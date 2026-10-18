@@ -75,7 +75,12 @@ public final class Fact extends Node implements Evaluatable {
             handler.addException(new ParseException("Fact " + predicate + " has variables.", predicate));
             return;
         }
-        knowledgeBase.addFact(predicate);
+        try {
+            knowledgeBase.addFact(predicate);
+        } catch (InconsistencyException ie) {
+            handler.addException(new ParseException(ie.getMessage(), predicate));
+            return;
+        }
     }
 
 }

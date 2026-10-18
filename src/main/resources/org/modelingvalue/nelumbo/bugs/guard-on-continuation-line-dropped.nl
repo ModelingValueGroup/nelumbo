@@ -1,16 +1,7 @@
-// Bug: when an alternative's `if` guard stands on its own continuation line
-// (legal-looking indented continuation, but the previous line's parens are
-// balanced), the parser reports "Unexpected token ..." for the guard line
-// and then SILENTLY DROPS IT, keeping the alternative guardless. Evaluation
-// continues with changed semantics: below, f(3) matches BOTH alternatives
-// (y=1 via its guard, y=2 because its guard was dropped), which the engine
-// reports as "Inconsistent results" for the f(3) query. In sudoku-9x9-smart.nl's
-// development this turned a guarded solver into a givens-overwriting one
-// that still looked green because the extra results hid in `,..` forms.
-// Correct: either accept the continuation or fail the file hard.
-// Actual: parse error printed, guard dropped, inconsistent results.
-// Legal continuations must break INSIDE unbalanced parens with the guard on
-// the closing line (see sudoku-9x9.nl solve).
+// Bug: an `if` guard on its own continuation line (the previous line's parens are
+// balanced) gives a parse error and is then silently dropped: the alternative becomes
+// guardless, so f(3) matches both alternatives ("Inconsistent results").
+// Correct: accept the continuation, or fail the file hard.
 import nelumbo.integers
 
 R :: Object

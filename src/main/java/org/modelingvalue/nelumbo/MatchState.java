@@ -111,10 +111,10 @@ public class MatchState<E extends Node> extends AbstractState<MatchState<E>> {
     }
 
     @SuppressWarnings("unchecked")
-    public Set<E> match(Object obj, KnowledgeBase knowledgeBase) {
+    public Set<E> match(Object obj, boolean inverse, KnowledgeBase knowledgeBase) {
         MutableMap<Variable, Type> typeArgs = MutableMap.of(Map.of());
         Set<E> elements = null;
-        for (MatchState<E> state : doMatch(obj, typeArgs)) {
+        for (MatchState<E> state : doMatch(obj, inverse, typeArgs)) {
             if (!state.elements().isEmpty()) {
                 elements = state.elements();
                 break;
@@ -128,18 +128,18 @@ public class MatchState<E extends Node> extends AbstractState<MatchState<E>> {
                 : elements.replaceAll(e -> knowledgeBase.actualize(e, tas, p -> (E) p.a().setTypeArgs(p.b())));
     }
 
-    private List<MatchState<E>> doMatch(Object obj, MutableMap<Variable, Type> typeArgs) {
+    private List<MatchState<E>> doMatch(Object obj, boolean inverse, MutableMap<Variable, Type> typeArgs) {
         List<MatchState<E>> states = List.of();
         switch (obj) {
         case Type type    -> {
-            MatchState<E> state = matchType(type, typeArgs);
+            MatchState<E> state = matchType(type, false, typeArgs);
             if (state != null) {
                 states = states.add(state);
             }
             break;
         }
         case Variable var -> {
-            MatchState<E> state = matchType(var.type().toVariable(), typeArgs);
+            MatchState<E> state = matchType(var.type().toVariable(), inverse, typeArgs);
             if (state != null) {
                 states = states.add(state);
             }
@@ -153,13 +153,13 @@ public class MatchState<E extends Node> extends AbstractState<MatchState<E>> {
                 for (Object arg : node.args()) {
                     List<MatchState<E>> next = List.of();
                     for (MatchState<E> inner : inners) {
-                        next = next.addAll(inner.doMatch(arg, typeArgs));
+                        next = next.addAll(inner.doMatch(arg, inverse, typeArgs));
                     }
                     inners = next;
                 }
                 states = states.addAll(inners);
             }
-            state = matchType(node.type(), typeArgs);
+            state = matchType(node.type(), inverse, typeArgs);
             if (state != null) {
                 states = states.add(state);
             }
@@ -207,6 +207,11 @@ public class MatchState<E extends Node> extends AbstractState<MatchState<E>> {
     @Override
     public Class<?> getMeetClass() {
         return MatchState.class;
+    }
+
+    @Override
+    public Map<Object, MatchState<E>> allTransitions() {
+        return transitions;
     }
 
 }

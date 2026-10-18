@@ -612,7 +612,7 @@ public class ParseState extends AbstractState<ParseState> {
         if (functor != null) {
             Set<StateContext> states = Set.of();
             Type type = functor.resultType().setTypeArgs(typeArgs.get());
-            ParseState state = ctx.state().matchType(type, typeArgs);
+            ParseState state = ctx.state().matchType(type, false, typeArgs);
             if (state != null) {
                 states = states.add(new StateContext(state, ctx.outer()));
             }
@@ -629,7 +629,7 @@ public class ParseState extends AbstractState<ParseState> {
             Map<Type, ParseState> posts = pc.postStates(group);
             if (posts != null) {
                 for (Entry<Type, ParseState> e : posts) {
-                    ParseState state = e.getValue().matchType(type, typeArgs);
+                    ParseState state = e.getValue().matchType(type, false, typeArgs);
                     if (state != null) {
                         states = states.add(new StateContext(state, ctx));
                     }
@@ -766,7 +766,7 @@ public class ParseState extends AbstractState<ParseState> {
                 result.addException(new ParseException(exc.getMessage(), node));
             }
             Type type = node instanceof Variable ? node.type().toVariable() : node.type();
-            ParseState next = matchType(type, result.typeArgs());
+            ParseState next = matchType(type, false, result.typeArgs());
             if (next != null) {
                 result.add(node);
                 return new TokenState(node.nextToken(), next);
@@ -893,6 +893,11 @@ public class ParseState extends AbstractState<ParseState> {
 
     public static enum Visibility {
         visible, hidden, optional;
+    }
+
+    @Override
+    public Map<Object, ParseState> allTransitions() {
+        return Map.<Object, ParseState>of().putAll(tokenTexts).putAll(tokenTypes).putAll(nodeTypes);
     }
 
 }

@@ -55,7 +55,6 @@ public class Predicate extends Node {
     private int           nrOfUnbound    = -1;
     private Set<Variable> localVariables = null;
     private Set<Variable> variables      = null;
-    private Predicate     varsToTypes    = null;
 
     @NelumboConstructor
     public Predicate(NodeInfo nodeInfo, Object... args) {
@@ -85,22 +84,6 @@ public class Predicate extends Node {
         return localVariables;
     }
 
-    public Predicate varsToTypes() {
-        if (varsToTypes == null) {
-            try {
-                varsToTypes = (Predicate) replace(o -> {
-                    if (o instanceof Variable var) {
-                        return var.type();
-                    }
-                    return o;
-                });
-            } catch (ParseException e) {
-                throw new IllegalStateException(e);
-            }
-        }
-        return varsToTypes;
-    }
-
     public final boolean isFullyBound() {
         return nrOfUnbound() == 0;
     }
@@ -123,7 +106,7 @@ public class Predicate extends Node {
                     Functor lit = functor.toLiteral();
                     if (lit != null) {
                         List<Object> args = n.args();
-                        if (args.allMatch(a -> a instanceof Node node && node.type().isLiteral())) {
+                        if (args.allMatch(a -> a instanceof Node node ? node.type().isLiteral() : true)) {
                             return lit.construct(n.astElements(), args.toArray(), kb, ctx);
                         }
                     }
@@ -312,29 +295,25 @@ public class Predicate extends Node {
     }
 
     protected InferResult infer(int nrOfUnbound, InferContext context) {
-        Functor functor = functor();
-        if (nrOfUnbound > 1 || //
-                (context.shallow() && !isShallow(nrOfUnbound, functor)) || //
-                (nrOfUnbound == 1 && functor.argTypes().size() == 1)) {
-            return unknown();
-        }
         KnowledgeBase knowledgebase = context.knowledgebase();
-        if (isFact()) {
-            return knowledgebase.getFacts(this, context);
-        } else {
-            InferResult result = knowledgebase.getMemoiz(this);
-            if (result != null) {
-                return result;
-            }
-            result = context.getCycleResult(this);
-            if (result != null) {
-                return result;
-            }
+
+        InferResult result = knowledgebase.getMemoiz(this);
+        if (result != null) {
+            return result;
+        }
+
+        result = knowledgebase.getFacts(this, context);
+
+        Functor functor = functor();
+        if (nrOfUnbound <= 1 && nrOfUnbound < functor.argTypes().size() && //
+                (!context.shallow() || isShallow(nrOfUnbound, functor))) {
+
             List<Predicate> stack = context.stack();
             if (stack.size() >= MAX_LOGIC_DEPTH) {
                 return InferResult.overflow(stack.append(this));
             }
-            result = fixpoint(context.pushOnStack(this));
+
+            result = fixpoint(context.pushOnStack(this), result);
             if (stack.size() >= MAX_LOGIC_DEPTH_D2) {
                 List<Predicate> overflow = result.stackOverflow();
                 if (overflow != null) {
@@ -344,16 +323,22 @@ public class Predicate extends Node {
                     return result;
                 }
             }
-            checkSingleResult(result);
-            knowledgebase.memoization(this, result);
-            return result;
         }
+
+        checkSingleResult(nrOfUnbound, result);
+        knowledgebase.memoization(this, result);
+
+        return result;
     }
 
-    private void checkSingleResult(InferResult result) {
-        if (CHECK_SINGLE_FUNCTION_RESULT) {
-            Variable unique = unique();
-            if (unique != null) {
+    private void checkSingleResult(int nrOfUnbound, InferResult result) {
+        Variable unique = unique();
+        if (unique != null) {
+            if (nrOfUnbound == 1) {
+                if (result.facts().size() > 1 || (!result.completeFacts() && result.facts().size() == 1)) {
+                    throw new InconsistencyException(result);
+                }
+            } else {
                 Map<Map<Variable, Object>, Predicate> map = Map.of();
                 for (Predicate fact : result.facts()) {
                     Map<Variable, Object> rest = fact.getBinding(this).removeKey(unique);
@@ -367,8 +352,20 @@ public class Predicate extends Node {
         }
     }
 
-    protected Variable unique() {
-        return null;
+    public final Variable unique() {
+        List<Integer> indexes = functor().unique();
+        Variable unique = null;
+        for (int i : indexes) {
+            if (get(i) instanceof Variable var) {
+                if (unique == null) {
+                    unique = var;
+                } else {
+                    unique = null;
+                    break;
+                }
+            }
+        }
+        return unique;
     }
 
     protected boolean isShallow(int nrOfUnbound, Functor functor) {
@@ -381,7 +378,8 @@ public class Predicate extends Node {
         KnowledgeBase knowledgebase = context.knowledgebase();
         while (!todo.isEmpty()) {
             Predicate predicate = todo.last();
-            result = predicate.fixpoint(context.pushOnStack(predicate));
+            result = knowledgebase.getFacts(predicate, context);
+            result = predicate.fixpoint(context.pushOnStack(predicate), result);
             overflow = result.stackOverflow();
             if (overflow != null) {
                 todo = todo.appendList(overflow.sublist(stackSize + 1, overflow.size()));
@@ -393,42 +391,32 @@ public class Predicate extends Node {
         return result;
     }
 
-    private InferResult fixpoint(InferContext context) {
-        InferResult previousResult = null, cycleResult = InferResult.cycle(Set.of(), Set.of(), this), nextResult;
+    private InferResult fixpoint(InferContext context, InferResult result) {
+        InferResult previousResult = null, nextResult,
+                cycleResult = InferResult.cycle(result.facts(), result.falsehoods(), this, singleton());
         do {
-            if (context.knowledgebase().isPastDeadline()) {
-                throw new NelumboTimeoutException();
-            }
-            nextResult = inferRules(context.putCycleResult(this, cycleResult));
-            if (nextResult.hasStackOverflow()) {
+            context.knowledgebase().memoization(this, cycleResult);
+            nextResult = inferRules(context, result);
+            if (nextResult.hasStackOverflow() || nextResult.cycles().isEmpty()) {
                 return nextResult;
             }
-            if (nextResult.hasCycleWith(this)) {
-                if (!nextResult.equals(previousResult)) {
-                    previousResult = nextResult;
-                    cycleResult = InferResult.cycle(nextResult.facts(), nextResult.falsehoods(), this);
-                    context.knowledgebase().memoization(this, cycleResult);
-                    continue;
-                } else {
-                    cycleResult = InferResult.of(this, nextResult.facts(), true, nextResult.falsehoods(), true,
-                            nextResult.cycles().remove(this));
-                    context.knowledgebase().memoization(this, cycleResult);
-                    nextResult = inferRules(context.putCycleResult(this, cycleResult));
-                    if (nextResult.hasStackOverflow()) {
-                        return nextResult;
-                    }
-                    return InferResult.of(this, nextResult.facts(), nextResult.completeFacts(), //
-                            nextResult.falsehoods(), nextResult.completeFalsehoods(), //
-                            nextResult.cycles().remove(this));
-                }
+            if (nextResult.equals(previousResult)) {
+                return InferResult.of(this, nextResult.facts(), nextResult.completeFacts(), //
+                        nextResult.falsehoods(), nextResult.completeFalsehoods(), //
+                        Set.of());
+            } else {
+                previousResult = nextResult;
+                cycleResult = nextResult;
             }
-            return nextResult;
         } while (true);
     }
 
-    private InferResult inferRules(InferContext context) {
-        InferResult result = unknown();
-        Set<Rule> rules = context.knowledgebase().getRules(this);
+    private InferResult inferRules(InferContext context, InferResult result) {
+        KnowledgeBase knowledgebase = context.knowledgebase();
+        if (knowledgebase.isPastDeadline()) {
+            throw new NelumboTimeoutException();
+        }
+        Set<Rule> rules = knowledgebase.getRules(this);
         for (Rule rule : REVERSE_NELUMBO ? rules.reverse() : RANDOM_NELUMBO ? rules.random() : rules) {
             result = rule.biimply(this, context, result);
             if (result.hasStackOverflow()) {
@@ -436,10 +424,6 @@ public class Predicate extends Node {
             }
         }
         return result;
-    }
-
-    public boolean isFact() {
-        return Type.FACT_TYPE.isAssignableFrom(type());
     }
 
     public Predicate replaveVars(Map<String, Variable> map) {

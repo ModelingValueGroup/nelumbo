@@ -21,6 +21,7 @@ import static org.modelingvalue.nelumbo.KnowledgeBase.TRACE_SYNTATIC;
 import java.io.Serial;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
@@ -322,6 +323,14 @@ public class Node extends StructImpl implements AstElement {
         return (V) val;
     }
 
+    public Object getIdx(int... is) {
+        Object val = this;
+        for (int i : is) {
+            val = ((Node) val).get(i);
+        }
+        return val;
+    }
+
     protected final Object[] setArray(int f, Object... a) {
         Object[] array = null;
         for (int i = 0; i < a.length; i++) {
@@ -379,6 +388,37 @@ public class Node extends StructImpl implements AstElement {
                     "Specialisation of Node " + this.getClass().getName() + " without @NelumboConstructor");
         }
         return new Node(nodeInfo, args);
+    }
+
+    public Node getNode(int[] idx) {
+        Node node = this;
+        for (int i : idx) {
+            node = (Node) node.get(i);
+        }
+        return node;
+    }
+
+    // Paths (as accepted by set(int[], Object) and getNode(int[])) to all nodes,
+    // this one included, that satisfy the
+    // filter, in pre-order. Only Node arguments are traversed, not nodes inside
+    // collection.
+    // It does not descend into a node that satisfies the filter.
+    public List<int[]> paths(java.util.function.Predicate<Node> filter) {
+        return paths(filter, new int[0], List.of());
+    }
+
+    private List<int[]> paths(java.util.function.Predicate<Node> filter, int[] path, List<int[]> paths) {
+        if (filter.test(this)) {
+            return paths.add(path);
+        }
+        for (int i = 0; i < length(); i++) {
+            if (get(i) instanceof Node n) {
+                int[] sub = Arrays.copyOf(path, path.length + 1);
+                sub[path.length] = i;
+                paths = n.paths(filter, sub, paths);
+            }
+        }
+        return paths;
     }
 
     public Set<Variable> allVars() {

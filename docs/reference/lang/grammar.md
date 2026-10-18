@@ -81,6 +81,7 @@ A pattern is a mix of:
 - **Holes** of the form `<T>` — placeholders filled by an expression of type `T`
 - **Built-in token holes** like `<NUMBER>`, `<STRING>`, `<NAME>` — see [`built-in-tokens.md`](built-in-tokens.md)
 - **Variable holes** `<Variable>` — used by binding forms like quantifiers
+- **Unique holes** `<one T>` — at most one value for each combination of the other holes; the keyword comes after `visible`/`hidden` and before the type (`<hidden one T#5>`). Meaningful in `Boolean` patterns: `=` is declared `<one Object> = <one Object>`, which gives functions a single, closed result (see [Open facts and `one`](../logic/statements.md#open-facts-and-one))
 - **Repetition and grouping markers** `<(>`, `<)>`, `<)*>`, `<)+>`, `<)?>`, `<,>`, `<|>` — see [below](#repetition-and-grouping)
 - An optional **precedence annotation** `#N` — see [`precedence-and-associativity.md`](precedence-and-associativity.md)
 - An optional **native binding** `@fully.qualified.JavaClass` — see [`native-api.md`](../core/native-api.md)
@@ -112,7 +113,7 @@ Female ::= Wilhelmina, Juliana, Beatrix, Maxima, Amalia
 Lidwoord ::= de, het
 ```
 
-Each listed name becomes a constant of the declared type. They are literals, not variables.
+Each listed name becomes a constant of the declared type. They are literals, not variables. The list does not close the type: other declarations may add constants, and Nelumbo never enumerates a type's members to bind a variable (see [The open world](../logic/three-valued-logic.md#the-open-world)).
 
 ### Repetition and grouping
 
@@ -139,8 +140,8 @@ Alternation ::= <(> A <|> B <|> C <)>              // "A", "B", or "C"
 `collections.nl` uses this for generic sets and lists:
 
 ```nelumbo
-Set<E>  ::= { <(> <E> <,> , <)*> }
-List<E> ::= [ <(> <E> <,> , <)*> ]
+Set<E>  ::= { <(> <(> <E> <|> .. <)> <,> , <)*> }   // {1,2,3}, {}, open {1,2,..}
+List<E> ::= [ <(> <(> <E> <|> .. <)> <,> , <)*> ]
 ```
 
 ### Connected-token groups: `<[> ... <]>`
@@ -246,7 +247,7 @@ The `::>` operator defines a **language pattern transformation** — a macro-lik
 attr OT AN AT ::> {
     AT       ::= <OT>.AN
     Root     ::= <OT>.AN := <AT>
-    private FactType ::= AN(<OT>,<AT>)
+    private Boolean ::= AN(<OT>,<AT>)
     ...
 }
 ```
@@ -273,14 +274,14 @@ This is Nelumbo's mechanism for building higher-level DSLs on top of the core. I
 |---|---|
 | `Object`, `Type`, `Variable`, `Root`, `Functor`, `Pattern`, `Namespace`, `RootNamespace` | The core object hierarchy. `Root` is the entry-point production for top-level statements; `Type` is used as a generic parameter introducer (`Type T`). |
 
-The logic-layer identifiers (`Boolean`, `FactType`, `true`, ...) are listed in [`operators.md`](../logic/operators.md#special-identifiers).
+The logic-layer identifiers (`Boolean`, `Function`, `true`, ...) are listed in [`operators.md`](../logic/operators.md#special-identifiers).
 
 ---
 
 ## See also
 
 - [`operators.md`](../logic/operators.md) — the operators from `nelumbo.logic`
-- [`statements.md`](../logic/statements.md) — fact types, facts, queries and tests
+- [`statements.md`](../logic/statements.md) — facts, queries and tests
 - [`built-in-tokens.md`](built-in-tokens.md) — `<NUMBER>`, `<STRING>`, `<NAME>`, `<Variable>`
 - [`precedence-and-associativity.md`](precedence-and-associativity.md) — how `#N` works
 - [`visibility.md`](visibility.md) — `private`, `hidden`, `visible`, and `{ }` scopes

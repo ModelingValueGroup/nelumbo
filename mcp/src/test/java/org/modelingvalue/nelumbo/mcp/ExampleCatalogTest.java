@@ -37,14 +37,11 @@ public class ExampleCatalogTest {
 
     @Test
     public void familyDescriptionIsInformative() {
-        List<Example> all  = ExampleCatalog.list();
-        String        desc = all.stream()
-                               .filter(e -> e.name().equals("family"))
-                               .findFirst()
-                               .map(Example::description)
-                               .orElse("");
+        List<Example> all = ExampleCatalog.list();
+        String desc = all.stream().filter(e -> e.name().equals("family")).findFirst().map(Example::description)
+                .orElse("");
         assertTrue(desc.toLowerCase().contains("family") || desc.toLowerCase().contains("fact"),
-                   "family description should mention 'family' or 'fact': " + desc);
+                "family description should mention 'family' or 'fact': " + desc);
     }
 
     @Test
@@ -58,7 +55,7 @@ public class ExampleCatalogTest {
     public void contentOfFamily() {
         String content = ExampleCatalog.content("family");
         assertNotNull(content);
-        assertTrue(content.contains("pc(Hendrik, Juliana)"));
+        assertTrue(content.contains("m(Willem)=Beatrix"));
     }
 
     @Test

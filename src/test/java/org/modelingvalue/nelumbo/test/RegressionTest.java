@@ -80,6 +80,17 @@ public class RegressionTest extends NelumboTestBase {
         testResource("rule-pos-on-mapped-collection-list-undecided.nl");
     }
 
+    @RepeatedTest(10)
+    public void inOnFunctionCallUndecided() {
+        testResource("in-on-function-call-undecided.nl");
+    }
+
+    // the argument of the function is itself a call (user or built-in), also in a rule body
+    @RepeatedTest(10)
+    public void inOnNestedFunctionCallUndecided() {
+        testResource("in-on-nested-function-call-undecided.nl");
+    }
+
     // also covers the list-literal twin [j+1], which did not parse before the fix
     @RepeatedTest(10)
     public void setLiteralArithmeticUnevaluated() {
@@ -113,6 +124,11 @@ public class RegressionTest extends NelumboTestBase {
     @Timeout(20)
     public void nestedGenericRuleLoadTime() {
         testResource("nested-generic-rule-load-time.nl");
+    }
+
+    @RepeatedTest(10)
+    public void unboundPredicateNotResolved() {
+        testResource("unbound-predicate-not-resolved.nl");
     }
 
 }

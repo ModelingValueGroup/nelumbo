@@ -443,7 +443,7 @@ Insert after the `logic` section. Prose: facts are asserted with `fact`; objects
 ```
 import nelumbo.logic
 Person :: Object
-FactType ::= friends(<Person>,<Person>)
+Boolean ::= friends(<Person>,<Person>)
 Person ::= Piet, Jan, Klaas
 fact friends(Piet, Jan),
      friends(Jan,  Klaas)
@@ -456,7 +456,7 @@ Exercise - challenge: "Add a fact so that `friends(Klaas, Kees)` holds, then con
 ```
 import nelumbo.logic
 Person :: Object
-FactType ::= friends(<Person>,<Person>)
+Boolean ::= friends(<Person>,<Person>)
 Person ::= Piet, Jan, Klaas, Kees
 // add a fact here
 friends(Klaas, Kees) ? [()][]
@@ -564,7 +564,7 @@ import nelumbo.logic
 Person   :: Object
 Male     :: Person
 Female   :: Person
-FactType ::= pc(<Person>,<Person>)
+Boolean ::= pc(<Person>,<Person>)
 Person   ::= p(<Person>), c(<Person>), m(<Person>)
 Person a, b
 Female x
@@ -605,7 +605,7 @@ Prose: Nelumbo is a meta-language - you can declare your own functors/patterns s
 ```
 import nelumbo.logic
 Person   :: Object
-FactType ::= friends(<Person>,<Person>)
+Boolean ::= friends(<Person>,<Person>)
 Person   ::= friend(<Person>)
 Person   ::= Piet, Jan, Klaas
 Person A, B, Who
@@ -631,7 +631,7 @@ NAME AN
 attr OT AN AT ::&gt; {
     AT   ::= &lt;OT&gt;.AN
     Root ::= &lt;OT&gt;.AN := &lt;AT&gt;
-    private FactType ::= AN(&lt;OT&gt;,&lt;AT&gt;)
+    private Boolean ::= AN(&lt;OT&gt;,&lt;AT&gt;)
     OT o
     AT a
     o.AN=a &lt;=&gt; AN(o,a)

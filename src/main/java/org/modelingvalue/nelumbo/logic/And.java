@@ -16,16 +16,18 @@
 
 package org.modelingvalue.nelumbo.logic;
 
+import static org.modelingvalue.nelumbo.patterns.Pattern.n;
+import static org.modelingvalue.nelumbo.patterns.Pattern.s;
+import static org.modelingvalue.nelumbo.patterns.Pattern.t;
+
+import java.io.Serial;
+
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.syntax.ParseException;
-
-import java.io.Serial;
-
-import static org.modelingvalue.nelumbo.patterns.Pattern.*;
 
 public final class And extends BinaryPredicate {
     @Serial
@@ -38,7 +40,7 @@ public final class And extends BinaryPredicate {
         try {
             FUNCTOR = Functor.of(s(n(Type.BOOLEAN), t("&"), n(Type.BOOLEAN)), Type.BOOLEAN, null, And.class, 22);
         } catch (ParseException e) {
-            throw new IllegalStateException("Cannot create functor for "+ And.class, e);
+            throw new IllegalStateException("Cannot create functor for " + And.class, e);
         }
     }
 
@@ -84,6 +86,23 @@ public final class And extends BinaryPredicate {
     @Override
     protected boolean isRight(InferResult[] predResult) {
         return predResult[0].isTrueCC();
+    }
+
+    @Override
+    protected InferResult resolvedOnly(InferResult[] predResult, InferContext context) {
+        if (predResult[0].isResolved(context) && predResult[1].isResolved(context)) {
+            InferResult result = predResult[0].addToSet(predResult[1]);
+            if (predResult[0].completeFacts() || predResult[1].completeFacts()) {
+                result = result.factsComplete();
+            }
+            return result;
+        } else if (predResult[0].isResolved(context)) {
+            return predResult[0];
+        } else if (predResult[1].isResolved(context)) {
+            return predResult[1];
+        } else {
+            return unknown();
+        }
     }
 
 }

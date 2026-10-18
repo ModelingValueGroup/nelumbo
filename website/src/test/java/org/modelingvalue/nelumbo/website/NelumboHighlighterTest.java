@@ -94,7 +94,7 @@ class NelumboHighlighterTest {
                 import nelumbo.lang
 
                 Boolean   :: Object
-                FactType  :: Boolean
+                Boolean  :: Boolean
                 Function  :: Object
                 Literal   :: Object
 

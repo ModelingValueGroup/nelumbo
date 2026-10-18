@@ -36,12 +36,35 @@ public abstract class NCollection extends Node {
         return (Collection<T>) get(0);
     }
 
+    public boolean complete() {
+        return (Boolean) get(1);
+    }
+
     public int size() {
         return collection().size();
     }
 
     public Type elementType() {
         return type().arguments().first();
+    }
+
+    protected static final int open(Object[] args) {
+        for (int i = 0; i < args.length; i++) {
+            if ("..".equals(args[i])) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    protected static final Object[] remove(Object[] args, int i) {
+        if (i >= 0) {
+            Object[] result = new Object[args.length - 1];
+            System.arraycopy(args, 0, result, 0, i);
+            System.arraycopy(args, i + 1, result, i, result.length - i);
+            return result;
+        }
+        return args;
     }
 
 }

@@ -109,7 +109,7 @@ The Java level. Always present.
 `nelumbo.logic`, three-valued logic and the statements that drive execution.
 
 - [`nelumbo.logic`](reference/logic/index.md) — the module: Boolean, connectives, quantifiers, equality
-- [Statements](reference/logic/statements.md) — fact types, facts, queries and tests
+- [Statements](reference/logic/statements.md) — facts, queries and tests
 - [Operators](reference/logic/operators.md) — the logical operators and `fact` / `<=>` / `?`
 - [Writing rules](reference/logic/writing-rules.md) — `<=>`, guards, merging, contradictions
 - [Three-valued logic](reference/logic/three-valued-logic.md) — truth tables and identities
@@ -153,7 +153,7 @@ The `.nl` files under [`src/main/resources/org/modelingvalue/nelumbo/examples/`]
 | File | What it demonstrates |
 |---|---|
 | `fibonacci.nl` | Integer arithmetic, recursive rule with guards, basic tests |
-| `family.nl` | Types, subtypes, `FactType`, literal enumerations, ancestor/descendant recursion |
+| `family.nl` | Types, subtypes, `Boolean`, literal enumerations, ancestor/descendant recursion |
 | `friends.nl` | Mutually-recursive relations, symmetric + transitive closure |
 | `even.nl` | Simplest useful predicate using an existential quantifier |
 | `max.nl`, `ternary.nl` | Generic types (`Type T`), conditional expressions, user-defined operators |
@@ -182,7 +182,7 @@ The `*Test.nl` files under [`src/main/resources/org/modelingvalue/nelumbo/tests/
 
 ## A note on conventions used in the docs
 
-- **`..`** is the *incompleteness marker* — it means "this side of the result may have more bindings than are listed." It is never called a wildcard because it doesn't match values.
+- **`..`** is the *incompleteness marker* — it means "this side of the result may have more bindings than are listed." It is never called a wildcard because it doesn't match values. Inside a collection (`{Juliana,..}`) it marks that set or list as open.
 - **Facts** (left bracket) and **falsehoods** (right bracket) are the two sides of every query result.
 - **In-language** extensions (rules, transformations, modules) are distinguished from **host-language** extensions (Java natives bound with `@`). The docs use these terms consistently.
 - Cross-references in every page point to other pages when a topic is covered in more depth elsewhere. If you follow the links, you end up with a coherent tour of the language.

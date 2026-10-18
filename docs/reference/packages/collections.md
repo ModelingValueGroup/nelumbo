@@ -4,7 +4,7 @@
 
 Generic sets and lists, with membership, set algebra, list concatenation and indexing, and the higher-order operations `where` (filter), `map` and `sort`. The higher-order operations take [lambdas](../logic/lambdas.md), which are declared in `nelumbo.logic`, not here. This is also the only stdlib module that uses Nelumbo's generic-type parameter mechanism.
 
-**Source:** [`src/main/resources/org/modelingvalue/nelumbo/collections/collections.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/collections/collections.nl) — 79 lines.
+**Source:** [`src/main/resources/org/modelingvalue/nelumbo/collections/collections.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/collections/collections.nl) — 78 lines.
 
 **Import:**
 
@@ -35,21 +35,38 @@ List<E>        :: Collection<E>
 ## Literals
 
 ```nelumbo
-{Struct,Set<E>}  ::= { <(> <E> <,> , <)*> }  @nelumbo.collections.NSet
-{Struct,List<E>} ::= [ <(> <E> <,> , <)*> ]  @nelumbo.collections.NList
+{Struct,Set<E>}  ::= { <(> <(> <E> <|> .. <)> <,> , <)*> }  @nelumbo.collections.NSet
+{Struct,List<E>} ::= [ <(> <(> <E> <|> .. <)> <,> , <)*> ]  @nelumbo.collections.NList
 ```
 
 | Syntax        | Type      | Notes                                       |
 |---|---|---|
 | `{}`          | `Set<E>`  | empty set                                   |
 | `{x, y, z}`   | `Set<E>`  | unordered, no duplicates                    |
+| `{x, y, ..}`  | `Set<E>`  | open set: at least `x` and `y`              |
+| `{..}`        | `Set<E>`  | open set with no known elements             |
 | `{[e](c)}`    | `Set<E>`  | set-builder (comprehension) — see below     |
 | `[]`          | `List<E>` | empty list                                  |
 | `[x, y, z]`   | `List<E>` | ordered, duplicates preserved               |
+| `[x, y, ..]`  | `List<E>` | open list: `x`, `y` and possibly more       |
 
 The `<(> ... <,> , <)*>` fragment is the zero-or-more comma-separated repetition (see [`built-in-tokens.md`](../lang/built-in-tokens.md#structural-markers--repetition-and-grouping)). The element type `E` is inferred from the surrounding context — the declared type of the receiving variable or pattern hole.
 
 The result type `{Struct,Set<E>}` is an intersection: a collection literal is a `Set<E>` *and* a `Struct`. `Struct` values have **structural equality** — two literals are equal when their elements are — which is what makes `{1,2}={2,1}` true and `[1,2]=[1,2]` decidable without any rule.
+
+### Open collections — `..`
+
+A collection literal may contain the **incompleteness marker** `..` in place of an element. It makes the collection *open*: the listed elements are known members, but there may be more. This is the same `..` that marks an open side of a query result (see [`reading-a-test.md`](../../getting-started/reading-a-test.md#the-incompleteness-marker-)), now on a single value. An open collection prints with a trailing `..` (`{1,2,..}`, `[1,..]`, `{..}`), wherever the `..` was written.
+
+Openness is part of the value, so a closed and an open collection are never equal, while two open collections with the same known elements are:
+
+```nelumbo
+s = {1,2,..}      ?   [(s={1,2,..})][..]
+{1,..} = {1}      ?   [][()]
+{1,..} = {1,..}   ?   [()][]
+```
+
+Open collections arise naturally from a set-builder over open facts (see [below](#set-builder--ec)): the result is one open set rather than an open list of candidate sets.
 
 Elements may be expressions; they are evaluated before the collection is formed:
 
@@ -91,12 +108,20 @@ Set<E> s
 ```nelumbo
 Integer i   Set<Integer> s
 
-{[i](|i|=10)} = s   ?   [(s={-10,10})][(s={0}),..]
+{[i](|i|=10)} = s   ?   [(s={-10,10})][(s={0,..}),..]
 ```
 
-The bound variable `i` ranges over the condition `|i| = 10`. Its two solutions, `-10` and `10`, are gathered into the fact `s = {-10, 10}`. The falsehoods side carries `(s={0})`: `i = 0` is a proven *non*-member (`|0| = 10` is false), so the singleton `{0}` is a proven falsehood of the builder, with `..` standing in for the rest of the open domain.
+The bound variable `i` ranges over the condition `|i| = 10`. Its two solutions, `-10` and `10`, are gathered into the fact `s = {-10, 10}`. The falsehoods side carries `(s={0,..})`: `i = 0` is a proven *non*-member (`|0| = 10` is false), so no set containing `0` — the open set `{0,..}` — is the result; the side's own `..` stands in for the rest of the open domain.
 
-Set-builder takes **exactly one** bound variable (it is a `Lambda1`); `{[i,j](…)}` does not parse. Because it is built on the three-valued quantifier machinery, it inherits the completeness behaviour of `E[...]`/`A[...]` (see [`three-valued-logic.md`](../logic/three-valued-logic.md)). In particular, a condition that cannot be enumerated exhaustively gives an *open* result: `{[i](i in {1,2,3} & i>1)} = s` reports `[(s={2,3}),..][(s={1}),..]`, not a closed `[(s={2,3})][..]`.
+The facts side lists **one** set. When the condition's facts are complete, that set is closed; when they are open (the condition is derived from open facts), the set itself is open, and when nothing is known yet it is `{..}`. From [`family.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/family.nl):
+
+```text
+c(Hendrik)=s      ? [(s={Juliana,..})][..]
+```
+
+`Juliana` is a known child; others may exist. So a set-builder result is always a single binding: the openness lives in the set, not in a `..` after it.
+
+Set-builder takes **exactly one** bound variable (it is a `Lambda1`); `{[i,j](…)}` does not parse. Because it is built on the three-valued quantifier machinery, it inherits the completeness behaviour of `E[...]`/`A[...]` (see [`three-valued-logic.md`](../logic/three-valued-logic.md)). For example `{[i](i in {1,2,3} & i>1)} = s` reports `[(s={2,3})][(s={1,..}),..]`: `{2,3}` as the one result and every set containing the non-member `1` as a falsehood.
 
 ---
 
@@ -131,6 +156,21 @@ private Boolean ::= build(<Lambda1<E,Boolean>>, <Set<E>>)                    @ne
 | filter                            | `<Set<E>> where <Lambda1<E,Boolean>>` / the `List` form | 37 | `Set<E>` / `List<E>` |
 | map                               | `<Collection<F>> map <Lambda1<F,E>>`                 | 37   | `List<E>`   |
 | sort                              | `<Collection<E>> sort <Lambda2<E,E,Boolean>>`        | 37   | `List<E>`   |
+
+### Open operands
+
+Operations respect the openness of their operands; a result is only as complete as its inputs allow:
+
+| Operation | Result for open operands |
+|---|---|
+| `e in s`, `e` bound | `true` if `e` is a known member, else `false` for a closed set and unknown for an open one |
+| `e in s`, `e` free | enumerates the known members; the facts side is open (`..`) for an open set |
+| `\|c\|` | unknown for an open collection |
+| `a < b` | true if `a` is closed and its elements are known members of `b`; false if `b` is closed and misses a known element of `a`; otherwise unknown (`{1,3} < {1,..}`, `{1,..} < {1,2}`) |
+| `a \|\| b`, `a + b` | open if either operand is open: `{1,..} \|\| {2} = s` gives `{1,2,..}` |
+| `a && b` | open only if both are open: `{1,..} && {1,2} = s` gives `{1}` |
+| `a - b` | open if `a` is open; if `b` is open (and `a` is not empty) the result is `{..}`, since any element of `a` may be in `b` |
+| `where`, `map`, `sort` | open if the input collection is open: `{1,2,..} where [i](i>1) = s` gives `{2,..}` |
 
 ### Cardinality — `|c|`
 
@@ -289,7 +329,7 @@ Integer             i, ib, ia
 List<Set<Integer>>  ls
 
 s = {1,2,3}                            ?   [(s={1,2,3})][..]
-{[i](|i|=10)} = s                      ?   [(s={-10,10})][(s={0}),..]
+{[i](|i|=10)} = s                      ?   [(s={-10,10})][(s={0,..}),..]
 
 |{1,2,3}| = i                          ?   [(i=3)][..]
 i in {1,2,3}                           ?   [(i=1),(i=2),(i=3)][..]
@@ -310,7 +350,7 @@ Collection values print back in their literal form on the facts side. The CSP-st
 
 ## Status
 
-`collections` provides type declarations, literal constructors, set-builder comprehension, the algebraic operations (cardinality, membership, subset/superset, set intersection/union/difference, list concatenation, list indexing) and the lambda-based higher-order operations `where`, `map` and `sort`. Still absent are folds/reductions (`fold`, `sum`), element access by index in expression position (use `e pos l = i`), `head`/`tail`, and union/intersection for lists. The native classes are `NSet` and `NList` (literals), `BuildSet` (the comprehension form) and `Collections` (every other operation); the lambda value itself is `nelumbo.logic.Lambda`.
+`collections` provides type declarations, literal constructors (closed and open), set-builder comprehension, the algebraic operations (cardinality, membership, subset/superset, set intersection/union/difference, list concatenation, list indexing) and the lambda-based higher-order operations `where`, `map` and `sort`. Still absent are folds/reductions (`fold`, `sum`), element access by index in expression position (use `e pos l = i`), `head`/`tail`, and union/intersection for lists. The native classes are `NSet` and `NList` (literals), `BuildSet` (the comprehension form) and `Collections` (every other operation); the lambda value itself is `nelumbo.logic.Lambda`.
 
 ---
 

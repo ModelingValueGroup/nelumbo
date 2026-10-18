@@ -29,7 +29,7 @@ NAME AN
 attr OT AN AT  ::>  {
     AT       ::= <OT>.AN
     Root     ::= <OT>.AN := <AT>
-    private FactType ::= AN(<OT>,<AT>)
+    private Boolean ::= AN(<OT>,<AT>)
     OT o
     AT a
     o.AN = a  <=>  AN(o,a)
@@ -56,7 +56,7 @@ the effect is **exactly the same** as if they had written
 ```nelumbo
 String ::= <Person>.name
 Root   ::= <Person>.name := <String>
-private FactType ::= name(<Person>, <String>)
+private Boolean ::= name(<Person>, <String>)
 Person o
 String a
 o.name = a  <=>  name(o, a)
@@ -144,7 +144,7 @@ User writes:           Transformation expands to:        Further expands to:
 attr Person name String
                    ->  String ::= <Person>.name
                        Root ::= <Person>.name := <String>
-                       private FactType ::= name(<Person>,<String>)
+                       private Boolean ::= name(<Person>,<String>)
                        Person o
                        String a
                        o.name = a <=> name(o,a)
@@ -189,7 +189,7 @@ Root ::= "attr" <Type> <Lidwoord> <n> <Type>  #100
   attr OT lw n AT ::> {
      Root ::= <lw> n van <OT> is <AT>              #0
      Root ::= wat is <lw> n van <OT> ?             #0
-     private FactType ::= n(<OT>, <AT>)
+     private Boolean ::= n(<OT>, <AT>)
      OT o
      AT a
      lw n van o is a ::> {
@@ -210,7 +210,7 @@ Two things to notice:
 When the user writes `attr Persoon de naam String`, all of the following happen:
 
 - The `Root` grammar gains two new patterns: `de naam van Persoon is String` and `wat is de naam van Persoon ?`
-- A private fact type `naam(Persoon, String)` is declared
+- A private relation `naam(Persoon, String)` is declared
 - Two transformations are registered that turn user uses of those new Root patterns into facts and queries respectively
 
 The user then gets to write natural Dutch and have it work.
@@ -223,7 +223,7 @@ A transformation block accepts **any declaration or statement** that is legal at
 
 - Type declarations (`T :: S`)
 - Pattern declarations (`T ::= P`, with or without `private`/`hidden`)
-- `FactType` declarations
+- `Boolean` declarations
 - Variable declarations
 - Rules (`L <=> R`)
 - Fact assertions (`fact E`)
@@ -262,9 +262,9 @@ Transformations are powerful, which means they are also easy to overuse. A good 
 
 - **Use a rule (`<=>`)** when the same abstraction can be expressed as an equivalence over values.
 - **Use multiple `::=` patterns** when you want several surface syntaxes for the same underlying relation.
-- **Use a transformation (`::>`)** only when the abstraction you want introduces *structural* declarations — new types, new fact types, new patterns — that depend on the arguments.
+- **Use a transformation (`::>`)** only when the abstraction you want introduces *structural* declarations — new types, new relations, new patterns — that depend on the arguments.
 
-The `attr` example is a good test case: `attr Person name String` introduces a new fact type `name(Person, String)` whose *name* depends on the argument. No rule can do that, because rules cannot declare fact types. Transformation is the right tool.
+The `attr` example is a good test case: `attr Person name String` introduces a new relation `name(Person, String)` whose *name* depends on the argument. No rule can do that, because rules cannot declare relations. Transformation is the right tool.
 
 If you find yourself writing a transformation whose body is one rule with substitutions, consider whether the same effect can be achieved with generic types (`Type E`) instead. Transformations are a last resort when declarative mechanisms cannot express the shape you need.
 
@@ -287,7 +287,7 @@ This is why metavariable declarations look like logical-variable declarations (t
 Since `::>` is under active development, here are some specific points to be aware of when using it today:
 
 - **Error messages from transformations are still rough.** A mistake in a transformation body may surface as a confusing diagnostic about the expanded code rather than the source you wrote.
-- **Interaction with `private`/`hidden` inside transformations is evolving.** The worked examples use `private FactType ::= ...` inside transformations and it works, but finer-grained visibility controls may be added.
+- **Interaction with `private`/`hidden` inside transformations is evolving.** The worked examples use `private Boolean ::= ...` inside transformations and it works, but finer-grained visibility controls may be added.
 - **Namespace handling.** Any type that specialises `Namespace` introduces its own scope; declaring a functor `private` inside such a type keeps it confined to that scope. See [`../reference/visibility.md`](../reference/lang/visibility.md). This is the piece that keeps declarations from different transformation expansions from colliding.
 - **Syntax of the `::>` operator itself** may tighten over releases. The current form supports both the patterns shown here and the nested form; a consolidated spec is a work in progress.
 - **Performance** is not a concern. Transformations — including nested ones — are expanded at compile/load time only, so they contribute nothing to query execution. Heavy transformation use affects load time, not the reasoner's runtime.

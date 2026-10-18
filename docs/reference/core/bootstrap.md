@@ -23,7 +23,7 @@
 | Type hole | `<T>`, `<T#100>`, `<hidden T>`, `<visible T>` | `Pattern ::= "<" ... <Type#100> ... ">"` |
 | Named-pattern hole | `<N>` | `Pattern ::= "<" <PatternPart#100> ">"` |
 
-Besides these patterns the core registers one type per token type (`NAME`, `NUMBER`, `STRING`, ...) and a fixed set of predefined types (`Type.predefined()`): `NATIVE`, `Object`, `Type`, `World`, `Namespace`, `Function`, `Literal`, `Root`, `Boolean`, `FactType`, `Variable`, `Functor`, `PatternPart`, `Pattern`, `Struct`, `Collection`, `Set`, `List` and `Lambda`. The Java classes behind the reasoner and the collections refer to these types. Being registered does not give them any syntax: values, operators and statements for `Boolean`, `FactType` or `Set` only exist once the `.nl` file that declares them is imported.
+Besides these patterns the core registers one type per token type (`NAME`, `NUMBER`, `STRING`, ...) and a fixed set of predefined types (`Type.predefined()`): `NATIVE`, `Object`, `Type`, `World`, `Namespace`, `Function`, `Literal`, `Root`, `Boolean`, `Variable`, `Functor`, `PatternPart`, `Pattern`, `Struct`, `Collection`, `Set`, `List` and `Lambda`. The Java classes behind the reasoner and the collections refer to these types. Being registered does not give them any syntax: values, operators and statements for `Boolean`, `Function` or `Set` only exist once the `.nl` file that declares them is imported.
 
 ---
 

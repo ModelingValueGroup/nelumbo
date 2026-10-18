@@ -67,7 +67,6 @@ public final class Type extends Node implements FunctorOrType {
     public static final Type  LITERAL         = new Type("Literal", OBJECT);
     public static final Type  ROOT            = new Type("Root", OBJECT);
     public static final Type  BOOLEAN         = new Type("Boolean", OBJECT);
-    public static final Type  FACT_TYPE       = new Type("FactType", BOOLEAN);
     public static final Type  VARIABLE        = new Type("Variable", OBJECT);
     public static final Type  FUNCTOR         = new Type("Functor", ROOT);
     public static final Type  PATTERN_PART    = new Type("PatternPart", ROOT);
@@ -92,7 +91,6 @@ public final class Type extends Node implements FunctorOrType {
                 LITERAL, //
                 ROOT, //
                 BOOLEAN, //
-                FACT_TYPE, //
                 VARIABLE, //
                 FUNCTOR, //
                 PATTERN_PART, //
@@ -324,6 +322,8 @@ public final class Type extends Node implements FunctorOrType {
     public class TypeInfo {
         private Set<Type>        supers;
         private TypeMatcherState typeMatcher;
+        private Type             objectArgsOnly;
+        private Type             numberArgs;
 
         public Set<Type> supers() {
             if (supers == null) {
@@ -338,6 +338,32 @@ public final class Type extends Node implements FunctorOrType {
             }
             return typeMatcher;
         }
+
+        public Type objectArgsOnly() {
+            if (objectArgsOnly == null) {
+                objectArgsOnly = initObjectArgsOnly();
+            }
+            return objectArgsOnly;
+        }
+
+        public Type numberArgs() {
+            if (numberArgs == null) {
+                numberArgs = initNumberArgs();
+            }
+            return numberArgs;
+        }
+    }
+
+    private Type initNumberArgs() {
+        int[] i = new int[1];
+        return hasArguments() ? setArguments(arguments().replaceAll(
+                a -> OBJECT.isAssignableFrom(a) ? new Type(new Variable(List.of(), false, TYPE, "" + i[0]++)) : a))
+                : this;
+    }
+
+    private Type initObjectArgsOnly() {
+        return hasArguments() ? setArguments(arguments().replaceAll(a -> OBJECT.isAssignableFrom(a) ? OBJECT : a))
+                : this;
     }
 
     private Set<Type> initSupers() {
@@ -377,13 +403,11 @@ public final class Type extends Node implements FunctorOrType {
 
     private TypeMatcherState typeMatcher(Type type, TypeMatcherState next) {
         if (type.hasArguments()) {
-            List<Type> args = type.arguments();
-            for (Type arg : args.reverse()) {
+            for (Type arg : type.arguments().reverse()) {
                 next = typeMatcher(arg, next);
             }
-            type = type.setArguments(args.replaceAll(a -> OBJECT.isAssignableFrom(a) ? OBJECT : a));
         }
-        return new TypeMatcherState(Map.of(Entry.of(type, next)), null);
+        return new TypeMatcherState(Map.of(Entry.of(type.objectArgsOnly(), next)), null);
     }
 
     public TypeInfo typeInfo() {
@@ -398,8 +422,12 @@ public final class Type extends Node implements FunctorOrType {
         return typeInfo().typeMatcher();
     }
 
-    public boolean isFactType() {
-        return FACT_TYPE.isAssignableFrom(this);
+    public Type objectArgsOnly() {
+        return typeInfo().objectArgsOnly();
+    }
+
+    public Type numberArgs() {
+        return typeInfo().numberArgs();
     }
 
     public boolean isFunction() {

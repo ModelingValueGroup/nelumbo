@@ -17,6 +17,7 @@
 package org.modelingvalue.nelumbo;
 
 import org.modelingvalue.collections.Entry;
+import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.mutable.MutableMap;
@@ -40,11 +41,11 @@ public class TypeMatcherState implements IState<TypeMatcherState> {
         return type;
     }
 
-    public final Set<Type> match(Type type, MutableMap<Variable, Type> typeArgs) {
-        return doMatch(type, typeArgs).replaceAll(TypeMatcherState::type);
+    public final Set<Type> match(Type type, boolean inverse, MutableMap<Variable, Type> typeArgs) {
+        return doMatch(type, inverse, typeArgs).replaceAll(TypeMatcherState::type);
     }
 
-    private Set<TypeMatcherState> doMatch(Type type, MutableMap<Variable, Type> typeArgs) {
+    private Set<TypeMatcherState> doMatch(Type type, boolean inverse, MutableMap<Variable, Type> typeArgs) {
         Set<TypeMatcherState> result = Set.of();
         Entry<Type, TypeMatcherState> found = null;
         Type assigned = null;
@@ -77,6 +78,28 @@ public class TypeMatcherState implements IState<TypeMatcherState> {
                 }
             } else {
                 Type a = e.getKey().getAssigned(type);
+                if (a == null && inverse) {
+                    a = type.nonVariable().nonLiteral().nonFunction().objectArgsOnly()
+                            .getAssigned(e.getKey().numberArgs());
+                    if (a != null) {
+                        if (e.getKey().hasArguments()) {
+                            List<Type> from = type.arguments();
+                            List<Type> to = e.getKey().arguments();
+                            int fi = 0;
+                            for (Type arg : a.arguments()) {
+                                try {
+                                    int ti = Integer.parseInt(arg.variable().name());
+                                    to = to.replace(ti, from.get(fi));
+                                } catch (NumberFormatException nfe) {
+                                }
+                                fi++;
+                            }
+                            a = e.getKey().setArguments(to);
+                        } else {
+                            a = e.getKey();
+                        }
+                    }
+                }
                 if (a != null && (found == null || found.getKey().isAssignableFrom(e.getKey()))) {
                     found = e;
                     assigned = a;
@@ -90,7 +113,7 @@ public class TypeMatcherState implements IState<TypeMatcherState> {
                     pre = post;
                     post = Set.of();
                     for (TypeMatcherState s : pre) {
-                        post = post.addAll(s.doMatch(arg, typeArgs));
+                        post = post.addAll(s.doMatch(arg, inverse, typeArgs));
                     }
                 }
                 result = result.addAll(post);
@@ -156,6 +179,11 @@ public class TypeMatcherState implements IState<TypeMatcherState> {
     @Override
     public Class<?> getMeetClass() {
         return TypeMatcherState.class;
+    }
+
+    @Override
+    public Map<Object, TypeMatcherState> allTransitions() {
+        return Map.<Object, TypeMatcherState>of().putAll(transitions);
     }
 
 }

@@ -128,6 +128,14 @@ public class SequencePattern extends Pattern {
         return types;
     }
 
+    @Override
+    public List<Integer> unique(List<Integer> unique, int[] i) {
+        for (Pattern element : elements()) {
+            unique = element.unique(unique, i);
+        }
+        return unique;
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public int string(List<Object> args, int ai, StringBuffer sb, RenderOptions options, boolean alt) {

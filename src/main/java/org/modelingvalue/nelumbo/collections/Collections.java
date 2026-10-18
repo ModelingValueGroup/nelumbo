@@ -16,6 +16,9 @@
 
 package org.modelingvalue.nelumbo.collections;
 
+import java.io.Serial;
+import java.math.BigInteger;
+
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.NelumboConstructor;
@@ -25,9 +28,6 @@ import org.modelingvalue.nelumbo.integers.NInteger;
 import org.modelingvalue.nelumbo.logic.InferResult;
 import org.modelingvalue.nelumbo.logic.Lambda;
 import org.modelingvalue.nelumbo.logic.Predicate;
-
-import java.io.Serial;
-import java.math.BigInteger;
 
 public class Collections extends Predicate {
     @Serial
@@ -40,7 +40,7 @@ public class Collections extends Predicate {
 
     @NelumboMethod
     protected InferResult size(NCollection collection, NInteger size) {
-        if (collection == null) {
+        if (collection == null || !collection.complete()) {
             return unknown();
         }
         BigInteger found = BigInteger.valueOf(collection.size());
@@ -52,7 +52,7 @@ public class Collections extends Predicate {
 
     @NelumboMethod
     protected InferResult indexOf(NList list, Object element, NInteger index) {
-        if (list == null) {
+        if (list == null || !list.complete()) {
             return unknown();
         }
         if (element == null && index == null) {
@@ -84,13 +84,13 @@ public class Collections extends Predicate {
         }
         Set<?> coll = set.collection();
         if (element != null) {
-            return coll.contains(element) ? factCC() : falsehoodCC();
+            return coll.contains(element) ? factCC() : set.complete() ? falsehoodCC() : unknown();
         }
         Set<Predicate> facts = Set.of();
         for (Object e : coll) {
             facts = facts.add(set(1, e));
         }
-        return InferResult.factsCI(this, facts);
+        return set.complete() ? InferResult.factsCI(this, facts) : InferResult.factsII(this, facts);
     }
 
     @NelumboMethod
@@ -98,7 +98,10 @@ public class Collections extends Predicate {
         if (a == null || b == null) {
             return unknown();
         }
-        return b.collection().containsAll(a.collection()) ? factCC() : falsehoodCC();
+        if (b.collection().containsAll(a.collection())) {
+            return a.complete() ? factCC() : unknown();
+        }
+        return b.complete() ? falsehoodCC() : unknown();
     }
 
     @NelumboMethod
@@ -106,7 +109,8 @@ public class Collections extends Predicate {
         if (a == null || b == null) {
             return unknown();
         }
-        NSet intersection = new NSet(a.elementType(), a.collection().retainAll(b.collection()));
+        NSet intersection = new NSet(a.elementType(), a.collection().retainAll(b.collection()),
+                a.complete() || b.complete());
         if (i != null) {
             return intersection.equals(i) ? factCC() : falsehoodCC();
         }
@@ -118,7 +122,7 @@ public class Collections extends Predicate {
         if (a == null || b == null) {
             return unknown();
         }
-        NSet union = new NSet(a.elementType(), a.collection().addAll(b.collection()));
+        NSet union = new NSet(a.elementType(), a.collection().addAll(b.collection()), a.complete() && b.complete());
         if (u != null) {
             return union.equals(u) ? factCC() : falsehoodCC();
         }
@@ -130,7 +134,12 @@ public class Collections extends Predicate {
         if (a == null || b == null) {
             return unknown();
         }
-        NSet diff = new NSet(a.elementType(), a.collection().removeAll(b.collection()));
+        NSet diff;
+        if (!b.complete() && !a.collection().isEmpty()) {
+            diff = new NSet(a.elementType(), Set.of(), false);
+        } else {
+            diff = new NSet(a.elementType(), a.collection().removeAll(b.collection()), a.complete());
+        }
         if (d != null) {
             return diff.equals(d) ? factCC() : falsehoodCC();
         }
@@ -142,7 +151,7 @@ public class Collections extends Predicate {
         if (a == null || b == null) {
             return unknown();
         }
-        NList concat = new NList(a.elementType(), a.collection().addAll(b.collection()));
+        NList concat = new NList(a.elementType(), a.collection().addAll(b.collection()), a.complete() && b.complete());
         if (c != null) {
             return concat.equals(c) ? factCC() : falsehoodCC();
         }
@@ -154,7 +163,7 @@ public class Collections extends Predicate {
         if (a == null || l == null) {
             return unknown();
         }
-        NSet filter = new NSet(a.elementType(), a.collection().filter(l::test).asSet());
+        NSet filter = new NSet(a.elementType(), a.collection().filter(l::test).asSet(), a.complete());
         if (hasIncompleteResult()) {
             return incompleteResult();
         }
@@ -169,7 +178,7 @@ public class Collections extends Predicate {
         if (a == null || l == null) {
             return unknown();
         }
-        NList filter = new NList(a.elementType(), a.collection().filter(l::test).asList());
+        NList filter = new NList(a.elementType(), a.collection().filter(l::test).asList(), a.complete());
         if (hasIncompleteResult()) {
             return incompleteResult();
         }
@@ -184,7 +193,7 @@ public class Collections extends Predicate {
         if (a == null || l == null) {
             return unknown();
         }
-        NList map = new NList(l.expression().type(), a.collection().map(l::apply).asList());
+        NList map = new NList(l.expression().type(), a.collection().map(l::apply).asList(), a.complete());
         if (hasIncompleteResult()) {
             return incompleteResult();
         }
@@ -200,7 +209,7 @@ public class Collections extends Predicate {
             return unknown();
         }
         NList sort = new NList(a.elementType(),
-                a.collection().sorted((x, y) -> l.test(x, y) ? -1 : l.test(y, x) ? 1 : 0).asList());
+                a.collection().sorted((x, y) -> l.test(x, y) ? -1 : l.test(y, x) ? 1 : 0).asList(), a.complete());
         if (hasIncompleteResult()) {
             return incompleteResult();
         }

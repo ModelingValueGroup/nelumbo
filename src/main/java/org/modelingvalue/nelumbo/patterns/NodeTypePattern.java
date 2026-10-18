@@ -42,8 +42,9 @@ public class NodeTypePattern extends Pattern {
     @Serial
     private static final long serialVersionUID = 6828401544789430678L;
 
-    public NodeTypePattern(Type type, List<AstElement> elements, Type nodeType, Integer precedence, Boolean visible) {
-        super(NodeInfo.of(type, elements), visible, nodeType, precedence);
+    public NodeTypePattern(Type type, List<AstElement> elements, Type nodeType, Integer precedence, Boolean visible,
+            boolean unique) {
+        super(NodeInfo.of(type, elements), visible, unique, nodeType, precedence);
     }
 
     @NelumboConstructor
@@ -57,7 +58,7 @@ public class NodeTypePattern extends Pattern {
     }
 
     public Type nodeType() {
-        return (Type) get(1);
+        return (Type) get(2);
     }
 
     @Override
@@ -74,17 +75,21 @@ public class NodeTypePattern extends Pattern {
     protected NodeTypePattern setBinding(Node declaration, Map<Variable, Object> vars, boolean setFunctorOrType) {
         Variable var = variable();
         if (var != null && vars.get(var) instanceof Type type) {
-            return set(1, nodeType().rewrite(type));
+            return set(2, nodeType().rewrite(type));
         }
         return (NodeTypePattern) super.setBinding(declaration, vars, setFunctorOrType);
     }
 
     public Integer precedence() {
-        return (Integer) get(2);
+        return (Integer) get(3);
     }
 
     public Boolean visible() {
         return (Boolean) get(0);
+    }
+
+    public boolean unique() {
+        return (Boolean) get(1);
     }
 
     @Override
@@ -103,17 +108,23 @@ public class NodeTypePattern extends Pattern {
         if (precedence() != null) {
             return this;
         }
-        return set(2, precedence);
+        return set(3, precedence);
     }
 
     @Override
     public Pattern setTypes(Function<Type, Type> typeFunction) {
-        return set(1, typeFunction.apply(nodeType()));
+        return set(2, typeFunction.apply(nodeType()));
     }
 
     @Override
     public List<Type> argTypes(List<Type> types) {
         return types.add(nodeType());
+    }
+
+    @Override
+    public List<Integer> unique(List<Integer> unique, int[] i) {
+        i[0]++;
+        return unique() ? unique.add(i[0] - 1) : unique;
     }
 
     @Override
@@ -155,7 +166,7 @@ public class NodeTypePattern extends Pattern {
             AstElement e = elements.get(i);
             if (e instanceof Node n) {
                 Type type = n instanceof Variable ? n.type().toVariable() : n.type();
-                if (!nodeType().typeMatcher().match(type, typeArgs).isEmpty()) {
+                if (!nodeType().typeMatcher().match(type, false, typeArgs).isEmpty()) {
                     args.clear();
                     keep[0] = false;
                     args.add(n);
@@ -177,18 +188,23 @@ public class NodeTypePattern extends Pattern {
         if (reason == ConstructionReason.parsing) {
             List<AstElement> elements = astElements();
             Boolean visible = null;
+            boolean unique = false;
             String v = getVal(0);
             if (v != null) {
                 visible = v.equals("visible");
             }
-            Type type = (Type) get(1);
+            String u = getVal(1);
+            if (u != null) {
+                unique = true;
+            }
+            Type type = (Type) get(2);
             Integer precedence = null;
-            String p = getVal(2);
+            String p = getVal(3);
             if (p != null) {
                 precedence = Integer.parseInt(p);
             }
             TokenType tt = type.tokenType();
-            return tt != null ? t(elements, tt) : n(elements, type, precedence, visible);
+            return tt != null ? t(elements, tt) : n(elements, type, precedence, visible, unique);
         }
         return this;
     }

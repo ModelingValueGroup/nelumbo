@@ -213,7 +213,7 @@ public interface ParseContext {
                 Type type = left instanceof Variable ? left.type().toVariable() : left.type();
                 for (Entry<Type, ParseState> e : states) {
                     result.clear();
-                    ParseState found = e.getValue().matchType(type, result.typeArgs());
+                    ParseState found = e.getValue().matchType(type, false, result.typeArgs());
                     if (found != null) {
                         result.left(left);
                         if (found.parse(token, result, Map.of(), true)) {

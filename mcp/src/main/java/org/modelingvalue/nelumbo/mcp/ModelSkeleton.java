@@ -16,7 +16,10 @@
 
 package org.modelingvalue.nelumbo.mcp;
 
-/** Skeleton for a new self-contained decision model; must always evaluate cleanly (see test). */
+/**
+ * Skeleton for a new self-contained decision model; must always evaluate
+ * cleanly (see test).
+ */
 public final class ModelSkeleton {
 
     private ModelSkeleton() {
@@ -35,7 +38,8 @@ public final class ModelSkeleton {
                 Person   :: Object
 
                 // -- Fact types: the case data asserted as facts below ----------------
-                FactType ::= age(<Person>,<Integer>)
+                // -- <one T>: unique argument (one age per person) -------------------
+                Boolean  ::= age(<Person>,<one Integer>)
 
                 // -- Decisions: Boolean functors derived by rules ---------------------
                 Boolean  ::= eligible(<Person>)
@@ -55,14 +59,15 @@ public final class ModelSkeleton {
 
                 // -- Queries with expected results: [()][] = true, [][()] = false, ----
                 // -- [(x=V)][..] = exactly these true bindings; the [..] falsehoods --
-                // -- side is open (no claim about what else is false) ----------------
+                // -- side is open (no claim about what else is false); [(x=V),..] --
+                // -- = more may be true (facts are open unless the argument is one) --
                 // -- Note: eligible(p) with free p yields [..][..] (no enumeration  --
                 // -- over decisions); enumerate a fact type with one free arg, then  --
                 // -- check the decision per case -------------------------------------
                 eligible(Alice) ? [()][]
                 eligible(Bob)   ? [][()]
                 age(Alice,n)    ? [(n=34)][..]
-                age(p,34)       ? [(p=Alice)][..]
+                age(p,34)       ? [(p=Alice),..][..]
                 """.formatted(t);
     }
 }

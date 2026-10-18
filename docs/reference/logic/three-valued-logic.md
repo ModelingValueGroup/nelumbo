@@ -39,6 +39,44 @@ The price is that every operator has to be defined on three inputs, not two. For
 
 ---
 
+## The open world
+
+Nelumbo makes an **open-world assumption**: what it has not derived is unknown, not false. This holds for types, for facts, and for the variables of a query.
+
+**The extent of a type is unknown.** `Person ::= Piet, Jan, Klaas` declares three constants of type `Person`; it does not say that these are all the persons. A type has no known list of members, so Nelumbo **never binds a variable by enumerating a type**. A variable gets a value only by *navigation*: from something already bound, through
+
+- a fact or rule lookup in which at least one other argument is bound (`pc(Piet, x)`),
+- `=` (`x = Piet`, `x = m(Beatrix)`, `f = fib(5)`),
+- a native that computes the missing value (`3 + 4 = i`),
+- membership of a known collection (`x in {Piet, Jan}`).
+
+A predicate with **all** arguments unbound is therefore not resolved: it is unknown, even when matching facts exist. Quantifiers follow from this: `E[x](p)` and `A[x](p)` are decided only by what the body itself derives for `x`, never by trying every member of the type.
+
+```nelumbo
+Person  :: Object
+Person  ::= Piet, Jan, Klaas
+Person  x
+Boolean ::= q(<Person>), pc(<Person>,<Person>)
+fact q(Piet)
+fact pc(Piet, Jan)
+
+q(x)                           ? [..][..]  // all arguments unbound: not resolved
+E[x](q(x))                     ? [..][..]  // no witness is searched in Person
+E[x](x=Piet & q(x))            ? [()][]    // x bound by =
+E[x](pc(Piet,x))               ? [()][]    // x bound by navigation from Piet
+A[x](x=Piet)                   ? [..][..]  // no counterexample is searched in Person
+A[x]((x in {Piet}) -> q(x))    ? [()][]    // bounded by a known collection
+A[x]((x in {Piet,Jan}) -> q(x)) ? [..][..] // q(Jan) is unknown
+```
+
+To quantify over "all known persons", make the domain explicit: a closed collection (`x in {Piet, Jan, Klaas}`) or a relation that binds `x`.
+
+**Facts are open.** A relation that is not asserted is unknown, not false, so `pc(Piet, x)` answers `[(x=Jan),..][..]`.
+
+**Closed results come only from `one`.** A [unique hole](statements.md#open-facts-and-one) `<one T>` has at most one value per combination of the other arguments: once a value is asserted or derived, every other value in that hole is false. Because `=` is declared `<one Object> = <one Object>`, every function has a single result, and a function value is closed: after `fact m(Beatrix)=Juliana`, `m(Beatrix)=x` is `[(x=Juliana)][..]` and `m(Beatrix)=Beatrix` is false. Natives and collection literals can also give closed sides, because their values are computed, not looked up.
+
+---
+
 ## The truth tables
 
 All tables below are the ones exercised in [`logicTest.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/tests/logicTest.nl). You can run that file to verify them.

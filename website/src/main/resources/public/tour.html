@@ -136,11 +136,13 @@ false | true ? [()][]
   <section class="tour-section" id="facts">
     <h2>Facts &amp; queries</h2>
     <p>Ground truth is asserted with <code>fact</code>. Objects and their functors are declared first
-       (<code>Person :: Object</code> introduces a type, <code>FactType ::= ...</code> a fact shape),
-       then a query binds a variable and enumerates every matching answer.</p>
+       (<code>Person :: Object</code> introduces a type, <code>Boolean ::= ...</code> a relation),
+       then a query binds a variable and enumerates every matching answer. Facts are open: what is
+       not asserted is not false, so the trailing <code>..</code> in <code>[(X=Jan),..]</code> says
+       more answers may exist.</p>
     <div class="nelumbo-field" data-height="200px">import nelumbo.logic
 Person :: Object
-FactType ::= friends(&lt;Person&gt;,&lt;Person&gt;)
+Boolean ::= friends(&lt;Person&gt;,&lt;Person&gt;)
 Person ::= Piet, Jan, Klaas
 fact friends(Piet, Jan),
      friends(Jan,  Klaas)
@@ -151,14 +153,14 @@ friends(Piet, X) ?
       <p class="challenge">Add a fact so that <code>friends(Klaas, Kees)</code> holds.</p>
       <div class="nelumbo-field" data-height="150px">import nelumbo.logic
 Person :: Object
-FactType ::= friends(&lt;Person&gt;,&lt;Person&gt;)
+Boolean ::= friends(&lt;Person&gt;,&lt;Person&gt;)
 Person ::= Piet, Jan, Klaas, Kees
 // add a fact here
 friends(Klaas, Kees) ? [()][]
 </div>
       <pre class="nelumbo-solution">import nelumbo.logic
 Person :: Object
-FactType ::= friends(&lt;Person&gt;,&lt;Person&gt;)
+Boolean ::= friends(&lt;Person&gt;,&lt;Person&gt;)
 Person ::= Piet, Jan, Klaas, Kees
 fact friends(Klaas, Kees)
 friends(Klaas, Kees) ? [()][]
@@ -235,66 +237,59 @@ Integer d
     <p>A knowledge base is facts plus rules over relations. Base facts (here <code>pc</code>,
        parent-child) are asserted directly; rules with quantifiers such as <code>E[x]</code>
        (there exists) and <code>A[y]</code> (for all) derive new relations from them. Below, the mother
-       relation <code>m</code> is derived from <code>pc</code> via an existential over female children.</p>
-    <div class="nelumbo-field" data-height="260px">import nelumbo.logic
+       relation <code>m</code> is derived from <code>pc</code> via an existential over female parents.
+       Because <code>pc</code> facts are open, Beatrix may have parents not asserted here: the answer
+       ends in <code>..</code>.</p>
+    <div class="nelumbo-field" data-height="240px">import nelumbo.logic
 Person   :: Object
 Male     :: Person
 Female   :: Person
-FactType ::= pc(&lt;Person&gt;,&lt;Person&gt;)
-Person   ::= p(&lt;Person&gt;), c(&lt;Person&gt;), m(&lt;Person&gt;)
+Boolean ::= pc(&lt;Person&gt;,&lt;Person&gt;), m(&lt;Person&gt;,&lt;Person&gt;)
 Person a, b
 Female x
-c(a)=b &lt;=&gt; pc(a,b)
-p(a)=b &lt;=&gt; pc(b,a)
-m(a)=b &lt;=&gt; E[x](c(x)=a &amp; b=x)
+m(a,b) &lt;=&gt; E[x](pc(x,a) &amp; b=x)
 Female ::= Juliana, Beatrix
 fact pc(Juliana, Beatrix)
 Person who
-m(Beatrix)=who ?
+m(Beatrix,who) ?
 </div>
     <div class="nelumbo-exercise">
       <p class="challenge">Add a father relation <code>f</code> that mirrors the mother rule, using
-         <code>E[y]</code> over male children, so <code>f(Beatrix) = Bernhard</code>.</p>
+         <code>E[y]</code> over male parents, so <code>f(Beatrix,who)</code> finds Bernhard.</p>
       <div class="nelumbo-field" data-height="260px">import nelumbo.logic
 Person   :: Object
 Male     :: Person
 Female   :: Person
-FactType ::= pc(&lt;Person&gt;,&lt;Person&gt;)
-Person   ::= p(&lt;Person&gt;), c(&lt;Person&gt;), m(&lt;Person&gt;), f(&lt;Person&gt;)
+Boolean ::= pc(&lt;Person&gt;,&lt;Person&gt;), m(&lt;Person&gt;,&lt;Person&gt;), f(&lt;Person&gt;,&lt;Person&gt;)
 Person a, b
 Female x
 Male   y
-c(a)=b &lt;=&gt; pc(a,b)
-p(a)=b &lt;=&gt; pc(b,a)
-m(a)=b &lt;=&gt; E[x](c(x)=a &amp; b=x)
-// fix this rule so f(Beatrix)=Bernhard (mirror the mother rule using Male y)
-f(a)=b &lt;=&gt; E[y](p(y)=a &amp; b=y)
+m(a,b) &lt;=&gt; E[x](pc(x,a) &amp; b=x)
+// fix this rule so f(Beatrix,who) finds Bernhard (mirror the mother rule using Male y)
+f(a,b) &lt;=&gt; E[y](pc(a,y) &amp; b=y)
 Female ::= Juliana, Beatrix
 Male   ::= Bernhard
 fact pc(Juliana, Beatrix),
      pc(Bernhard, Beatrix)
 Person who
-f(Beatrix)=who ? [(who=Bernhard)][..]
+f(Beatrix,who) ? [(who=Bernhard),..][..]
 </div>
       <pre class="nelumbo-solution">import nelumbo.logic
 Person   :: Object
 Male     :: Person
 Female   :: Person
-FactType ::= pc(&lt;Person&gt;,&lt;Person&gt;)
-Person   ::= p(&lt;Person&gt;), c(&lt;Person&gt;), m(&lt;Person&gt;), f(&lt;Person&gt;)
+Boolean ::= pc(&lt;Person&gt;,&lt;Person&gt;), m(&lt;Person&gt;,&lt;Person&gt;), f(&lt;Person&gt;,&lt;Person&gt;)
 Person a, b
 Female x
 Male   y
-c(a)=b &lt;=&gt; pc(a,b)
-p(a)=b &lt;=&gt; pc(b,a)
-m(a)=b &lt;=&gt; E[x](c(x)=a &amp; b=x)
-f(a)=b &lt;=&gt; E[y](c(y)=a &amp; b=y)
+m(a,b) &lt;=&gt; E[x](pc(x,a) &amp; b=x)
+f(a,b) &lt;=&gt; E[y](pc(y,a) &amp; b=y)
 Female ::= Juliana, Beatrix
 Male   ::= Bernhard
 fact pc(Juliana, Beatrix),
      pc(Bernhard, Beatrix)
 Person who
-f(Beatrix)=who ? [(who=Bernhard)][..]
+f(Beatrix,who) ? [(who=Bernhard),..][..]
 </pre>
     </div>
   </section>
@@ -302,19 +297,18 @@ f(Beatrix)=who ? [(who=Bernhard)][..]
     <h2>Custom DSL</h2>
     <p>Nelumbo is a meta-language: declare your own functors and patterns with an explicit precedence
        (<code>#N</code>) and natural-language statements and queries become first-class syntax. Here a
-       <code>friend</code> functor is derived from base <code>friends</code> facts, then the phrase
+       rule makes the <code>friends</code> facts symmetric and transitive, then the phrase
        <code>X is a friend of Y</code> is declared as a <code>Boolean</code> pattern that reads as
        ordinary English.</p>
     <div class="nelumbo-field" data-height="260px">import nelumbo.logic
 Person   :: Object
-FactType ::= friends(&lt;Person&gt;,&lt;Person&gt;)
-Person   ::= friend(&lt;Person&gt;)
+Boolean ::= friends(&lt;Person&gt;,&lt;Person&gt;)
 Person   ::= Piet, Jan, Klaas
-Person A, B, Who
-friend(A)=B &lt;=&gt; friends(A,B) | friends(B,A) | friend(friend(A))=B
+Person a, b, c, Who
+friends(a,c) &lt;=&gt; friends(a,c) | friends(c,a) | E[b](friends(a,b) &amp; friends(b,c))
 Boolean ::= &lt;Person&gt; is a friend of &lt;Person&gt; #30
 Person X, Y
-X is a friend of Y &lt;=&gt; friend(Y)=X
+X is a friend of Y &lt;=&gt; friends(Y,X)
 fact friends(Piet, Jan), friends(Jan, Klaas)
 Who is a friend of Piet ?
 </div>
@@ -324,38 +318,37 @@ Who is a friend of Piet ?
          same friends as the phrase above.</p>
       <div class="nelumbo-field" data-height="260px">import nelumbo.logic
 Person   :: Object
-FactType ::= friends(&lt;Person&gt;,&lt;Person&gt;)
-Person   ::= friend(&lt;Person&gt;)
+Boolean ::= friends(&lt;Person&gt;,&lt;Person&gt;)
 Person   ::= Piet, Jan, Klaas
-Person A, B, Who
-friend(A)=B &lt;=&gt; friends(A,B) | friends(B,A) | friend(friend(A))=B
+Person a, b, c, Who
+friends(a,c) &lt;=&gt; friends(a,c) | friends(c,a) | E[b](friends(a,b) &amp; friends(b,c))
 Boolean ::= &lt;Person&gt; knows &lt;Person&gt; #30
 Person X, Y
 X knows Y &lt;=&gt; X=Y
 fact friends(Piet, Jan), friends(Jan, Klaas)
-Who knows Piet ? [(Who=Jan),(Who=Klaas),(Who=Piet)][..]
+Who knows Piet ? [(Who=Jan),(Who=Klaas),(Who=Piet),..][..]
 </div>
       <pre class="nelumbo-solution">import nelumbo.logic
 Person   :: Object
-FactType ::= friends(&lt;Person&gt;,&lt;Person&gt;)
-Person   ::= friend(&lt;Person&gt;)
+Boolean ::= friends(&lt;Person&gt;,&lt;Person&gt;)
 Person   ::= Piet, Jan, Klaas
-Person A, B, Who
-friend(A)=B &lt;=&gt; friends(A,B) | friends(B,A) | friend(friend(A))=B
+Person a, b, c, Who
+friends(a,c) &lt;=&gt; friends(a,c) | friends(c,a) | E[b](friends(a,b) &amp; friends(b,c))
 Boolean ::= &lt;Person&gt; knows &lt;Person&gt; #30
 Person X, Y
-X knows Y &lt;=&gt; friend(Y)=X
+X knows Y &lt;=&gt; friends(Y,X)
 fact friends(Piet, Jan), friends(Jan, Klaas)
-Who knows Piet ? [(Who=Jan),(Who=Klaas),(Who=Piet)][..]
+Who knows Piet ? [(Who=Jan),(Who=Klaas),(Who=Piet),..][..]
 </pre>
     </div>
   </section>
   <section class="tour-section" id="transform">
     <h2>Transformations</h2>
     <p>A transformation rule <code>::&gt;</code> rewrites one construct into several. The
-       <code>attr</code> declaration below expands - at declaration time - into a type, a
-       <code>:=</code> setter, a <code>private</code> fact relation, and a getter rule. Declaring
-       <code>attr Person name String</code> then behaves as if all four were written by hand.</p>
+       <code>attr</code> declaration below expands - at declaration time - into a getter function
+       <code>o.name</code> and a <code>:=</code> setter that itself transforms into a
+       <code>fact</code> on that function. Declaring <code>attr Person name String</code> then
+       behaves as if both were written by hand.</p>
     <div class="nelumbo-field" data-height="300px">import nelumbo.strings
 Root ::= attr &lt;Type&gt; &lt;NAME&gt; &lt;Type&gt; #100
 Type OT, AT
@@ -363,14 +356,10 @@ NAME AN
 attr OT AN AT ::&gt; {
     AT   ::= &lt;OT&gt;.AN                             #30
     Root ::= &lt;{OT,Literal}&gt;.AN := &lt;{AT,Literal}&gt; #30
-    private FactType ::= AN(&lt;OT&gt;,&lt;AT&gt;)
-    OT o
-    AT a
-    o.AN=a &lt;=&gt; AN(o,a)
     {OT,Literal} ol
     {AT,Literal} al
     ol.AN := al ::&gt; {
-        fact AN(ol,al)
+        fact ol.AN = al
     }
 }
 Person :: Object
@@ -391,14 +380,10 @@ NAME AN
 attr OT AN AT ::&gt; {
     AT   ::= &lt;OT&gt;.AN                             #30
     Root ::= &lt;{OT,Literal}&gt;.AN := &lt;{AT,Literal}&gt; #30
-    private FactType ::= AN(&lt;OT&gt;,&lt;AT&gt;)
-    OT o
-    AT a
-    o.AN=a &lt;=&gt; AN(o,a)
     {OT,Literal} ol
     {AT,Literal} al
     ol.AN := al ::&gt; {
-        fact AN(ol,al)
+        fact ol.AN = al
     }
 }
 Person :: Object
@@ -417,14 +402,10 @@ NAME AN
 attr OT AN AT ::&gt; {
     AT   ::= &lt;OT&gt;.AN                             #30
     Root ::= &lt;{OT,Literal}&gt;.AN := &lt;{AT,Literal}&gt; #30
-    private FactType ::= AN(&lt;OT&gt;,&lt;AT&gt;)
-    OT o
-    AT a
-    o.AN=a &lt;=&gt; AN(o,a)
     {OT,Literal} ol
     {AT,Literal} al
     ol.AN := al ::&gt; {
-        fact AN(ol,al)
+        fact ol.AN = al
     }
 }
 Person :: Object

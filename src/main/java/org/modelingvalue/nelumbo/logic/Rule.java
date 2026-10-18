@@ -103,12 +103,6 @@ public final class Rule extends Node implements Evaluatable {
             return this;
         }
         Predicate c = consequence();
-        Functor consFunctor = c.functor();
-        Functor litFunctor = consFunctor.toLiteral();
-        if (Type.FACT_TYPE.isAssignableFrom((litFunctor != null ? litFunctor : consFunctor).resultType())) {
-            knowledgeBase.addException(
-                    new ParseException("Rule consequence " + c + " must be a Predicate, not a FactType", c));
-        }
         Node left = c instanceof NIs ? (Node) c.get(0) : c;
         Predicate cons = (Predicate) c.replace(e -> e != c && e instanceof BooleanVariable v ? v.variable() : e);
         Map<Variable, Object> consVars = cons.getBinding(cons);

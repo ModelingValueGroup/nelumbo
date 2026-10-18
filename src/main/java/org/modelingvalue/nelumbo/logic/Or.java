@@ -79,4 +79,21 @@ public final class Or extends BinaryPredicate {
         return predResult[0].isFalseCC();
     }
 
+    @Override
+    protected InferResult resolvedOnly(InferResult[] predResult, InferContext context) {
+        if (predResult[0].isResolved(context) && predResult[1].isResolved(context)) {
+            InferResult result = predResult[0].addToSet(predResult[1]);
+            if (predResult[0].completeFalsehoods() || predResult[1].completeFalsehoods()) {
+                result = result.falsehoodsComplete();
+            }
+            return result;
+        } else if (predResult[0].isResolved(context)) {
+            return predResult[0];
+        } else if (predResult[1].isResolved(context)) {
+            return predResult[1];
+        } else {
+            return unknown();
+        }
+    }
+
 }

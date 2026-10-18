@@ -92,7 +92,7 @@ Sudoku examples (`examples/sudoku-*.nl`, NOT in `ExampleCatalog`/`ExamplesTest`)
 - Brute-force files report the result set open (`[(s=...),..][..]`), singles-first files closed; the smart files keep only the "real" puzzle active (neighbor-query effects).
 - `SudokuExamplesTest`: all `@Disabled` (4x4: timing-dependent `speculative-guard-index-crash.nl` without the flag; 9x9: too slow).
 - `sudoku-4x4-smart.nl` fails with `Inconsistent results`: `scanB`'s forced branch lacks an `if` (program defect), which the engine reports in one rule order only (`bugs/inconsistency-missed-by-rule-order.nl`; `-DREVERSE_NELUMBO=true` flips it). `sudoku-9x9-smart.nl` has the same `scanB` shape.
-- `sudoku-4x4-csp.nl`: CSP solver, Task 6 (`elim`) blocked on `bugs/in-on-function-call-undecided.nl`.
+- `sudoku-4x4-csp.nl`: CSP solver at Task 6 (`elim`); its Task 6 probes are commented out: the first two decide, the third (contradiction, expected `[][..]`) is still `[..][..]`. Grid DSL (Task 17) BLOCKED on `bugs/single-hole-functor-parser-npe.nl` (`Cell ::= ".", <Integer>` NPEs the parser); its section is commented out.
 
 ## Nelumbo Language Syntax (.nl files)
 
@@ -217,7 +217,7 @@ Deployment (`.github/workflows/deploy.yml`, on push to `master` or manual):
 
 ## Known-Bug Repros (xfail suite)
 
-- Red-by-design repros in `src/main/resources/org/modelingvalue/nelumbo/bugs/`; every expectation states the CORRECT behavior; headers carry status, code location and attribution.
+- Red-by-design repros in `src/main/resources/org/modelingvalue/nelumbo/bugs/`; every expectation states the CORRECT behavior; the header only describes the reproduced problem, as briefly as possible (no history, dates, commits, code locations).
 - Two harnesses, both needed (one bug can show as a crash in one and a wrong result in the other):
   - JUnit `KnownBugsTest`: one `@KnownBug` method per repro (`KnownBugExtension`: a failure shows ABORTED, build green; a pass FAILS with "KNOWN BUG APPEARS FIXED"). `bugResource()` has a preemptive 60 s timeout.
   - CLI `./run-all-tests-with-CLI` (needs `cliJar`, runs with `-ea`): a file taking >= `SLOW_SECONDS` (60) fails.

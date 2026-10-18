@@ -57,6 +57,7 @@ public abstract class CompoundPredicate extends Predicate {
                 } else {
                     predicate = result.predicate();
                     resolve = deep;
+                    cycles = cycles.addAll(result.cycles());
                 }
                 result = predicate.infer(resolve);
                 if (result.hasStackOverflow()) {

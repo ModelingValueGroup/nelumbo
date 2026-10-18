@@ -91,7 +91,7 @@ public class NelumboToolsTest {
         Map<String, Object> listing = tools.getExample(null);
         assertTrue(((List<Object>) listing.get("examples")).size() > 10);
         Map<String, Object> one = tools.getExample("family");
-        assertTrue(String.valueOf(one.get("content")).contains("pc(Hendrik, Juliana)"));
+        assertTrue(String.valueOf(one.get("content")).contains("fact f(Juliana)=Hendrik"));
         Map<String, Object> unknown = tools.getExample("nope");
         assertNotNull(unknown.get("error"));
     }

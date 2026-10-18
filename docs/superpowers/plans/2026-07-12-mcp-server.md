@@ -1018,7 +1018,7 @@ Expected: compile error.
 
 - [ ] **Step 3: Implement ModelSkeleton**
 
-Every construct below is taken from working examples (`belasting.nl`, `family.nl`, `fibonacci.nl`): `FactType ::=`, `Boolean ::=` decision functors, `E[n](...)`, `fact ...`, `? [()][]` / `? [][()]` / `? [(p=X)][..]` expectations.
+Every construct below is taken from working examples (`belasting.nl`, `family.nl`, `fibonacci.nl`): `Boolean ::=`, `Boolean ::=` decision functors, `E[n](...)`, `fact ...`, `? [()][]` / `? [][()]` / `? [(p=X)][..]` expectations.
 
 ```java
 package org.modelingvalue.nelumbo.mcp;
@@ -1042,7 +1042,7 @@ public final class ModelSkeleton {
                 Person   :: Object
 
                 // -- Fact types: the case data asserted as facts below ----------------
-                FactType ::= age(<Person>,<Integer>)
+                Boolean ::= age(<Person>,<Integer>)
 
                 // -- Decisions: Boolean functors derived by rules ---------------------
                 Boolean  ::= eligible(<Person>)
@@ -1075,7 +1075,7 @@ public final class ModelSkeleton {
 Run: `./gradlew :mcp:test --tests "org.modelingvalue.nelumbo.mcp.ModelSkeletonTest"`
 Expected: 2 tests PASS.
 
-If `skeletonEvaluatesCleanly` fails: the diagnostics in the assertion message say exactly what the parser rejected. Debug the skeleton (not the test) against the working examples: `src/main/resources/org/modelingvalue/nelumbo/examples/belasting.nl` (FactType/Boolean/E[..] idiom) and `family.nl` (fact/query idiom), and `docs/reference/stdlib/integers.md` for the comparison operators. Iterate quickly by piping candidate content through the CLI: `java -jar build/libs/nelumbo-*-cli.jar -`.
+If `skeletonEvaluatesCleanly` fails: the diagnostics in the assertion message say exactly what the parser rejected. Debug the skeleton (not the test) against the working examples: `src/main/resources/org/modelingvalue/nelumbo/examples/belasting.nl` (Boolean/Boolean/E[..] idiom) and `family.nl` (fact/query idiom), and `docs/reference/stdlib/integers.md` for the comparison operators. Iterate quickly by piping candidate content through the CLI: `java -jar build/libs/nelumbo-*-cli.jar -`.
 
 - [ ] **Step 5: Commit**
 
@@ -1351,7 +1351,7 @@ public final class Main {
               instances:           Person ::= Alice, Bob
               variables:           Integer n, f
               rules:               fib(n)=f <=> f=n if n>=0 & n<=1, f=fib(n-1)+fib(n-2) if n>1
-              fact types:          FactType ::= pc(<Person>,<Person>)
+              fact types:          Boolean ::= pc(<Person>,<Person>)
               facts:               fact pc(Alice, Bob)
               queries + expected:  fib(5)=f ? [(f=5)][..]
               logic:               & (and), | (or), E[x](..) exists, A[x](..) forall

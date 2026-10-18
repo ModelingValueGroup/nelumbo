@@ -4,7 +4,7 @@
 
 The bootstrap layer. Every other `.nl` file — including `logic.nl` itself — is written in the syntax that `lang.nl` declares. It is the meta-language for the meta-language.
 
-**Source:** [`src/main/resources/org/modelingvalue/nelumbo/lang/lang.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/lang/lang.nl) — 57 lines.
+**Source:** [`src/main/resources/org/modelingvalue/nelumbo/lang/lang.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/lang/lang.nl) — 58 lines.
 
 **Import:**
 
@@ -159,7 +159,7 @@ Pattern ::= <NAME>                                                          @nel
             "<(" <PATTERNS> "<)?>"                                          @nelumbo.patterns.OptionalPattern,
             <LEFT> <PATTERNS> <RIGHT>                                       @nelumbo.patterns.SequencePattern,
             "<[" <PATTERNS> "<]>"                                           @nelumbo.patterns.SequencePattern,
-            "<" (visible|hidden)? <Type#100> (# <NUMBER>)? ">"             @nelumbo.patterns.NodeTypePattern,
+            "<" (visible|hidden)? (one)? <Type#100> (# <NUMBER>)? ">"      @nelumbo.patterns.NodeTypePattern,
             "<" <PatternPart#100> ">"                                       @nelumbo.patterns.PatternPartPattern
 ```
 
@@ -178,7 +178,7 @@ Reading these alternatives in order:
 | `"<(" ... ")?>"`                                             | `OptionalPattern`       | An optional group: `<(> super <)?>`.            |
 | `<LEFT> ... <RIGHT>`                                         | `SequencePattern`       | A bracketed sequence — any of `(...)`, `[...]`, `{...}`. |
 | `"<[" ... "<]>"`                                             | `SequencePattern`       | A [connected-token group](grammar.md#connected-token-groups---) — adjacent tokens, no whitespace between them. |
-| `"<" (visible\|hidden)? <Type#100> (# <NUMBER>)? ">"`        | `NodeTypePattern`       | A type hole `<T>`, optionally with visibility (`<hidden T>`) and precedence (`<T#5>`). |
+| `"<" (visible\|hidden)? (one)? <Type#100> (# <NUMBER>)? ">"` | `NodeTypePattern`       | A type hole `<T>`, optionally with visibility (`<hidden T>`), uniqueness (`<one T>`, see [Open facts and `one`](../logic/statements.md#open-facts-and-one)) and precedence (`<T#5>`). |
 | `"<" <PatternPart#100> ">"`                                  | `PatternPartPattern`    | A reference to a [named pattern](#named-patterns): `<PATTERNS>`, `<QNAME>`, `<RADIX_NUMBER>`, … |
 
 The escaping is delicate: `"<"`, `"("`, `"|"`, `","`, `")"`, `"?"`, `">"`, `"+"`, `"*"` all have meaning *inside* a pattern, so when this file wants to write them as literal text it quotes them. This is the meta-syntax describing itself.

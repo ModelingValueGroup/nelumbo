@@ -15,9 +15,9 @@
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 slides:
-  theme: solarized
+  theme: white
   highlight_theme: nelumbo.css
-  favicon: ../src/main/resources/org/modelingvalue/nelumbo/nelumbo.png
+  favicon: nelumbo.svg
 revealjs:
   height: 910
   width: 1445

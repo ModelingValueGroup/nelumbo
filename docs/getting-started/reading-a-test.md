@@ -61,6 +61,8 @@ Inside either bracket, `..` is the **incompleteness marker**. It means:
 
 This matters because Nelumbo's reasoner cannot always enumerate every solution. When it cannot, it is honest about that, and `..` is how tests acknowledge it.
 
+The same marker can appear *inside a set or list value*, where it makes that one collection open: `c(Hendrik)=s ? [(s={Juliana,..})][..]` says there is exactly one answer `s`, a set that contains `Juliana` and possibly more (see [open collections](../reference/packages/collections.md#open-collections--)).
+
 ---
 
 ## The four shapes you need to recognise

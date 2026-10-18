@@ -4,7 +4,7 @@ Person   :: Object
 Male     :: Person
 Female   :: Person
 
-FactType ::= pc(<Person>,<Person>)   // parent-child
+Boolean ::= pc(<Person>,<Person>)   // parent-child
 
 Person   ::= p(<Person>),  // parent
              c(<Person>),  // child
@@ -35,6 +35,6 @@ a(Amalia)=a       ? [(a=Beatrix),(a=Maxima),(a=Hendrik),(a=Bernhard),(a=Juliana)
 
 m(Amalia)=Maxima  ? [()][]
 m(Amalia)=Willem  ? [][()]
-m(Amalia)=a       ? [(a=Maxima)][..]
-f(Amalia)=a       ? [(a=Willem)][..]
-f(m(f(Amalia)))=a ? [(a=Bernhard)][..]
+m(Amalia)=a       ? [(a=Maxima)][(a=Willem),..]
+f(Amalia)=a       ? [(a=Willem)][(a=Maxima),..]
+f(m(f(Amalia)))=a ? [(a=Bernhard)][(a=Juliana),..]

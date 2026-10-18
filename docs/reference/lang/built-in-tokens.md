@@ -7,7 +7,7 @@ When you declare a pattern with `::=`, everything in angle brackets (`<...>`) is
 ```nelumbo
 Integer ::= <NUMBER>                  @org.modelingvalue.nelumbo.integers.NInteger
 Integer ::= <Integer> + <Integer>     #40
-Set<E>  ::= { <(> <E> <,> , <)*> }    @org.modelingvalue.nelumbo.collections.NSet
+Set<E>  ::= { <(> <(> <E> <|> .. <)> <,> , <)*> }    @org.modelingvalue.nelumbo.collections.NSet
 ```
 
 A hole is either a **lexical-token hole** (matches a single lexer token class), a **type hole** (matches an expression of some declared type), or a **structural marker** (builds repetition and grouping).
@@ -143,11 +143,11 @@ In a repetition, the literal that follows `<,>` is the actual separator token (`
 The collections module uses repetition to define `Set` and `List`:
 
 ```nelumbo
-Set<E>  ::= { <(> <E> <,> , <)*> }
-List<E> ::= [ <(> <E> <,> , <)*> ]
+Set<E>  ::= { <(> <(> <E> <|> .. <)> <,> , <)*> }
+List<E> ::= [ <(> <(> <E> <|> .. <)> <,> , <)*> ]
 ```
 
-Both say "zero or more `<E>`, comma-separated, wrapped in brackets." `{}` and `[]` are empty literals for set and list respectively. `{1,2,3}` matches, as does `[1]`, as does `{}`.
+Both say "zero or more items, comma-separated, wrapped in brackets", where an item is an `<E>` or the incompleteness marker `..` (an alternation nested in the repetition). `{}` and `[]` are empty literals for set and list respectively. `{1,2,3}` matches, as does `[1]`, as does `{}`; `{1,2,..}` and `{..}` are open sets.
 
 ---
 

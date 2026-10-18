@@ -1,22 +1,21 @@
-import     nelumbo.logic
+import     nelumbo.collections
 
-Person   :: Object
+Person  :: Object
 
-FactType ::= friends(<Person>,<Person>)
-Person   ::= friend(<Person>)
+Boolean ::= friends(<Person>,<Person>)
 
-Person A, B, C
+Person      a, b, c
+Set<Person> s
 
-friend(A)=C <=>  friends(A,C) |
-                 friends(C,A)  |
-                 friend(friend(A))=C
+friends(a,c) <=>  friends(a,c) | friends(c,a) |
+                  E[b](friends(a,b) & friends(b,c))
 
-Person      ::= Piet, Jan, Klaas, Kees, Bart
+Person       ::= Piet, Jan, Klaas, Kees
 
-fact friends(Piet, Jan),
-     friends(Jan,  Klaas)
+fact friends(Piet, Jan)
+fact friends(Jan, Klaas)
+fact friends(Jan, Kees)
 
-friend(Piet)=B    ? [(B=Jan),(B=Klaas),(B=Piet)][..]
-friend(Jan)=B     ? [(B=Jan),(B=Klaas),(B=Piet)][..]
-friend(Klaas)=Jan ? [()][]
-friend(Kees)=Kees ? [][()]
+friends(Piet, a)    ? [(a=Jan),(a=Kees),(a=Klaas),(a=Piet),..][..]
+friends(Jan, a)     ? [(a=Jan),(a=Kees),(a=Klaas),(a=Piet),..][..]
+friends(Klaas, Jan) ? [()][]

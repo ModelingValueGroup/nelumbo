@@ -252,6 +252,19 @@ peer(r,c,r2,c2)    <=> !(r=r2 & c=c2) & (r=r2 | c=c2 | samebox(r,c,r2,c2))
 
 **Files:** Modify `examples/sudoku-4x4-csp.nl`
 
+> **UNBLOCKED (2026-10-16):** `in-on-nested-function-call-undecided.nl` is fixed, now in
+> `tests/` and `RegressionTest`. The first two probes decide; the third (contradiction,
+> `elim(...)=g ? [][..]`) is still `[..][..]`. Probes still commented out in the file.
+>
+> **BLOCKED (2026-10-13)** on `bugs/in-on-nested-function-call-undecided.nl` (`@KnownBug` in
+> `KnownBugsTest`): the first blocker is fixed, but `e in f(a)` is still undecided when the
+> argument a is itself a call (`1 in f(g(0))`, `1 in f(0+1)`), as in `cell`
+> (`sc = catRow(crow(g,r),c)`); all three probes are `[..][..]` again. Minimal repro uses
+> Integers. Rules unchanged, probes commented out.
+>
+> **UNBLOCKED (2026-10-13):** the blocker below is fixed, now `tests/in-on-function-call-undecided.nl`
+> in `RegressionTest`; the three probes are still commented out in the file.
+>
 > **BLOCKED (2026-10-09)** on `bugs/in-on-function-call-undecided.nl` (`@KnownBug` in
 > `KnownBugsTest`): `e in f(...)` is undecided when the collection is a user function call,
 > so both guards of `elim` (`d in cell(g,r,c)`, `!(d in cell(g,r,c))`) and with them all
@@ -605,6 +618,13 @@ Goal: an intuitive grid notation that produces the `List<List<Integer>>` phase-1
 
 **Files:** Modify `examples/sudoku-4x4-csp.nl`
 
+> **BLOCKED (2026-10-13)** on `bugs/single-hole-functor-parser-npe.nl` (`@KnownBug` in
+> `KnownBugsTest`). Deviation: a named pattern produces no value (`docs/reference/lang/index.md`),
+> so `Cell` is a type: `Cell ::= ".", <Integer>` + `cellNum(<Cell>)`. Its lone-hole alternative
+> `<Integer>` makes the parser NPE (`PatternResult.leftPrecedence`) on every later Integer
+> expression; the whole file dies. The row functor itself works (with `<Integer#100>` cells).
+> The DSL section, declarations included, is commented out.
+
 - [ ] **Step 1: Write the failing probe:** a one-row notation parses to a `List<Integer>`, e.g.
 
 ```
@@ -613,10 +633,10 @@ sudokuRow . 2 3 4 = il ? [(il=[0,2,3,4])][..]
 
 - [ ] **Step 2: Run CLI, verify it fails** (pattern undefined).
 
-- [ ] **Step 3: Add a cell pattern and a row functor.** Blank is `.` mapped to 0; digits map through `dig`/their integer. Use a named sub-pattern for the cell and the repetition marker for the row (see `docs/reference/stdlib/lang.md#named-patterns` and the `Pattern ::=` catalogue in `lang.nl`):
+- [ ] **Step 3: Add a cell pattern and a row functor.** Blank is `.` mapped to 0; digits map through `dig`/their integer. Use a named sub-pattern for the cell and the repetition marker for the row (see `docs/reference/lang/index.md#named-patterns` and the `Pattern ::=` catalogue in `lang.nl`):
 
 ```
-List<Integer> ::= sudokuRow <(> <Cell> <)+> #0
+List<Integer> ::= sudokuRow <(> <Cell#100> <)+> #0
 ```
 
 with `Cell` a named pattern matching `.` or a digit, wired to yield the integer. (Exact pattern text is validated at execution; if the Root-extending repetition fails without an explicit `#N`, that is the documented gotcha - add `#0`, which is a syntax requirement, not a workaround.)

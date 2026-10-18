@@ -79,6 +79,7 @@ public class Functor extends Node implements FunctorOrType {
     }
 
     private String        name;
+    private List<Integer> unique;
     private List<Type>    argTypes;
     private Set<Variable> typeVariables;
     private ParseState    start;
@@ -123,11 +124,7 @@ public class Functor extends Node implements FunctorOrType {
     public Type resultType() {
         Type type = (Type) get(1);
         if (hasLiteral()) {
-            if (type.isFactType()) {
-                type = Type.BOOLEAN;
-            } else {
-                type = type.nonStruct();
-            }
+            type = type.nonStruct();
         }
         return type;
     }
@@ -213,6 +210,13 @@ public class Functor extends Node implements FunctorOrType {
             typeVariables = argTypes().flatMap(Type::typeVariables).asSet();
         }
         return typeVariables;
+    }
+
+    public List<Integer> unique() {
+        if (unique == null) {
+            unique = pattern().unique(List.of(), new int[1]);
+        }
+        return unique;
     }
 
     @Override

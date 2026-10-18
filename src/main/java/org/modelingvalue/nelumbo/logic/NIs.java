@@ -43,7 +43,8 @@ public class NIs extends Predicate {
 
     static {
         try {
-            FUNCTOR = Functor.of(s(n(Type.OBJECT), t("="), n(Type.OBJECT)), Type.BOOLEAN, null, NIs.class, 30);
+            FUNCTOR = Functor.of(s(n(Type.OBJECT, true), t("="), n(Type.OBJECT, true)), Type.BOOLEAN, null, NIs.class,
+                    30);
         } catch (ParseException e) {
             throw new IllegalStateException("Cannot create functor for " + NIs.class, e);
         }
@@ -74,14 +75,6 @@ public class NIs extends Predicate {
     @Override
     public NIs setBinding(Node declaration, Map<Variable, Object> vars) {
         return (NIs) super.setBinding(declaration, vars);
-    }
-
-    @Override
-    protected Variable unique() {
-        if (get(1) instanceof Variable var && get(0) instanceof Node n && n.type().isFunction()) {
-            return var;
-        }
-        return null;
     }
 
     @Override

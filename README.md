@@ -153,50 +153,56 @@ The intended agent workflow: start from `new_model`, look up syntax with `search
 ### Family Relations Example
 
 ```text
-Person    :: Object
-Male      :: Person
-Female    :: Person
+import      nelumbo.collections
 
-FactType  ::= pc(<Person>,<Person>)   // parent-child
+Person      :: Object
+Male        :: Person
+Female      :: Person
 
-Person    ::= p(<Person>),   // parent
-              c(<Person>),   // child
-              a(<Person>),   // ancestor
-              d(<Person>),   // descendant
-              m(<Person>),   // mother
-              f(<Person>)    // father
+Female      ::= m(<Person>)   // mother
+Male        ::= f(<Person>)   // father
 
-Person a, b, c
-Male   y
-Female x
-           
-c(a)=b  <=>  pc(a,b)
-p(a)=b  <=>  pc(b,a)
-m(a)=b  <=>  E[x](c(x)=a & b=x)
-f(a)=b  <=>  E[y](c(y)=a & b=y)
+Set<Person> ::= p(<Person>),  // parents
+                c(<Person>),  // childs
+                a(<Person>),  // ancestors
+                d(<Person>)   // descendants
 
-a(a)=b  <=>  d(b)=a
-d(a)=c  <=>  c(a)=c |
-             E[b](d(a)=b & c(b)=c)
+Person      a, b, c
+Set<Person> s
+Male        y
+Female      x
+
+p(a)=s <=>  {[b](b=m(a)|b=f(a))}=s
+c(a)=s <=>  {[b](a=m(b)|a=f(b))}=s
+
+d(a)=s <=>  {[b](b in c(a) | E[c](c in c(a) & b in d(c)))}=s
+a(a)=s <=>  {[b](b in p(a) | E[c](c in p(a) & b in a(c)))}=s
 
 Male   ::= Hendrik, Bernhard, Claus, Willem
 Female ::= Wilhelmina, Juliana, Beatrix, Maxima, Amalia
 
-pc(Hendrik, Juliana)
-pc(Wilhelmina, Juliana)
-pc(Juliana, Beatrix)
-pc(Bernhard, Beatrix)
-pc(Beatrix, Willem)
-pc(Claus, Willem)
-pc(Willem, Amalia)
-pc(Maxima, Amalia)
+fact f(Juliana)=Hendrik,
+     m(Juliana)=Wilhelmina,
+     m(Beatrix)=Juliana,
+     f(Beatrix)=Bernhard,
+     m(Willem)=Beatrix,
+     f(Willem)=Claus,
+     f(Amalia)=Willem,
+     m(Amalia)=Maxima
 
-a(Amalia)=a         ? [(a=Beatrix),(a=Maxima),(a=Hendrik),(a=Bernhard),(a=Juliana),(a=Claus),(a=Willem),(a=Wilhelmina)][..]    
-m(Amalia)=Maxima    ? [()][]
-m(Amalia)=Willem    ? [][()]
-m(Amalia)=a         ? [(a=Maxima)][..]
-f(Amalia)=a         ? [(a=Willem)][..]
-f(m(f(Amalia)))=a   ? [(a=Bernhard)][..]
+m(Amalia)=Maxima  ? [()][]
+m(Amalia)=Willem  ? [][()]
+
+m(Amalia)=x       ? [(x=Maxima)][..]
+f(Amalia)=y       ? [(y=Willem)][..]
+
+m(m(f(Amalia)))=x ? [(x=Juliana)][..]
+
+p(Amalia)=s       ? [(s={Willem,Maxima})][..]
+c(Hendrik)=s      ? [(s={Juliana,..})][..]
+
+d(Hendrik)=s      ? [(s={Juliana,Willem,Amalia,Beatrix,..})][..]
+a(Amalia)=s       ? [(s={Juliana,Willem,Maxima,Beatrix,Hendrik,Wilhelmina,Bernhard,Claus,..})][..]
 ```
 
 ### Fibonacci Example

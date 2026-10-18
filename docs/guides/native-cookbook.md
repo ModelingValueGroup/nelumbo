@@ -473,7 +473,9 @@ public class NMyContainer extends Node {
 
     @NelumboConstructor
     public NMyContainer(NodeInfo nodeInfo, Object... args) {
-        super(nodeInfo, args);
+        // the parser delivers the elements as individual args; a rebuild delivers the wrapped form
+        super(nodeInfo, args.length == 1 && args[0] instanceof MyInternalColl ? args
+                : new Object[] { MyInternalColl.of(args) });
     }
 
     @Override
@@ -505,29 +507,20 @@ public class NMyContainer extends Node {
         return /* render your collection */ ;
     }
 
-    @Override
-    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason)
-            throws ParseException {
-        if (reason != ConstructionReason.parsing
-                || (length() > 0 && get(0) instanceof MyInternalColl)) {
-            return this;
-        }
-        // Wrap the children that the parser delivered into the internal collection.
-        return setArgs(new Object[] { MyInternalColl.of(super.args()) });
-    }
 }
 ```
 
 ### Key decisions
 
 1. **Extend `Node`, not `Predicate`.** A container is a value.
-2. **Wrap into the internal collection in `init(...)`, not the constructor.** At parse time the engine hands you the children as individual args; `init` is where you collapse them into a single `Set` / `List` and stash it as `args[0]`. After that initial wrapping, subsequent reconstructions (when `length() > 0 && get(0) instanceof MyInternalColl`) leave the node alone.
+2. **Wrap into the internal collection in the constructor.** At parse time the engine hands you the children as individual args; collapse them into a single `Set` / `List` stored as `args[0]`. Reconstructions during reasoning pass the already wrapped form, which the constructor keeps as is. `NSet`/`NList` do this in a static `initArgs`, which also strips a `..` item and stores a completeness flag as `args[1]` (open collections, see [`collections.md`](../reference/packages/collections.md#open-collections--)); `args()` then appends `".."` again for an open collection.
 3. **Override `set(NodeInfo, Object[])`** if you need to control how the engine rebuilds the node during reasoning. `NSet` does this; the new instance is what the engine uses going forward.
 4. **`args()` override** tells the engine what the container's children are for traversal and binding purposes. For `NList`, `args()` returns the list in order. For `NSet`, it returns the set's elements in some canonical order (the shipped implementation uses `asList()`).
-5. **`toString(TokenType[])`** should emit the user-facing syntax (e.g. `{a, b, c}` for a set, `[a, b, c]` for a list).
+5. **`toString(TokenType[])`** should emit the user-facing syntax (e.g. `{a, b, c}` for a set, `[a, b, c]` for a list, `{a, ..}` for an open set).
 
 ### Study the source
 
+- `org.modelingvalue.nelumbo.collections.NCollection` — shared base: `collection()`, the `complete()` flag and the `..` helpers
 - `org.modelingvalue.nelumbo.collections.NSet` — simplest form
 - `org.modelingvalue.nelumbo.collections.NList` — includes an `elementsFlattened()` helper for nested list flattening
 

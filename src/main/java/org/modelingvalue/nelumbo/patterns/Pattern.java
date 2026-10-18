@@ -41,19 +41,19 @@ public abstract class Pattern extends Node {
     }
 
     public static Pattern n(Type nodeType) {
-        return n(List.of(), nodeType, null, null);
+        return n(List.of(), nodeType, null, null, false);
     }
 
-    public static Pattern n(Type nodeType, boolean visible) {
-        return n(List.of(), nodeType, null, visible);
+    public static Pattern n(Type nodeType, boolean unique) {
+        return n(List.of(), nodeType, null, null, unique);
     }
 
     public static Pattern n(Type nodeType, int precedence) {
-        return n(List.of(), nodeType, precedence, null);
+        return n(List.of(), nodeType, precedence, null, false);
     }
 
     public static Pattern n(Type nodeType, int precedence, boolean visible) {
-        return n(List.of(), nodeType, precedence, visible);
+        return n(List.of(), nodeType, precedence, visible, false);
     }
 
     public static Pattern o(Pattern optional) {
@@ -96,8 +96,8 @@ public abstract class Pattern extends Node {
         return new AlternationPattern(Type.PATTERN, ast, List.of(options));
     }
 
-    public static Pattern n(List<AstElement> ast, Type nodeType, Integer precedence, Boolean visible) {
-        return new NodeTypePattern(Type.PATTERN, ast, nodeType, precedence, visible);
+    public static Pattern n(List<AstElement> ast, Type nodeType, Integer precedence, Boolean visible, boolean unique) {
+        return new NodeTypePattern(Type.PATTERN, ast, nodeType, precedence, visible, unique);
     }
 
     public static Pattern o(List<AstElement> ast, Pattern optional) {
@@ -170,12 +170,16 @@ public abstract class Pattern extends Node {
         return (Pattern) super.set(i, a);
     }
 
+    public List<Integer> unique(List<Integer> unique, int[] i) {
+        return unique;
+    }
+
     public abstract List<Type> argTypes(List<Type> types);
 
     public abstract int string(List<Object> args, int ai, StringBuffer sb, RenderOptions options, boolean alt);
 
-    public abstract int args(List<AstElement> elements, int i, MutableList<Object> args, boolean[] keep, Functor functor,
-            MutableMap<Variable, Type> typeArgs);
+    public abstract int args(List<AstElement> elements, int i, MutableList<Object> args, boolean[] keep,
+            Functor functor, MutableMap<Variable, Type> typeArgs);
 
     public static boolean isEndOfLine(Token token) {
         return token.type() == TokenType.ENDOFFILE

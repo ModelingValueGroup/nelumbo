@@ -4,7 +4,7 @@
 
 The logic module. A file gets it with `import nelumbo.logic`, or transitively by importing any package. It declares the `Boolean` type, the three Boolean values, the connectives, [lambdas](lambdas.md), the quantifiers (which are lambdas), equality, and the three top-level forms (`fact`, `<=>`, `?`).
 
-**Source:** [`src/main/resources/org/modelingvalue/nelumbo/logic/logic.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/logic/logic.nl) — 62 lines.
+**Source:** [`src/main/resources/org/modelingvalue/nelumbo/logic/logic.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/logic/logic.nl) — 61 lines.
 
 **Import:**
 
@@ -20,13 +20,11 @@ import nelumbo.logic
 
 ```nelumbo
 Boolean   :: Object
-FactType  :: Boolean
 Function  :: Object
 Literal   :: Object
 Struct    :: Object
 ```
 - `Boolean` — the type of truth-valued expressions.
-- `FactType` — marker subtype of `Boolean` used by the language transformation machinery (see [`belasting.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/belasting.nl) for usage in a DSL).
 - `Literal` — values that are their own canonical form: named constants such as `T1`, `Hendrik`, `true`, integers, strings, …
 - `Function` — values produced by functional patterns (e.g., `a+b`, `fib(n)`, `r(x/y)`) that reduce by rules.
 - `Struct` — values that are constructors with **structural equality**: two `Struct` values are equal when their parts are (collection literals such as `{1,2}` and `[1,2]` are `Struct`s; a user type declared `:: Struct` gets the same). They take the `eq` route like a `Literal`.
@@ -89,6 +87,7 @@ Boolean ::= E<Lambda<Boolean>>   @nelumbo.logic.ExistentialQuantifier,
 - `E[x](p)` — there exists `x` such that `p`.
 - `A[x](p)` — for all `x`, `p`.
 - Up to six bound variables are allowed: `E[x,y,z](p)`, `A[x,y,z](p)`; a seventh is a parse error.
+- The quantified variables range over a type whose extent is unknown: Nelumbo never tries every member of the type. `E[x](p)` and `A[x](p)` are decided only by what `p` derives for `x` (through `=`, a lookup from a bound argument, or `x in` a known collection), so `E[x](q(x))` over a fact `q(Piet)` is unknown. See [The open world](three-valued-logic.md#the-open-world).
 
 The quantifier is the keyword `E` / `A` followed by a [**lambda**](lambdas.md) whose body is a `Boolean`: `[x,y](p)` is a `Lambda2<…,Boolean>`. The bracketed variables must be declared variables, they are local to the body, and the body is at the lowest precedence (`#0`) so the entire expression inside the parentheses is consumed. (The quantifiers used to carry their own `<(> <Variable#100> <,> , <)+>` variable-list pattern; they now share the lambda syntax.)
 
@@ -112,14 +111,14 @@ A[a](a=T1 & a=T2)      ? [][()]
 ```nelumbo
 private Boolean ::= eq(<Literal>, <Literal>)   @nelumbo.logic.Equal
 
-Boolean ::= <Object> =  <Object>   #30   @nelumbo.logic.NIs,
-            <Object> != <Object>   #30
+Boolean ::= <one Object> = <one Object>   #30   @nelumbo.logic.NIs,
+            <Object> != <Object>           #30
 ```
 
 Two related but distinct primitives:
 
 - `eq(l1, l2)` is the **private** literal-equality predicate. It compares two `Literal` values directly and is bound to the native class `Equal`. Importers never call `eq` themselves.
-- `<Object> = <Object>` is the **public** equality operator, bound to `NIs`. Unlike `eq`, it accepts any `Object` on either side, so it works on functions and variables as well as literals.
+- `<one Object> = <one Object>` is the **public** equality operator, bound to `NIs`. Unlike `eq`, it accepts any `Object` on either side, so it works on functions and variables as well as literals.
 
 `!=` has no native binding of its own; it is the negation of `=`. The remaining cases are rules, written with *intersection types* `{A,B}` ("both an `A` and a `B`") over a generic parameter `E`:
 
@@ -139,6 +138,14 @@ f1 = f2   <=>  E[l1](f1 = l1 & f2 = l1)
 - `l1 = f1` swaps a literal-equals-function query into function-equals-literal form, so that user-defined rules of the shape `f1 = literal <=> ...` are reachable from either direction.
 - `f1 = f2` — two functions are equal when some literal is equal to both.
 
+### `one`: equality has a single answer
+
+Both holes of `=` are [unique holes](statements.md#open-facts-and-one) (`<one Object>`): a variable on either side of `=` gets at most one value. This is what gives every function a single result:
+
+- `fib(5)=f` must give exactly one closed answer `[(f=5)][..]` (or none). A rule that derives two values, or one value with an open facts side, is reported as `Inconsistent result: ... has non unique bindings`.
+- A function value asserted as a fact is **closed**: after `fact m(Beatrix)=Juliana`, `m(Beatrix)=x` gives `[(x=Juliana)][..]` and `m(Beatrix)=Beatrix` is false. All other facts are open (unknown when not asserted), so `=` on functions is the main source of closed answers over facts.
+- Only a variable in the hole is constrained, not a term: `m(x)=Juliana` may have many answers (`m` need not be injective), and `x=y` with both unbound is not checked.
+
 `=` is what makes ordinary rule bodies work — `f=fib(n-1)+fib(n-2)` succeeds when both sides reduce to the same value — and is the surface form used in queries to bind variables. Note that a class-less `Object` functor with arguments is `Function`-typed, so `f(1)=f(1)` is undecided unless the result type is declared `:: Struct` (structural equality).
 
 ---
@@ -148,18 +155,18 @@ f1 = f2   <=>  E[l1](f1 = l1 & f2 = l1)
 `nelumbo.logic` also declares the three statement forms that appear at the top level of a `.nl` file:
 
 ```nelumbo
-Root ::= "fact" <(> <FactType#0> <,> , <)+>                                       @nelumbo.logic.Fact,
+Root ::= "fact" <(> <Boolean#0> <,> , <)+>                                       @nelumbo.logic.Fact,
          <Boolean#0> "<=>" <(> <Boolean#0> <(> "if" <Boolean#0> <)?> <,> , <)+>   @nelumbo.logic.Rule,
          <Boolean#0> ? <(> <BINDING> <BINDING> <)?>                               @nelumbo.logic.Query
 ```
 
 | Form  | Shape                                                | Native             |
 |---|---|---|
-| Fact  | `fact <FactType>`, comma-separated lists allowed      | `Fact`             |
+| Fact  | `fact <Boolean>`, comma-separated lists allowed      | `Fact`             |
 | Rule  | `<Boolean> <=> <Boolean> if <Boolean>`, `if` optional | `Rule`             |
 | Query | `<Boolean> ?`, optionally followed by `[..][..]`      | `Query`            |
 
-In test files the `fact` keyword is often elided — a bare predicate at top level (such as `pc(Hendrik, Juliana)` in `family.nl`) is sugar for `fact pc(Hendrik, Juliana)`. The `BINDING` fragment that follows `?` is a [named pattern](../lang/index.md#named-patterns), declared here:
+The `fact` keyword is required: a bare `Boolean` at top level is rejected. The `BINDING` fragment that follows `?` is a [named pattern](../lang/index.md#named-patterns), declared here:
 
 ```nelumbo
 pattern BINDING ::= [ <(> <(> ( <(> <Variable#100> = <Object#0> <,> , <)*> ) <|> .. <)> <,> , <)*> ]
@@ -175,7 +182,7 @@ After `import nelumbo.logic`, the following are visible to the importer:
 
 | Kind           | Names                                              |
 |---|---|
-| Types          | `Boolean`, `FactType`, `Literal`, `Function`, `Struct`, `Lambda`, `Lambda1`…`Lambda6` |
+| Types          | `Boolean`, `Literal`, `Function`, `Struct`, `Lambda`, `Lambda1`…`Lambda6` |
 | Boolean values | `true`, `false`, `unknown`                          |
 | Connectives    | `!`, `&`, `\|`, `->`, `<->`                         |
 | Lambdas        | `[x,…](body)` (1–6 variables)                      |

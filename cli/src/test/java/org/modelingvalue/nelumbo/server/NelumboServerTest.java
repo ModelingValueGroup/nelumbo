@@ -45,7 +45,8 @@ class NelumboServerTest {
     private static final TypeReference<List<String>> STRING_LIST = new TypeReference<>() {
     };
 
-    // The startup knowledge base: fib declarations only (queries are posted per request).
+    // The startup knowledge base: fib declarations only (queries are posted per
+    // request).
     private static final String FIB_BASE = """
             import nelumbo.integers
 
@@ -98,9 +99,11 @@ class NelumboServerTest {
 
     @Test
     void bindsToLoopbackByDefault() throws Exception {
-        // the server has no authentication: by default it must not be reachable from other machines (issue #109)
+        // the server has no authentication: by default it must not be reachable from
+        // other machines (issue #109)
         assertTrue(server.address().getAddress().isLoopbackAddress(), "bound to " + server.address());
-        // and the advertised URL names the address actually bound, not a hostname that may differ from it
+        // and the advertised URL names the address actually bound, not a hostname that
+        // may differ from it
         assertEquals("http://" + InetAddress.getLoopbackAddress().getHostAddress() + ":" + port, server.url());
     }
 
@@ -149,15 +152,17 @@ class NelumboServerTest {
 
     @Test
     void envelopeLimitTruncatesBindings() throws Exception {
-        String family = new String(getClass().getResourceAsStream(
-                "/org/modelingvalue/nelumbo/examples/family.nl").readAllBytes(), StandardCharsets.UTF_8);
-        NelumboServer fam = new NelumboServer(
-                KnowledgeBaseLoader.load(List.of(new NamedSource("family.nl", family))), List.of("family.nl"));
+        String family = new String(
+                getClass().getResourceAsStream("/org/modelingvalue/nelumbo/examples/family.nl").readAllBytes(),
+                StandardCharsets.UTF_8);
+        NelumboServer fam = new NelumboServer(KnowledgeBaseLoader.load(List.of(new NamedSource("family.nl", family))),
+                List.of("family.nl"));
         int famPort = fam.start(0);
         try {
-            // Juliana has two parents; limit 1 must return a single binding and flag the truncation.
+            // Juliana has two parents; limit 1 must return a single binding and flag the
+            // truncation.
             HttpResponse<String> response = postJson(famPort,
-                    envelope(Map.of("document", "Person q\npc(q, Juliana) ?\n", "limit", 1)));
+                    envelope(Map.of("document", "Person q\nq in p(Juliana) ?\n", "limit", 1)));
             assertEquals(200, response.statusCode());
             JsonNode query = mapper.readTree(response.body()).get("queries").get(0);
             assertEquals(1, query.get("bindings").size(), "limit should cap bindings: " + query);
@@ -180,7 +185,8 @@ class NelumboServerTest {
 
     @Test
     void stdlibEnvelopeNeedsNoImports() throws Exception {
-        // no import statements in the document: the stdlib flag preloads them server-side
+        // no import statements in the document: the stdlib flag preloads them
+        // server-side
         HttpResponse<String> response = postJson(port,
                 envelope(Map.of("document", "Integer i\n2+3=i ?\n", "stdlib", true)));
         assertEquals(200, response.statusCode());
@@ -220,7 +226,8 @@ class NelumboServerTest {
 
     @Test
     void evalSolvesQueryAgainstLoadedKnowledgeBase() throws Exception {
-        // A posted document is self-contained: it declares the variable it queries with. The fib rule
+        // A posted document is self-contained: it declares the variable it queries
+        // with. The fib rule
         // it relies on comes from the knowledge base loaded at startup.
         HttpResponse<String> response = post("/eval", "Integer r\nfib(5)=r ?\n");
         assertEquals(200, response.statusCode());
@@ -236,9 +243,11 @@ class NelumboServerTest {
         assertEquals("true", query.get("status").asText());
         // The binding must actually carry the answer r=5 — not merely "a result".
         assertEquals("5", query.get("bindings").get(0).get("r").asText());
-        assertTrue(query.get("result").asText().contains("r=5"), "canonical result should show r=5: " + query.get("result"));
+        assertTrue(query.get("result").asText().contains("r=5"),
+                "canonical result should show r=5: " + query.get("result"));
 
-        // The parse tree reflects the posted document: one entry per statement, the query last.
+        // The parse tree reflects the posted document: one entry per statement, the
+        // query last.
         JsonNode parseTree = body.get("parseTree");
         assertTrue(parseTree.isArray() && !parseTree.isEmpty(), "parse tree expected: " + parseTree);
         JsonNode queryNode = parseTree.get(parseTree.size() - 1);
@@ -248,15 +257,16 @@ class NelumboServerTest {
 
     @Test
     void evalTimesOutOnLongRunningInference() throws Exception {
-        // A 1 ms inference budget: fib(20000) cannot finish in time, so the engine deadline trips.
+        // A 1 ms inference budget: fib(20000) cannot finish in time, so the engine
+        // deadline trips.
         NelumboServer tight = new NelumboServer(
-                KnowledgeBaseLoader.load(List.of(new NamedSource("fibonacci.nl", FIB_BASE))),
-                List.of("fibonacci.nl"), 1);
+                KnowledgeBaseLoader.load(List.of(new NamedSource("fibonacci.nl", FIB_BASE))), List.of("fibonacci.nl"),
+                1);
         int tightPort = tight.start(0);
         try {
             HttpRequest request = HttpRequest.newBuilder(URI.create("http://localhost:" + tightPort + "/eval"))
-                    .header("Content-Type", "text/plain")
-                    .POST(BodyPublishers.ofString("Integer r\nfib(20000)=r ?\n")).build();
+                    .header("Content-Type", "text/plain").POST(BodyPublishers.ofString("Integer r\nfib(20000)=r ?\n"))
+                    .build();
             HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
             assertEquals(408, response.statusCode(), "a query exceeding the budget should time out");
             assertEquals("timeout", mapper.readTree(response.body()).get("error").asText());
@@ -296,7 +306,8 @@ class NelumboServerTest {
         List<String> files = mapper.convertValue(body.get("files"), STRING_LIST);
         assertTrue(files.contains("fibonacci.nl"), "metadata should list loaded files: " + files);
 
-        // The lists hold only what the loaded file declared — not the imported integer/logic vocabulary.
+        // The lists hold only what the loaded file declared — not the imported
+        // integer/logic vocabulary.
         List<String> functors = mapper.convertValue(body.get("functors"), STRING_LIST);
         assertTrue(functors.contains("fib(<Integer>)"), "declared functors should be just fib: " + functors);
 
@@ -304,7 +315,8 @@ class NelumboServerTest {
         assertTrue(rules.stream().anyMatch(r -> r.contains("fib(n)=f") && r.contains("<=>")),
                 "rules should hold the readable fib rule(s): " + rules);
 
-        // fib declares no new type (Integer is imported) and no facts, so those lists are empty here.
+        // fib declares no new type (Integer is imported) and no facts, so those lists
+        // are empty here.
         assertTrue(body.get("types").isEmpty(), "fib declares no types: " + body.get("types"));
         assertTrue(body.get("facts").isEmpty(), "fib declares no facts: " + body.get("facts"));
     }

@@ -30,9 +30,11 @@ import org.modelingvalue.nelumbo.tools.NelumboEvaluator.EvalResult;
 // from src/main/resources/org/modelingvalue/nelumbo/bugs/ whose query
 // expectations state the CORRECT behavior. While the bug exists the method is
 // ABORTED (grey); once fixed it FAILS with "KNOWN BUG APPEARS FIXED" - then
-// remove the @KnownBug and promote the method to RegressionTest (fifteen
+// remove the @KnownBug and promote the method to RegressionTest (sixteen
 // promoted so far: two on 2026-09-11, three on 2026-09-24, four on 2026-09-25,
-// one on 2026-10-02, five on 2026-10-06).
+// one on 2026-10-02, five on 2026-10-06, and on 2026-10-18 one merged from
+// three unbound-lookup repros whose remaining expectations were wrong: a
+// variable is never bound by enumerating a type).
 //
 // The CLI twin is ./run-all-tests-with-CLI (repo root): the SAME bug can
 // manifest differently on the CLI vs this test JVM (proven 2026-09-13: the
@@ -117,7 +119,7 @@ public class KnownBugsTest extends NelumboTestBase {
     // results, an unused rule being load-bearing) reproduced only against
     // intermediate sudoku-9x9-smart.nl versions - facets of the same defects
 
-    @KnownBug("where-filter over user Boolean rule NPEs inside deep recursion (currently masked by bba88fc8)")
+    @KnownBug("where-filter over user Boolean rule NPEs inside deep recursion")
     @Test
     public void whereFilterNpeInRecursion() {
         bugResource("where-filter-npe-in-recursion.nl");
@@ -125,7 +127,7 @@ public class KnownBugsTest extends NelumboTestBase {
 
     // ==== speculative evaluation ====
 
-    @KnownBug("rule guards evaluated speculatively: unguarded pos crashes out-of-range (currently masked by bba88fc8)")
+    @KnownBug("rule guards evaluated speculatively: unguarded pos crashes out-of-range")
     @Test
     public void speculativeGuardIndexCrash() {
         bugResource("speculative-guard-index-crash.nl");
@@ -157,18 +159,18 @@ public class KnownBugsTest extends NelumboTestBase {
         bugResource("multiline-string-assert.nl");
     }
 
-    // ==== logic / quantifiers / facts ====
-
-    @KnownBug("fully-bound quantifiers turn unknown body result into definitive answer")
+    @KnownBug("single-hole functor (Cell ::= <Integer>) makes the parser NPE on every later Integer expression")
     @Test
-    public void quantifierDefinitiveFromUnknown() {
-        bugResource("quantifier-definitive-from-unknown.nl");
+    public void singleHoleFunctorParserNpe() {
+        bugResource("single-hole-functor-parser-npe.nl");
     }
 
-    @KnownBug("getFacts claims complete-no-facts for un-indexed shapes like r(a,a)")
+    // ==== logic / quantifiers / facts ====
+
+    @KnownBug("pattern whose only argument is a unique hole (winner(<one Person>)) is never closed")
     @Test
-    public void diagonalFactLookup() {
-        bugResource("diagonal-fact-lookup.nl");
+    public void singleUniqueHoleNotClosed() {
+        bugResource("single-unique-hole-not-closed.nl");
     }
 
     // the correct behavior is an error per query, which bugResource (pass = no
@@ -217,10 +219,28 @@ public class KnownBugsTest extends NelumboTestBase {
         bugResource("collections-index-out-of-range.nl");
     }
 
-    @KnownBug("e in f(...) undecided when the collection is a user function call")
+    @KnownBug("set-builder compared with a closed set literal holds for any set")
     @Test
-    public void inOnFunctionCallUndecided() {
-        bugResource("in-on-function-call-undecided.nl");
+    public void setBuilderEqualsAnySet() {
+        bugResource("set-builder-equals-any-set.nl");
+    }
+
+    @KnownBug("set-builder without solutions yields no result instead of {}")
+    @Test
+    public void setBuilderEmptyResultMissing() {
+        bugResource("set-builder-empty-result-missing.nl");
+    }
+
+    @KnownBug("size of a where/map result reports a closed, empty falsehoods side")
+    @Test
+    public void sizeOfLambdaResultClosesFalsehoods() {
+        bugResource("size-of-lambda-result-closes-falsehoods.nl");
+    }
+
+    @KnownBug("pos/in on a list with a duplicated element: inconsistent result (pos is a function)")
+    @Test
+    public void posDuplicateElementInconsistent() {
+        bugResource("pos-duplicate-element-inconsistent.nl");
     }
 
     @KnownBug("period_multiply crashes on multipliers outside int range")

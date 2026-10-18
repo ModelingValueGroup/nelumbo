@@ -38,6 +38,8 @@ public final class Variable extends Node {
     @Serial
     private static final long serialVersionUID = -8998368070388908726L;
 
+    public static final Variable DUMMY = new Variable(List.of(), false, Type.$NONE, "$DUMMY");
+
     @NelumboConstructor
     public Variable(NodeInfo nodeInfo, Object... args) {
         super(nodeInfo, args);
