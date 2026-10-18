@@ -115,6 +115,12 @@ public class AlternationPattern extends Pattern {
 
     @Override
     public List<Type> argTypes(List<Type> types) {
+        for (Pattern o : options()) {
+            List<Type> a = o.argTypes(List.of());
+            if (a.size() == 1 && Type.OBJECT.isAssignableFrom(a.first())) {
+                return types.add(a.first());
+            }
+        }
         return types.add(Type.$OBJECT);
     }
 

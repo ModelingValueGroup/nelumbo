@@ -35,11 +35,19 @@ public class NSet extends NCollection {
 
     @NelumboConstructor
     public NSet(NodeInfo nodeInfo, Object... args) {
-        super(nodeInfo, args.length != 1 || !(args[0] instanceof Set) ? new Object[] { Set.of(args) } : args);
+        super(nodeInfo, initArgs(args));
     }
 
-    public NSet(Type elementType, Set<?> set) {
-        super(NodeInfo.of(elementType.toSet().toLiteral()), set);
+    private static Object[] initArgs(Object... args) {
+        if (args.length == 2 && args[0] instanceof Set && args[1] instanceof Boolean) {
+            return args;
+        }
+        int open = open(args);
+        return new Object[] { Set.of(remove(args, open)), open < 0 };
+    }
+
+    public NSet(Type elementType, Set<?> set, boolean complete) {
+        super(NodeInfo.of(elementType.toSet().toLiteral()), set, complete);
     }
 
     @Override
@@ -55,20 +63,20 @@ public class NSet extends NCollection {
 
     @Override
     public List<Object> args() {
-        return collection().asList();
+        List<Object> args = collection().asList();
+        return complete() ? args : args.add("..");
     }
 
     @Override
     public String toString(RenderOptions options) {
-        String string = collection().toString();
-        return "{" + string.substring(4, string.length() - 1) + "}";
+        Set<Object> collection = collection();
+        String string = collection.toString();
+        return "{" + string.substring(4, string.length() - 1)
+                + (complete() ? "" : (collection.isEmpty() ? "" : ",") + "..") + "}";
     }
 
     @Override
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
-        if (reason != ConstructionReason.parsing || (length() > 0 && get(0) instanceof Set)) {
-            return this;
-        }
-        return set(nodeInfo(), new Object[] { super.args().asSet() });
+        return this;
     }
 }

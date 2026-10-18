@@ -36,27 +36,36 @@ public final class NList extends NCollection {
 
     @NelumboConstructor
     public NList(NodeInfo nodeInfo, Object... args) {
-        super(nodeInfo, args.length != 1 || !(args[0] instanceof List) ? new Object[] { List.of(args) } : args);
+        super(nodeInfo, initArgs(args));
+    }
+
+    private static Object[] initArgs(Object... args) {
+        if (args.length == 2 && args[0] instanceof List && args[1] instanceof Boolean) {
+            return args;
+        }
+        int open = open(args);
+        return new Object[] { List.of(remove(args, open)), open < 0 };
+    }
+
+    public NList(Type elementType, List<?> list, boolean complete) {
+        super(NodeInfo.of(elementType.toList().toLiteral()), list, complete);
     }
 
     public NList(List<AstElement> elements, Type elementType) {
-        super(NodeInfo.of(elementType.toList().toLiteral(), elements), List.of());
-    }
-
-    public NList(Type elementType, List<?> list) {
-        super(NodeInfo.of(elementType.toList().toLiteral()), list);
+        super(NodeInfo.of(elementType.toList().toLiteral(), elements), List.of(), true);
     }
 
     public NList(Type elementType, List<AstElement> elements, List<?> args) {
-        super(NodeInfo.of(elementType.toList().toLiteral(), elements), args);
+        super(NodeInfo.of(elementType.toList().toLiteral(), elements), args, true);
     }
 
     public NList(Functor functor, List<AstElement> elements, List<?> args) {
-        super(NodeInfo.of(functor, elements), args);
+        super(NodeInfo.of(functor, elements), args, true);
     }
 
     public NList(List<AstElement> elements, NList list, Node last) {
-        super(NodeInfo.of(list.type(), list.astElements().addAll(elements).add(last)), list.collection().add(last));
+        super(NodeInfo.of(list.type(), list.astElements().addAll(elements).add(last)), list.collection().add(last),
+                true);
     }
 
     @Override
@@ -71,7 +80,8 @@ public final class NList extends NCollection {
 
     @Override
     public List<Object> args() {
-        return collection();
+        List<Object> args = collection();
+        return complete() ? args : args.add("..");
     }
 
     @Override
@@ -99,8 +109,10 @@ public final class NList extends NCollection {
 
     @Override
     public String toString(RenderOptions options) {
-        String string = collection().toString();
-        return "[" + string.substring(5, string.length() - 1) + "]";
+        List<Object> collection = collection();
+        String string = collection.toString();
+        return "[" + string.substring(5, string.length() - 1)
+                + (complete() ? "" : (collection.isEmpty() ? "" : ",") + "..") + "]";
     }
 
     @Override
@@ -110,9 +122,6 @@ public final class NList extends NCollection {
 
     @Override
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
-        if (reason != ConstructionReason.parsing || (length() > 0 && get(0) instanceof List)) {
-            return this;
-        }
-        return set(nodeInfo(), new Object[] { super.args() });
+        return this;
     }
 }

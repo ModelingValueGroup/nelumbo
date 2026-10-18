@@ -44,7 +44,7 @@ f(Amalia)=y       ? [(y=Willem)][..]
 m(m(f(Amalia)))=x ? [(x=Juliana)][..]
 
 p(Amalia)=s       ? [(s={Willem,Maxima})][..]
-c(Hendrik)=s      ? [(s={Juliana}),..][..]
+c(Hendrik)=s      ? [(s={Juliana,..})][..]
 
-d(Hendrik)=s      ? [(s={Juliana,Willem,Amalia,Beatrix}),..][..]
-a(Amalia)=s       ? [(s={Juliana,Willem,Maxima,Beatrix,Hendrik,Wilhelmina,Bernhard,Claus}),..][..]
+d(Hendrik)=s      ? [(s={Juliana,Willem,Amalia,Beatrix,..})][..]
+a(Amalia)=s       ? [(s={Juliana,Willem,Maxima,Beatrix,Hendrik,Wilhelmina,Bernhard,Claus,..})][..]

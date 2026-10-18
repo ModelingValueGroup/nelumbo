@@ -106,7 +106,7 @@ public class Predicate extends Node {
                     Functor lit = functor.toLiteral();
                     if (lit != null) {
                         List<Object> args = n.args();
-                        if (args.allMatch(a -> a instanceof Node node && node.type().isLiteral())) {
+                        if (args.allMatch(a -> a instanceof Node node ? node.type().isLiteral() : true)) {
                             return lit.construct(n.astElements(), args.toArray(), kb, ctx);
                         }
                     }
@@ -335,7 +335,7 @@ public class Predicate extends Node {
         Variable unique = unique();
         if (unique != null) {
             if (nrOfUnbound == 1) {
-                if (result.facts().size() > 1) {
+                if (result.facts().size() > 1 || (!result.completeFacts() && result.facts().size() == 1)) {
                     throw new InconsistencyException(result);
                 }
             } else {
