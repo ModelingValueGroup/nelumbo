@@ -106,7 +106,8 @@ public class Collections extends Predicate {
         if (a == null || b == null) {
             return unknown();
         }
-        NSet intersection = new NSet(a.elementType(), a.collection().retainAll(b.collection()), true);
+        NSet intersection = new NSet(a.elementType(), a.collection().retainAll(b.collection()),
+                a.complete() || b.complete());
         if (i != null) {
             return intersection.equals(i) ? factCC() : falsehoodCC();
         }
@@ -118,7 +119,7 @@ public class Collections extends Predicate {
         if (a == null || b == null) {
             return unknown();
         }
-        NSet union = new NSet(a.elementType(), a.collection().addAll(b.collection()), true);
+        NSet union = new NSet(a.elementType(), a.collection().addAll(b.collection()), a.complete() && b.complete());
         if (u != null) {
             return union.equals(u) ? factCC() : falsehoodCC();
         }
@@ -130,7 +131,12 @@ public class Collections extends Predicate {
         if (a == null || b == null) {
             return unknown();
         }
-        NSet diff = new NSet(a.elementType(), a.collection().removeAll(b.collection()), true);
+        NSet diff;
+        if (!b.complete() && !a.collection().isEmpty()) {
+            diff = new NSet(a.elementType(), Set.of(), false);
+        } else {
+            diff = new NSet(a.elementType(), a.collection().removeAll(b.collection()), a.complete());
+        }
         if (d != null) {
             return diff.equals(d) ? factCC() : falsehoodCC();
         }
@@ -154,7 +160,7 @@ public class Collections extends Predicate {
         if (a == null || l == null) {
             return unknown();
         }
-        NSet filter = new NSet(a.elementType(), a.collection().filter(l::test).asSet(), true);
+        NSet filter = new NSet(a.elementType(), a.collection().filter(l::test).asSet(), a.complete());
         if (hasIncompleteResult()) {
             return incompleteResult();
         }
