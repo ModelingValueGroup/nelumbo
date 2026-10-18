@@ -56,7 +56,7 @@ example file in the project is unreadable.
 - [nelumbo.integers](https://nelumbo.nl/docs/reference/packages/integers.html): arbitrary-precision integer arithmetic
 - [nelumbo.rationals](https://nelumbo.nl/docs/reference/packages/rationals.html): exact rationals
 - [nelumbo.strings](https://nelumbo.nl/docs/reference/packages/strings.html): strings, concatenation, conversion
-- [nelumbo.collections](https://nelumbo.nl/docs/reference/packages/collections.html): generic `Set<E>` and `List<E>`, set-builder notation, operations, `where`/`map`/`sort`
+- [nelumbo.collections](https://nelumbo.nl/docs/reference/packages/collections.html): generic `Set<E>` and `List<E>`, open collections (`{1,2,..}`), set-builder notation, operations, `where`/`map`/`sort`
 - [nelumbo.datetime](https://nelumbo.nl/docs/reference/packages/datetime.html): ISO 8601 dates, times, date-times, durations
 - [Standard library tour](https://nelumbo.nl/docs/guides/stdlib-tour.html): all seven modules read in dependency order
 

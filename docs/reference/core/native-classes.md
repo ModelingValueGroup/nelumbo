@@ -186,28 +186,28 @@ One class hosts all three string primitives as `@NelumboMethod`s: `string_concat
 
 ### `NSet`
 
-- Backs: `Set<E> ::= { <(> <E> <,> , <)*> }`
+- Backs: `Set<E> ::= { <(> <(> <E> <|> .. <)> <,> , <)*> }`
 - Role: container constant
-- Value: backed by the internal immutable `Set<T>` collection type.
+- Value: two args, the internal immutable `Set<T>` and a `Boolean` completeness flag (`complete()`). The `@NelumboConstructor` receives the parsed items; a `..` among them is removed and clears the flag. `args()` appends `".."` for an open set and `toString` renders it as `{1,2,..}`.
 
 ### `NList`
 
-- Backs: `List<E> ::= [ <(> <E> <,> , <)*> ]`
+- Backs: `List<E> ::= [ <(> <(> <E> <|> .. <)> <,> , <)*> ]`
 - Role: container constant
-- Value: backed by the internal immutable `List<T>` collection type.
+- Value: like `NSet`: the internal immutable `List<T>` plus the completeness flag (shared base class `NCollection`).
 - Notes: `NList` supports an `elementsFlattened()` helper that recursively unwraps nested `NList` values. This is useful when a parse produces a tree of concatenated list fragments that you want to flatten.
 
 ### `BuildSet`
 
 - Backs: `private Boolean ::= build(<Lambda1<E,Boolean>>, <Set<E>>)`, reached from the set-builder literal `{[e](c)}` through the rule `{leb} = s <=> build(leb, s)` (the `{ <Lambda1<E,Boolean>> }` pattern itself has no native; the former `SetBuilder` class is gone)
 - Role: quantifier (extends `Quantifier`, like `ExistentialQuantifier`/`UniversalQuantifier`)
-- Strategy: evaluates the condition under every binding of the local element variable, then **strips** that variable and aggregates. Each group of facts sharing the rest of the binding produces one fact whose third slot is an `NSet` of the witnessing values; each falsehood produces a singleton `NSet` of its non-member value on the falsehoods side. Completeness flags are inherited from the condition's result, so `{[i](|i|=10)}` yields `[(s={-10,10})][(s={0}),..]` — the two solutions as a fact, `{0}` as a proven non-member, `..` for the open remainder.
+- Strategy: evaluates the condition under every binding of the local element variable, then **strips** that variable and aggregates. Each group of facts sharing the rest of the binding produces one fact whose third slot is an `NSet` of the witnessing values; each falsehood produces an open singleton `NSet` of its non-member value on the falsehoods side. The facts' completeness becomes the set's own flag rather than the result's: incomplete facts give an open set (an open `{..}` when there are none), and the facts side is reported complete. So `{[i](|i|=10)}` yields `[(s={-10,10})][(s={0,..}),..]` — the two solutions as a fact, every set containing `0` as a falsehood, `..` for the open remainder — and a builder over open facts yields one open set such as `[(s={Juliana,..})][..]`.
 
 ### `Collections`
 
 - Backs: the algebraic operations — `size` (`|c|`), `indexOf` (`e pos l`), `elementOf` (`e in s`), `subset` (`< > <= >=`), `intersection` (`&&`), `union` (`||`), `diff` (`-`), and `concat` (`+`) — and the lambda-based higher-order operations `setFilter`/`listFilter` (`where`), `map` and `sort`.
 - Role: predicate (one `@NelumboMethod` per operation)
-- Strategy: each method is **relational** — it computes the missing slot or checks a supplied one, returning a fact/falsehood accordingly. `size` and `elementOf` accept either a `Set` or a `List` via `Collection`. `subset` is non-strict (`containsAll`, so a set is a subset of itself). With an unbound result, `elementOf` enumerates a set's members and `indexOf` enumerates one index fact per occurrence (so a duplicated list element yields several solutions). When the operands needed to compute a result are unbound — or a collection itself is unbound — the method returns `unknown()` (e.g. `|s| = 4` for a free `s` gives `[..][..]`). The four lambda-based methods call `Lambda.test`/`Lambda.apply` once per element (`sort` uses `test` as the comparator, treating elements where neither precedes the other as equal) and return the lambda's incomplete result if any evaluation could not be decided. See [`packages/collections.md`](../packages/collections.md#operations).
+- Strategy: each method is **relational** — it computes the missing slot or checks a supplied one, returning a fact/falsehood accordingly. Computed collections carry a completeness flag derived from the operands (union, concatenation: open if either is; intersection: open only if both are; difference: `{..}` when the subtrahend is open; `where`/`map`/`sort`: as the input), and `elementOf` answers unknown instead of false for a non-member of an open set. `size` and `elementOf` accept either a `Set` or a `List` via `Collection`. `subset` is non-strict (`containsAll`, so a set is a subset of itself). With an unbound result, `elementOf` enumerates a set's members and `indexOf` enumerates one index fact per occurrence (so a duplicated list element yields several solutions). When the operands needed to compute a result are unbound — or a collection itself is unbound — the method returns `unknown()` (e.g. `|s| = 4` for a free `s` gives `[..][..]`). The four lambda-based methods call `Lambda.test`/`Lambda.apply` once per element (`sort` uses `test` as the comparator, treating elements where neither precedes the other as equal) and return the lambda's incomplete result if any evaluation could not be decided. See [`packages/collections.md`](../packages/collections.md#operations).
 
 ---
 

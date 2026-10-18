@@ -140,8 +140,8 @@ Alternation ::= <(> A <|> B <|> C <)>              // "A", "B", or "C"
 `collections.nl` uses this for generic sets and lists:
 
 ```nelumbo
-Set<E>  ::= { <(> <E> <,> , <)*> }
-List<E> ::= [ <(> <E> <,> , <)*> ]
+Set<E>  ::= { <(> <(> <E> <|> .. <)> <,> , <)*> }   // {1,2,3}, {}, open {1,2,..}
+List<E> ::= [ <(> <(> <E> <|> .. <)> <,> , <)*> ]
 ```
 
 ### Connected-token groups: `<[> ... <]>`

@@ -182,7 +182,7 @@ The `*Test.nl` files under [`src/main/resources/org/modelingvalue/nelumbo/tests/
 
 ## A note on conventions used in the docs
 
-- **`..`** is the *incompleteness marker* — it means "this side of the result may have more bindings than are listed." It is never called a wildcard because it doesn't match values.
+- **`..`** is the *incompleteness marker* — it means "this side of the result may have more bindings than are listed." It is never called a wildcard because it doesn't match values. Inside a collection (`{Juliana,..}`) it marks that set or list as open.
 - **Facts** (left bracket) and **falsehoods** (right bracket) are the two sides of every query result.
 - **In-language** extensions (rules, transformations, modules) are distinguished from **host-language** extensions (Java natives bound with `@`). The docs use these terms consistently.
 - Cross-references in every page point to other pages when a topic is covered in more depth elsewhere. If you follow the links, you end up with a coherent tour of the language.

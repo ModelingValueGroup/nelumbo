@@ -98,7 +98,10 @@ public class Collections extends Predicate {
         if (a == null || b == null) {
             return unknown();
         }
-        return b.collection().containsAll(a.collection()) ? factCC() : falsehoodCC();
+        if (b.collection().containsAll(a.collection())) {
+            return a.complete() ? factCC() : unknown();
+        }
+        return b.complete() ? falsehoodCC() : unknown();
     }
 
     @NelumboMethod

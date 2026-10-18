@@ -237,68 +237,59 @@ Integer d
     <p>A knowledge base is facts plus rules over relations. Base facts (here <code>pc</code>,
        parent-child) are asserted directly; rules with quantifiers such as <code>E[x]</code>
        (there exists) and <code>A[y]</code> (for all) derive new relations from them. Below, the mother
-       relation <code>m</code> is derived from <code>pc</code> via an existential over female children.
+       relation <code>m</code> is derived from <code>pc</code> via an existential over female parents.
        Because <code>pc</code> facts are open, Beatrix may have parents not asserted here: the answer
        ends in <code>..</code>.</p>
-    <div class="nelumbo-field" data-height="260px">import nelumbo.logic
+    <div class="nelumbo-field" data-height="240px">import nelumbo.logic
 Person   :: Object
 Male     :: Person
 Female   :: Person
-Boolean ::= pc(&lt;Person&gt;,&lt;Person&gt;)
-Person   ::= p(&lt;Person&gt;), c(&lt;Person&gt;), m(&lt;Person&gt;)
+Boolean ::= pc(&lt;Person&gt;,&lt;Person&gt;), m(&lt;Person&gt;,&lt;Person&gt;)
 Person a, b
 Female x
-c(a)=b &lt;=&gt; pc(a,b)
-p(a)=b &lt;=&gt; pc(b,a)
-m(a)=b &lt;=&gt; E[x](c(x)=a &amp; b=x)
+m(a,b) &lt;=&gt; E[x](pc(x,a) &amp; b=x)
 Female ::= Juliana, Beatrix
 fact pc(Juliana, Beatrix)
 Person who
-m(Beatrix)=who ?
+m(Beatrix,who) ?
 </div>
     <div class="nelumbo-exercise">
       <p class="challenge">Add a father relation <code>f</code> that mirrors the mother rule, using
-         <code>E[y]</code> over male children, so <code>f(Beatrix) = Bernhard</code>.</p>
+         <code>E[y]</code> over male parents, so <code>f(Beatrix,who)</code> finds Bernhard.</p>
       <div class="nelumbo-field" data-height="260px">import nelumbo.logic
 Person   :: Object
 Male     :: Person
 Female   :: Person
-Boolean ::= pc(&lt;Person&gt;,&lt;Person&gt;)
-Person   ::= p(&lt;Person&gt;), c(&lt;Person&gt;), m(&lt;Person&gt;), f(&lt;Person&gt;)
+Boolean ::= pc(&lt;Person&gt;,&lt;Person&gt;), m(&lt;Person&gt;,&lt;Person&gt;), f(&lt;Person&gt;,&lt;Person&gt;)
 Person a, b
 Female x
 Male   y
-c(a)=b &lt;=&gt; pc(a,b)
-p(a)=b &lt;=&gt; pc(b,a)
-m(a)=b &lt;=&gt; E[x](c(x)=a &amp; b=x)
-// fix this rule so f(Beatrix)=Bernhard (mirror the mother rule using Male y)
-f(a)=b &lt;=&gt; E[y](p(y)=a &amp; b=y)
+m(a,b) &lt;=&gt; E[x](pc(x,a) &amp; b=x)
+// fix this rule so f(Beatrix,who) finds Bernhard (mirror the mother rule using Male y)
+f(a,b) &lt;=&gt; E[y](pc(a,y) &amp; b=y)
 Female ::= Juliana, Beatrix
 Male   ::= Bernhard
 fact pc(Juliana, Beatrix),
      pc(Bernhard, Beatrix)
 Person who
-f(Beatrix)=who ? [(who=Bernhard),..][..]
+f(Beatrix,who) ? [(who=Bernhard),..][..]
 </div>
       <pre class="nelumbo-solution">import nelumbo.logic
 Person   :: Object
 Male     :: Person
 Female   :: Person
-Boolean ::= pc(&lt;Person&gt;,&lt;Person&gt;)
-Person   ::= p(&lt;Person&gt;), c(&lt;Person&gt;), m(&lt;Person&gt;), f(&lt;Person&gt;)
+Boolean ::= pc(&lt;Person&gt;,&lt;Person&gt;), m(&lt;Person&gt;,&lt;Person&gt;), f(&lt;Person&gt;,&lt;Person&gt;)
 Person a, b
 Female x
 Male   y
-c(a)=b &lt;=&gt; pc(a,b)
-p(a)=b &lt;=&gt; pc(b,a)
-m(a)=b &lt;=&gt; E[x](c(x)=a &amp; b=x)
-f(a)=b &lt;=&gt; E[y](c(y)=a &amp; b=y)
+m(a,b) &lt;=&gt; E[x](pc(x,a) &amp; b=x)
+f(a,b) &lt;=&gt; E[y](pc(y,a) &amp; b=y)
 Female ::= Juliana, Beatrix
 Male   ::= Bernhard
 fact pc(Juliana, Beatrix),
      pc(Bernhard, Beatrix)
 Person who
-f(Beatrix)=who ? [(who=Bernhard),..][..]
+f(Beatrix,who) ? [(who=Bernhard),..][..]
 </pre>
     </div>
   </section>

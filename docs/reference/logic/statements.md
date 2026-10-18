@@ -35,6 +35,8 @@ friends(Piet, x) ? [(x=Jan),..][..]
 
 A hole marked `<one T>` is unique: for each combination of the other arguments there is at most one value. Asserting `het inkomen van Piet is 50000 euro` then also decides that every other amount is false, so `het inkomen van Piet is i euro` gives `[(i=50000)][..]`. Functions work the same way: a function has a single result, so `fact m(Beatrix)=Juliana` makes `m(Beatrix)=Beatrix` false.
 
+A unique result must therefore be decided by what is known: a function whose defining rule derives its value from open facts (`m(a)=b <=> E[x](pc(x,a) & b=x)`, with `pc` asserted) would answer `[(b=Juliana),..][..]`, one value plus possibly others, which contradicts uniqueness. The engine reports it as `Inconsistent result: ... has non unique bindings`. Model such a derived relation as a relation (`m(a,b) <=> E[x](pc(x,a) & b=x)`, answering `[(b=Juliana),..][..]`), or as a set-valued function built with a set-builder, whose single result is an open set such as `{Juliana,..}` (see [`collections.md`](../packages/collections.md#open-collections--) and [`family.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/family.nl)).
+
 ---
 
 ## Queries and tests

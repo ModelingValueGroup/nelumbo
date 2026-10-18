@@ -415,13 +415,13 @@ private Boolean ::= build(<Lambda1<E,Boolean>>, <Set<E>>)  @...BuildSet,
                     intersection(...), union(...), diff(...), concat(...),
                     setFilter(...), listFilter(...), map(...), sort(...)  @...Collections
 
-{Struct,Set<E>}  ::= { <(> <E> <,> , <)*> }  @...NSet
+{Struct,Set<E>}  ::= { <(> <(> <E> <|> .. <)> <,> , <)*> }  @...NSet
 Set<E>           ::= { <Lambda1<E,Boolean>> },             ▸ set-builder
                      <Set<E>> where <Lambda1<E,Boolean>>,  ▸ filter
                      <Set<E>> && <Set<E>>,                 ▸ intersection
                      <Set<E>> || <Set<E>>,                 ▸ union
                      <Set<E>> -  <Set<E>>                  ▸ difference
-{Struct,List<E>} ::= [ <(> <E> <,> , <)*> ]  @...NList
+{Struct,List<E>} ::= [ <(> <(> <E> <|> .. <)> <,> , <)*> ]  @...NList
 List<E>          ::= <List<E>> + <List<E>>,                ▸ concatenation
                      <List<E>> where <Lambda1<E,Boolean>>,
                      <Collection<F>> map <Lambda1<F,E>>,
@@ -438,21 +438,21 @@ Boolean          ::= <Set<E>> "<" <Set<E>>, ...,           ▸ subset / superset
 ### What it introduces
 
 - **`Type E, F`** — the declaration that introduces generic type parameters. `lang.nl` uses the same mechanism for parenthesisation (`Type P; P ::= (<P>)`); this is its first use to define container types. `F` is the input element type of `map`.
-- **`Collection<E>`, `Set<E>`, and `List<E>`** — parameterised container types with literal syntax. `Collection<E>` is the common supertype. The literals are also `Struct`s, which gives them structural equality.
+- **`Collection<E>`, `Set<E>`, and `List<E>`** — parameterised container types with literal syntax. `Collection<E>` is the common supertype. The literals are also `Struct`s, which gives them structural equality. A literal may contain `..` to make it *open* (`{1,2,..}`: at least these elements).
 - **Set-builder notation** — `{[e](c)}`, the comprehension form of `Set<E>`; it is a `Lambda1<E,Boolean>` in braces.
 - **Algebraic operations** — cardinality `|c|`, membership `e in c`, subset/superset `< > <= >=`, set intersection/union/difference `&& || -`, list concatenation `+`, and list indexing `e pos l`. Each is a relation backed by the `Collections` native class and runs in both directions where meaningful.
 - **Higher-order operations** — `c where [x](p)` (filter), `c map [x](e)` (to a list), `c sort [a,b](p)` (to a list). They take [lambdas](../reference/logic/lambdas.md) declared in `logic.nl`. See [`reference/packages/collections.md`](../reference/packages/collections.md#operations) for the full table.
 
 ### How the literal syntax works
 
-The structural markers `<(> <E> <,> , <)*>` decode as:
+The structural markers `<(> <(> <E> <|> .. <)> <,> , <)*>` decode as:
 
 - `<(>` … `<)*>` — a group with zero-or-more repetition
-- `<E>` — the element (typed by the generic parameter)
+- `<(> <E> <|> .. <)>` — an alternation: each item is an element (typed by the generic parameter) or the incompleteness marker `..`
 - `<,>` — the separator marker
 - `,` after `<,>` — the actual separator character the user writes
 
-So `Set<E>` accepts `{}`, `{x}`, `{x, y}`, `{x, y, z}`, and so on. Same for `List<E>` with `[` and `]`.
+So `Set<E>` accepts `{}`, `{x}`, `{x, y}`, `{x, y, z}`, and so on. Same for `List<E>` with `[` and `]`. A `..` among the items makes the collection **open**: `{x, y, ..}` contains at least `x` and `y`, `{..}` has no known elements. Open collections print with a trailing `..`, are never equal to a closed one, and propagate through the operations (a union with an open set is open, the size of an open set is unknown); see [`reference/packages/collections.md`](../reference/packages/collections.md#open-collections--).
 
 ### Set-builder notation
 
@@ -466,10 +466,10 @@ So `Set<E>` accepts `{}`, `{x}`, `{x, y}`, `{x, y, z}`, and so on. Same for `Lis
 
 ```nelumbo
 Integer i
-{[i](|i|=10)} = s  ?  [(s={-10,10})][(s={0}),..]
+{[i](|i|=10)} = s  ?  [(s={-10,10})][(s={0,..}),..]
 ```
 
-The two solutions of `|i| = 10` become the fact `s = {-10, 10}`; `i = 0` is a proven non-member, so `{0}` lands on the falsehoods side with `..` for the open remainder.
+The two solutions of `|i| = 10` become the fact `s = {-10, 10}`; `i = 0` is a proven non-member, so every set containing it, `{0,..}`, lands on the falsehoods side, with `..` for the open remainder. When the condition rests on open facts, the one result set is itself open: `c(Hendrik)=s ? [(s={Juliana,..})][..]` in `family.nl`.
 
 ### Filter, map and sort
 
