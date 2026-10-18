@@ -38,3 +38,23 @@ test('a #name link opens the sandbox with that example loaded', async ({ page }:
     await expect.poll(async (): Promise<string> => editorText(page)).toBe(source);
     await expect(page.locator('aside nav a[data-example="family"]')).toHaveClass(/\bactive\b/);
 });
+
+test('the Library menu opens a standard library module in the same editor', async ({ page }: { page: Page }): Promise<void> => {
+    await page.goto('/sandbox.html');
+    await page.waitForFunction((): boolean => ((window as any).NelumboFields?.__editors?.length ?? 0) > 0);
+    const sidebar: Locator = page.locator('aside nav');
+    await expect(sidebar.locator('.group', { hasText: 'Library' })).toBeVisible();
+    await expect(sidebar.locator('a[data-example="library/lang"]')).toHaveText('lang.nl');
+    await sidebar.locator('a[data-example="library/integers"]').click();
+    const source: string = await page.evaluate(async (): Promise<string> => (await fetch('/library/integers')).text());
+    await expect.poll(async (): Promise<string> => editorText(page)).toBe(source);
+    await expect(page).toHaveURL(/\/sandbox\.html#library\/integers$/);
+    await expect(sidebar.locator('a[data-example="library/integers"]')).toHaveClass(/\bactive\b/);
+});
+
+test('a #library/<module> link opens the sandbox with that module loaded', async ({ page }: { page: Page }): Promise<void> => {
+    await page.goto('/sandbox.html#library/collections');
+    const source: string = await page.evaluate(async (): Promise<string> => (await fetch('/library/collections')).text());
+    await expect.poll(async (): Promise<string> => editorText(page)).toBe(source);
+    await expect(page.locator('aside nav a[data-example="library/collections"]')).toHaveClass(/\bactive\b/);
+});
