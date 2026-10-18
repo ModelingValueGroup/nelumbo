@@ -223,6 +223,30 @@ public class KnownBugsTest extends NelumboTestBase {
         bugResource("collections-index-out-of-range.nl");
     }
 
+    @KnownBug("set-builder compared with a closed set literal holds for any set")
+    @Test
+    public void setBuilderEqualsAnySet() {
+        bugResource("set-builder-equals-any-set.nl");
+    }
+
+    @KnownBug("set-builder without solutions yields no result instead of {}")
+    @Test
+    public void setBuilderEmptyResultMissing() {
+        bugResource("set-builder-empty-result-missing.nl");
+    }
+
+    @KnownBug("size of a where/map result reports a closed, empty falsehoods side")
+    @Test
+    public void sizeOfLambdaResultClosesFalsehoods() {
+        bugResource("size-of-lambda-result-closes-falsehoods.nl");
+    }
+
+    @KnownBug("pos/in on a list with a duplicated element: inconsistent result (pos is a function)")
+    @Test
+    public void posDuplicateElementInconsistent() {
+        bugResource("pos-duplicate-element-inconsistent.nl");
+    }
+
     @KnownBug("period_multiply crashes on multipliers outside int range")
     @Test
     public void datetimeMultiplyOverflow() {
