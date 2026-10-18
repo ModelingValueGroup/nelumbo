@@ -81,7 +81,7 @@ A pattern is a mix of:
 - **Holes** of the form `<T>` — placeholders filled by an expression of type `T`
 - **Built-in token holes** like `<NUMBER>`, `<STRING>`, `<NAME>` — see [`built-in-tokens.md`](built-in-tokens.md)
 - **Variable holes** `<Variable>` — used by binding forms like quantifiers
-- **Unique holes** `<one T>` — at most one value for each combination of the other holes (see [Open facts and `one`](../logic/statements.md#open-facts-and-one))
+- **Unique holes** `<one T>` — at most one value for each combination of the other holes; the keyword comes after `visible`/`hidden` and before the type (`<hidden one T#5>`). Meaningful in `Boolean` patterns: `=` is declared `<one Object> = <one Object>`, which gives functions a single, closed result (see [Open facts and `one`](../logic/statements.md#open-facts-and-one))
 - **Repetition and grouping markers** `<(>`, `<)>`, `<)*>`, `<)+>`, `<)?>`, `<,>`, `<|>` — see [below](#repetition-and-grouping)
 - An optional **precedence annotation** `#N` — see [`precedence-and-associativity.md`](precedence-and-associativity.md)
 - An optional **native binding** `@fully.qualified.JavaClass` — see [`native-api.md`](../core/native-api.md)

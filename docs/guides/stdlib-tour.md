@@ -7,11 +7,11 @@ This guide walks through all seven modules in dependency order. It starts with `
 The files:
 
 1. [`lang.nl`](#1-nelumbolang-58-lines) — 58 lines — syntactic bootstrap: tokens, object hierarchy, the pattern meta-grammar, top-level forms
-2. [`logic.nl`](#2-nelumbologic-62-lines) — 62 lines — Boolean, connectives, lambdas, quantifiers, equality, and the `fact`/`<=>`/`?` statement forms
+2. [`logic.nl`](#2-nelumbologic-61-lines) — 61 lines — Boolean, connectives, lambdas, quantifiers, equality, and the `fact`/`<=>`/`?` statement forms
 3. [`integers.nl`](#3-nelumbointegers-39-lines) — 39 lines — arithmetic and comparison
 4. [`rationals.nl`](#4-nelumborationals-46-lines) — 46 lines — exact rational arithmetic
 5. [`strings.nl`](#5-nelumbostrings-23-lines) — 23 lines — string operations
-6. [`collections.nl`](#6-nelumbocollections-79-lines) — 79 lines — generic `Set<E>` and `List<E>`, set-builder notation, and the lambda-based `where`/`map`/`sort`
+6. [`collections.nl`](#6-nelumbocollections-78-lines) — 78 lines — generic `Set<E>` and `List<E>`, set-builder notation, and the lambda-based `where`/`map`/`sort`
 7. [`datetime.nl`](#7-nelumbodatetime-97-lines) — 97 lines — ISO 8601 dates, times, date-times, and durations
 
 Each module is small enough to read in full, and the commentary around them illuminates the idioms they establish.
@@ -51,7 +51,7 @@ Pattern ::= <NAME>                                       @nelumbo.patterns.Token
             <STRING>                                     @nelumbo.patterns.TokenTextPattern,
             ...
             <LEFT> ... <RIGHT>                           @nelumbo.patterns.SequencePattern,
-            "<" (visible|hidden)? <Type#100> (#NUMBER)? ">"  @nelumbo.patterns.NodeTypePattern
+            "<" (visible|hidden)? (one)? <Type#100> (#NUMBER)? ">"  @nelumbo.patterns.NodeTypePattern
 
 // Top-level statement forms
 Root ::= "import" ...                                                @nelumbo.lang.Import,
@@ -80,7 +80,7 @@ See [`../reference/lang/index.md`](../reference/lang/index.md) for the full anno
 
 ---
 
-## 2. `nelumbo.logic` (62 lines)
+## 2. `nelumbo.logic` (61 lines)
 
 The three-valued logic layer. This is where Boolean, the connectives, and — crucially — the `fact`, `<=>`, and `?` statement forms are declared.
 
@@ -111,7 +111,7 @@ Boolean ::= true                                            @nelumbo.logic.NBool
             <Boolean> | <Boolean>                   #20     @nelumbo.logic.Or,
             E<Lambda<Boolean>>                              @nelumbo.logic.ExistentialQuantifier,
             A<Lambda<Boolean>>                              @nelumbo.logic.UniversalQuantifier,
-            <Object> =  <Object>                    #30     @nelumbo.logic.NIs,
+            <one Object> = <one Object>             #30     @nelumbo.logic.NIs,
             <Object> != <Object>                    #30,
             <Boolean> -> <Boolean>                  #18,
             <Boolean> "<->" <Boolean>               #16
@@ -140,7 +140,7 @@ f1 = f2  <=> E[l1](f1 = l1 & f2 = l1)
 
 ### What is native here
 
-Ten native bindings: `Equal` (for the private literal-equality `eq`), `NBoolean`, `Not`, `And`, `Or`, `Lambda` (all six arities), `ExistentialQuantifier`, `UniversalQuantifier`, `NIs` (the public `<Object> = <Object>` operator), and three statement-form natives `Fact`, `Rule`, `Query`. Everything else is derived in Nelumbo.
+Ten native bindings: `Equal` (for the private literal-equality `eq`), `NBoolean`, `Not`, `And`, `Or`, `Lambda` (all six arities), `ExistentialQuantifier`, `UniversalQuantifier`, `NIs` (the public `<one Object> = <one Object>` operator), and three statement-form natives `Fact`, `Rule`, `Query`. Everything else is derived in Nelumbo.
 
 ### What is derived
 
@@ -160,6 +160,7 @@ This is the module's first big lesson: **even at the deepest level of the langua
 - The `::=` declaration for `Boolean` lists many alternatives separated by commas — all productions for `Boolean`. This is the conventional way to declare a type with many forms.
 - Precedence annotations follow a ladder: `<->` at 16, `->` at 18, `|` at 20, `&` at 22, `!` at 25, `=`/`!=` at 30. Tighter-binding operators get higher numbers.
 - `E[...]` and `A[...]` are not special syntax: they are the keyword `E`/`A` followed by a **lambda** (`Lambda<Boolean>`). The lambda's `{Variable,A1}` holes require a bare declared variable at each binding site, and its body `<R#0>` accepts any expression, even low-precedence ones. This is why quantifiers take one to six variables, and why `where`, `map`, `sort` and set-builder in `collections` can reuse the same syntax. See [`reference/logic/lambdas.md`](../reference/logic/lambdas.md).
+- `<one Object> = <one Object>`: the `one` marks both holes of `=` as unique, so a variable on either side gets at most one value. That is why a function has a single result, and why an asserted function value (`fact m(Beatrix)=Juliana`) is closed while other facts stay open. See [Open facts and `one`](../reference/logic/statements.md#open-facts-and-one).
 - `{E,Literal}` is an *intersection type* ("an `E` that is also a `Literal`") over the generic parameter `E`, so the equality rules are written once for every type. The `Literal`/`Function`/`Object` split is what makes the equality rules sufficient.
 
 ---
@@ -397,7 +398,7 @@ All three work from the same rule and the same native. The `Strings#string_conca
 
 ---
 
-## 6. `nelumbo.collections` (79 lines)
+## 6. `nelumbo.collections` (78 lines)
 
 The only module that uses generic-type parameters.
 

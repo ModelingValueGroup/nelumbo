@@ -90,7 +90,7 @@ Defined in `logic.nl` as `(p -> q) & (q -> p)`.
 a = b
 ```
 
-Identity comparison. Declared in `logic.nl` as `Boolean ::= <Object> = <Object> #30 @nelumbo.logic.NIs`. The public native `NIs` handles the general case; a separate private native `Equal` backs the private `eq(<Literal>, <Literal>)` predicate, which the rule `l1 = l2 <=> eq(l1, l2)` invokes for literal-to-literal comparison. A second rule, `l1 = f1 <=> f1 = l1`, inverts a literal-equals-function query into function-equals-literal form, so equality is usable in either direction: `fib(5) = f` and `5 = fib(n)` both work.
+Identity comparison. Declared in `logic.nl` as `Boolean ::= <one Object> = <one Object> #30 @nelumbo.logic.NIs`; the `one` holes give `=` (and so every function) at most one value per side, see [`one`](index.md#one-equality-has-a-single-answer). The public native `NIs` handles the general case; a separate private native `Equal` backs the private `eq(<Literal>, <Literal>)` predicate, which the rule `l1 = l2 <=> eq(l1, l2)` invokes for literal-to-literal comparison. A second rule, `l1 = f1 <=> f1 = l1`, inverts a literal-equals-function query into function-equals-literal form, so equality is usable in either direction: `fib(5) = f` and `5 = fib(n)` both work.
 
 ### `!=` — inequality (`#30`)
 

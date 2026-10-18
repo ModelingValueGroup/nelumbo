@@ -4,12 +4,12 @@
 // The last four queries have no expectation (they illustrate).
 import nelumbo.logic
 
-Person   :: Object
-Male     :: Person
+Person  :: Object
+Male    :: Person
 
-FactType ::= q(<Person>), s(<Person>,<Person>)
+Boolean ::= q(<Person>), s(<Person>,<Person>)
 
-Male     ::= X, Y
+Male    ::= X, Y
 
 Person a, b
 

@@ -177,6 +177,12 @@ public class KnownBugsTest extends NelumboTestBase {
         bugResource("unbound-fact-lookup-complete-empty.nl");
     }
 
+    @KnownBug("pattern whose only argument is a unique hole (winner(<one Person>)) is never closed")
+    @Test
+    public void singleUniqueHoleNotClosed() {
+        bugResource("single-unique-hole-not-closed.nl");
+    }
+
     // the correct behavior is an error per query, which bugResource (pass = no
     // error) cannot express: count the inconsistency diagnostics instead
     @KnownBug("inconsistency between two rules detected in one rule order only")

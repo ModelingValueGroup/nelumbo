@@ -4,7 +4,7 @@
 
 The logic module. A file gets it with `import nelumbo.logic`, or transitively by importing any package. It declares the `Boolean` type, the three Boolean values, the connectives, [lambdas](lambdas.md), the quantifiers (which are lambdas), equality, and the three top-level forms (`fact`, `<=>`, `?`).
 
-**Source:** [`src/main/resources/org/modelingvalue/nelumbo/logic/logic.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/logic/logic.nl) — 62 lines.
+**Source:** [`src/main/resources/org/modelingvalue/nelumbo/logic/logic.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/logic/logic.nl) — 61 lines.
 
 **Import:**
 
@@ -110,14 +110,14 @@ A[a](a=T1 & a=T2)      ? [][()]
 ```nelumbo
 private Boolean ::= eq(<Literal>, <Literal>)   @nelumbo.logic.Equal
 
-Boolean ::= <Object> =  <Object>   #30   @nelumbo.logic.NIs,
-            <Object> != <Object>   #30
+Boolean ::= <one Object> = <one Object>   #30   @nelumbo.logic.NIs,
+            <Object> != <Object>           #30
 ```
 
 Two related but distinct primitives:
 
 - `eq(l1, l2)` is the **private** literal-equality predicate. It compares two `Literal` values directly and is bound to the native class `Equal`. Importers never call `eq` themselves.
-- `<Object> = <Object>` is the **public** equality operator, bound to `NIs`. Unlike `eq`, it accepts any `Object` on either side, so it works on functions and variables as well as literals.
+- `<one Object> = <one Object>` is the **public** equality operator, bound to `NIs`. Unlike `eq`, it accepts any `Object` on either side, so it works on functions and variables as well as literals.
 
 `!=` has no native binding of its own; it is the negation of `=`. The remaining cases are rules, written with *intersection types* `{A,B}` ("both an `A` and a `B`") over a generic parameter `E`:
 
@@ -136,6 +136,14 @@ f1 = f2   <=>  E[l1](f1 = l1 & f2 = l1)
 - `l1 = l2` — two literals (of one type `E`) are compared by `eq`.
 - `l1 = f1` swaps a literal-equals-function query into function-equals-literal form, so that user-defined rules of the shape `f1 = literal <=> ...` are reachable from either direction.
 - `f1 = f2` — two functions are equal when some literal is equal to both.
+
+### `one`: equality has a single answer
+
+Both holes of `=` are [unique holes](statements.md#open-facts-and-one) (`<one Object>`): a variable on either side of `=` gets at most one value. This is what gives every function a single result:
+
+- `fib(5)=f` must give exactly one closed answer `[(f=5)][..]` (or none). A rule that derives two values, or one value with an open facts side, is reported as `Inconsistent result: ... has non unique bindings`.
+- A function value asserted as a fact is **closed**: after `fact m(Beatrix)=Juliana`, `m(Beatrix)=x` gives `[(x=Juliana)][..]` and `m(Beatrix)=Beatrix` is false. All other facts are open (unknown when not asserted), so `=` on functions is the main source of closed answers over facts.
+- Only a variable in the hole is constrained, not a term: `m(x)=Juliana` may have many answers (`m` need not be injective), and `x=y` with both unbound is not checked.
 
 `=` is what makes ordinary rule bodies work — `f=fib(n-1)+fib(n-2)` succeeds when both sides reduce to the same value — and is the surface form used in queries to bind variables. Note that a class-less `Object` functor with arguments is `Function`-typed, so `f(1)=f(1)` is undecided unless the result type is declared `:: Struct` (structural equality).
 

@@ -35,6 +35,8 @@ Nelumbo takes neither option. It treats **facts and falsehoods as separate thing
 - A program can distinguish "X is not a parent of Y" (a proven negative) from "we have no information about whether X is a parent of Y" (unknown)
 - Incompleteness of the knowledge base is represented explicitly rather than silently miscast as falsity
 
+The same holds for asserted facts: the world of facts is **open**. A relation that is not asserted is unknown, not false, so `friends(Piet, x)` over asserted facts answers `[(x=Jan),..][..]`. The exception is a [unique hole](statements.md#open-facts-and-one) `<one T>`: once a value is asserted, every other value in that hole is false. Because `=` is declared `<one Object> = <one Object>`, this makes function values closed: after `fact m(Beatrix)=Juliana`, `m(Beatrix)=x` is `[(x=Juliana)][..]` and `m(Beatrix)=Beatrix` is false.
+
 The price is that every operator has to be defined on three inputs, not two. Fortunately most of them extend in the natural way.
 
 ---

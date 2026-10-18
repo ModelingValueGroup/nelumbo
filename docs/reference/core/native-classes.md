@@ -95,7 +95,7 @@ Shipped natives fall into five structural roles. Reading this classification fir
 
 ### `NIs`
 
-- Backs: `Boolean ::= <Object> = <Object> #30`
+- Backs: `Boolean ::= <one Object> = <one Object> #30`
 - Role: comparison predicate (public)
 - Strategy: the general-purpose equality native. Handles equality between any two `Object` values, including variables and partially-bound expressions. Returns `factCC()` / `falsehoodCC()` when both sides are fully ground, and partial-information results otherwise.
 
@@ -259,7 +259,7 @@ This table lets you go from a line in an `.nl` file to the Java class that imple
 | `lang.nl` | `Pattern ::= <(> ... <,> ... <)+/*>` | `nelumbo.patterns.RepetitionPattern` |
 | `lang.nl` | `Pattern ::= <(> ... <)?>` | `nelumbo.patterns.OptionalPattern` |
 | `lang.nl` | `Pattern ::= <LEFT> ... <RIGHT>` | `nelumbo.patterns.SequencePattern` |
-| `lang.nl` | `Pattern ::= "<" (vis/hid)? <Type> (#N)? ">"` | `nelumbo.patterns.NodeTypePattern` |
+| `lang.nl` | `Pattern ::= "<" (vis/hid)? (one)? <Type> (#N)? ">"` | `nelumbo.patterns.NodeTypePattern` |
 | `lang.nl` | `Root ::= "import" ...` | `nelumbo.lang.Import` |
 | `lang.nl` | `Root ::= <Root> ::> <RootNamespace>` | `nelumbo.lang.Transform` |
 | `lang.nl` | `Root ::= (hidden)? <Type> <NAME>, ...` | `nelumbo.lang.Variable` |
@@ -273,7 +273,7 @@ This table lets you go from a line in an `.nl` file to the Java class that imple
 | `logic.nl` | `LambdaN<…> ::= [<{Variable,A1}>,…](<R#0>)` (N = 1…6) | `Lambda` |
 | `logic.nl` | `E<Lambda<Boolean>>` | `ExistentialQuantifier` |
 | `logic.nl` | `A<Lambda<Boolean>>` | `UniversalQuantifier` |
-| `logic.nl` | `<Object> = <Object>` | `NIs` |
+| `logic.nl` | `<one Object> = <one Object>` | `NIs` |
 | `logic.nl` | `eq(<Literal>,<Literal>)` *(private)* | `Equal` |
 | `logic.nl` | `Root ::= "fact" ...` | `nelumbo.logic.Fact` |
 | `logic.nl` | `Root ::= <Boolean> "<=>" ...` | `nelumbo.logic.Rule` |
