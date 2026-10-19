@@ -1304,6 +1304,12 @@ public class EditorWindow extends WindowAdapter
             lastParserResult = result;
         } catch (NelumboEditor.EDTException e) {
             System.err.println("EDT call failed in execute: " + e.getCause());
+        } catch (RuntimeException | StackOverflowError e) {
+            // an engine crash on this text: report it in this window and keep the loop
+            // alive, so the next edit evaluates again
+            e.printStackTrace();
+            String message = "Internal error: " + e;
+            javax.swing.SwingUtilities.invokeLater(() -> setMessages(message));
         }
     }
 

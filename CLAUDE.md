@@ -58,6 +58,7 @@ nelumbo (root)   -> core: syntax, semantics, patterns, knowledge base
 - `logic/`: `And`, `Or`, `Not`, `Equal`, `When`, quantifiers, `Predicate`, `BinaryPredicate`, `CompoundPredicate`.
 - `integers/`, `strings/`, `collections/`: built-in types.
 - `tools/`: Swing `NelumboEditor`, AST/KB viewers, `NelumboEvaluator` (shared by CLI and MCP).
+- Each editor window evaluates in its own loop (one `KnowledgeBase.BASE.invoke` per window, re-`init()` per edit). An engine crash (`RuntimeException`, `StackOverflowError`) shows as `Internal error: ...` in that window's messages and the loop keeps running, so the next edit evaluates again.
 - Untitled editor windows keep their text in `java.util.prefs.Preferences` via `PreferenceText`: one value holds at most 8 KB (`MAX_VALUE_LENGTH`, else "Value too long"), so the text is split over `content`, `content.1`, ...
 - Core classes: `KnowledgeBase` (engine), `Node`, `Type`, `Variable`, `Fact`, `Rule`, `Transform`, `Query`, `InferResult`, `InferContext`.
 
