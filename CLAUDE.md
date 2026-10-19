@@ -58,7 +58,7 @@ nelumbo (root)   -> core: syntax, semantics, patterns, knowledge base
 - `logic/`: `And`, `Or`, `Not`, `Equal`, `When`, quantifiers, `Predicate`, `BinaryPredicate`, `CompoundPredicate`.
 - `integers/`, `strings/`, `collections/`: built-in types.
 - `tools/`: Swing `NelumboEditor`, AST/KB viewers, `NelumboEvaluator` (shared by CLI and MCP).
-- Each editor window evaluates in its own loop (one `KnowledgeBase.BASE.invoke` per window, re-`init()` per edit). An engine crash (`RuntimeException`, `StackOverflowError`) shows as `Internal error: ...` in that window's messages and the loop keeps running, so the next edit evaluates again.
+- Each editor window evaluates in its own loop (one `KnowledgeBase.BASE.invoke` per window, re-`init()` per edit). An engine crash (`RuntimeException`, `StackOverflowError`) shows as `Internal error: <innermost cause>` in that window's messages and the loop keeps running, so the next edit evaluates again. It is placed on the crashing line: for a parse crash at `Parser.crashToken()` (first token of the innermost node being parsed; the exception itself is rethrown unchanged), with all token colors cleared to black (no parse, no reliable colors), for an evaluation crash at that statement (the other statements still evaluate).
 - Untitled editor windows keep their text in `java.util.prefs.Preferences` via `PreferenceText`: one value holds at most 8 KB (`MAX_VALUE_LENGTH`, else "Value too long"), so the text is split over `content`, `content.1`, ...
 - Core classes: `KnowledgeBase` (engine), `Node`, `Type`, `Variable`, `Fact`, `Rule`, `Transform`, `Query`, `InferResult`, `InferContext`.
 
