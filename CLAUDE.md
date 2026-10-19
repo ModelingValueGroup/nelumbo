@@ -8,7 +8,7 @@ Nelumbo is a declarative logic programming meta-language in Java: custom syntax 
 
 ## Build Commands
 
-Java 21+, Gradle 8.14.3 (Kotlin DSL) via wrapper.
+Java 21+, Gradle 9.8.1 (Kotlin DSL) via wrapper.
 
 ```sh
 ./gradlew build                          # everything (core + LSP server + tests)
