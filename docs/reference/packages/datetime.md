@@ -4,7 +4,7 @@
 
 ISO 8601 dates, times, date-times, and durations, with chronological comparison and reversible arithmetic.
 
-**Source:** [`src/main/resources/org/modelingvalue/nelumbo/datetime/datetime.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/datetime/datetime.nl) — 97 lines.
+**Source:** [`src/main/resources/org/modelingvalue/nelumbo/datetime/datetime.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/datetime/datetime.nl)
 
 **Import:**
 

@@ -6,19 +6,19 @@ This guide walks through all seven modules in dependency order. It starts with `
 
 The files:
 
-1. [`lang.nl`](#1-nelumbolang-58-lines) — 58 lines — syntactic bootstrap: tokens, object hierarchy, the pattern meta-grammar, top-level forms
-2. [`logic.nl`](#2-nelumbologic-61-lines) — 61 lines — Boolean, connectives, lambdas, quantifiers, equality, and the `fact`/`<=>`/`?` statement forms
-3. [`integers.nl`](#3-nelumbointegers-39-lines) — 39 lines — arithmetic and comparison
-4. [`rationals.nl`](#4-nelumborationals-46-lines) — 46 lines — exact rational arithmetic
-5. [`strings.nl`](#5-nelumbostrings-23-lines) — 23 lines — string operations
-6. [`collections.nl`](#6-nelumbocollections-78-lines) — 78 lines — generic `Set<E>` and `List<E>`, set-builder notation, and the lambda-based `where`/`map`/`sort`
-7. [`datetime.nl`](#7-nelumbodatetime-97-lines) — 97 lines — ISO 8601 dates, times, date-times, and durations
+1. [`lang.nl`](#1-nelumbolang) — syntactic bootstrap: tokens, object hierarchy, the pattern meta-grammar, top-level forms
+2. [`logic.nl`](#2-nelumbologic) — Boolean, connectives, lambdas, quantifiers, equality, and the `fact`/`<=>`/`?` statement forms
+3. [`integers.nl`](#3-nelumbointegers) — arithmetic and comparison
+4. [`rationals.nl`](#4-nelumborationals) — exact rational arithmetic
+5. [`strings.nl`](#5-nelumbostrings) — string operations
+6. [`collections.nl`](#6-nelumbocollections) — generic `Set<E>` and `List<E>`, set-builder notation, and the lambda-based `where`/`map`/`sort`
+7. [`datetime.nl`](#7-nelumbodatetime) — ISO 8601 dates, times, date-times, and durations
 
 Each module is small enough to read in full, and the commentary around them illuminates the idioms they establish.
 
 ---
 
-## 1. `nelumbo.lang` (58 lines)
+## 1. `nelumbo.lang`
 
 The syntactic bootstrap. Every other `.nl` file — including `logic.nl` — is parsed using the `::=` declarations in this file. The Java core knows just enough to load `lang.nl`; from there on, the same machinery the user writes parses everything.
 
@@ -80,7 +80,7 @@ See [`../reference/lang/index.md`](../reference/lang/index.md) for the full anno
 
 ---
 
-## 2. `nelumbo.logic` (61 lines)
+## 2. `nelumbo.logic`
 
 The three-valued logic layer. This is where Boolean, the connectives, and — crucially — the `fact`, `<=>`, and `?` statement forms are declared.
 
@@ -165,7 +165,7 @@ This is the module's first big lesson: **even at the deepest level of the langua
 
 ---
 
-## 3. `nelumbo.integers` (39 lines)
+## 3. `nelumbo.integers`
 
 Builds arithmetic on top of logic.
 
@@ -272,7 +272,7 @@ Read it when you want to confirm how an operator behaves in a case you are unsur
 
 ---
 
-## 4. `nelumbo.rationals` (46 lines)
+## 4. `nelumbo.rationals`
 
 Builds exact rationals on top of integers. Structurally identical to `integers`.
 
@@ -344,7 +344,7 @@ This is a good template: **when adding a new numeric-like type, mirror the integ
 
 ---
 
-## 5. `nelumbo.strings` (23 lines)
+## 5. `nelumbo.strings`
 
 The smallest non-trivial module.
 
@@ -398,7 +398,7 @@ All three work from the same rule and the same native. The `Strings#string_conca
 
 ---
 
-## 6. `nelumbo.collections` (78 lines)
+## 6. `nelumbo.collections`
 
 The only module that uses generic-type parameters.
 
@@ -488,7 +488,7 @@ There is no fold/reduce, no `head`/`tail`, and no set-like operations on lists. 
 
 ---
 
-## 7. `nelumbo.datetime` (97 lines)
+## 7. `nelumbo.datetime`
 
 The largest stdlib module, and a good demonstration that the integer idioms scale to a much richer value domain. It imports `nelumbo.integers` (for the `Period * Integer` scaling operator) and adds four independent value types.
 

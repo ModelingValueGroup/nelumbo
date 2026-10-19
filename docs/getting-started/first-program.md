@@ -4,7 +4,7 @@ This page walks through `fibonacci.nl` one line at a time. By the end you will h
 
 Before reading on, make sure you have read [`reading-a-test.md`](reading-a-test.md). If `[(f=5)][..]` does not mean anything to you yet, start there.
 
-The file we are working with is [`src/main/resources/org/modelingvalue/nelumbo/examples/fibonacci.nl`](../../src/main/resources/org/modelingvalue/nelumbo/examples/fibonacci.nl). It is 19 lines long.
+The file we are working with is [`src/main/resources/org/modelingvalue/nelumbo/examples/fibonacci.nl`](../../src/main/resources/org/modelingvalue/nelumbo/examples/fibonacci.nl).
 
 ---
 
@@ -170,4 +170,4 @@ Good next files to open, in order:
 - **`logicTest.nl`** — a complete specification of three-valued logic in test form. Useful to skim whenever you are unsure how `&`, `|`, `!`, `->`, `<->`, `E[]`, or `A[]` behave in edge cases.
 - **`belasting.nl`** — the same mechanisms used to write Dutch tax rules in near-natural-language syntax. A good preview of what Nelumbo is actually for.
 
-And when you want to see *how the language is built out of itself*, open `src/main/resources/org/modelingvalue/nelumbo/integers/integers.nl`. It is 37 lines long and defines everything you used on this page.
+And when you want to see *how the language is built out of itself*, open `src/main/resources/org/modelingvalue/nelumbo/integers/integers.nl`. It defines everything you used on this page.
