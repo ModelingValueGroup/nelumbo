@@ -125,6 +125,12 @@ public class KnownBugsTest extends NelumboTestBase {
         bugResource("where-filter-npe-in-recursion.nl");
     }
 
+    @KnownBug("call over an empty set goes unknown after an earlier query over an empty set of another type")
+    @Test
+    public void emptySetQueryChangesLaterResult() {
+        bugResource("empty-set-query-changes-later-result.nl");
+    }
+
     // ==== speculative evaluation ====
 
     @KnownBug("rule guards evaluated speculatively: unguarded pos crashes out-of-range")
@@ -241,6 +247,18 @@ public class KnownBugsTest extends NelumboTestBase {
     @Test
     public void posDuplicateElementInconsistent() {
         bugResource("pos-duplicate-element-inconsistent.nl");
+    }
+
+    @KnownBug("call as list argument leaves the bound index unbound in a pos rule: inconsistent result")
+    @Test
+    public void callArgUnbindsIndexInPosRule() {
+        bugResource("call-arg-unbinds-index-in-pos-rule.nl");
+    }
+
+    @KnownBug("empty collection literal ({} or []) rejected as the argument of a typed hole")
+    @Test
+    public void emptyCollectionLiteralRejectedAsArgument() {
+        bugResource("empty-collection-literal-rejected-as-argument.nl");
     }
 
     @KnownBug("period_multiply crashes on multipliers outside int range")

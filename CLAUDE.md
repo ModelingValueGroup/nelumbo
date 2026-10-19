@@ -58,6 +58,7 @@ nelumbo (root)   -> core: syntax, semantics, patterns, knowledge base
 - `logic/`: `And`, `Or`, `Not`, `Equal`, `When`, quantifiers, `Predicate`, `BinaryPredicate`, `CompoundPredicate`.
 - `integers/`, `strings/`, `collections/`: built-in types.
 - `tools/`: Swing `NelumboEditor`, AST/KB viewers, `NelumboEvaluator` (shared by CLI and MCP).
+- Untitled editor windows keep their text in `java.util.prefs.Preferences` via `PreferenceText`: one value holds at most 8 KB (`MAX_VALUE_LENGTH`, else "Value too long"), so the text is split over `content`, `content.1`, ...
 - Core classes: `KnowledgeBase` (engine), `Node`, `Type`, `Variable`, `Fact`, `Rule`, `Transform`, `Query`, `InferResult`, `InferContext`.
 
 Entry points: `KnowledgeBase`, `lsp.Main` (stdio, or `Main ws [port]`), `mcp.Main`, `tools.NelumboEditor`.
@@ -86,13 +87,13 @@ Overload budget (`EvalGate.GLOBAL` counts evaluations JVM-wide):
 - Fast loop: `./gradlew :cli:cliJar`, then `java -jar cli/build/libs/nelumbo-cli-*.jar file.nl` (exit 0 = ok, errors as `file:line:col`, `-q` silences query output). Always rebuild the jar after engine changes - a stale jar once faked an "environment-dependent" bug.
 
 Sudoku examples (`examples/sudoku-*.nl`, NOT in `ExampleCatalog`/`ExamplesTest`):
-- Run via CLI with `-DPARALLEL_COLLECTIONS=false`: under parallel collections `map` results are nondeterministic (unfixed engine bug). The flag does NOT serialize inference.
+- `-DPARALLEL_COLLECTIONS=false` no longer matters for evaluation: since 2026-10-06 `KnowledgeBase.invoke`/`run`/`get` wrap their work in `Collection.sequential`, so collection operations inside them run on one thread with or without the flag (probe-verified; only the async memoization `cleanup` on `POOL` can still split). The immutable-collections interning bug that made parallel `map` nondeterministic is unfixed, but unreachable there. The flag is a `static final` in `CollectionImpl`, read once at JVM start.
 - `sudoku-9x9.nl`: naive brute force; its third puzzle runs 2+ hours (baseline). `sudoku-9x9-smart.nl`: singles-first (`scanF` forced moves, `solveBX` guesses; entry `sudokuSmart(g)`), all four puzzles ~45 s.
 - `sudoku-4x4*.nl`: line-for-line 4x4 debug copies (solution grid `[[1,2,3,4],[3,4,1,2],[2,1,4,3],[4,3,2,1]]`), sub-second.
 - Brute-force files report the result set open (`[(s=...),..][..]`), singles-first files closed; the smart files keep only the "real" puzzle active (neighbor-query effects).
 - `SudokuExamplesTest`: all `@Disabled` (4x4: timing-dependent `speculative-guard-index-crash.nl` without the flag; 9x9: too slow).
 - `sudoku-4x4-smart.nl` fails with `Inconsistent results`: `scanB`'s forced branch lacks an `if` (program defect), which the engine reports in one rule order only (`bugs/inconsistency-missed-by-rule-order.nl`; `-DREVERSE_NELUMBO=true` flips it). `sudoku-9x9-smart.nl` has the same `scanB` shape.
-- `sudoku-4x4-csp.nl`: CSP solver at Task 6 (`elim`); its Task 6 probes are commented out: the first two decide, the third (contradiction, expected `[][..]`) is still `[..][..]`. Grid DSL (Task 17) BLOCKED on `bugs/single-hole-functor-parser-npe.nl` (`Cell ::= ".", <Integer>` NPEs the parser); its section is commented out.
+- `sudoku-4x4-csp.nl`: CSP solver, Tasks 1-8, 10-12 done (`assign`, naked + hidden single, `solved`/MRV, `search`, `toNums`; probed on literal grids and with givens set by nested `assign`, since `parse` is blocked; the `solve` oracle is commented out). `search` is first-success-wins (`tryCand`): a function with two answers is an inconsistency since `=` is unique. `/` is exact division (`1/2` has no value): box/flat-index offsets via `bro`/`bco`/`fr`/`fc`. Task 9 (`parse`) BLOCKED on `bugs/call-arg-unbinds-index-in-pos-rule.nl` (`icell(p,r,c)=0` on a row with two blanks: "Inconsistent result"); probes commented out. Task 6's contradiction probe is commented out: `[..][..]` after a neighbor query, `[][..]` alone (`bugs/empty-set-query-changes-later-result.nl`, hash-dependent). A Norvig `return False` needs an explicit `false if ...` branch: a guard that fails makes its branch silent (`[..][..]`), not false (`docs/reference/logic/writing-rules.md`). Grid DSL (Task 17) BLOCKED on `bugs/single-hole-functor-parser-npe.nl` (`Cell ::= ".", <Integer>` NPEs the parser); its section is commented out.
 
 ## Nelumbo Language Syntax (.nl files)
 

@@ -1519,7 +1519,7 @@ public class EditorWindow extends WindowAdapter
                 preferences.put(prefKey("title"), frame.getTitle());
             } else {
                 // For regular windows, save content and state
-                preferences.put(prefKey("content"), text);
+                PreferenceText.put(preferences, prefKey("content"), text);
 
                 // Save window number
                 if (windowNumber > 0) {
@@ -1588,7 +1588,7 @@ public class EditorWindow extends WindowAdapter
     }
 
     private void loadTextContent() {
-        String text = preferences.get(prefKey("content"), "");
+        String text = PreferenceText.get(preferences, prefKey("content"));
 
         if (!text.isEmpty()) {
             try {
