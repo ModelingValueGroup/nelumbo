@@ -173,7 +173,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             }
         }
         Functor functor = Functor.of(List.of(type), pattern, Type.TYPE, var != null ? Type.NAMESPACE : null, Type.class,
-                null, false);
+                100, false);
         functor.init(this, ctx, bootstrapping);
         return functor;
     }
@@ -184,7 +184,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         } else {
             Type type = var.type().toVariable();
             Functor functor = Functor.of(List.of(var), t(List.of(var), var), type,
-                    worldScopedVariables ? null : Type.NAMESPACE, Variable.class, null, false);
+                    worldScopedVariables ? null : Type.NAMESPACE, Variable.class, 100, false);
             functor.init(this, ctx, bootstrapping);
             return functor;
         }
@@ -206,16 +206,16 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 Pattern PATTERNS = r(n(Type.PATTERN, 100), true, null);
                 Pattern QNAME = c(r(t(NAME), true, t(".")));
 
-                Functor.of(s(t(BEGINOFFILE), ROOTS, t(ENDOFFILE)), Type.NAMESPACE, null, Namespace.class, null)
-                        .init(this, parseContext, bootstrapping);
+                Functor.of(s(t(BEGINOFFILE), ROOTS, t(ENDOFFILE)), Type.NAMESPACE, null, Namespace.class, 0).init(this,
+                        parseContext, bootstrapping);
 
-                Functor.of(s(k("import"), r(QNAME, true, t(","))), Type.ROOT, null, Import.class, null).init(this,
+                Functor.of(s(k("import"), r(QNAME, true, t(","))), Type.ROOT, null, Import.class, 0).init(this,
                         parseContext, bootstrapping);
 
                 Functor.of(
                         s(c(t(NAME), o(s(t("<"), r(n(Type.TYPE, 100), true, t(",")), t(">")))), t("::"),
                                 r(n(Type.TYPE, 100), true, t(",")), o(s(t("#"), t(NAME)))),
-                        Type.ROOT, null, Type.class, null).init(this, parseContext, bootstrapping);
+                        Type.ROOT, null, Type.class, 0).init(this, parseContext, bootstrapping);
 
                 for (Type type : Type.predefined()) {
                     addType(type, parseContext);
@@ -253,16 +253,16 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                         o(s(t("#"), t(NUMBER))), t(">")), Type.PATTERN, null, NodeTypePattern.class, null)
                         .init(this, parseContext, bootstrapping);
 
-                Functor.of(s(t("<"), n(Type.PATTERN_PART, 100), t(">")), Type.PATTERN, null, PatternPartPattern.class,
-                        null).init(this, parseContext, bootstrapping);
+                Functor.of(s(t("<"), n(Type.ROOT, 100), t(">")), Type.PATTERN, null, PatternPartPattern.class, null)
+                        .init(this, parseContext, bootstrapping);
 
                 Functor.of(
                         s(o(k("private")), n(Type.TYPE, 100), t("::="),
                                 r(s(PATTERNS, o(s(t("#"), t(NUMBER))), o(s(t("@"), QNAME))), true, t(","))),
-                        Type.ROOT, null, Functor.class, null).init(this, parseContext, bootstrapping);
+                        Type.ROOT, null, Functor.class, 0).init(this, parseContext, bootstrapping);
 
                 Functor.of(s(k("pattern"), t(TokenType.NAME), t("::="), PATTERNS), Type.PATTERN_PART, null,
-                        PatternPart.class, null).init(this, parseContext, bootstrapping);
+                        PatternPart.class, 0).init(this, parseContext, bootstrapping);
 
             } catch (ParseException e) {
                 throw new IllegalStateException(e);
@@ -328,7 +328,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         this.deadlineNanos = init != null ? init.deadlineNanos : 0;
         this.worldScopedVariables = init != null && init.worldScopedVariables;
         context = InferContext.of(KnowledgeBase.this, List.of(), false, false, TRACE_NELUMBO, null);
-        parseContext = ParseContext.of(Type.DEFAULT_GROUP, prePatterns, postPatterns, hiddenVariables);
+        parseContext = ParseContext.of(Type.DEFAULT_GROUP, Integer.MIN_VALUE, prePatterns, postPatterns,
+                hiddenVariables);
         init();
     }
 

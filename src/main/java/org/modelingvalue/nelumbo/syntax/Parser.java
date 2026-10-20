@@ -139,10 +139,16 @@ public final class Parser implements ParseExceptionHandler {
     private Node parseNodeAt(Token token, ParseContext inner, ParseContext outer) throws ParseException {
         String group = inner.group();
         PatternResult result = new PatternResult(this, inner);
-        if (!preParse(group, token, null, result, outer)) {
-            if (!hiddenParse(group, token, result, outer) || inner.precedence() >= result.leftPrecedence()) {
+        if (preParse(group, token, null, result, outer)) {
+            if (inner.precedence() > result.leftPrecedence()) {
                 return null;
             }
+        } else if (hiddenParse(group, token, result, outer)) {
+            if (inner.precedence() >= result.leftPrecedence()) {
+                return null;
+            }
+        } else {
+            return null;
         }
         Node left = result.postParse();
         token = left != null && inner.precedence() < Integer.MAX_VALUE ? left.nextToken() : null;

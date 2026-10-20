@@ -260,7 +260,11 @@ public class Functor extends Node implements FunctorOrType {
     public ParseState start() {
         if (start == null) {
             ParseState s = pattern().state(new ParseState(this));
-            startPre = s.pre();
+            ParseState pre = s.pre();
+            if (pre != null) {
+                Integer left = leftPrecedence();
+                startPre = pre.setLeftPrecedence(left != null ? left : Integer.MAX_VALUE);
+            }
             ParseState post = s.post();
             if (post != null) {
                 Integer left = leftPrecedence();

@@ -331,11 +331,11 @@ public class ParseState extends AbstractState<ParseState> {
     }
 
     private boolean isPreComplete(PatternResult result) {
-        return !result.isEmpty() && (!result.hasLeft() || leftPrecedence() != null);
+        return !result.isEmpty() && leftPrecedence() != null;
     }
 
     private Functor isPostComplete(PatternResult result) {
-        if (!result.hasLeft() || leftPrecedence() != null) {
+        if (leftPrecedence() != null) {
             return functor(result.typeArgs().get());
         }
         return null;
