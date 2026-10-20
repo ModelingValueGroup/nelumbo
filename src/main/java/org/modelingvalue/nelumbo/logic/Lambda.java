@@ -16,7 +16,9 @@
 
 package org.modelingvalue.nelumbo.logic;
 
-import static org.modelingvalue.nelumbo.patterns.Pattern.*;
+import static org.modelingvalue.nelumbo.patterns.Pattern.n;
+import static org.modelingvalue.nelumbo.patterns.Pattern.s;
+import static org.modelingvalue.nelumbo.patterns.Pattern.t;
 
 import java.io.Serial;
 
@@ -26,12 +28,12 @@ import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
-import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
+import org.modelingvalue.nelumbo.patterns.Pattern;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 
@@ -39,14 +41,22 @@ public final class Lambda extends Node {
     @Serial
     private static final long serialVersionUID = -8085779803830595557L;
 
-    @NelumboFunctorField
-    private static Functor FUNCTOR;
+    private static Functor[] FUNCTOR;
 
     static {
         try {
-            FUNCTOR = Functor.of(
-                    s(t("["), r(n(Type.VARIABLE, 100), true, t(",")), t("]"), t("("), n(Type.OBJECT, 0), t(")")),
-                    Type.LAMBDA, null, Rule.class, null);
+            FUNCTOR = new Functor[Functor.REPETITION_MAX];
+            for (int i = 1; i <= Functor.REPETITION_MAX; i++) {
+                Pattern[] vars = new Pattern[i * 2 - 1];
+                for (int ii = 0; ii < vars.length; ii += 2) {
+                    if (ii > 1) {
+                        vars[ii - 1] = t(",");
+                    }
+                    vars[ii] = n(Type.VARIABLE, 100);
+                }
+                FUNCTOR[i - 1] = Functor.of(s(t("["), s(vars), t("]"), t("("), n(Type.OBJECT, 0), t(")")), Type.LAMBDA,
+                        null, Lambda.class, null);
+            }
         } catch (ParseException e) {
             throw new IllegalStateException("Cannot create functor for " + Lambda.class, e);
         }
@@ -61,7 +71,7 @@ public final class Lambda extends Node {
     }
 
     public Lambda(List<AstElement> elements, List<Variable> localVars, Predicate predicate) {
-        super(NodeInfo.of(FUNCTOR, elements), localVars, predicate);
+        super(NodeInfo.of(FUNCTOR[localVars.size() - 1], elements), localVars, predicate);
     }
 
     @SuppressWarnings("unchecked")
@@ -100,8 +110,14 @@ public final class Lambda extends Node {
     }
 
     @Override
+    public List<Object> args() {
+        List<Object> localVars = getVal(0);
+        return localVars.add(expression());
+    }
+
+    @Override
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
-        List<Object> args = args();
+        List<Object> args = super.args();
         return set(0, args.removeLast(), args.last());
     }
 

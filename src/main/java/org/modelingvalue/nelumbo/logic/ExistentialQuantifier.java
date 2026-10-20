@@ -16,33 +16,33 @@
 
 package org.modelingvalue.nelumbo.logic;
 
+import static org.modelingvalue.nelumbo.patterns.Pattern.n;
+import static org.modelingvalue.nelumbo.patterns.Pattern.s;
+import static org.modelingvalue.nelumbo.patterns.Pattern.t;
+
+import java.io.Serial;
+
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.NelumboConstructor;
-import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 
-import java.io.Serial;
-
-import static org.modelingvalue.nelumbo.patterns.Pattern.*;
-
 public final class ExistentialQuantifier extends Quantifier {
     @Serial
     private static final long serialVersionUID = 7237451657373739426L;
 
-    @NelumboFunctorField
     private static Functor FUNCTOR;
 
     static {
         try {
             FUNCTOR = Functor.of(s(t("E"), n(Type.LAMBDA)), Type.BOOLEAN, null, ExistentialQuantifier.class, null);
         } catch (ParseException e) {
-            throw new IllegalStateException("Cannot create functor for "+ ExistentialQuantifier.class, e);
+            throw new IllegalStateException("Cannot create functor for " + ExistentialQuantifier.class, e);
         }
     }
 
@@ -72,7 +72,8 @@ public final class ExistentialQuantifier extends Quantifier {
         for (Predicate predFalsehood : predResult.falsehoods()) {
             Predicate falsehood = setBinding(this, predFalsehood.getBinding(predicate).removeAllKey(localVars));
             if (!facts.contains(falsehood)) {
-                // E is false only when every candidate is false: that needs all facts of the body
+                // E is false only when every candidate is false: that needs all facts of the
+                // body
                 if (falsehood.isFullyBound() && predResult.completeFacts()) {
                     falsehoods = falsehoods.add(falsehood);
                 } else {

@@ -780,4 +780,23 @@ public class Node extends StructImpl implements AstElement {
         return from;
     }
 
+    public final void doCheck(KnowledgeBase knowledgeBase, ParseContext parseContext) throws ParseException {
+        doCheck(knowledgeBase, parseContext, List.of());
+    }
+
+    private final void doCheck(KnowledgeBase knowledgeBase, ParseContext parseContext, List<Node> ancestors)
+            throws ParseException {
+        check(knowledgeBase, parseContext, ancestors);
+        ancestors = ancestors.prepend(this);
+        for (int i = 0; i < length(); i++) {
+            if (get(i) instanceof Node n) {
+                n.doCheck(knowledgeBase, parseContext, ancestors);
+            }
+        }
+    }
+
+    public void check(KnowledgeBase knowledgeBase, ParseContext parseContext, List<Node> ancestors)
+            throws ParseException {
+    }
+
 }

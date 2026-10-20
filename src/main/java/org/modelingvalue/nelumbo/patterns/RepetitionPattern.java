@@ -128,7 +128,7 @@ public class RepetitionPattern extends Pattern {
     }
 
     @Override
-    public int string(List<Object> args, int ai, StringBuffer sb, RenderOptions options, boolean alt) {
+    public int string(List<Object> args, int ai, StringBuffer sb, RenderOptions options, boolean alt, MutableMap<Variable, Type> typeArgs) {
         if (ai < 0 || args.size() <= ai) {
             return -1;
         }
@@ -138,11 +138,11 @@ public class RepetitionPattern extends Pattern {
             StringBuffer inner = new StringBuffer();
             for (Object o : list) {
                 if (separator != null && !inner.isEmpty()) {
-                    if (separator.string(List.of(o), 0, inner, options, false) < 0) {
+                    if (separator.string(List.of(o), 0, inner, options, false, typeArgs) < 0) {
                         return -1;
                     }
                 }
-                if (repeated.string(List.of(o), 0, inner, options, false) < 0) {
+                if (repeated.string(List.of(o), 0, inner, options, false, typeArgs) < 0) {
                     return -1;
                 }
             }

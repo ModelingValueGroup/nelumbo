@@ -138,7 +138,8 @@ public class SequencePattern extends Pattern {
 
     @SuppressWarnings("unchecked")
     @Override
-    public int string(List<Object> args, int ai, StringBuffer sb, RenderOptions options, boolean alt) {
+    public int string(List<Object> args, int ai, StringBuffer sb, RenderOptions options, boolean alt,
+            MutableMap<Variable, Type> typeArgs) {
         if (ai < 0 || args.size() <= ai) {
             return -1;
         }
@@ -149,7 +150,7 @@ public class SequencePattern extends Pattern {
             StringBuffer inner = new StringBuffer();
             int ii = 0;
             for (Pattern element : elements()) {
-                ii = element.string(list, ii, inner, options, false);
+                ii = element.string(list, ii, inner, options, false, typeArgs);
                 if (ii < 0) {
                     return -1;
                 }

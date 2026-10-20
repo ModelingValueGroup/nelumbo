@@ -4,7 +4,7 @@
 
 Exact rational arithmetic — no floating-point rounding. Mirrors the shape of `nelumbo.integers` over a separate `Rational` type, plus integer-to-rational conversion.
 
-**Source:** [`src/main/resources/org/modelingvalue/nelumbo/rationals/rationals.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/rationals/rationals.nl) — 46 lines.
+**Source:** [`src/main/resources/org/modelingvalue/nelumbo/rationals/rationals.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/rationals/rationals.nl)
 
 **Import:**
 

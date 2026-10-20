@@ -29,7 +29,6 @@ import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.Evaluatable;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
-import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.collections.NList;
@@ -45,7 +44,6 @@ public final class Rule extends Node implements Evaluatable {
     @Serial
     private static final long serialVersionUID = -4602043866952049391L;
 
-    @NelumboFunctorField
     private static Functor FUNCTOR;
 
     static {

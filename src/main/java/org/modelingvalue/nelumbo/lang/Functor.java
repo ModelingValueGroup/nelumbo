@@ -56,7 +56,7 @@ public class Functor extends Node implements FunctorOrType {
     @Serial
     private static final long serialVersionUID = -1901047746034698364L;
 
-    private static final int REPETITION_MAX = Integer.getInteger("REPETITION_MAX", 6);
+    public static final int REPETITION_MAX = Integer.getInteger("REPETITION_MAX", 6);
 
     public static Functor of(Pattern pattern, Type result, Type local, Class<?> clazz, Integer leftPrecedence)
             throws ParseException {
@@ -75,6 +75,7 @@ public class Functor extends Node implements FunctorOrType {
 
     private static Functor of(List<AstElement> elements, Pattern pattern, Type result, Type local,
             Constructor<?> constructor, Integer leftPrecedence, Method method, boolean hasLiteral) {
+        pattern = pattern.setPresedence(leftPrecedence != null ? leftPrecedence : Integer.MIN_VALUE);
         return new Functor(elements, pattern, result, local, constructor, leftPrecedence, method, hasLiteral);
     }
 
@@ -286,10 +287,6 @@ public class Functor extends Node implements FunctorOrType {
         return set(1, type);
     }
 
-    private Functor setPattern(Pattern pattern) {
-        return set(0, pattern);
-    }
-
     public Object[] args(List<AstElement> elements, MutableMap<Variable, Type> typeArgs) {
         Pattern pattern = pattern();
         MutableList<Object> args = MutableList.of(List.of());
@@ -310,7 +307,7 @@ public class Functor extends Node implements FunctorOrType {
             args = List.of(args);
         }
         StringBuffer sb = new StringBuffer();
-        if (pattern.string(args, 0, sb, options, false) < 0) {
+        if (pattern.string(args, 0, sb, options, false, MutableMap.of(Map.of())) < 0) {
             return null;
         }
         return sb.toString();
@@ -378,13 +375,8 @@ public class Functor extends Node implements FunctorOrType {
             }
             return roots;
         }
-        Functor result = this;
-        if (reason == ConstructionReason.bootstrapping) {
-            Integer precedence = leftPrecedence();
-            result = setPattern(pattern().setPresedence(precedence != null ? precedence : Integer.MIN_VALUE));
-        }
-        result.activate(knowledgeBase, ctx);
-        return result;
+        activate(knowledgeBase, ctx);
+        return this;
     }
 
     private void activate(KnowledgeBase knowledgeBase, ParseContext ctx) throws ParseException {

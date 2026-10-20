@@ -42,8 +42,8 @@ dependencies {
     implementation("io.javalin:javalin:7.2.3")
     implementation(libs.jackson.databind)
     // markdown -> html for the /docs pages (module-unique dependency, so not in the version catalog)
-    implementation("org.commonmark:commonmark:0.30.0")
-    implementation("org.commonmark:commonmark-ext-gfm-tables:0.30.0")
+    implementation("org.commonmark:commonmark:0.30.1")
+    implementation("org.commonmark:commonmark-ext-gfm-tables:0.30.1")
     runtimeOnly(libs.slf4j.simple)
 
     testImplementation(libs.junit.jupiter)

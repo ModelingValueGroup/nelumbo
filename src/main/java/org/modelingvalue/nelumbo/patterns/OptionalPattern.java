@@ -90,14 +90,14 @@ public class OptionalPattern extends Pattern {
     }
 
     @Override
-    public int string(List<Object> args, int ai, StringBuffer sb, RenderOptions options, boolean alt) {
+    public int string(List<Object> args, int ai, StringBuffer sb, RenderOptions options, boolean alt, MutableMap<Variable, Type> typeArgs) {
         if (ai < 0 || args.size() <= ai) {
             return -1;
         }
         if (args.get(ai) instanceof Optional<?> opt) {
             StringBuffer inner = new StringBuffer();
             if (opt.isPresent()) {
-                int ii = optional().string(List.of(opt.get()), 0, inner, options, false);
+                int ii = optional().string(List.of(opt.get()), 0, inner, options, false, typeArgs);
                 if (ii < 0) {
                     return -1;
                 }
