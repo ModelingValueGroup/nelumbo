@@ -23,7 +23,6 @@ import static org.modelingvalue.nelumbo.patterns.Pattern.t;
 import java.io.Serial;
 
 import org.modelingvalue.nelumbo.NelumboConstructor;
-import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.lang.Type;
@@ -33,7 +32,6 @@ public final class And extends BinaryPredicate {
     @Serial
     private static final long serialVersionUID = -7248491569810098948L;
 
-    @NelumboFunctorField
     private static Functor FUNCTOR;
 
     static {

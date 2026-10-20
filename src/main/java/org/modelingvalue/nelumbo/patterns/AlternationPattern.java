@@ -125,14 +125,14 @@ public class AlternationPattern extends Pattern {
     }
 
     @Override
-    public int string(List<Object> args, int ai, StringBuffer sb, RenderOptions options, boolean alt) {
+    public int string(List<Object> args, int ai, StringBuffer sb, RenderOptions options, boolean alt, MutableMap<Variable, Type> typeArgs) {
         if (ai < 0 || args.size() <= ai) {
             return -1;
         }
         Object o = args.get(ai);
         StringBuffer inner = new StringBuffer();
         for (Pattern option : options()) {
-            int ii = option.string(List.of(o), 0, inner, options, true);
+            int ii = option.string(List.of(o), 0, inner, options, true, typeArgs);
             if (ii < 0) {
                 inner = new StringBuffer();
             } else {

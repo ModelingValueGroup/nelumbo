@@ -133,28 +133,30 @@ public class NodeTypePattern extends Pattern {
     }
 
     @Override
-    public int string(List<Object> args, int ai, StringBuffer sb, RenderOptions options, boolean alt) {
+    public int string(List<Object> args, int ai, StringBuffer sb, RenderOptions options, boolean alt,
+            MutableMap<Variable, Type> typeArgs) {
         if (ai < 0 || args.size() <= ai) {
             return -1;
         }
-        if (args.get(ai) instanceof Node node && (//
-        nodeType().isAssignableFrom(node instanceof Type type ? type : node.type()) || //
-                (node instanceof Variable && nodeType().isAssignableFrom(Type.VARIABLE)))) {
-            boolean parenthetical = false;
-            Functor functor = node.functor();
-            ParseState post = functor != null ? functor.postStart() : null;
-            if (post != null) {
-                Integer inner = precedence();
-                parenthetical = inner != null && inner > post.leftPrecedence();
+        if (args.get(ai) instanceof Node n) {
+            Type type = n instanceof Variable ? n.type().toVariable() : n.type();
+            if (!nodeType().typeMatcher().match(type, n instanceof Variable, typeArgs).isEmpty()) {
+                boolean parenthetical = false;
+                Functor functor = n.functor();
+                ParseState post = functor != null ? functor.postStart() : null;
+                if (post != null) {
+                    Integer inner = precedence();
+                    parenthetical = inner != null && inner > post.leftPrecedence();
+                }
+                if (parenthetical) {
+                    sb.append('(');
+                }
+                sb.append(n.toString(options));
+                if (parenthetical) {
+                    sb.append(')');
+                }
+                return ai + 1;
             }
-            if (parenthetical) {
-                sb.append('(');
-            }
-            sb.append(node.toString(options));
-            if (parenthetical) {
-                sb.append(')');
-            }
-            return ai + 1;
         }
         return -1;
     }
@@ -166,7 +168,7 @@ public class NodeTypePattern extends Pattern {
             AstElement e = elements.get(i);
             if (e instanceof Node n) {
                 Type type = n instanceof Variable ? n.type().toVariable() : n.type();
-                if (!nodeType().typeMatcher().match(type, false, typeArgs).isEmpty()) {
+                if (!nodeType().typeMatcher().match(type, n instanceof Variable, typeArgs).isEmpty()) {
                     args.clear();
                     keep[0] = false;
                     args.add(n);
