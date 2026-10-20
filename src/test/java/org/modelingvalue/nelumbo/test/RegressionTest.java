@@ -16,8 +16,16 @@
 
 package org.modelingvalue.nelumbo.test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.List;
+
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Timeout;
+import org.modelingvalue.nelumbo.tools.NelumboEvaluator;
+import org.modelingvalue.nelumbo.tools.NelumboEvaluator.Diagnostic;
+import org.modelingvalue.nelumbo.tools.NelumboEvaluator.EvalResult;
 
 // Regression tests promoted from the known-bug suite (KnownBugsTest) once the
 // engine fix landed. Each guards a previously-broken behavior; the .nl file's
@@ -129,6 +137,39 @@ public class RegressionTest extends NelumboTestBase {
     @RepeatedTest(10)
     public void unboundPredicateNotResolved() {
         testResource("unbound-predicate-not-resolved.nl");
+    }
+
+    // A lambda variable ([i](...)) is local to its lambda: using the same
+    // variable outside it is an error (was bugs/size-of-lambda-result-closes-falsehoods.nl,
+    // where the reused i made the size queries report a closed falsehoods side).
+    @RepeatedTest(10)
+    public void localVariableUsedOutsideLocalContext() {
+        String header = """
+                import nelumbo.collections
+
+                Integer i, n
+
+                """;
+        List<String> misuses = List.of( //
+                "|[1,2,3] where [i](i>1)|=i ? [(i=2)][..]", //
+                "|{1,2,3} where [i](i>1)|=i ? [(i=2)][..]", //
+                "|[1,2,3] map [i](i+1)|=i ? [(i=3)][..]");
+        for (String misuse : misuses) {
+            EvalResult result = NelumboEvaluator.evaluate(header + misuse + "\n", "misuse.nl", 60_000);
+            List<Diagnostic> local = result.diagnostics().stream() //
+                    .filter(d -> d.message().startsWith("Local variable i used")).toList();
+            assertTrue(!local.isEmpty(), "no local-variable error for: " + misuse + ", diagnostics: " + result.diagnostics());
+            assertTrue(local.stream().allMatch(d -> d.line() == 5), "error on the wrong line: " + local);
+        }
+        // the same queries with a separate variable outside the lambda are fine
+        String correct = header + """
+                |[1,2,3] where [i](i>1)|=n ? [(n=2)][..]
+                |{1,2,3} where [i](i>1)|=n ? [(n=2)][..]
+                |[1,2,3] map [i](i+1)|=n ? [(n=3)][..]
+                """;
+        EvalResult result = NelumboEvaluator.evaluate(correct, "correct.nl", 60_000);
+        assertEquals(List.of(), result.diagnostics());
+        assertTrue(result.ok());
     }
 
 }

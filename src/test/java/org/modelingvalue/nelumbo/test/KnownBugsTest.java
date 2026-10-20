@@ -237,12 +237,6 @@ public class KnownBugsTest extends NelumboTestBase {
         bugResource("set-builder-empty-result-missing.nl");
     }
 
-    @KnownBug("size of a where/map result reports a closed, empty falsehoods side")
-    @Test
-    public void sizeOfLambdaResultClosesFalsehoods() {
-        bugResource("size-of-lambda-result-closes-falsehoods.nl");
-    }
-
     @KnownBug("pos/in on a list with a duplicated element: inconsistent result (pos is a function)")
     @Test
     public void posDuplicateElementInconsistent() {
