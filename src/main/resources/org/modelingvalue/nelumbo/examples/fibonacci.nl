@@ -4,8 +4,8 @@ Integer ::= fib(<Integer>)
 
 Integer n, f
 
-fib(n)=f <=>  f=n                 if n>=0 & n<=1,
-              f=fib(n-1)+fib(n-2) if n>1
+fib(n) ==  n                 if n>=0 & n<=1,
+           fib(n-1)+fib(n-2) if n>1
 
 fib(0)=f    ? [(f=0)][..]
 fib(1)=f    ? [(f=1)][..]

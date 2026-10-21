@@ -102,10 +102,11 @@ Sudoku examples (`examples/sudoku-*.nl`, NOT in `ExampleCatalog`/`ExamplesTest`)
 - Patterns: `Integer ::= fib(<Integer>)`
 - Variables: `Integer n, f`
 - Rules: `fib(n)=f <=> f=n if n<=1, f=fib(n-1)+fib(n-2) if n>1`
+- Function rules: `fib(n) == n if n<=1, fib(n-1)+fib(n-2) if n>1` = the rule above (`L == e if g` is `L=r <=> r=e if g`, fresh `r`); prefer it when every branch is a value.
 - Facts: `pc(Hendrik, Juliana)`
 - Queries with expected result: `fib(5)=f ? [(f=5)][..]`
 - Operators: `&`, `|`, `E[x]`, `A[y]` (up to 6 quantified variables)
-- Statements are only `fact`, `<=>`, `?`: a bare `f(i)=[1,2]` is rejected ("unexpected type Boolean, expected Root or List<Root>"); write `f(i)=l <=> l=[1,2]`.
+- Statements are only `fact`, `<=>`/`==`, `?`: a bare `f(i)=[1,2]` is rejected ("unexpected type Boolean, expected Root or List<Root>"); write `f(i) == [1,2]`.
 
 ## Authoring .nl files (DSL extension)
 

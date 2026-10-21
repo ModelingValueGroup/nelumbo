@@ -87,10 +87,10 @@ The [`hidden.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples
   Integer ::= <visible Integer> & <Integer> #35
 
   hidden Integer x
-  Integer y, z
+  Integer y
 
-  x & y = z  <=>  x * 100 + y = z
-  && y = z   <=>  x & y = z
+  x & y  ==  x * 100 + y
+  && y   ==  x & y
 
   && 11 = 2211 ? [(x=22)][..]
   x & 11 = 2211 ? [(x=22)][..]

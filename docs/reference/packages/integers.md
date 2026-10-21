@@ -84,10 +84,10 @@ Subtraction is not a separate native. It is `add` viewed from a different angle:
 Unary negation and absolute value are defined on top of subtraction:
 
 ```nelumbo
-- a = b   <=>  0 - a = b
+- a   ==  0 - a
 
-|a| = b   <=>  b =  a   if a >= 0,
-              b = -a   if a < 0
+|a|   ==   a   if a >= 0,
+          -a   if a < 0
 ```
 
 The two guarded clauses of `|a|` cover the integer domain without overlap.

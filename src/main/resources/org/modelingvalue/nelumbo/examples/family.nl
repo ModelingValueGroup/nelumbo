@@ -17,11 +17,11 @@ Set<Person> s
 Male        y
 Female      x
 
-p(a)=s <=>  {[b](b=m(a)|b=f(a))}=s
-c(a)=s <=>  {[b](a=m(b)|a=f(b))}=s
+p(a) ==  {[b](b=m(a)|b=f(a))}
+c(a) ==  {[b](a=m(b)|a=f(b))}
 
-d(a)=s <=>  {[b](b in c(a) | E[c](c in c(a) & b in d(c)))}=s
-a(a)=s <=>  {[b](b in p(a) | E[c](c in p(a) & b in a(c)))}=s
+d(a) ==  {[b](b in c(a) | E[c](c in c(a) & b in d(c)))}
+a(a) ==  {[b](b in p(a) | E[c](c in p(a) & b in a(c)))}
 
 Male   ::= Hendrik, Bernhard, Claus, Willem
 Female ::= Wilhelmina, Juliana, Beatrix, Maxima, Amalia

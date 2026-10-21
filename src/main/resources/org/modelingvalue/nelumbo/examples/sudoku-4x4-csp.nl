@@ -78,25 +78,25 @@ List<List<Integer>>    p, q
 List<Set<Digit>>       rw, rw2
 List<List<Set<Digit>>> g, g2, g3, s, pre, suf
 
-dig(i)=d   <=> d=D1 if i=1, d=D2 if i=2, d=D3 if i=3, d=D4 if i=4
-undig(d)=v <=> v=1 if d=D1, v=2 if d=D2, v=3 if d=D3, v=4 if d=D4
+dig(i)     == D1 if i=1, D2 if i=2, D3 if i=3, D4 if i=4
+undig(d)   == 1 if d=D1, 2 if d=D2, 3 if d=D3, 4 if d=D4
 
 iat(il,i)=k    <=> k pos il = i  if i>=0 & i<4
 irow(p,r)=il   <=> il pos p = r  if r>=0 & r<4
-icell(p,r,c)=k <=> k = iat(irow(p,r),c)
+icell(p,r,c)   == iat(irow(p,r),c)
 
 catRow(rw,c)=sc <=> sc pos rw = c if c>=0 & c<4
 crow(g,r)=rw    <=> rw pos g = r  if r>=0 & r<4
-cell(g,r,c)=sc  <=> sc = catRow(crow(g,r),c)
+cell(g,r,c)     == catRow(crow(g,r),c)
 
-fullGrid(p)=g <=> g=[[{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4}],
-                     [{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4}],
-                     [{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4}],
-                     [{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4}]]
+fullGrid(p)   == [[{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4}],
+                  [{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4}],
+                  [{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4}],
+                  [{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4}]]
 
 // functional update: put candidate set ns at (r,c), everything else unchanged
-sel(j,i,ns,sc)=sy   <=> sy=ns if j=i,  sy=sc if j!=i
-putRow(rw,i,ns)=rw2 <=> rw2 = [0,1,2,3] map [j](sel(j,i,ns,catRow(rw,j)))
+sel(j,i,ns,sc)      == ns if j=i,  sc if j!=i
+putRow(rw,i,ns)     == [0,1,2,3] map [j](sel(j,i,ns,catRow(rw,j)))
 rowsBefore(g,r)=s   <=> s=[]                                                      if r=0,
                         E[rw,pre](crow(g,r-1)=rw & rowsBefore(g,r-1)=pre & s=pre+[rw]) if r>0
 rowsFrom(g,r)=s     <=> s=[]                                                      if r=4,
@@ -104,12 +104,12 @@ rowsFrom(g,r)=s     <=> s=[]                                                    
 put(g,r,c,ns)=s     <=> E[pre,suf](rowsBefore(g,r)=pre & rowsFrom(g,r+1)=suf &
                                    E[rw,rw2](crow(g,r)=rw & putRow(rw,c,ns)=rw2 & s=pre+[rw2]+suf))
 
-bb(r)=k <=> k=0 if r<2, k=2 if r>=2
+bb(r)   == 0 if r<2, 2 if r>=2
 // `/` is exact division (1/2 has no value): floor division = exact division of (x - remainder)
 bro(m)=k <=> E[t](t in {0,1} & (m-t)/2=k)
-bco(m)=k <=> k=m-2*bro(m)
+bco(m)   == m-2*bro(m)
 fr(i)=k  <=> E[t](t in {0,1,2,3} & (i-t)/4=k)   // flat index i=r*4+c -> r
-fc(i)=k  <=> k=i-4*fr(i)                        //                    -> c
+fc(i)    == i-4*fr(i)                          //                    -> c
 samebox(r,c,r2,c2) <=> E[i,j](bb(r)=i & bb(c)=j & bb(r2)=i & bb(c2)=j)
 peer(r,c,r2,c2)    <=> !(r=r2 & c=c2) & (r=r2 | c=c2 | samebox(r,c,r2,c2))
 
@@ -125,7 +125,7 @@ afterElim(g,r,c,d,ns)=s <=> false                                             if
                             hidden(g,r,c,d)=s                                 if |ns|>1
 
 // assign d at (r,c) = eliminate every OTHER digit index e (1..4) from the cell
-assign(g,r,c,d)=s <=> s=assignOthers(g,r,c,d,1)
+assign(g,r,c,d)   == assignOthers(g,r,c,d,1)
 assignOthers(g,r,c,d,i)=s <=> s=g                                     if i=5,
                               s=assignOthers(g,r,c,d,i+1)             if i<5 & dig(i)=d,
                               E[g2](elim(g,r,c,dig(i))=g2 & s=assignOthers(g2,r,c,d,i+1)) if i<5 & dig(i)!=d
@@ -133,7 +133,7 @@ assignOthers(g,r,c,d,i)=s <=> s=g                                     if i=5,
 // naked single: cell is a singleton {d} -> remove d from all peers
 nakedSingle(g,r,c)=s <=> E[d](d in cell(g,r,c) & elimPeers(g,r,c,d)=s)
 
-elimPeers(g,r,c,d)=s      <=> s=elimPeersR(g,r,c,d,0)
+elimPeers(g,r,c,d)        == elimPeersR(g,r,c,d,0)
 elimPeersR(g,r,c,d,r2)=s  <=> s=g if r2=4,
                               E[g2](elimPeersC(g,r,c,d,r2,0)=g2 & s=elimPeersR(g2,r,c,d,r2+1)) if r2<4
 elimPeersC(g,r,c,d,r2,c2)=s <=> s=g                             if c2=4,
@@ -167,7 +167,7 @@ hidden(g,r,c,d)=s <=> E[g2,g3](hRow(g,r,d,rowFree(g,r,d,0))=g2 &
                                hBox(g3,r,c,d,boxFree(g3,r,c,d,0))=s)
 
 // walk the puzzle, assign each non-zero clue on the full grid
-parse(p)=g <=> g=parseAt(p, fullGrid(p), 0, 0)
+parse(p)   == parseAt(p, fullGrid(p), 0, 0)
 parseAt(p,g,r,c)=s <=> s=g                       if r=4,
                        s=parseAt(p,g,r+1,0)      if r<4 & c=4,
                        s=parseAt(p,g,r,c+1)      if r<4 & c<4 & icell(p,r,c)=0,
@@ -176,16 +176,16 @@ parseAt(p,g,r,c)=s <=> s=g                       if r=4,
 solved(g) <=> !E[r,c](r in {0,1,2,3} & c in {0,1,2,3} & |cell(g,r,c)|!=1)
 
 // smallest candidate-set size among unfilled cells (best starts at 5 = above max)
-minCand(g)=v <=> v=minCandAt(g,0,0,5)
-minCandAt(g,r,c,k)=v <=> v=k                                if r=4,
-                         v=minCandAt(g,r+1,0,k)             if r<4 & c=4,
-                         v=minCandAt(g,r,c+1,k)             if r<4 & c<4 & |cell(g,r,c)|<=1,
-                         v=minCandAt(g,r,c+1,|cell(g,r,c)|) if r<4 & c<4 & |cell(g,r,c)|>1 & |cell(g,r,c)|<k,
-                         v=minCandAt(g,r,c+1,k)             if r<4 & c<4 & |cell(g,r,c)|>1 & |cell(g,r,c)|>=k
+minCand(g)   == minCandAt(g,0,0,5)
+minCandAt(g,r,c,k)   == k                                if r=4,
+                        minCandAt(g,r+1,0,k)             if r<4 & c=4,
+                        minCandAt(g,r,c+1,k)             if r<4 & c<4 & |cell(g,r,c)|<=1,
+                        minCandAt(g,r,c+1,|cell(g,r,c)|) if r<4 & c<4 & |cell(g,r,c)|>1 & |cell(g,r,c)|<k,
+                        minCandAt(g,r,c+1,k)             if r<4 & c<4 & |cell(g,r,c)|>1 & |cell(g,r,c)|>=k
 
 // flat index (r*4+c) of the first cell whose candidate count = n, scanning from i
-pickCell(g,n,i)=k <=> k=i                 if i<16 & |cell(g,fr(i),fc(i))|=n,
-                      k=pickCell(g,n,i+1) if i<16 & |cell(g,fr(i),fc(i))|!=n
+pickCell(g,n,i)   == i                 if i<16 & |cell(g,fr(i),fc(i))|=n,
+                     pickCell(g,n,i+1) if i<16 & |cell(g,fr(i),fc(i))|!=n
 
 // solved -> done; else the MRV cell k, its candidates tried in digit order, first success wins
 search(g)=s <=> s=g                                                   if solved(g),
@@ -200,9 +200,9 @@ tryCand(g,k,i)=s <=> false                                              if i=5,
 
 // unparse: every solved singleton back to its integer
 cellNum(sc)=v <=> E[d](d in sc & |sc|=1 & undig(d)=v)
-numRow(rw)=il <=> il=[0,1,2,3] map [c](cellNum(catRow(rw,c)))
-toNums(g)=p   <=> p=[0,1,2,3] map [r](numRow(crow(g,r)))
-solve(p)=q    <=> q=toNums(search(parse(p)))
+numRow(rw)    == [0,1,2,3] map [c](cellNum(catRow(rw,c)))
+toNums(g)     == [0,1,2,3] map [r](numRow(crow(g,r)))
+solve(p)      == toNums(search(parse(p)))
 
 dig(2)=d    ? [(d=D2)][..]
 undig(D3)=v ? [(v=3)][..]

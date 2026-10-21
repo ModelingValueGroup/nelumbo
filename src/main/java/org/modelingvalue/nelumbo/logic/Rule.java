@@ -102,7 +102,7 @@ public final class Rule extends Node implements Evaluatable {
         }
         boolean equals = functor().name().equals("==");
         Node node = (Node) get(0);
-        Variable var = equals ? new Variable(List.of(), false, node.type(), "r") : null;
+        Variable var = equals ? new Variable(List.of(), false, node.type().nonFunction(), "r" + uniqueId()) : null;
         Predicate c = equals ? new NIs(node.astElements(), node, var) : (Predicate) node;
         Node left = equals ? node : c instanceof NIs ? (Node) c.get(0) : c;
         Predicate cons = (Predicate) c.replace(e -> e != c && e instanceof BooleanVariable v ? v.variable() : e);
