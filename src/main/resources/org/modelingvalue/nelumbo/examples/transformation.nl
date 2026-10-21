@@ -27,11 +27,11 @@ attr OT AN AT  ::> {
     }
 
     (o.AN := af) ::> {
-        o.AN=a <=>  af=a
+        o.AN == af
     }
 
     (o.AN := af if bf) ::> {
-        o.AN=a <=>  af=a if bf
+        o.AN == af if bf
     }
 }
 
