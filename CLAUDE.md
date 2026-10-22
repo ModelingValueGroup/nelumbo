@@ -176,7 +176,7 @@ Pages (`src/main/resources/public/`):
 - `landing.html` (`/`): live `grandparent.nl` field in a `.codecard` - must stay valid Nelumbo (e2e asserts its checkmark and that h1 contains "language"). The hero animation's end frame must equal the icon paths of `lsp/plugins/*/icons/logo.svg` (stroke 22, fill and transforms tuned to it). Messaging: logic meta-language for specifying DSLs.
 - Palette from the lotus logo: accent `#c184d8`, soft `#edd4e8`, violet `#a99ae8`; no browns/golds/blues.
 - `tour.html`: 8 sections, exercises carry expected results. `NelumboHttpServerTest.everyTourEditorEvaluates` posts every tour editor to `/eval`: an exercise may only fail on its expectation, a solution not at all. Transformation heads need `{OT,Literal}`/`{AT,Literal}` variables and `.AN` patterns `#30`.
-- `sandbox.html`: one field + sidebar from `GET /examples` and `/examples/<name>` (cli examples minus `sudoku*`), grouped Examples/Exercises (`*Assignment` + "answer" link); `#<name>` opens an example. `/playground.html` 301-redirects here.
+- `sandbox.html`: one field + sidebar from `GET /examples` and `/examples/<name>` (cli examples minus `sudoku*`), grouped Examples/Exercises (`*Assignment` + "answer" link) plus a Library group (`GET /library`, `/library/<module>`: `NelumboHttpServer.LIBRARY_MODULES`, stdlib sources in dependency order, keyed `library/<module>`); `#<name>` / `#library/<module>` opens one. `/playground.html` 301-redirects here.
 - Below 760px the tour/sandbox sidebar is a drawer (`#nav-toggle`/`#nav-backdrop`); below 420px the GitHub link shrinks to its logo.
 
 Theme:

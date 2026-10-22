@@ -51,6 +51,11 @@ public final class NelumboHttpServer {
     public static final long DEFAULT_TIMEOUT_MS       = EvalService.DEFAULT_TIMEOUT_MS;
     /** Default cap on concurrent LSP WebSocket sessions. */
     public static final int  DEFAULT_MAX_LSP_SESSIONS = 32;
+    /**
+     * The standard library modules the sandbox's Library menu shows, in dependency order (each module imports only
+     * modules before it). Module {@code m} is the core resource {@code org/modelingvalue/nelumbo/m/m.nl}.
+     */
+    public static final List<String> LIBRARY_MODULES = List.of("lang", "logic", "integers", "strings", "rationals", "collections", "datetime");
 
     private final EvalService   service;
     private final KnowledgeBase baseKb;
@@ -141,6 +146,17 @@ public final class NelumboHttpServer {
                     ctx.contentType("text/plain; charset=utf-8").result(source);
                 }
             });
+            // the stdlib sources for the sandbox's Library menu (read-only reference; editing them changes nothing on the server)
+            config.routes.get("/library", ctx -> ctx.json(Map.of("library", LIBRARY_MODULES)));
+            config.routes.get("/library/{name}", ctx -> {
+                String name   = ctx.pathParam("name");
+                String source = librarySource(name);
+                if (source == null) {
+                    ctx.status(HttpStatus.NOT_FOUND).result("unknown library module: " + name);
+                } else {
+                    ctx.contentType("text/plain; charset=utf-8").result(source);
+                }
+            });
             config.routes.post("/eval", ctx -> handleEval(ctx, false));
             config.routes.post("/eval/trace", ctx -> handleEval(ctx, true));
             config.routes.get("/metadata", ctx -> ctx.json(service.metadata()));
@@ -213,6 +229,18 @@ public final class NelumboHttpServer {
     private void handleEval(Context ctx, boolean pathTrace) {
         EvalService.Response response = service.eval(ctx.body(), ctx.contentType(), pathTrace);
         ctx.status(response.status()).json(response.body());
+    }
+
+    /** The source of a {@link #LIBRARY_MODULES standard library module}, or null when the name is not one. */
+    static String librarySource(String name) {
+        if (!LIBRARY_MODULES.contains(name)) {
+            return null;
+        }
+        try (InputStream in = KnowledgeBase.class.getResourceAsStream("/org/modelingvalue/nelumbo/" + name + "/" + name + ".nl")) {
+            return in == null ? null : new String(in.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            return null;
+        }
     }
 
     private static String loadResource(String path) {

@@ -160,6 +160,54 @@ class NelumboHttpServerTest {
         assertEquals(404, get("/examples/noSuchExample").statusCode());
     }
 
+    /** The sandbox's Library menu lists the standard library modules from /library, in dependency order. */
+    @Test
+    void libraryModulesAreListedForTheSandbox() throws Exception {
+        HttpResponse<String> list = get("/library");
+        assertEquals(200, list.statusCode());
+        assertTrue(list.headers().firstValue("Content-Type").orElse("").contains("json"), "the list is JSON");
+        assertTrue(list.body().contains("\"library\""), list.body());
+        for (String module : NelumboHttpServer.LIBRARY_MODULES) {
+            assertTrue(list.body().contains("\"" + module + "\""), module + " is listed: " + list.body());
+        }
+        assertTrue(list.body().indexOf("\"lang\"") < list.body().indexOf("\"datetime\""), "dependency order: " + list.body());
+    }
+
+    @Test
+    void aLibraryModuleIsServedAsPlainNelumboSource() throws Exception {
+        for (String module : NelumboHttpServer.LIBRARY_MODULES) {
+            HttpResponse<String> source = get("/library/" + module);
+            assertEquals(200, source.statusCode(), module);
+            assertTrue(source.headers().firstValue("Content-Type").orElse("").contains("text/plain"), "served as text, not HTML");
+            assertFalse(source.body().isBlank(), module + " has a source");
+        }
+        assertTrue(get("/library/integers").body().contains("Integer"), "the integers module source");
+        assertEquals(404, get("/library/fibonacci").statusCode(), "examples are not library modules");
+        assertEquals(404, get("/library/noSuchModule").statusCode());
+    }
+
+    /**
+     * The sandbox loads a library module into its editor, so it must evaluate there without diagnostics. Like the
+     * public site (and {@link #everyTourEditorEvaluates}), against an EMPTY base KB: on top of a base that already
+     * loaded the stdlib (this class's fibonacci base imports it), a module's source would define its syntax twice.
+     */
+    @Test
+    void everyLibraryModuleEvaluatesWithoutErrors() throws Exception {
+        NelumboHttpServer empty     = new NelumboHttpServer(KnowledgeBaseLoader.load(List.of()), List.of());
+        int               emptyPort = empty.start(0);
+        try {
+            for (String module : NelumboHttpServer.LIBRARY_MODULES) {
+                HttpRequest request = HttpRequest.newBuilder(URI.create("http://localhost:" + emptyPort + "/eval"))
+                        .header("Content-Type", "text/plain").POST(BodyPublishers.ofString(NelumboHttpServer.librarySource(module))).build();
+                HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+                assertEquals(200, response.statusCode(), module + ": " + response.body());
+                assertEquals(0, mapper.readTree(response.body()).get("errors").size(), module + " evaluates without errors: " + response.body());
+            }
+        } finally {
+            empty.stop();
+        }
+    }
+
     /** The sandbox was published as /playground.html (e.g. in llms.txt); old links must keep working. */
     @Test
     void formerPlaygroundUrlRedirectsPermanentlyToTheSandbox() throws Exception {

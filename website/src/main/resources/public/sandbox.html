@@ -149,9 +149,15 @@ fib(7)=r ?
       div.textContent = title;
       nav.appendChild(div);
     }
+    // library modules are keyed 'library/<module>' (in the hash too), examples by their bare name
+    var LIBRARY = 'library/';
+    function sourceUrl(name) {
+      return name.indexOf(LIBRARY) === 0 ? '/library/' + encodeURIComponent(name.slice(LIBRARY.length))
+                                         : '/examples/' + encodeURIComponent(name);
+    }
     // replaces the document (one undoable edit) and marks the example as current
     function load(name) {
-      fetch('/examples/' + encodeURIComponent(name)).then(function (r) { return r.ok ? r.text() : null; }).then(function (source) {
+      fetch(sourceUrl(name)).then(function (r) { return r.ok ? r.text() : null; }).then(function (source) {
         if (source === null || !NelumboFields.setFieldText(field, source, name)) { return; }
         nav.querySelectorAll('a').forEach(function (a) { a.classList.toggle('active', a.dataset.example === name); });
         if (location.hash !== '#' + name) { history.replaceState(null, '', '#' + name); }
@@ -159,13 +165,16 @@ fib(7)=r ?
     }
 
     NelumboFields.initNelumboFields();
-    fetch('/examples').then(function (r) { return r.json(); }).then(function (body) {
-      var names     = body.examples;
-      var exercises = names.filter(function (n) { return /Assignment$/.test(n); });
+    function json(url) { return fetch(url).then(function (r) { return r.json(); }); }
+    Promise.all([json('/examples'), json('/library')]).then(function (bodies) {
+      var examples  = bodies[0].examples;
+      var modules   = bodies[1].library.map(function (m) { return LIBRARY + m; });
+      var names     = examples.concat(modules);
+      var exercises = examples.filter(function (n) { return /Assignment$/.test(n); });
       var answers   = exercises.map(function (n) { return n.replace(/Assignment$/, ''); })
-                               .filter(function (n) { return names.indexOf(n) >= 0; });
+                               .filter(function (n) { return examples.indexOf(n) >= 0; });
       group('Examples');
-      names.filter(function (n) { return exercises.indexOf(n) < 0 && answers.indexOf(n) < 0; })
+      examples.filter(function (n) { return exercises.indexOf(n) < 0 && answers.indexOf(n) < 0; })
            .forEach(function (n) { nav.appendChild(link(n, n)); });
       group('Exercises');
       exercises.forEach(function (n) {
@@ -176,6 +185,9 @@ fib(7)=r ?
         if (answers.indexOf(base) >= 0) { row.appendChild(link(base, 'answer', 'answer')); }
         nav.appendChild(row);
       });
+      // the standard library sources, in dependency order, in the same editor as the examples
+      group('Library');
+      modules.forEach(function (n) { nav.appendChild(link(n, n.slice(LIBRARY.length) + '.nl')); });
       nav.addEventListener('click', function (e) {
         var a = e.target.closest('a[data-example]');
         if (!a) { return; }
