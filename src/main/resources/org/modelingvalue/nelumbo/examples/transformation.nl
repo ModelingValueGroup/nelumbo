@@ -27,11 +27,11 @@ attr OT AN AT  ::> {
     }
 
     (o.AN := af) ::> {
-        o.AN == af
+        o.AN ==  af
     }
 
     (o.AN := af if bf) ::> {
-        o.AN == af if bf
+        o.AN ==  af if bf
     }
 }
 
@@ -72,9 +72,9 @@ String       s
 Person       p
 List<String> l
 
-p.name="Piet"                 ? [(p=Piet),..][..]
-Piet.street=s                 ? [(s="Kalverstraat")][..]
-p.street="Kalverstraat"       ? [(p=Piet),(p=Jan),..][..]
-Piet.address=s                ? [(s="Kalverstraat  88")][..]
-Jan.address=s                 ? [(s="Kalverstraat 122")][..]
-Jan.friends map [f](f.name)=l ? [(l=["Piet"])][..]
+p.name="Piet"               ? [(p=Piet),..][..]
+Piet.street                 ? [("Kalverstraat")][..]
+p.street="Kalverstraat"     ? [(p=Piet),(p=Jan),..][..]
+Piet.address                ? [("Kalverstraat  88")][..]
+Jan.address                 ? [("Kalverstraat 122")][..]
+Jan.friends map [f](f.name) ? [(["Piet"])][..]
