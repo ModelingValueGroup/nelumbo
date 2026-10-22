@@ -121,8 +121,16 @@ A[a,b](a=T1&b=T2&a$b) ? [..][..]
 
 // Structs
 
-Rep :: Struct
-Rep ::= rep <(> aa <)+>
+Sid :: Struct
+Sid ::= rep <(> aa <)+>
+Sid ::= opt <(> aa <)?>
+Sid ::= alt <(> aa <|> bb <)>
 
 rep aa = rep aa aa ? [][()]
 rep aa = rep aa    ? [()][]
+
+opt aa = opt       ? [][()]
+opt aa = opt aa    ? [()][]
+
+alt aa = alt bb    ? [][()]
+alt aa = alt aa    ? [()][]

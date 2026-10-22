@@ -4,7 +4,7 @@
 
 The logic module. A file gets it with `import nelumbo.logic`, or transitively by importing any package. It declares the `Boolean` type, the three Boolean values, the connectives, [lambdas](lambdas.md), the quantifiers (which are lambdas), equality, and the three top-level forms (`fact`, `<=>`, `?`).
 
-**Source:** [`src/main/resources/org/modelingvalue/nelumbo/logic/logic.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/logic/logic.nl) — 61 lines.
+**Source:** [`src/main/resources/org/modelingvalue/nelumbo/logic/logic.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/logic/logic.nl)
 
 **Import:**
 

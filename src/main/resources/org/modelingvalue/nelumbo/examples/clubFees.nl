@@ -25,8 +25,8 @@ Integer  ::= fee(<Person>)
 Person  p
 Integer n, f
 
-fee(p)=f <=>  f=50  if E[n](age(p,n) & (n<18 | n>65)),
-              f=100 if E[n](age(p,n) & n>=18 & n<=65)
+fee(p) ==  50  if E[n](age(p,n) & (n<18 | n>65)),
+           100 if E[n](age(p,n) & n>=18 & n<=65)
 
 Person ::= Alice, Bob, Carol, Dave, Eve
 

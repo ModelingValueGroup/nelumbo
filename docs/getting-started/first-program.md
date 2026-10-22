@@ -4,7 +4,7 @@ This page walks through `fibonacci.nl` one line at a time. By the end you will h
 
 Before reading on, make sure you have read [`reading-a-test.md`](reading-a-test.md). If `[(f=5)][..]` does not mean anything to you yet, start there.
 
-The file we are working with is [`src/main/resources/org/modelingvalue/nelumbo/examples/fibonacci.nl`](../../src/main/resources/org/modelingvalue/nelumbo/examples/fibonacci.nl). It is 19 lines long.
+The file we are working with is [`src/main/resources/org/modelingvalue/nelumbo/examples/fibonacci.nl`](../../src/main/resources/org/modelingvalue/nelumbo/examples/fibonacci.nl).
 
 ---
 
@@ -17,8 +17,8 @@ Integer ::= fib(<Integer>)
 
 Integer n, f
 
-fib(n)=f <=> f=n                 if n>=0 & n<=1,
-             f=fib(n-1)+fib(n-2) if n>1
+fib(n) ==  n                 if n>=0 & n<=1,
+           fib(n-1)+fib(n-2) if n>1
 
 fib(0)=f       ? [(f=0)][..]
 fib(1)=f       ? [(f=1)][..]
@@ -72,7 +72,7 @@ Key things to notice:
 Integer n, f
 ```
 
-This declares two variables of type `Integer`, named `n` and `f`. They are available in the rules and tests below.
+This declares two variables of type `Integer`, named `n` and `f`. The rule below uses `n`; the tests use `f` for the answer they ask for.
 
 Variables in Nelumbo are **logical variables**, not storage cells. They do not have a single value; they stand for "whatever value makes the rule hold." The engine finds bindings for them during query evaluation.
 
@@ -83,29 +83,35 @@ Variables in Nelumbo are **logical variables**, not storage cells. They do not h
 ## Lines 7–8 — the rule
 
 ```nelumbo
-fib(n)=f <=> f=n                 if n>=0 & n<=1,
-             f=fib(n-1)+fib(n-2) if n>1
+fib(n) ==  n                 if n>=0 & n<=1,
+           fib(n-1)+fib(n-2) if n>1
 ```
 
 This is the heart of the program. Line by line:
 
-- `<=>` is **logical equivalence** and it is how rules are written in Nelumbo. The rule says: *the statement on the left holds exactly when the statement on the right holds.*
-- The left-hand side, `fib(n)=f`, reads *"`fib(n)` equals `f`"*. This is the shape of every query you will write against `fib`: you ask the engine to find the `f` such that `fib(n)=f`.
+- `==` defines a **function rule**: the left-hand side `fib(n)` equals the value on the right. It is shorthand for Nelumbo's general rule operator `<=>` (**logical equivalence**), which says *the statement on the left holds exactly when the statement on the right holds*. Written out with `<=>`, the same rule needs a variable for the result:
+
+  ```nelumbo
+  fib(n)=f <=> f=n                 if n>=0 & n<=1,
+               f=fib(n-1)+fib(n-2) if n>1
+  ```
+
+  `==` writes that result variable for you. Use it whenever every alternative is just a value; use `<=>` when the right-hand side is a condition (see [`writing-rules.md`](../reference/logic/writing-rules.md)).
 - The right-hand side has **two alternatives separated by a comma**. The comma here is **purely shorthand** for repeating the left-hand side. What you see compressed onto two lines is really two separate rules:
 
   ```nelumbo
-  fib(n)=f <=> f=n                 if n>=0 & n<=1
-  fib(n)=f <=> f=fib(n-1)+fib(n-2) if n>1
+  fib(n) == n                 if n>=0 & n<=1
+  fib(n) == fib(n-1)+fib(n-2) if n>1
   ```
 
-  Both rules bi-imply the left-hand side; neither supersedes the other. The `if`-guards ensure that for any given `n` only one of the two rules contributes, so there is no overlap. (When rules *do* overlap and both produce closed results on the same side, that is a contradiction — see the note below.)
-- `if` attaches a **guard** to a rule. `f=n if n>=0 & n<=1` reads *"`f` equals `n`, provided `n` is 0 or 1."* `f=fib(n-1)+fib(n-2) if n>1` is the recursive case.
+  Both rules define `fib(n)`; neither supersedes the other. The `if`-guards ensure that for any given `n` only one of the two rules contributes, so there is no overlap. (When rules *do* overlap and both produce closed results on the same side, that is a contradiction — see the note below.)
+- `if` attaches a **guard** to a rule. `n if n>=0 & n<=1` reads *"`fib(n)` is `n`, provided `n` is 0 or 1."* `fib(n-1)+fib(n-2) if n>1` is the recursive case.
 
-Read the whole rule in English: *"`fib(n)` equals `f` if, for `n` in 0..1, `f` equals `n`; and `fib(n)=f` if, for `n` greater than 1, `f` equals `fib(n-1) + fib(n-2)`."* That is the definition of Fibonacci.
+Read the whole rule in English: *"`fib(n)` is `n` for `n` in 0..1, and `fib(n-1) + fib(n-2)` for `n` greater than 1."* That is the definition of Fibonacci.
 
 ### A note on multiple rules for the same relation
 
-You can write many rules for the same left-hand side, either using the comma shorthand or as separate `<=>` declarations. Nelumbo **merges** the results of all applicable rules: facts from every rule go into the facts side, falsehoods from every rule go into the falsehoods side. No rule wins over another; every rule is a bi-implication and contributes equally.
+You can write many rules for the same left-hand side, either using the comma shorthand or as separate `==` (or `<=>`) declarations. Nelumbo **merges** the results of all applicable rules: facts from every rule go into the facts side, falsehoods from every rule go into the falsehoods side. No rule wins over another; every rule is a bi-implication and contributes equally.
 
 This merging is sound as long as the rules **agree**. When they don't — specifically, when two rules both produce **closed** (non-`..`) claims on the same side that conflict — the program has a contradiction. A common way to avoid contradictions is to keep at most one rule closed on each side and let the others end with an incompleteness marker on that side. In practice, mutually exclusive `if`-guards (like the ones in `fib`) are the cleanest pattern.
 
@@ -160,7 +166,7 @@ You have now seen all four of Nelumbo's core building blocks:
 
 1. `import` — pull in definitions from another module
 2. `::=` — add syntax
-3. variable declarations and `<=>` rules — add semantics
+3. variable declarations and `==` / `<=>` rules — add semantics
 4. `?` — queries, and `? [..][..]` — tests
 
 Good next files to open, in order:
@@ -170,4 +176,4 @@ Good next files to open, in order:
 - **`logicTest.nl`** — a complete specification of three-valued logic in test form. Useful to skim whenever you are unsure how `&`, `|`, `!`, `->`, `<->`, `E[]`, or `A[]` behave in edge cases.
 - **`belasting.nl`** — the same mechanisms used to write Dutch tax rules in near-natural-language syntax. A good preview of what Nelumbo is actually for.
 
-And when you want to see *how the language is built out of itself*, open `src/main/resources/org/modelingvalue/nelumbo/integers/integers.nl`. It is 37 lines long and defines everything you used on this page.
+And when you want to see *how the language is built out of itself*, open `src/main/resources/org/modelingvalue/nelumbo/integers/integers.nl`. It defines everything you used on this page.

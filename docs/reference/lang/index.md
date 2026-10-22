@@ -4,7 +4,7 @@
 
 The bootstrap layer. Every other `.nl` file — including `logic.nl` itself — is written in the syntax that `lang.nl` declares. It is the meta-language for the meta-language.
 
-**Source:** [`src/main/resources/org/modelingvalue/nelumbo/lang/lang.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/lang/lang.nl) — 58 lines.
+**Source:** [`src/main/resources/org/modelingvalue/nelumbo/lang/lang.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/lang/lang.nl)
 
 **Import:**
 

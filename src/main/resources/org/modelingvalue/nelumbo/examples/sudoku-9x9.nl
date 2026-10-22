@@ -23,11 +23,11 @@ Set<Integer>        bs, cs
 // ---- access ---------------------------------------------------------
 at(l,i)=x        <=>  x pos l = i
 row(g,r)=rw      <=>  rw pos g = r
-cell(g,r,c)=x    <=>  x = at(row(g,r),c)
+cell(g,r,c)      ==  at(row(g,r),c)
 
 // ---- update (functional) -------------------------------------------
-sel(j,i,d,x)=y         <=>  y=d if j=i,  y=x if j!=i
-putRow(l,i,d)=rw       <=>  rw = [0,1,2,3,4,5,6,7,8] map [j](sel(j,i,d,at(l,j)))
+sel(j,i,d,x)           ==  d if j=i,  x if j!=i
+putRow(l,i,d)          ==  [0,1,2,3,4,5,6,7,8] map [j](sel(j,i,d,at(l,j)))
 rowsBefore(g,r)=s      <=>  s=[]                                                    if r=0,
                             E[rw,p](row(g,r-1)=rw & rowsBefore(g,r-1)=p & s=p+[rw])    if r>0
 rowsFrom(g,r)=s        <=>  s=[]                                                    if r=9,
@@ -36,8 +36,8 @@ put(g,r,c,d)=s         <=>  E[p,q](rowsBefore(g,r)=p & rowsFrom(g,r+1)=q &
                                    E[rw,rw2](row(g,r)=rw & putRow(rw,c,d)=rw2 & s=p+[rw2]+q))
 
 // ---- 9x9 boxes are 3 rows x 3 cols ---------------------------------
-boxRows(r)=bs    <=>  bs={0,1,2} if r<3,  bs={3,4,5} if r>=3 & r<6,  bs={6,7,8} if r>=6
-boxCols(c)=bs    <=>  bs={0,1,2} if c<3,  bs={3,4,5} if c>=3 & c<6,  bs={6,7,8} if c>=6
+boxRows(r)       ==  {0,1,2} if r<3,  {3,4,5} if r>=3 & r<6,  {6,7,8} if r>=6
+boxCols(c)       ==  {0,1,2} if c<3,  {3,4,5} if c>=3 & c<6,  {6,7,8} if c>=6
 
 // ---- constraint -----------------------------------------------------
 ok(g,r,c,d)      <=>  !E[rw](row(g,r)=rw & d in rw) &
@@ -51,7 +51,7 @@ solve(g,r,c)=s   <=>  s=g                                          if r=9,
                       E[d,g2](d in {1,2,3,4,5,6,7,8,9} & ok(g,r,c,d) &
                               put(g,r,c,d)=g2 & s=solve(g2,r,c+1))  if r<9 & c<9 & cell(g,r,c)=0
 
-sudoku(g)=s      <=>  s=solve(g,0,0)
+sudoku(g)        ==  solve(g,0,0)
 
 // ---- tests ----------------------------------------------------------
 at([4,5,6],1)=x                              ? [(x=5)][..]

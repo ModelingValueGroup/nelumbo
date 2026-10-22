@@ -4,7 +4,7 @@
 
 Generic sets and lists, with membership, set algebra, list concatenation and indexing, and the higher-order operations `where` (filter), `map` and `sort`. The higher-order operations take [lambdas](../logic/lambdas.md), which are declared in `nelumbo.logic`, not here. This is also the only stdlib module that uses Nelumbo's generic-type parameter mechanism.
 
-**Source:** [`src/main/resources/org/modelingvalue/nelumbo/collections/collections.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/collections/collections.nl) — 78 lines.
+**Source:** [`src/main/resources/org/modelingvalue/nelumbo/collections/collections.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/collections/collections.nl)
 
 **Import:**
 

@@ -66,6 +66,7 @@ public final class Parser implements ParseExceptionHandler {
     private final TokenizerResult tokenizerResult;
 
     private ParserResult result;
+    private Token        crashToken;
 
     public Parser(TokenizerResult tokenizerResult) {
         this.knowledgeBase = KnowledgeBase.current();
@@ -116,6 +117,26 @@ public final class Parser implements ParseExceptionHandler {
     }
 
     protected Node parseNode(Token token, ParseContext inner, ParseContext outer) throws ParseException {
+        try {
+            crashToken = null;
+            return parseNodeAt(token, inner, outer);
+        } catch (RuntimeException | StackOverflowError e) {
+            if (crashToken == null) {
+                crashToken = token; // set by the innermost node only
+            }
+            throw e;
+        }
+    }
+
+    /**
+     * The first token of the innermost node that was being parsed when an
+     * unexpected exception escaped the parser, else null.
+     */
+    public Token crashToken() {
+        return crashToken;
+    }
+
+    private Node parseNodeAt(Token token, ParseContext inner, ParseContext outer) throws ParseException {
         String group = inner.group();
         PatternResult result = new PatternResult(this, inner);
         if (!preParse(group, token, null, result, outer)) {

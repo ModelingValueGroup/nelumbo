@@ -252,6 +252,13 @@ peer(r,c,r2,c2)    <=> !(r=r2 & c=c2) & (r=r2 | c=c2 | samebox(r,c,r2,c2))
 
 **Files:** Modify `examples/sudoku-4x4-csp.nl`
 
+> **DONE (2026-10-19):** the third probe stayed `[..][..]` because this plan assumed "no rule
+> branch = relational failure". Wrong: a branch whose guard fails is silent, not false
+> (`docs/reference/logic/writing-rules.md`, "Guarded rules"). Fix: `afterElim` gets an explicit
+> `false if |ns|=0` branch; the probe then gives `[][..]` and `E[g](elim(..)=g)` is `[][()]`.
+> Every later Norvig `return False` (Task 7 `afterElim`, Task 8 `hRow`/`hCol`/`hBox` with 0 free
+> places, Task 8 `afterElim`) needs the same explicit branch.
+>
 > **UNBLOCKED (2026-10-16):** `in-on-nested-function-call-undecided.nl` is fixed, now in
 > `tests/` and `RegressionTest`. The first two probes decide; the third (contradiction,
 > `elim(...)=g ? [][..]`) is still `[..][..]`. Probes still commented out in the file.
@@ -307,6 +314,10 @@ afterElim(g,r,c,d,ns)=s <=> s=g if |ns|>=1
 ### Task 7: `assign` + naked-single propagation
 
 **Files:** Modify `examples/sudoku-4x4-csp.nl`
+
+> **DONE (2026-10-19):** with `false if |ns|=0` added to `afterElim` (see Task 6), and
+> `assignOthers` reflowed: a line break right after `<=>` ends the statement. Extra probe: the
+> non-peer (2,2) keeps all four candidates.
 
 `assign(g,r,c,d)` eliminates every other candidate from the cell (which, via naked single, cascades to peers). Naked single lives in `afterElim`: when a cell drops to one value, eliminate that value from all peers.
 
@@ -364,6 +375,18 @@ afterElim(g,r,c,d,ns)=s <=> nakedSingle(g,r,c)=s if |ns|=1,
 ### Task 8: Hidden-single propagation
 
 **Files:** Modify `examples/sudoku-4x4-csp.nl`
+
+> **DONE (2026-10-19)** with three plan defects fixed: (1) `false if |pl|=0` in `hRow`/`hCol`/`hBox`
+> and `false if |ns|=0` in `afterElim` (see Task 6); (2) `boxFree`'s guards moved onto the line of
+> their alternative (on their own continuation line they are silently dropped,
+> `bugs/guard-on-continuation-line-dropped.nl`; here that made `boxFree` recurse forever);
+> (3) `/` is exact division (`1/2` has no value), so `m/2`, `m-(m/2)*2` gave `boxFree = {0,2}`:
+> replaced by `bro(m)=k <=> E[t](t in {0,1} & (m-t)/2=k)` and `bco(m)=k <=> k=m-2*bro(m)`.
+> Extra probes: `boxFree` of a full grid, and a hidden-single cascade (D1 placed at (0,3), which
+> places D4 at (0,2)). New finding: Task 6's contradiction probe decides alone but is `[..][..]`
+> after the first Task 6 probe; commented out. Repro `bugs/empty-set-query-changes-later-result.nl`
+> (`@KnownBug`): a call over an empty set goes unknown after an earlier empty-set query
+> (hash-dependent, memoization involved).
 
 Hidden single: after eliminating `d` from a cell, in each unit that cell belongs to, if `d` now has exactly one possible place, assign it there; if zero places, contradiction. `rowFree`/`colFree`/`boxFree` build the set of free positions without set-builder (recursion + union), to avoid unbounded enumeration.
 
@@ -429,6 +452,12 @@ afterElim(g,r,c,d,ns)=s <=> E[g2](nakedSingle(g,r,c)=g2 & hidden(g2,r,c,d)=s) if
 
 **Files:** Modify `examples/sudoku-4x4-csp.nl`
 
+> **BLOCKED (2026-10-19)** on `bugs/call-arg-unbinds-index-in-pos-rule.nl` (`@KnownBug` in
+> `KnownBugsTest`): `parseAt`'s guard `icell(p,r,c)=0` gives "Inconsistent result ... non unique
+> bindings" on every row with two blanks: `iat(irow(p,r),c)=0` runs `0 pos il = i` with the bound
+> index unbound. Rules in the file, probes commented out. Probe 2 expects `{D2}` (P0 is solved by
+> propagation alone, pre-flight ruling) and a third probe checks (3,0)=`{D2}`.
+
 - [ ] **Step 1: Write the failing probe** (append): after parsing `P0`, cell (0,0) is `{D1}`, and its row peer (0,1) has lost `D1`:
 
 ```
@@ -461,6 +490,12 @@ parseAt(p,g,r,c)=s <=> s=g                       if r=4,
 ### Task 10: `solved` + MRV cell pick
 
 **Files:** Modify `examples/sudoku-4x4-csp.nl`
+
+> **DONE (2026-10-19)** on literal candidate grids (parse is blocked): Q2 after propagation
+> (`solved` false, `minCand`=2, `pickCell`=0), a solved grid (`solved` true) and a grid whose
+> first 2-candidate cell is index 8. Fixes: `n` was undeclared (misleading "Unexpected token ','"),
+> `minCandAt` reflowed (break after `<=>`), and `i/4`, `i-(i/4)*4` (exact division) replaced by
+> `fr(i)=k <=> E[t](t in {0,1,2,3} & (i-t)/4=k)` and `fc(i)=k <=> k=i-4*fr(i)`.
 
 - [ ] **Step 1: Write the failing probe** (append): a parsed but unsolved P0 is not solved; the minimum candidate count among unfilled cells is >= 2:
 
@@ -507,6 +542,14 @@ pickCell(g,n,i)=k <=> k=i                    if i<16 & |cell(g,i/4,i-(i/4)*4)|=n
 
 **Files:** Modify `examples/sudoku-4x4-csp.nl`
 
+> **DONE (2026-10-19)** on literal candidate grids (parse is blocked), with "first success
+> wins" (spec) instead of the `E[k,d,g2]` below: since `=` has unique holes, a function with two
+> answers is an "Inconsistent result ... non unique bindings", so the plan's version cannot
+> search a 2-solution puzzle such as Q2. `tryCand(g,k,i)` tries digit i at flat cell k and falls
+> through to i+1 when `assign` or the search below it fails (`false if i=5`). Probes: a solved
+> grid stays solved, Q2 gives its D1-first solution, and a grid where D1 at (0,0) empties (2,0)
+> backtracks to D2.
+
 - [ ] **Step 1: Write the failing probe** (append): search on an ALREADY-solved singleton grid returns it unchanged. Build it by parsing the full solution:
 
 ```
@@ -534,6 +577,12 @@ search(g)=s <=> s=g if solved(g),
 ### Task 12: `solve` end-to-end + oracle queries
 
 **Files:** Modify `examples/sudoku-4x4-csp.nl`
+
+> **PARTLY DONE (2026-10-19):** rules in the file (`q` declared). `toNums` decides on a literal
+> solved grid, and two end-to-end probes run `toNums(search(...))` with the givens assigned by
+> nested `assign` calls instead of `parse`: P0 (solved by propagation alone) and Q2 (DFS after
+> propagation, first solution). The `solve` oracle (P0, the two easy smart puzzles, Q2 with only
+> its first solution, see Task 11) is commented out: `parse` is BLOCKED (Task 9).
 
 - [ ] **Step 1: Write the failing probe** (append): convert the solved candidate grid back to integers and assert the full known solution:
 

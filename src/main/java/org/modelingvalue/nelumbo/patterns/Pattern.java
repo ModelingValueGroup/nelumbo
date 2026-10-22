@@ -176,7 +176,8 @@ public abstract class Pattern extends Node {
 
     public abstract List<Type> argTypes(List<Type> types);
 
-    public abstract int string(List<Object> args, int ai, StringBuffer sb, RenderOptions options, boolean alt);
+    public abstract int string(List<Object> args, int ai, StringBuffer sb, RenderOptions options, boolean alt,
+            MutableMap<Variable, Type> typeArgs);
 
     public abstract int args(List<AstElement> elements, int i, MutableList<Object> args, boolean[] keep,
             Functor functor, MutableMap<Variable, Type> typeArgs);

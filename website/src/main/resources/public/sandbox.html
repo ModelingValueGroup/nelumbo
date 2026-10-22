@@ -113,8 +113,8 @@
   <p class="intro">Edit the document below; results appear inline as you type. The document is self-contained: it imports the stdlib it needs, so it evaluates even against an empty knowledge base.</p>
   <div class="nelumbo-field" data-height="55vh">import nelumbo.integers
 Integer ::= fib(&lt;Integer&gt;)
-Integer n, f
-fib(n)=f &lt;=&gt; f=n if n&lt;=1, f=fib(n-1)+fib(n-2) if n&gt;1
+Integer n
+fib(n) == n if n&lt;=1, fib(n-1)+fib(n-2) if n&gt;1
 Integer r
 fib(7)=r ?
 </div>

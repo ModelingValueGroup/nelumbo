@@ -4,7 +4,7 @@
 
 Exact rational arithmetic — no floating-point rounding. Mirrors the shape of `nelumbo.integers` over a separate `Rational` type, plus integer-to-rational conversion.
 
-**Source:** [`src/main/resources/org/modelingvalue/nelumbo/rationals/rationals.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/rationals/rationals.nl) — 46 lines.
+**Source:** [`src/main/resources/org/modelingvalue/nelumbo/rationals/rationals.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/rationals/rationals.nl)
 
 **Import:**
 
@@ -90,10 +90,10 @@ a - b = c   <=>  add(c, b, a)
 a * b = c   <=>  mult(a, b, c)
 a / b = c   <=>  mult(c, b, a)
 
-- a = b     <=>  0.0 - a = b
+- a         ==  0.0 - a
 
-|a| = b     <=>  b =  a   if a >= 0.0,
-                b = -a   if a < 0.0
+|a|         ==   a   if a >= 0.0,
+                -a   if a < 0.0
 ```
 
 The literal `0.0` (not `0`) in the negation rule keeps the operands in `Rational` — `0` is an `Integer` and the typed `-` would not match.

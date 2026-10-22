@@ -6,13 +6,13 @@ Integer ::= maxFib(<Integer>)
 
 Integer n,f,m
 
-fib(n)=f       <=>  f=n                 if n<=1,
-                    f=fib(n-1)+fib(n-2) if n>1
+fib(n)       ==  n                 if n<=1,
+                 fib(n-1)+fib(n-2) if n>1
 
-maxFib(n, m)=f <=>  f=fib(n)        if fib(n)<m & fib(n+1)>=m,
-                    f=maxFib(n+1,m) if fib(n+1)<m
+maxFib(n, m) ==  fib(n)        if fib(n)<m & fib(n+1)>=m,
+                 maxFib(n+1,m) if fib(n+1)<m
 
-maxFib(m)=f    <=>  maxFib(0,m)=f
+maxFib(m)    ==  maxFib(0,m)
 
 fib(50)=f         ? [(f=12586269025)][..]
 

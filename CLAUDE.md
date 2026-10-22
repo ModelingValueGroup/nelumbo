@@ -8,7 +8,7 @@ Nelumbo is a declarative logic programming meta-language in Java: custom syntax 
 
 ## Build Commands
 
-Java 21+, Gradle 8.14.3 (Kotlin DSL) via wrapper.
+Java 21+, Gradle 9.8.1 (Kotlin DSL) via wrapper.
 
 ```sh
 ./gradlew build                          # everything (core + LSP server + tests)
@@ -58,6 +58,8 @@ nelumbo (root)   -> core: syntax, semantics, patterns, knowledge base
 - `logic/`: `And`, `Or`, `Not`, `Equal`, `When`, quantifiers, `Predicate`, `BinaryPredicate`, `CompoundPredicate`.
 - `integers/`, `strings/`, `collections/`: built-in types.
 - `tools/`: Swing `NelumboEditor`, AST/KB viewers, `NelumboEvaluator` (shared by CLI and MCP).
+- Each editor window evaluates in its own loop (one `KnowledgeBase.BASE.invoke` per window, re-`init()` per edit). An engine crash (`RuntimeException`, `StackOverflowError`) shows as `Internal error: <innermost cause>` in that window's messages and the loop keeps running, so the next edit evaluates again. It is placed on the crashing line: for a parse crash at `Parser.crashToken()` (first token of the innermost node being parsed; the exception itself is rethrown unchanged), with all token colors cleared to black (no parse, no reliable colors), for an evaluation crash at that statement (the other statements still evaluate).
+- Untitled editor windows keep their text in `java.util.prefs.Preferences` via `PreferenceText`: one value holds at most 8 KB (`MAX_VALUE_LENGTH`, else "Value too long"), so the text is split over `content`, `content.1`, ...
 - Core classes: `KnowledgeBase` (engine), `Node`, `Type`, `Variable`, `Fact`, `Rule`, `Transform`, `Query`, `InferResult`, `InferContext`.
 
 Entry points: `KnowledgeBase`, `lsp.Main` (stdio, or `Main ws [port]`), `mcp.Main`, `tools.NelumboEditor`.
@@ -86,13 +88,13 @@ Overload budget (`EvalGate.GLOBAL` counts evaluations JVM-wide):
 - Fast loop: `./gradlew :cli:cliJar`, then `java -jar cli/build/libs/nelumbo-cli-*.jar file.nl` (exit 0 = ok, errors as `file:line:col`, `-q` silences query output). Always rebuild the jar after engine changes - a stale jar once faked an "environment-dependent" bug.
 
 Sudoku examples (`examples/sudoku-*.nl`, NOT in `ExampleCatalog`/`ExamplesTest`):
-- Run via CLI with `-DPARALLEL_COLLECTIONS=false`: under parallel collections `map` results are nondeterministic (unfixed engine bug). The flag does NOT serialize inference.
+- `-DPARALLEL_COLLECTIONS=false` no longer matters for evaluation: since 2026-10-06 `KnowledgeBase.invoke`/`run`/`get` wrap their work in `Collection.sequential`, so collection operations inside them run on one thread with or without the flag (probe-verified; only the async memoization `cleanup` on `POOL` can still split). The immutable-collections interning bug that made parallel `map` nondeterministic is unfixed, but unreachable there. The flag is a `static final` in `CollectionImpl`, read once at JVM start.
 - `sudoku-9x9.nl`: naive brute force; its third puzzle runs 2+ hours (baseline). `sudoku-9x9-smart.nl`: singles-first (`scanF` forced moves, `solveBX` guesses; entry `sudokuSmart(g)`), all four puzzles ~45 s.
 - `sudoku-4x4*.nl`: line-for-line 4x4 debug copies (solution grid `[[1,2,3,4],[3,4,1,2],[2,1,4,3],[4,3,2,1]]`), sub-second.
 - Brute-force files report the result set open (`[(s=...),..][..]`), singles-first files closed; the smart files keep only the "real" puzzle active (neighbor-query effects).
 - `SudokuExamplesTest`: all `@Disabled` (4x4: timing-dependent `speculative-guard-index-crash.nl` without the flag; 9x9: too slow).
 - `sudoku-4x4-smart.nl` fails with `Inconsistent results`: `scanB`'s forced branch lacks an `if` (program defect), which the engine reports in one rule order only (`bugs/inconsistency-missed-by-rule-order.nl`; `-DREVERSE_NELUMBO=true` flips it). `sudoku-9x9-smart.nl` has the same `scanB` shape.
-- `sudoku-4x4-csp.nl`: CSP solver at Task 6 (`elim`); its Task 6 probes are commented out: the first two decide, the third (contradiction, expected `[][..]`) is still `[..][..]`. Grid DSL (Task 17) BLOCKED on `bugs/single-hole-functor-parser-npe.nl` (`Cell ::= ".", <Integer>` NPEs the parser); its section is commented out.
+- `sudoku-4x4-csp.nl`: CSP solver, Tasks 1-8, 10-12 done (`assign`, naked + hidden single, `solved`/MRV, `search`, `toNums`; probed on literal grids and with givens set by nested `assign`, since `parse` is blocked; the `solve` oracle is commented out). `search` is first-success-wins (`tryCand`): a function with two answers is an inconsistency since `=` is unique. `/` is exact division (`1/2` has no value): box/flat-index offsets via `bro`/`bco`/`fr`/`fc`. Task 9 (`parse`) BLOCKED on `bugs/call-arg-unbinds-index-in-pos-rule.nl` (`icell(p,r,c)=0` on a row with two blanks: "Inconsistent result"); probes commented out. Task 6's contradiction probe is commented out: `[..][..]` after a neighbor query, `[][..]` alone (`bugs/empty-set-query-changes-later-result.nl`, hash-dependent). A Norvig `return False` needs an explicit `false if ...` branch: a guard that fails makes its branch silent (`[..][..]`), not false (`docs/reference/logic/writing-rules.md`). Grid DSL (Task 17) BLOCKED on `bugs/single-hole-functor-parser-npe.nl` (`Cell ::= ".", <Integer>` NPEs the parser); its section is commented out.
 
 ## Nelumbo Language Syntax (.nl files)
 
@@ -100,10 +102,11 @@ Sudoku examples (`examples/sudoku-*.nl`, NOT in `ExampleCatalog`/`ExamplesTest`)
 - Patterns: `Integer ::= fib(<Integer>)`
 - Variables: `Integer n, f`
 - Rules: `fib(n)=f <=> f=n if n<=1, f=fib(n-1)+fib(n-2) if n>1`
+- Function rules: `fib(n) == n if n<=1, fib(n-1)+fib(n-2) if n>1` = the rule above (`L == e if g` is `L=r <=> r=e if g`, fresh `r`); prefer it when every branch is a value.
 - Facts: `pc(Hendrik, Juliana)`
 - Queries with expected result: `fib(5)=f ? [(f=5)][..]`
 - Operators: `&`, `|`, `E[x]`, `A[y]` (up to 6 quantified variables)
-- Statements are only `fact`, `<=>`, `?`: a bare `f(i)=[1,2]` is rejected ("unexpected type Boolean, expected Root or List<Root>"); write `f(i)=l <=> l=[1,2]`.
+- Statements are only `fact`, `<=>`/`==`, `?`: a bare `f(i)=[1,2]` is rejected ("unexpected type Boolean, expected Root or List<Root>"); write `f(i) == [1,2]`.
 
 ## Authoring .nl files (DSL extension)
 

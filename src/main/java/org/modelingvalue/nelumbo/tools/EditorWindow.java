@@ -1270,6 +1270,7 @@ public class EditorWindow extends WindowAdapter
     }
 
     private void execute() {
+        Parser parser = null;
         // Phase 1: Read document text on EDT
         try {
             String text = callOnEDT(null, () -> getDocumentText(textPane));
@@ -1278,7 +1279,8 @@ public class EditorWindow extends WindowAdapter
             knowledgeBase.init();
             Tokenizer tokenizer = new Tokenizer(text, getEditorFileName());
             TokenizerResult tokenizerResult = tokenizer.tokenize();
-            ParserResult result = new Parser(tokenizerResult).parseNonThrowing();
+            parser = new Parser(tokenizerResult);
+            ParserResult result = parser.parseNonThrowing();
 
             // Phase 3: Apply all pre-compute UI updates on EDT
             runOnEDT(knowledgeBase,
@@ -1304,6 +1306,35 @@ public class EditorWindow extends WindowAdapter
             lastParserResult = result;
         } catch (NelumboEditor.EDTException e) {
             System.err.println("EDT call failed in execute: " + e.getCause());
+        } catch (RuntimeException | StackOverflowError e) {
+            // an engine crash on this text: report it in this window and keep the loop
+            // alive, so the next edit evaluates again
+            e.printStackTrace();
+            Token at = parser != null ? parser.crashToken() : null;
+            String message = internalError(e);
+            javax.swing.SwingUtilities.invokeLater(() -> showCrash(at, message));
+        }
+    }
+
+    // the innermost cause: the outer ones are reflection wrappers
+    private static String internalError(Throwable e) {
+        while (e.getCause() != null) {
+            e = e.getCause();
+        }
+        return "Internal error: " + e;
+    }
+
+    // no parse, so no reliable colors: plain text, the message on the line of the
+    // crashing node, that node's first token in red
+    private void showCrash(Token at, String message) {
+        textPane.setHighlighter(new DefaultHighlighter());
+        messagesPane.setHighlighter(new DefaultHighlighter());
+        clearColors();
+        if (at == null) {
+            setMessages(message);
+        } else {
+            setMessages(emptyLines(at.line()) + message);
+            setHighlight(textPane, at.index(), at.text().length(), message, redPainter);
         }
     }
 
@@ -1333,6 +1364,10 @@ public class EditorWindow extends WindowAdapter
                     eval.evaluate(knowledgeBase, throwing);
                 } catch (ParseException exc) {
                     pe = exc;
+                    mess = pe.getShortMessage();
+                } catch (RuntimeException | StackOverflowError exc) {
+                    exc.printStackTrace();
+                    pe = new ParseException(exc, internalError(exc), root);
                     mess = pe.getShortMessage();
                 }
                 if (eval instanceof Query query && query.inferResult() != null) {
@@ -1385,12 +1420,7 @@ public class EditorWindow extends WindowAdapter
         // ArrayIndexOutOfBoundsException when repainting
         textPane.setHighlighter(new DefaultHighlighter());
         messagesPane.setHighlighter(new DefaultHighlighter());
-        currentUnderlineStart = -1;
-        currentUnderlineEnd = -1;
-        StyledDocument doc = textPane.getStyledDocument();
-        SimpleAttributeSet defaultAttr = new SimpleAttributeSet();
-        StyleConstants.setForeground(defaultAttr, Color.BLACK);
-        doc.setCharacterAttributes(0, doc.getLength(), defaultAttr, true);
+        clearColors();
 
         // Apply token colors
         showColors(textPane, tokenizerResult);
@@ -1419,6 +1449,15 @@ public class EditorWindow extends WindowAdapter
 
         // Save window state (reads caret position, must be on EDT)
         saveTextContent(text);
+    }
+
+    private void clearColors() {
+        currentUnderlineStart = -1; // the underline is a character attribute too
+        currentUnderlineEnd = -1;
+        StyledDocument doc = textPane.getStyledDocument();
+        SimpleAttributeSet defaultAttr = new SimpleAttributeSet();
+        StyleConstants.setForeground(defaultAttr, Color.BLACK);
+        doc.setCharacterAttributes(0, doc.getLength(), defaultAttr, true);
     }
 
     private void showMessageColors() {
@@ -1519,7 +1558,7 @@ public class EditorWindow extends WindowAdapter
                 preferences.put(prefKey("title"), frame.getTitle());
             } else {
                 // For regular windows, save content and state
-                preferences.put(prefKey("content"), text);
+                PreferenceText.put(preferences, prefKey("content"), text);
 
                 // Save window number
                 if (windowNumber > 0) {
@@ -1588,7 +1627,7 @@ public class EditorWindow extends WindowAdapter
     }
 
     private void loadTextContent() {
-        String text = preferences.get(prefKey("content"), "");
+        String text = PreferenceText.get(preferences, prefKey("content"));
 
         if (!text.isEmpty()) {
             try {

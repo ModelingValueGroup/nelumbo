@@ -68,6 +68,15 @@ public final class Import extends Node {
         return this;
     }
 
+    @Override
+    public List<Object> args() {
+        List<Object> args = List.of();
+        for (String name : name().split("\\.")) {
+            args = args.add(name);
+        }
+        return List.of(List.of(args));
+    }
+
     public String name() {
         return (String) get(0);
     }
