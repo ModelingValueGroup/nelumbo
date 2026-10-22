@@ -68,9 +68,7 @@ Jan.friends  := {Piet}
 
 // Queries 
 
-String       s
-Person       p
-List<String> l
+Person p
 
 p.name="Piet"               ? [(p=Piet),..][..]
 Piet.street                 ? [("Kalverstraat")][..]
