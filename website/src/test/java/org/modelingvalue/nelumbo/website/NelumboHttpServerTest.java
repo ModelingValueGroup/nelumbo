@@ -186,15 +186,25 @@ class NelumboHttpServerTest {
         assertEquals(404, get("/library/noSuchModule").statusCode());
     }
 
-    /** The sandbox loads a library module into its editor, so it must evaluate there without diagnostics. */
+    /**
+     * The sandbox loads a library module into its editor, so it must evaluate there without diagnostics. Like the
+     * public site (and {@link #everyTourEditorEvaluates}), against an EMPTY base KB: on top of a base that already
+     * loaded the stdlib (this class's fibonacci base imports it), a module's source would define its syntax twice.
+     */
     @Test
     void everyLibraryModuleEvaluatesWithoutErrors() throws Exception {
-        for (String module : NelumboHttpServer.LIBRARY_MODULES) {
-            HttpRequest request = HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/eval"))
-                    .header("Content-Type", "text/plain").POST(BodyPublishers.ofString(NelumboHttpServer.librarySource(module))).build();
-            HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
-            assertEquals(200, response.statusCode(), module + ": " + response.body());
-            assertEquals(0, mapper.readTree(response.body()).get("errors").size(), module + " evaluates without errors: " + response.body());
+        NelumboHttpServer empty     = new NelumboHttpServer(KnowledgeBaseLoader.load(List.of()), List.of());
+        int               emptyPort = empty.start(0);
+        try {
+            for (String module : NelumboHttpServer.LIBRARY_MODULES) {
+                HttpRequest request = HttpRequest.newBuilder(URI.create("http://localhost:" + emptyPort + "/eval"))
+                        .header("Content-Type", "text/plain").POST(BodyPublishers.ofString(NelumboHttpServer.librarySource(module))).build();
+                HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+                assertEquals(200, response.statusCode(), module + ": " + response.body());
+                assertEquals(0, mapper.readTree(response.body()).get("errors").size(), module + " evaluates without errors: " + response.body());
+            }
+        } finally {
+            empty.stop();
         }
     }
 
