@@ -49,7 +49,10 @@ public final class Query extends Node implements Evaluatable {
     @Override
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
         if (reason == ConstructionReason.parsing) {
-            Predicate nodePred = predicate();
+            Node node = (Node) get(0);
+            Variable var = node instanceof Predicate ? null
+                    : new Variable(List.of(), true, node.type().nonFunction(), "r" + uniqueId());
+            Predicate nodePred = var == null ? (Predicate) node : new NIs(node.astElements(), node, var);
             Predicate predicate = nodePred.setVariables(knowledgeBase,
                     Predicate.literals(nodePred.getBinding(nodePred)), ctx);
             List<List<Object>> expected = getVal(1);
@@ -62,9 +65,9 @@ public final class Query extends Node implements Evaluatable {
                 List<Object> falsehoods = expected.get(1);
                 Object[] array = new Object[5];
                 array[0] = predicate;
-                array[1] = bindings(facts.filter(List.class).asList());
+                array[1] = bindings(knowledgeBase, facts.exclude(e -> e instanceof String).asList(), var);
                 array[2] = !facts.contains("..");
-                array[3] = bindings(falsehoods.filter(List.class).asList());
+                array[3] = bindings(knowledgeBase, falsehoods.exclude(e -> e instanceof String).asList(), var);
                 array[4] = !falsehoods.contains("..");
                 return setArgs(array);
             }
@@ -73,12 +76,19 @@ public final class Query extends Node implements Evaluatable {
     }
 
     @SuppressWarnings("unchecked")
-    private static Set<Map<Variable, Object>> bindings(List<?> listListList) {
+    private static Set<Map<Variable, Object>> bindings(KnowledgeBase knowledgeBase, List<?> listList, Variable var)
+            throws ParseException {
         Set<Map<Variable, Object>> set = Set.of();
-        for (List<List<Object>> listList : (List<List<List<Object>>>) listListList) {
+        for (List<Object> list : (List<List<Object>>) listList) {
             Map<Variable, Object> map = Map.of();
-            for (List<Object> list : listList) {
-                map = map.put(((Node) list.get(0)).variable().literal(), list.get(1));
+            for (Object element : list) {
+                if (element instanceof List pair) {
+                    map = map.put(((Node) pair.get(0)).variable().literal(), pair.get(1));
+                } else if (var == null) {
+                    knowledgeBase.addException(new ParseException("No variable in binding", (Node) element));
+                } else {
+                    map = map.put(var.literal(), element);
+                }
             }
             set = set.add(map);
         }

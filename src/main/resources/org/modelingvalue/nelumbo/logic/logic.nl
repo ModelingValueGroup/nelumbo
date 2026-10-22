@@ -39,12 +39,13 @@ Boolean                      ::= true                            @nelumbo.logic.
                                  <Boolean> -> <Boolean>      #18,
                                  <Boolean> "<->" <Boolean>   #16
 
-pattern BINDING              ::= [ <(> <(> ( <(> <Variable#100> = <Object#0> <,> , <)*> ) <|> .. <)> <,> , <)*> ]
+pattern BINDING              ::= [ <(> <(> ( <(> <(> <Literal#100> <|> <Variable#100> = <Literal#0> <)> <,> , <)*> ) <|> .. <)> <,> , <)*> ]
 
 Root                         ::= "fact" <(> <Boolean#0> <,> , <)+>                                      @nelumbo.logic.Fact,
                                  <Boolean#0> "<=>" <(> <Boolean#0> <(> "if" <Boolean#0> <)?> <,> , <)+> @nelumbo.logic.Rule,
                                  <R#0> "==" <(> <R#0> <(> "if" <Boolean#0> <)?> <,> , <)+>              @nelumbo.logic.Rule,
-                                 <Boolean#0> ? <(> <BINDING> <BINDING> <)?>                             @nelumbo.logic.Query
+                                 <Boolean#0> ? <(> <BINDING> <BINDING> <)?>                             @nelumbo.logic.Query,
+                                 <{Function,R}#0> ? <(> <BINDING> <BINDING> <)?>                        @nelumbo.logic.Query
 
 Boolean p1, p2
 
