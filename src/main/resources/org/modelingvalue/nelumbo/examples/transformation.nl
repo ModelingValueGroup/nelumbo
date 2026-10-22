@@ -49,7 +49,7 @@ attr Person address String
 
 // Rules
 
-Person p, f
+Person p
 
 p.address := p.street + "  " + str(p.number) if p.number < 100
 p.address := p.street + " " + str(p.number) if p.number >= 100
@@ -73,4 +73,4 @@ Piet.street                 ? [("Kalverstraat")][..]
 p.street="Kalverstraat"     ? [(p=Piet),(p=Jan),..][..]
 Piet.address                ? [("Kalverstraat  88")][..]
 Jan.address                 ? [("Kalverstraat 122")][..]
-Jan.friends map [f](f.name) ? [(["Piet"])][..]
+Jan.friends map [p](p.name) ? [(["Piet"])][..]
