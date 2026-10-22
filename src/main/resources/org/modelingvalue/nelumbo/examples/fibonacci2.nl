@@ -2,7 +2,7 @@ import  nelumbo.integers
 
 Integer ::= F<Integer>#70
 
-Integer n, f
+Integer n
 
 Fn ==  n             if n>=0 & n<=1,
        F(n-1)+F(n-2) if n>1
