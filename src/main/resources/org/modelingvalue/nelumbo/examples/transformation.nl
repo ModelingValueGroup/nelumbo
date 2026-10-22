@@ -49,7 +49,7 @@ attr Person address String
 
 // Rules
 
-Person p, f
+Person p
 
 p.address := p.street + "  " + str(p.number) if p.number < 100
 p.address := p.street + " " + str(p.number) if p.number >= 100
