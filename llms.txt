@@ -49,7 +49,7 @@ example file in the project is unreadable.
 - [Grammar](https://nelumbo.nl/docs/reference/lang/grammar.html): types, patterns, variables, scope blocks and `::>` - the syntax-shaping declarations from `nelumbo.lang`
 - [Built-in tokens and pattern holes](https://nelumbo.nl/docs/reference/lang/built-in-tokens.html): `<NUMBER>`, `<STRING>`, `<Variable>` and friends
 - [Precedence and associativity](https://nelumbo.nl/docs/reference/lang/precedence-and-associativity.html): the `#N` system
-- [Visibility](https://nelumbo.nl/docs/reference/lang/visibility.html): `private`, `hidden`, `visible`, and scope blocks
+- [Visibility](https://nelumbo.nl/docs/reference/lang/visibility.html): `private`, `hidden` variables (implicit operands: `hidden Integer a` makes `>10` read `a>10`), `<hidden T>`/`<visible T>` holes, and scope blocks
 - [nelumbo.logic](https://nelumbo.nl/docs/reference/logic/index.html): Boolean, connectives, quantifiers, equality, and the `fact` / `<=>` / `?` statements
 - [Operators](https://nelumbo.nl/docs/reference/logic/operators.html): the logical operators and the `fact` / `<=>` / `?` forms from `nelumbo.logic`
 - [Statements](https://nelumbo.nl/docs/reference/logic/statements.html): facts, queries and tests

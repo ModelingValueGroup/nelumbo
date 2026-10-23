@@ -114,6 +114,7 @@ Sudoku examples (`examples/sudoku-*.nl`, NOT in `ExampleCatalog`/`ExamplesTest`)
 - A DSL: `MyType :: Root` + functor bodies `MyType ::= <pattern>`; instances become top-level statements.
 - Pattern syntax catalogue: `lang/lang.nl` lines 34-47 (`Pattern ::=`); one example per Pattern subtype in `tests/langOnly.nl`; named patterns `pattern N ::= ...` used as `<N>` (`docs/reference/lang/index.md#named-patterns`).
 - Root-extending functors need an explicit precedence per alternative (`MyStmt ::= keyword <(> <Arg> <,> , <)+> #0`), else instances with repetition/optional/alternation fail with `Unexpected token '\n'`. `Object`-based functors don't.
+- Hidden variables (`hidden Integer a`, `docs/reference/lang/visibility.md`): the parser fills one in as the left operand an expression leaves out (`>10` = `a>10`, `*100+y` = `x*100+y`); `<hidden T>` holes take only that implicit operand, `<visible T>` only a written one. One per scope (a second, any type, fails with the cryptic `null -> [a, s]`); results print its value without the name (`(15)`), but a Boolean query's expectation must still name it (`(a=15)`, else "No variable in binding").
 - Functors on `:: Object` are Function-typed (`=` undecided); declare `:: Struct` for structural equality.
 - A rule head whose result variable has the WRONG type is accepted silently and makes UNRELATED queries undecided: when everything goes undecided at once, check variable types first.
 
