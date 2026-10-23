@@ -26,7 +26,6 @@ import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.NelumboConstructor;
-import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
@@ -38,7 +37,6 @@ public class NIs extends Predicate {
     @Serial
     private static final long serialVersionUID = -7316551393714994267L;
 
-    @NelumboFunctorField
     private static Functor FUNCTOR;
 
     static {

@@ -58,10 +58,13 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
     }
 
     /** Declaration/definition operators that are aligned together as one column. The query {@code ?} is aligned separately. */
-    private static final Set<String> DECLARATION_OPERATORS = Set.of("::", "::=", "<=>");
+    private static final Set<String> DECLARATION_OPERATORS = Set.of("::", "::=", "<=>", "==");
 
-    /** Spaces emitted after an aligned marker. {@code <=>} takes two (corpus convention); everything else one. */
-    private static final Map<String, Integer> SPACE_AFTER = Map.of("<=>", 2);
+    /** Rule operators: {@code <=>} and its function shorthand {@code ==}. */
+    private static final Set<String> RULE_OPERATORS = Set.of("<=>", "==");
+
+    /** Spaces emitted after an aligned marker. The rule operators take two (corpus convention); everything else one. */
+    private static final Map<String, Integer> SPACE_AFTER = Map.of("<=>", 2, "==", 2);
 
     /** Spaces between the longest content and the aligned trailing {@code //} comment column. */
     private static final int COMMENT_GAP = 2;
@@ -736,10 +739,10 @@ public class DocumentFormattingService extends DocumentServiceAdapter {
         return targetAbs;
     }
 
-    /** True if this body block is a rule body (its head line contains the {@code <=>} operator). */
+    /** True if this body block is a rule body (its head line contains a rule operator, {@code <=>} or {@code ==}). */
     private static boolean isRuleBody(List<Integer> block, Map<Integer, List<Token>> significant) {
         List<Token> head = significant.get(block.getFirst());
-        return head != null && head.stream().anyMatch(t -> t.type() == TokenType.OPERATOR && t.text().equals("<=>"));
+        return head != null && head.stream().anyMatch(t -> t.type() == TokenType.OPERATOR && RULE_OPERATORS.contains(t.text()));
     }
 
     /** The {@code if} guard keyword on a line (a NAME whose text is exactly {@code "if"}), or null. */

@@ -24,7 +24,7 @@ sat(crw,j)=cs <=>  cs pos crw = j
 me(j)=ds      <=>  ds={1} if E[i](i in {0,1,2} & i=j),  ds={2} if !E[i](i in {0,1,2} & i=j)
 meAll(n)=sl   <=>  sl = [0,1,5] map [j](me(j))
 
-me(1)=ds ? [(ds={1})][..]
-me(5)=ds ? [(ds={2})][..]
-meAll(0)=sl ? [(sl=[{1},{1},{2}])][..]
-sat(meAll(0),0)=cs ? [(cs={1})][..]
+me(1) ? [({1})][..]
+me(5) ? [({2})][..]
+meAll(0) ? [([{1},{1},{2}])][..]
+sat(meAll(0),0) ? [({1})][..]

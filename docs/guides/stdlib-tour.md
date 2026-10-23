@@ -203,10 +203,10 @@ a-b=c  <=>  add(c,b,a)
 a*b=c  <=>  mult(a,b,c)
 a/b=c  <=>  mult(c,b,a)
 
--a=b   <=>  0-a=b
+-a     ==  0-a
 
-|a|=b  <=>  b=a   if a>=0,
-            b=-a  if a<0
+|a|    ==  a   if a>=0,
+           -a  if a<0
 ```
 
 ### What is native
@@ -237,17 +237,17 @@ a >= b  <=>  a > b | a = b
 
 `gt` (rather than the `>` operator) is the native because an operator functor's name cannot bind a `@NelumboMethod` — the named helper keeps the comparison logic in a method like `add` and `mult`.
 
-Unary minus is a one-liner:
+Unary minus is a one-liner. It is a function of one value, so it uses the `==` shorthand (`-a = b <=> 0 - a = b` without the result variable `b`, see [writing rules](../reference/logic/writing-rules.md#function-rules--)):
 
 ```nelumbo
--a = b  <=>  0 - a = b
+-a  ==  0 - a
 ```
 
 And absolute value uses the guard pattern with mutually exclusive conditions:
 
 ```nelumbo
-|a| = b  <=>  b = a   if a >= 0,
-              b = -a  if a <  0
+|a|  ==  a   if a >= 0,
+         -a  if a <  0
 ```
 
 ### Idioms to notice
@@ -314,10 +314,10 @@ a-b=c  <=>  add(c,b,a)
 a*b=c  <=>  mult(a,b,c)
 a/b=c  <=>  mult(c,b,a)
 
--a=b   <=>  0.0-a=b
+-a     ==  0.0-a
 
-|a|=b  <=>  b=a   if a>=0.0,
-            b=-a  if a<0.0
+|a|    ==  a   if a>=0.0,
+           -a  if a<0.0
 
 Integer x, y
 

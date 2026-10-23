@@ -82,6 +82,22 @@ E ? [F][N]         // test — query and compare; pass iff result matches
 
 A bare expression without `fact` is rejected (`unexpected type Boolean, expected Root or List<Root>`).
 
+### Function queries
+
+`E` does not have to be a `Boolean`. A query on a function value asks for that value. The query introduces its own result variable, as [`==`](writing-rules.md#function-rules--) does for rules, so you do not declare one, and an expected result lists the value without a variable name:
+
+```nelumbo
+fib(5)        ? [(5)][..]
+m(Amalia)     ? [(Maxima)][..]
+p(Amalia)     ? [({Willem,Maxima})][..]
+"foo" + "bar" ? [("foobar")][..]
+```
+
+`E ? [(v)]` means exactly `E = r ? [(r=v)]` for a fresh variable `r`, so `fib(5) ?` is the same query as `fib(5)=f ?` without declaring `Integer f`. The result is printed the same way, without the name: `fib(5) ? [(5)][..]`.
+
+- `E` must be a function application (`fib(5)`, `1+2`, `Piet.address`), not a single literal value: `5 ?` is rejected (`unexpected type {Integer,Literal}, expected Root or List<Root>`). A functor without arguments, such as `mkAll`, counts as a literal; query it with `mkAll=l ?`.
+- Write `=` when you compare against a known value (`m(Amalia)=Maxima ? [()][]`) or when other variables are bound too (`fib(n)=f`).
+
 See [`test-expression-semantics.md`](test-expression-semantics.md) for the precise comparison rules.
 
 ---

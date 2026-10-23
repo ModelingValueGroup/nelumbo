@@ -48,7 +48,7 @@ test('go-to-definition moves the selection to the declaration', async ({ page }:
     await awaitLspConnected(page);
     const result: { before: number; after: number } = await page.evaluate(async (): Promise<{ before: number; after: number }> => {
         const nf:  any = (window as any).NelumboFields;
-        const fib: any = nf.__editors.find((e: any): boolean => e.model.getValue().indexOf('fib(n)=f') >= 0);
+        const fib: any = nf.__editors.find((e: any): boolean => e.model.getValue().indexOf('fib(n) ==') >= 0);
         const use: any = fib.model.findMatches('fib(7)', true, false, false, null, false)[0].range;
         fib.editor.setPosition({ lineNumber: use.startLineNumber, column: use.startColumn + 1 });
         const before: number = fib.editor.getPosition().lineNumber;
@@ -69,7 +69,7 @@ test('hover shows information for a known symbol', async ({ page }: { page: Page
     // The Integer type reference in the declaration returns a documented hover ("type Integer ...").
     await page.evaluate((): void => {
         const nf:  any = (window as any).NelumboFields;
-        const fib: any = nf.__editors.find((e: any): boolean => e.model.getValue().indexOf('fib(n)=f') >= 0);
+        const fib: any = nf.__editors.find((e: any): boolean => e.model.getValue().indexOf('fib(n) ==') >= 0);
         const m:   any = fib.model.findMatches('Integer ::=', true, false, false, null, false)[0].range;
         fib.editor.focus();
         fib.editor.setPosition({ lineNumber: m.startLineNumber, column: m.startColumn + 1 });
@@ -88,7 +88,7 @@ test('completion offers suggestions', async ({ page }: { page: Page }): Promise<
     // At the end of the fib field on a fresh line the LSP offers identifier completions (fib, factorial, ...).
     await page.evaluate((): void => {
         const nf:  any = (window as any).NelumboFields;
-        const fib: any = nf.__editors.find((e: any): boolean => e.model.getValue().indexOf('fib(n)=f') >= 0);
+        const fib: any = nf.__editors.find((e: any): boolean => e.model.getValue().indexOf('fib(n) ==') >= 0);
         const monaco: any = nf.__monaco;
         fib.editor.focus();
         const last: number = fib.model.getLineCount();

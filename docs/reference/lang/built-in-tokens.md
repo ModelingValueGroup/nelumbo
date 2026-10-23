@@ -92,11 +92,11 @@ From `ternary.nl`. The `#5` restricts what can appear in the hole to expressions
 A type hole may also be marked with a visibility modifier:
 
 ```nelumbo
-Integer ::= <hidden Integer>  && <Integer>  #35
-Integer ::= <visible Integer> &  <Integer>  #35
+Integer ::= <hidden Integer>  $$ <Integer>  #35
+Integer ::= <visible Integer> $  <Integer>  #35
 ```
 
-From `hidden.nl`. These restrict the hole to hidden or visible variables respectively. See [`visibility.md`](visibility.md).
+From `hidden.nl`. A `<hidden T>` hole accepts only an operand that the source leaves out (the parser fills in the `hidden` variable in scope); a `<visible T>` hole only a written operand. See [`visibility.md`](visibility.md#hidden-t-and-visible-t-holes).
 
 ---
 

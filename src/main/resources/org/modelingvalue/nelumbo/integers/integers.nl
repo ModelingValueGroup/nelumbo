@@ -33,7 +33,7 @@ a-b=c <=>  add(c,b,a)
 a*b=c <=>  mult(a,b,c)
 a/b=c <=>  mult(c,b,a)
 
--a=b  <=>  0-a=b
+-a    ==  0-a
 
-|a|=b <=>  b=a  if a>=0,
-           b=-a if a<0
+|a|   ==  a  if a>=0,
+          -a if a<0

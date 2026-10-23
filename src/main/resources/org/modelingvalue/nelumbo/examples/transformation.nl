@@ -9,27 +9,33 @@ Type OT, AT
 NAME AN
 
 attr OT AN AT  ::> {
-    AT   ::= <OT>.AN                                 #100
+    AT   ::= <OT>.AN       #100,
+             <hidden OT>AN #100
 
-    Root ::= <{OT,Literal}>.AN  := <{AT,Literal}#0>  #100,
-             <{OT,Variable}>.AN := <{AT,Function}#0> #100
-
-    OT o
-    AT a
+    Root ::= <{OT,Literal}>.AN  := <{AT,Literal}#0>                                  #100,
+             <hidden {OT,Variable}>AN := <{AT,Function}#0> <(> "if" <Boolean#0> <)?> #100
 
     {OT,Literal}  ol
     {AT,Literal}  al
-    {AT,Function} af
 
     (ol.AN := al) ::> {
         fact ol.AN = al
     }
 
-    (o.AN := af) ::> {
-        o.AN=a <=>  af=a
+    {AT,Function} af
+    {Boolean}     bf
+    hidden OT     o
+
+    AN ==  o.AN
+
+    (AN := af) ::> {
+        o.AN ==  af
+    }
+
+    (AN := af if bf) ::> {
+        o.AN ==  af if bf
     }
 }
-
 
 // Model
 
@@ -39,14 +45,14 @@ attr Person name String
 attr Person street String
 attr Person number Integer
 attr Person friends Set<Person>
-
 attr Person address String
 
 // Rules
 
-Person p, f
+hidden Person p
 
-p.address := p.street + " " + str(p.number)
+address := street + "  " + str(number) if number < 100
+address := street + " " + str(number) if number >= 100
 
 // Facts
 
@@ -54,20 +60,17 @@ Person ::= Piet, Jan
 
 Piet.name    := "Piet"
 Piet.street  := "Kalverstraat"
-Piet.number  := 11
+Piet.number  := 88
 Jan.name     := "Jan"
 Jan.street   := "Kalverstraat"
-Jan.number   := 22
+Jan.number   := 122
 Jan.friends  := {Piet}
 
 // Queries 
 
-String       s
-Person       p
-List<String> l
-
-p.name="Piet"                 ? [(p=Piet),..][..]
-Piet.street=s                 ? [(s="Kalverstraat")][..]
-p.street="Kalverstraat"       ? [(p=Piet),(p=Jan),..][..]
-Piet.address=s                ? [(s="Kalverstraat 11")][..]
-Jan.friends map [f](f.name)=l ? [(l=["Piet"])][..]
+name="Piet"               ? [(p=Piet),..][..]
+Piet.street               ? [("Kalverstraat")][..]
+street="Kalverstraat"     ? [(p=Piet),(p=Jan),..][..]
+Piet.address              ? [("Kalverstraat  88")][..]
+Jan.address               ? [("Kalverstraat 122")][..]
+Jan.friends map [p](name) ? [(["Piet"])][..]

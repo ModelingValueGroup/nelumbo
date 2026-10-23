@@ -102,16 +102,19 @@ Sudoku examples (`examples/sudoku-*.nl`, NOT in `ExampleCatalog`/`ExamplesTest`)
 - Patterns: `Integer ::= fib(<Integer>)`
 - Variables: `Integer n, f`
 - Rules: `fib(n)=f <=> f=n if n<=1, f=fib(n-1)+fib(n-2) if n>1`
+- Function rules: `fib(n) == n if n<=1, fib(n-1)+fib(n-2) if n>1` = the rule above (`L == e if g` is `L=r <=> r=e if g`, fresh `r`); prefer it when every branch is a value.
 - Facts: `pc(Hendrik, Juliana)`
 - Queries with expected result: `fib(5)=f ? [(f=5)][..]`
+- Function queries: `fib(5) ? [(5)][..]` = the query above (the query introduces the result variable, like `==`); not on a single literal (`5 ?`, a 0-arity functor `mkAll ?`: "unexpected type ... Literal"). A DateTime-with-time value cannot be written bare in a binding yet (`(2024-01-15T11:30)` fails to parse, BINDING's `<Literal#100>`); keep `=a ? [(a=...)]` there.
 - Operators: `&`, `|`, `E[x]`, `A[y]` (up to 6 quantified variables)
-- Statements are only `fact`, `<=>`, `?`: a bare `f(i)=[1,2]` is rejected ("unexpected type Boolean, expected Root or List<Root>"); write `f(i)=l <=> l=[1,2]`.
+- Statements are only `fact`, `<=>`/`==`, `?`: a bare `f(i)=[1,2]` is rejected ("unexpected type Boolean, expected Root or List<Root>"); write `f(i) == [1,2]`.
 
 ## Authoring .nl files (DSL extension)
 
 - A DSL: `MyType :: Root` + functor bodies `MyType ::= <pattern>`; instances become top-level statements.
 - Pattern syntax catalogue: `lang/lang.nl` lines 34-47 (`Pattern ::=`); one example per Pattern subtype in `tests/langOnly.nl`; named patterns `pattern N ::= ...` used as `<N>` (`docs/reference/lang/index.md#named-patterns`).
 - Root-extending functors need an explicit precedence per alternative (`MyStmt ::= keyword <(> <Arg> <,> , <)+> #0`), else instances with repetition/optional/alternation fail with `Unexpected token '\n'`. `Object`-based functors don't.
+- Hidden variables (`hidden Integer a`, `docs/reference/lang/visibility.md`): the parser fills one in as the left operand an expression leaves out (`>10` = `a>10`, `*100+y` = `x*100+y`); `<hidden T>` holes take only that implicit operand, `<visible T>` only a written one. One per scope (a second, any type, fails with the cryptic `null -> [a, s]`); results print its value without the name (`(15)`), but a Boolean query's expectation must still name it (`(a=15)`, else "No variable in binding").
 - Functors on `:: Object` are Function-typed (`=` undecided); declare `:: Struct` for structural equality.
 - A rule head whose result variable has the WRONG type is accepted silently and makes UNRELATED queries undecided: when everything goes undecided at once, check variable types first.
 

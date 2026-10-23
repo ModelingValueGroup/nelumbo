@@ -28,6 +28,7 @@ import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.collections.NList;
+import org.modelingvalue.nelumbo.logic.BooleanVariable;
 import org.modelingvalue.nelumbo.patterns.Pattern;
 import org.modelingvalue.nelumbo.patterns.TokenTextPattern;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
@@ -89,7 +90,8 @@ public final class Transform extends Node {
 
     @Override
     public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
-        Transform to = makeVariablesUnique(ctx);
+        Transform to = (Transform) replace(o -> o instanceof BooleanVariable b ? b.variable() : o);
+        to = to.makeVariablesUnique(ctx);
         to = rewireFunctors(to, knowledgeBase);
         return knowledgeBase.addTransform(to);
     }

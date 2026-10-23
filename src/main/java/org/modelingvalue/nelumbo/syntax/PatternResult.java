@@ -186,6 +186,7 @@ public final class PatternResult implements ParseExceptionHandler {
                     setNodes(elements, node);
                 }
                 context.finish(type);
+                node.doCheck(parser().knowledgeBase(), context());
                 return node;
             } catch (ParseException pe) {
                 throw pe;

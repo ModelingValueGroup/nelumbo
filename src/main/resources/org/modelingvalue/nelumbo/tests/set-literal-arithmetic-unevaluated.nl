@@ -32,8 +32,8 @@ mkl(j)=li          <=>  li=[j+1]
 mkAll=l            <=>  l=[0,1,2] map [j]({j+1})
 mkAllL=ll          <=>  ll=[0,1,2] map [j]([j+1])
 
-two(1)=x   ? [(x=2)][..]                // control: always worked
-mk(1)=s    ? [(s={2})][..]              // was undecided
-mkl(1)=li  ? [(li=[2])][..]             // list twin: did not parse
-mkAll=l    ? [(l=[{1},{2},{3}])][..]    // was ClassCastException ListImpl -> Set
-mkAllL=ll  ? [(ll=[[1],[2],[3]])][..]   // list twin in a map lambda
+two(1)    ? [(2)][..]                 // control: always worked
+mk(1)     ? [({2})][..]               // was undecided
+mkl(1)    ? [([2])][..]               // list twin: did not parse
+mkAll=l   ? [(l=[{1},{2},{3}])][..]   // was ClassCastException ListImpl -> Set
+mkAllL=ll ? [(ll=[[1],[2],[3]])][..]  // list twin in a map lambda

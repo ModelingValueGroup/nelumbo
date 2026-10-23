@@ -129,7 +129,7 @@ public class TokenTextPattern extends Pattern {
     }
 
     @Override
-    public int string(List<Object> args, int ai, StringBuffer sb, RenderOptions options, boolean alt) {
+    public int string(List<Object> args, int ai, StringBuffer sb, RenderOptions options, boolean alt, MutableMap<Variable, Type> typeArgs) {
         if (alt) {
             if (ai < 0 || args.size() <= ai) {
                 return -1;

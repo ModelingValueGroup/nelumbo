@@ -21,51 +21,78 @@ Both sides of `::>` share the same variables, declared in the surrounding scope.
 A concrete example, from [`transformation.nl`](../../src/main/resources/org/modelingvalue/nelumbo/examples/transformation.nl):
 
 ```nelumbo
-Root ::= attr <Type> <n> <Type>  #100
+Root ::= attr <Type> <NAME> <Type> #100
 
 Type OT, AT
 NAME AN
 
-attr OT AN AT  ::>  {
-    AT       ::= <OT>.AN
-    Root     ::= <OT>.AN := <AT>
-    private Boolean ::= AN(<OT>,<AT>)
-    OT o
-    AT a
-    o.AN = a  <=>  AN(o,a)
-    o.AN := a ::> {
-        fact AN(o,a)
+attr OT AN AT  ::> {
+    AT   ::= <OT>.AN       #100,
+             <hidden OT>AN #100
+
+    Root ::= <{OT,Literal}>.AN  := <{AT,Literal}#0>                                  #100,
+             <hidden {OT,Variable}>AN := <{AT,Function}#0> <(> "if" <Boolean#0> <)?> #100
+
+    {OT,Literal}  ol
+    {AT,Literal}  al
+
+    (ol.AN := al) ::> {
+        fact ol.AN = al
+    }
+
+    {AT,Function} af
+    {Boolean}     bf
+    hidden OT     o
+
+    AN ==  o.AN
+
+    (AN := af) ::> {
+        o.AN ==  af
+    }
+
+    (AN := af if bf) ::> {
+        o.AN ==  af if bf
     }
 }
 ```
 
 Reading this top to bottom:
 
-1. The first line, `Root ::= attr <Type> <n> <Type> #100`, **introduces the new keyword** `attr` into the top-level grammar. `Root` is the special type Nelumbo uses for statement-level productions; extending `Root` means "the user can now write this at the top level of their program." The keyword `attr` is followed by two type names and an identifier (the attribute's name).
-2. The next block declares **variables for the transformation** — `OT` and `AT` of type `Type`, `AN` of type `NAME`. These are ordinary variable declarations; they just happen to be used by a transformation rather than by a rule.
-3. The `attr OT AN AT ::> { ... }` line is the transformation itself. When the user writes something like `attr Person name String`, the engine binds `OT = Person`, `AN = name`, `AT = String` — via the same machinery it uses to bind logical variables in queries — and then emits the declarations in the block with those bindings applied.
+1. The first line, `Root ::= attr <Type> <NAME> <Type> #100`, **introduces the new keyword** `attr` into the top-level grammar. `Root` is the special type Nelumbo uses for statement-level productions; extending `Root` means "the user can now write this at the top level of their program." The keyword `attr` is followed by a type, an identifier (the attribute's name, a [`<NAME>`](../reference/lang/built-in-tokens.md#name) hole) and another type.
+2. The next block declares **variables for the transformation**: `OT` and `AT` of type `Type`, `AN` of type `NAME`. These are ordinary variable declarations; they just happen to be used by a transformation rather than by a rule.
+3. The `attr OT AN AT ::> { ... }` line is the transformation itself. When the user writes something like `attr Person name String`, the engine binds `OT = Person`, `AN = name`, `AT = String` (via the same machinery it uses to bind logical variables in queries) and then emits the declarations in the block with those bindings applied.
 
-The result: when the user writes
+The block gives every attribute four things:
+
+- **Two ways to read it.** `<OT>.AN` is the attribute of a written object (`Piet.name`). `<hidden OT>AN` is the attribute of an *implicit* object (`name` alone), filled in by the [hidden variable](../reference/lang/visibility.md#hidden--implicit-operands) `o`. The rule `AN == o.AN` says both mean the same.
+- **An assignment for known values.** `Piet.name := "Piet"` matches `(ol.AN := al)` and becomes `fact Piet.name = "Piet"`. The intersection types `{OT,Literal}` and `{AT,Literal}` restrict this form to a literal object and a literal value.
+- **An assignment that derives a value.** `address := street + " " + str(number)` matches `(AN := af)`: the left operand is the implicit object, the value an expression (`{AT,Function}`). It becomes the rule `o.address == street + " " + str(number)`, so every person's `address` is computed from that same person's `street` and `number`.
+- **The same with a guard.** `address := ... if number >= 100` matches `(AN := af if bf)` and becomes `o.address == ... if number >= 100`.
+
+The attribute itself is a function, `Piet.name`, with the closed, single result every function has (see [Open facts and `one`](../reference/logic/statements.md#open-facts-and-one)), so it can be queried directly:
 
 ```nelumbo
 attr Person name String
+attr Person street String
+attr Person number Integer
+attr Person address String
+
+hidden Person p
+
+address := street + "  " + str(number) if number < 100
+address := street + " " + str(number) if number >= 100
+
+Person ::= Piet, Jan
+
+Piet.name    := "Piet"
+Piet.street  := "Kalverstraat"
+Piet.number  := 88
+
+Piet.address          ? [("Kalverstraat  88")][..]
+name="Piet"           ? [(p=Piet),..][..]
 ```
 
-the effect is **exactly the same** as if they had written
-
-```nelumbo
-String ::= <Person>.name
-Root   ::= <Person>.name := <String>
-private Boolean ::= name(<Person>, <String>)
-Person o
-String a
-o.name = a  <=>  name(o, a)
-o.name := a ::> {
-    fact name(o, a)
-}
-```
-
-Eight declarations, none of them surprising. The transformation is just an abbreviation.
+`hidden Person p` is what makes the derived assignments and the last query work: `address := ...` and `name="Piet"` leave the person out, and the parser fills in `p` (see [Visibility](../reference/lang/visibility.md#implicit-objects)).
 
 ---
 
@@ -81,15 +108,19 @@ This matters because variables in `Nelumbo` come in one underlying flavour — *
 | `Person a`    | a `Person` literal or result  | query evaluation |
 | `Type OT`     | a type name supplied by the user | transformation expansion |
 | `NAME AN`     | an identifier supplied by the user | transformation expansion |
+| `{OT,Literal} ol` | a literal of the type bound to `OT` (`Piet`) | transformation expansion |
+| `{AT,Function} af` | an expression of the type bound to `AT` (`street + " " + str(number)`) | transformation expansion |
 | `Lidwoord lw` | a `Lidwoord` literal (`de` or `het`) the user wrote | transformation expansion |
 
 In ordinary rules, variables are bound by navigating relations and reasoning three-valuedly over the results. In transformations, the same variables are bound by matching the user's source syntax against the transformation's left-hand side — **same binding, no fact/falsehood reasoning layered on top**.
+
+A type in a declaration may itself be a transformation variable: `{OT,Literal} ol` gets its type from what `OT` is bound to, intersected with `Literal`. That is how one transformation can say "a literal object" or "a computed value" for every attribute it expands.
 
 Some of these variable types — `Type`, `NAME` — exist primarily for transformations. Others, like `Lidwoord`, are ordinary user-defined types that happen to work in transformation positions because the engine binds them the same way. You can use any type in this role; what matters is that the engine can bind variables of that type by matching against what the user wrote.
 
 ### Why this matters for reading `.nl` files
 
-When you see `Type OT` at the top of a block containing `::>`, you are looking at a variable declaration — exactly the same kind you would see in a rule-bearing block. The difference is not in the variable itself, but in the context: in a `<=>` rule, the engine binds the variable during reasoning; in a `::>` transformation, the engine binds it during expansion.
+When you see `Type OT` at the top of a block containing `::>`, you are looking at a variable declaration — exactly the same kind you would see in a rule-bearing block. The difference is not in the variable itself, but in the context: in a rule, the engine binds the variable during reasoning; in a `::>` transformation, the engine binds it during expansion.
 
 This is also why a transformation's variables can be wrapped in a `{ ... }` scope — scopes work the same way for both uses.
 
@@ -100,7 +131,7 @@ This is also why a transformation's variables can be wrapped in a `{ ... }` scop
 The `Root` type is Nelumbo's hook for **top-level statement syntax**. To introduce a new keyword, you declare a `Root` pattern:
 
 ```nelumbo
-Root ::= attr <Type> <n> <Type>  #100
+Root ::= attr <Type> <NAME> <Type> #100
 ```
 
 Reading this: "at the top level, the user may write `attr` followed by a type, an identifier, and another type." The `#100` precedence keeps the statement from colliding with other parsing rules.
@@ -121,40 +152,52 @@ The pattern on the left of `::>` mirrors the `Root` declaration, with metavariab
 
 ## Nesting transformations
 
-A transformation block can itself contain a `::>`. Look again at the inner clause from `transformation.nl`:
+A transformation block can itself contain a `::>`. In `transformation.nl` the outer transformation declares the `Root` patterns for assignment, and three nested transformations give them meaning:
 
 ```nelumbo
-attr OT AN AT  ::>  {
+attr OT AN AT  ::> {
     ...
-    Root     ::= <OT>.AN := <AT>
+    Root ::= <{OT,Literal}>.AN  := <{AT,Literal}#0>                                  #100,
+             <hidden {OT,Variable}>AN := <{AT,Function}#0> <(> "if" <Boolean#0> <)?> #100
     ...
-    o.AN := a ::> {
-        fact AN(o,a)
+    (ol.AN := al) ::> {
+        fact ol.AN = al
+    }
+    ...
+    (AN := af if bf) ::> {
+        o.AN ==  af if bf
     }
 }
 ```
 
-The outer transformation expands `attr Person name String` into many things, one of which is another `Root` pattern: `Person.name := String`. That newly introduced pattern is **also** given a transformation — a nested `::>` that turns every use of the assignment syntax (e.g. `Piet.name := "Piet"`) into a `fact` declaration.
+The outer transformation expands `attr Person address String` into many things, among them the `Root` patterns `Person.address := String` and `address := String if Boolean`. Those newly introduced patterns get transformations too: every use of the assignment syntax turns into a `fact` or a rule.
 
 So the chain is:
 
 ```text
-User writes:           Transformation expands to:        Further expands to:
+User writes:           Transformation expands to:          Further expands to:
 
-attr Person name String
-                   ->  String ::= <Person>.name
-                       Root ::= <Person>.name := <String>
-                       private Boolean ::= name(<Person>,<String>)
-                       Person o
-                       String a
-                       o.name = a <=> name(o,a)
-                       o.name := a ::> { fact name(o,a) }
+attr Person address String
+                   ->  String ::= <Person>.address,
+                                  <hidden Person>address
+                       Root   ::= <{Person,Literal}>.address := ...,
+                                  <hidden {Person,Variable}>address := ... if ...
+                       address == o.address
+                       (ol.address := al) ::> { fact ol.address = al }
+                       (address := af if bf) ::> { o.address == af if bf }
+                       ...
 
-Piet.name := "Piet"
-                                                     ->  fact name(Piet, "Piet")
+Piet.address := "Kalverstraat"
+                                                       ->  fact Piet.address = "Kalverstraat"
+
+address := street + " " + str(number) if number >= 100
+                                                       ->  o.address == street + " " + str(number)
+                                                                        if number >= 100
 ```
 
-A nested transformation has **the same semantics as the outer one**: it binds the variables on its left-hand side against user syntax and emits the declarations on its right-hand side. There is no inner-vs-outer distinction in mechanism, and no special "action" mode — `fact name(o, a)` is just another declaration, no different from a `::=` or a `<=>`. Both transformations run at compile time, so nesting them carries no runtime cost.
+A nested transformation has **the same semantics as the outer one**: it binds the variables on its left-hand side against user syntax and emits the declarations on its right-hand side. There is no inner-vs-outer distinction in mechanism, and no special "action" mode: `fact ol.AN = al` is just another declaration, no different from a `::=` or a `==` rule. Both transformations run at compile time, so nesting them carries no runtime cost.
+
+The nested left-hand sides are in parentheses, `(AN := af) ::> {`. Without them the value hole (`<{AT,Function}#0>`, the lowest precedence) runs on into `::>`, and `AN := af ::> {` fails with `Unexpected token '>'`.
 
 ---
 
@@ -177,34 +220,40 @@ The transformation is structured the same way as the first example, but richer:
 
 ```nelumbo
 Lidwoord :: Object
+
 Lidwoord ::= de, het
 
-Root ::= "attr" <Type> <Lidwoord> <n> <Type>  #100
+Root     ::= "attr" <Type> <Lidwoord> <NAME> <Type> #100
 
 {
-  Type OT, AT
-  Lidwoord lw
-  NAME n
+    Type     OT, AT
+    Lidwoord lw
+    NAME     n
 
-  attr OT lw n AT ::> {
-     Root ::= <lw> n van <OT> is <AT>              #0
-     Root ::= wat is <lw> n van <OT> ?             #0
-     private Boolean ::= n(<OT>, <AT>)
-     OT o
-     AT a
-     lw n van o is a ::> {
-        fact n(o, a)
-     }
-     wat is lw n van o ? ::> {
-        n(o, a) ?
-     }
-  }
+    attr OT lw n AT ::> {
+        Root            ::= <lw> n van <{OT,Literal}> is <{AT,Literal}> #0
+        Root            ::= wat is <lw> n van <OT> ? #0
+        private Boolean ::= n(<OT>,<AT>)
+
+        OT o
+        AT a
+        wat is lw n van o ? ::> {
+            n(o,a) ?
+        }
+
+        {OT,Literal} ol
+        {AT,Literal} al
+        lw n van ol is al ::> {
+            fact n(ol,al)
+        }
+    }
 }
 ```
 
 Two things to notice:
 
 - **`Lidwoord`** (Dutch for *article*, as in "the") is an ordinary user-defined type with two literals `de` and `het`. But in the transformation's metavariable list (`Lidwoord lw`), it is acting as a meta-type, because the transformation uses it syntactically. The same type can serve both roles.
+- **A private relation instead of a function.** `deHet.nl` stores the attribute as `n(<OT>,<AT>)`, a `private Boolean` relation that only the generated Dutch sentences use. `transformation.nl` uses a function (`<OT>.AN`) instead, which the user can query and compute with directly.
 - **Two inner `::>` blocks** handle the two user-level actions: "say X is Y" (turned into a `fact`) and "ask what X is" (turned into a query). The transformation therefore defines not just syntax, but the full user-facing semantics, in one place.
 
 When the user writes `attr Persoon de naam String`, all of the following happen:
@@ -224,8 +273,8 @@ A transformation block accepts **any declaration or statement** that is legal at
 - Type declarations (`T :: S`)
 - Pattern declarations (`T ::= P`, with or without `private`/`hidden`)
 - `Boolean` declarations
-- Variable declarations
-- Rules (`L <=> R`)
+- Variable declarations, also `hidden` ones and ones whose type is a transformation variable (`{OT,Literal} ol`)
+- Rules (`L <=> R`, `L == e`)
 - Fact assertions (`fact E`)
 - Further `::>` transformations (nested)
 - Queries and tests (`E ?`, `E ? [F][N]`)
@@ -252,7 +301,7 @@ Transformations interact with scope blocks. The `deHet.nl` example puts the whol
 
 This keeps the metavariables `OT`, `AT`, `lw`, `n` local to that block. Without the scope, they would linger in the file's namespace and could collide with other names. **Wrapping a transformation's metavariables in a `{ ... }` is a useful hygiene practice.**
 
-Inside the transformation body, declarations added by the expansion live in the scope where the user wrote the invocation — not inside a hidden inner scope. So `attr Person name String` adds `Person o`, `String a`, and the rules to the surrounding scope. This is usually what you want; it is why the transformed code can be referenced from ordinary user code later in the file.
+Inside the transformation body, declarations added by the expansion live in the scope where the user wrote the invocation — not inside a hidden inner scope. So `attr Person name String` adds its patterns, its variables (`ol`, `al`, `af`, `bf`, `o`) and the rule `name == o.name` to the surrounding scope. This is usually what you want; it is why the transformed code can be referenced from ordinary user code later in the file.
 
 ---
 
@@ -260,11 +309,11 @@ Inside the transformation body, declarations added by the expansion live in the 
 
 Transformations are powerful, which means they are also easy to overuse. A good rule of thumb:
 
-- **Use a rule (`<=>`)** when the same abstraction can be expressed as an equivalence over values.
+- **Use a rule (`<=>` or `==`)** when the same abstraction can be expressed as an equivalence over values.
 - **Use multiple `::=` patterns** when you want several surface syntaxes for the same underlying relation.
 - **Use a transformation (`::>`)** only when the abstraction you want introduces *structural* declarations — new types, new relations, new patterns — that depend on the arguments.
 
-The `attr` example is a good test case: `attr Person name String` introduces a new relation `name(Person, String)` whose *name* depends on the argument. No rule can do that, because rules cannot declare relations. Transformation is the right tool.
+The `attr` example is a good test case: `attr Person name String` introduces a new function `Person.name`, its implicit form `name` and its assignment syntax, all named after the argument. No rule can do that, because rules cannot declare patterns. Transformation is the right tool.
 
 If you find yourself writing a transformation whose body is one rule with substitutions, consider whether the same effect can be achieved with generic types (`Type E`) instead. Transformations are a last resort when declarative mechanisms cannot express the shape you need.
 
@@ -287,7 +336,8 @@ This is why metavariable declarations look like logical-variable declarations (t
 Since `::>` is under active development, here are some specific points to be aware of when using it today:
 
 - **Error messages from transformations are still rough.** A mistake in a transformation body may surface as a confusing diagnostic about the expanded code rather than the source you wrote.
-- **Interaction with `private`/`hidden` inside transformations is evolving.** The worked examples use `private Boolean ::= ...` inside transformations and it works, but finer-grained visibility controls may be added.
+- **Interaction with `private`/`hidden` inside transformations is evolving.** The worked examples use `private Boolean ::= ...`, `<hidden OT>` holes and a `hidden OT o` variable inside transformations and they work, but finer-grained visibility controls may be added.
+- **An expansion cannot always be written out by hand.** Read the expanded declarations as a substitution of the bound values. Typed out literally for one attribute, `(ol.street := al) ::> { ... }` fails to parse (`Unexpected token ':='`), while the same line works inside the transformation.
 - **Namespace handling.** Any type that specialises `Namespace` introduces its own scope; declaring a functor `private` inside such a type keeps it confined to that scope. See [`../reference/visibility.md`](../reference/lang/visibility.md). This is the piece that keeps declarations from different transformation expansions from colliding.
 - **Syntax of the `::>` operator itself** may tighten over releases. The current form supports both the patterns shown here and the nested form; a consolidated spec is a work in progress.
 - **Performance** is not a concern. Transformations — including nested ones — are expanded at compile/load time only, so they contribute nothing to query execution. Heavy transformation use affects load time, not the reasoner's runtime.
@@ -299,9 +349,10 @@ Check the [latest examples](../../src/main/resources/org/modelingvalue/nelumbo/e
 ## See also
 
 - [`../reference/lang/grammar.md`](../reference/lang/grammar.md) — how `::>` fits in the overall grammar
-- [`../reference/built-in-tokens.md`](../reference/lang/built-in-tokens.md) — the `<n>` identifier token and type holes used in transformation LHS
+- [`../reference/built-in-tokens.md`](../reference/lang/built-in-tokens.md) — the `<NAME>` identifier token and type holes used in transformation LHS
+- [`../reference/visibility.md`](../reference/lang/visibility.md#hidden--implicit-operands) — hidden variables and implicit objects (`<hidden OT>AN`)
 - [`../reference/visibility.md`](../reference/lang/visibility.md) — scopes, `private`, and how `Namespace`-derived types introduce their own scopes
 - [`../reference/writing-rules.md`](../reference/logic/writing-rules.md) — the simpler alternative for value-level abstraction
 - [`transformation.nl`](../../src/main/resources/org/modelingvalue/nelumbo/examples/transformation.nl) — the canonical worked example
 - [`deHet.nl`](../../src/main/resources/org/modelingvalue/nelumbo/examples/deHet.nl) — natural-language DSL variant
-- [`transformationAssignment.nl`](../../src/main/resources/org/modelingvalue/nelumbo/examples/transformationAssignment.nl) — the "rules-and-transformation-stubbed-out" exercise version of the same example
+- [`transformationAssignment.nl`](../../src/main/resources/org/modelingvalue/nelumbo/examples/transformationAssignment.nl) — exercise: write the rule and the transformation for a simpler, relation-based `attr` (`private Boolean ::= AN(<OT>,<AT>)`)

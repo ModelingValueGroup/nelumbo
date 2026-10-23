@@ -33,8 +33,8 @@ fact pc(Hendrik, Juliana),
 
 a(Amalia)=a       ? [(a=Beatrix),(a=Maxima),(a=Hendrik),(a=Bernhard),(a=Juliana),(a=Claus),(a=Willem),(a=Wilhelmina)][..]
 
-m(Amalia)=Maxima  ? [()][]
-m(Amalia)=Willem  ? [][()]
-m(Amalia)=a       ? [(a=Maxima)][(a=Willem),..]
-f(Amalia)=a       ? [(a=Willem)][(a=Maxima),..]
-f(m(f(Amalia)))=a ? [(a=Bernhard)][(a=Juliana),..]
+m(Amalia)=Maxima ? [()][]
+m(Amalia)=Willem ? [][()]
+m(Amalia)        ? [(Maxima)][(Willem),..]
+f(Amalia)        ? [(Willem)][(Maxima),..]
+f(m(f(Amalia)))  ? [(Bernhard)][(Juliana),..]
