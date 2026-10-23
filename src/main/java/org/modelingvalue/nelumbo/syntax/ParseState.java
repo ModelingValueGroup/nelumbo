@@ -399,6 +399,9 @@ public class ParseState extends AbstractState<ParseState> {
             }
             dirTokenStates = removeMaxTokenTypes(dirTokenStates, max);
         }
+        if (dirTokenStates.size() > 1 && dirTokenStates.toKeys().allMatch(dc -> dc.direction() == Direction.node)) {
+            dirTokenStates = Map.of(Entry.of(new DirectionContext(Direction.node, null), Set.of()));
+        }
         dirTokenStates = removeIfMoreThenOne(dirTokenStates, Direction.node);
         dirTokenStates = removeIfMoreThenOne(dirTokenStates, Direction.outer);
         dirTokenStates = removeIfMoreThenOne(dirTokenStates, Direction.repeat);
