@@ -13,9 +13,6 @@ Set<Person> ::= p(<Person>),  // parents
                 d(<Person>)   // descendants
 
 Person      a, b, c
-Set<Person> s
-Male        y
-Female      x
 
 p(a) ==  {[b](b=m(a)|b=f(a))}
 c(a) ==  {[b](a=m(b)|a=f(b))}
@@ -35,16 +32,16 @@ fact f(Juliana)=Hendrik,
      f(Amalia)=Willem,
      m(Amalia)=Maxima
 
-m(Amalia)=Maxima  ? [()][]
-m(Amalia)=Willem  ? [][()]
+m(Amalia)=Maxima ? [()][]
+m(Amalia)=Willem ? [][()]
 
-m(Amalia)=x       ? [(x=Maxima)][..]
-f(Amalia)=y       ? [(y=Willem)][..]
+m(Amalia)        ? [(Maxima)][..]
+f(Amalia)        ? [(Willem)][..]
 
-m(m(f(Amalia)))=x ? [(x=Juliana)][..]
+m(m(f(Amalia)))  ? [(Juliana)][..]
 
-p(Amalia)=s       ? [(s={Willem,Maxima})][..]
-c(Hendrik)=s      ? [(s={Juliana,..})][..]
+p(Amalia)        ? [({Willem,Maxima})][..]
+c(Hendrik)       ? [({Juliana,..})][..]
 
-d(Hendrik)=s      ? [(s={Juliana,Willem,Amalia,Beatrix,..})][..]
-a(Amalia)=s       ? [(s={Juliana,Willem,Maxima,Beatrix,Hendrik,Wilhelmina,Bernhard,Claus,..})][..]
+d(Hendrik)       ? [({Juliana,Willem,Amalia,Beatrix,..})][..]
+a(Amalia)        ? [({Juliana,Willem,Maxima,Beatrix,Hendrik,Wilhelmina,Bernhard,Claus,..})][..]

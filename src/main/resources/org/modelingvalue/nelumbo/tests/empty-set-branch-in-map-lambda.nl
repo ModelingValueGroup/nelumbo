@@ -24,8 +24,8 @@ mt(j)=ds      <=>  ds={}  if j=0,  ds={1} if j!=0
 mtAll(n)=sl   <=>  sl = [0,1,2] map [j](mt(j))
 
 // the rule itself works standalone, empty branch included:
-mt(0)=ds ? [(ds={})][..]
-mt(1)=ds ? [(ds={1})][..]
+mt(0) ? [({})][..]
+mt(1) ? [({1})][..]
 // mapped (was undecided):
-sat(mtAll(0),0)=cs ? [(cs={})][..]
-sat(mtAll(0),1)=cs ? [(cs={1})][..]
+sat(mtAll(0),0) ? [({})][..]
+sat(mtAll(0),1) ? [({1})][..]

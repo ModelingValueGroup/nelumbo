@@ -15,4 +15,4 @@ List<Integer> ::= build(<Integer>)
 build(n)=s    <=>  s=[]             if n=0,
                    s=build(n-1)+[n] if n>0
 
-build(3)=s ? [(s=[1,2,3])][..]
+build(3) ? [([1,2,3])][..]

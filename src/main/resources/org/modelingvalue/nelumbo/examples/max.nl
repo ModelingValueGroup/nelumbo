@@ -10,7 +10,7 @@ import nelumbo.integers
 
 Integer ::= max(<Integer>,<Integer>)
 
-Integer x,y,z
+Integer x,y
 max(x,y) ==  x>y ? x : y
 
-z = max(14,16)      ? [(z=16)][..]
+max(14,16) ? [(16)][..]

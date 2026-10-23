@@ -18,4 +18,4 @@ List<Integer> ::= mk(<Integer>), pick(<Integer>)
 mk(i)=l   <=> l=[1,2]
 pick(i)=l <=> l = mk(i)     // collection-returning functor on RHS
 
-pick(0)=l ? [(l=[1,2])][..]
+pick(0) ? [([1,2])][..]

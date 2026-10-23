@@ -28,4 +28,4 @@ rowsFrom(g,r)=s     <=> s=[] if r=4, E[rw,suf](crow(g,r)=rw & rowsFrom(g,r+1)=su
 put(g,r,c,ns)=s     <=> E[pre,suf](rowsBefore(g,r)=pre & rowsFrom(g,r+1)=suf &
                                    E[rw,rw2](crow(g,r)=rw & putRow(rw,c,ns)=rw2 & s=pre+[rw2]+suf))
 
-put([[{1}],[{2}],[{3}],[{4}]],1,0,{9})=s ? [(s=[[{1}],[{9}],[{3}],[{4}]])][..]
+put([[{1}],[{2}],[{3}],[{4}]],1,0,{9}) ? [([[{1}],[{9}],[{3}],[{4}]])][..]

@@ -10,8 +10,6 @@ import nelumbo.integers
 
 Integer ::= max(<Integer>,<Integer>)
 
-Integer x
-
 // Rules here
 
-x=max(14,16) ? [(x=16)][..]
+max(14,16) ? [(16)][..]

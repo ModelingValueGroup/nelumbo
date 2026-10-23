@@ -10,5 +10,4 @@ Boolean b
 
 import nelumbo.strings
 
-String s
-(3>2?"a":"b")=s ? [(s="a")][..]
+(3>2?"a":"b") ? [("a")][..]

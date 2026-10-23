@@ -85,8 +85,8 @@ P1M != P30D ? [()][]
 2024-01-15 + P1D = 2024-01-17 ? [][()]
 // type-mismatched duration has no result: a Date rejects a time-bearing
 // duration, a Time rejects a calendar one (empty true-set, no binding).
-2024-01-15 + PT1H = c ? [][..]
-20:04 + P1D = e       ? [][..]
+2024-01-15 + PT1H ? [][..]
+20:04 + P1D       ? [][..]
 //
 // forward-compute: solve the resulting instant
 2024-01-15T10:00:00 + PT1H30M = a ? [(a=2024-01-15T11:30)][..]
@@ -103,21 +103,21 @@ x + PT30M = PT1H30M ? [(x=PT1H)][..]
 // solve the duration operand of an instant sum
 2024-01-15 + x = 2024-01-16 ? [(x=P1D)][..]
 // solve the duration between two datetimes (exact Duration)
-2024-01-16T00:00:00 - 2024-01-15T00:00:00 = x ? [(x=PT24H)][..]
+2024-01-16T00:00:00 - 2024-01-15T00:00:00 ? [(PT24H)][..]
 // solve the duration between two dates (calendar Period) and two times
-2024-01-16 - 2024-01-15 = x ? [(x=P1D)][..]
-21:04 - 20:04 = x           ? [(x=PT1H)][..]
+2024-01-16 - 2024-01-15 ? [(P1D)][..]
+21:04 - 20:04           ? [(PT1H)][..]
 // solve the left instant (instant - duration)
 c + P1D = 2024-01-16 ? [(c=2024-01-15)][..]
-2024-01-15 - P1D = c ? [(c=2024-01-14)][..]
+2024-01-15 - P1D     ? [(2024-01-14)][..]
 // forward: compute the resulting instant
-2024-01-15 + P1D = c ? [(c=2024-01-16)][..]
+2024-01-15 + P1D ? [(2024-01-16)][..]
 
 // scaling: Duration * Integer
 P1D * 3 = P3D   ? [()][]
 PT1H * 2 = PT2H ? [()][]
 // forward-compute the scaled duration (period_multiply with result unbound)
-P1D * 3 = y ? [(y=P3D)][..]
+P1D * 3 ? [(P3D)][..]
 
 // =========================================================================
 // Comparison operators >, <, <=, >= (datetime.nl lines 38-56).
@@ -146,5 +146,5 @@ P1M >= P30D ? [][()]
 // =========================================================================
 // Time arithmetic (time_add / date_add); previously untested.
 // =========================================================================
-20:04 + PT1H = e ? [(e=21:04)][..]
-21:04 - PT1H = e ? [(e=20:04)][..]
+20:04 + PT1H ? [(21:04)][..]
+21:04 - PT1H ? [(20:04)][..]
