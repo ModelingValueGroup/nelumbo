@@ -19,9 +19,10 @@ package org.modelingvalue.nelumbo.lsp.eclipse;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jface.text.DocumentEvent;
 import org.eclipse.jface.text.IDocument;
@@ -63,11 +64,16 @@ public class NelumboSemanticDamagerRepairer implements IPresentationDamager, IPr
     private static final Map<String, Integer> TOKEN_STYLES = Map.of("keyword", SWT.BOLD, "modifier", SWT.BOLD, "operator", SWT.BOLD);
 
     // Dedicated thread avoids ForkJoinPool deadlock with LSP4E's internal locking
-    private static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor(r -> {
+    private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor(r -> {
         Thread t = new Thread(r, "NelumboSemanticTokens");
         t.setDaemon(true);
         return t;
     });
+
+    // Right after opening, the token request can reach the server before LSP4E's didOpen (or before
+    // the server is up): the server then answers null. Retry until it knows the document.
+    private static final long RETRY_DELAY_MS = 200;
+    private static final int  MAX_RETRIES    = 10;
 
     private final    ITextViewer          viewer;
     private          IDocument            document;
@@ -116,6 +122,10 @@ public class NelumboSemanticDamagerRepairer implements IPresentationDamager, IPr
     }
 
     private void fetchTokens() {
+        fetchTokens(0, 0);
+    }
+
+    private void fetchTokens(int attempt, long delayMs) {
         IDocument doc = this.document;
         if (doc == null) {
             return;
@@ -125,8 +135,9 @@ public class NelumboSemanticDamagerRepairer implements IPresentationDamager, IPr
             pendingRequest.cancel(true);
         }
 
-        pendingRequest = EXECUTOR.submit(() -> {
+        pendingRequest = EXECUTOR.schedule(() -> {
             try {
+                long stamp = modificationStamp(doc);
                 LanguageServers.forDocument(doc).withFilter(capabilities -> capabilities.getSemanticTokensProvider() != null).computeFirst((wrapper, server) -> {
                     SemanticTokensWithRegistrationOptions provider = wrapper.getServerCapabilities().getSemanticTokensProvider();
                     if (provider == null) {
@@ -136,19 +147,35 @@ public class NelumboSemanticDamagerRepairer implements IPresentationDamager, IPr
 
                     SemanticTokensParams params = new SemanticTokensParams(LSPEclipseUtils.toTextDocumentIdentifier(doc));
 
-                    requestTokens(wrapper, params);
-                    return CompletableFuture.completedFuture(null);
+                    requestTokens(wrapper, params, doc, stamp, attempt);
+                    return CompletableFuture.completedFuture(Boolean.TRUE);
+                }).thenAccept(sent -> {
+                    if (sent.isEmpty()) {
+                        // no (started) server with semantic tokens for this document yet
+                        retry(doc, stamp, attempt);
+                    }
                 });
             } catch (Throwable t) {
                 t.printStackTrace(System.err);
             }
-        });
+        }, delayMs, TimeUnit.MILLISECONDS);
     }
 
-    private void requestTokens(LanguageServerWrapper wrapper, SemanticTokensParams params) {
-        // Snapshot the revision we are about to ask about; the response describes this revision.
-        long stamp = modificationStamp(this.document);
+    private void retry(IDocument doc, long stamp, int attempt) {
+        // An edit since then has already started its own fetch (with a fresh retry budget).
+        if (attempt < MAX_RETRIES && doc == document && stamp == modificationStamp(doc)) {
+            fetchTokens(attempt + 1, RETRY_DELAY_MS);
+        }
+    }
+
+    private void requestTokens(LanguageServerWrapper wrapper, SemanticTokensParams params, IDocument doc, long stamp, int attempt) {
+        // stamp: the revision we are asking about; the response describes this revision.
         wrapper.execute(server -> server.getTextDocumentService().semanticTokensFull(params)).thenAccept(tokens -> {
+            if (tokens == null) {
+                // server does not know the document (yet); keep the current coloring and ask again
+                retry(doc, stamp, attempt);
+                return;
+            }
             cachedTokens = tokens;
             cachedStamp  = stamp;
             applyPresentation();
@@ -167,33 +194,36 @@ public class NelumboSemanticDamagerRepairer implements IPresentationDamager, IPr
         if (display.isDisposed()) {
             return;
         }
-        display.asyncExec(() -> {
-            try {
-                if (viewer.getTextWidget().isDisposed()) {
-                    return;
-                }
-                IDocument doc = document;
-                if (doc == null) {
-                    return;
-                }
-                // The cached tokens describe the revision captured when the request was sent. If the
-                // user has typed since then, those offsets no longer line up with the current text.
-                // Applying them now would either shift styling around the edit point or — since
-                // createPresentation bails out for stale tokens — wipe all coloring to default while
-                // typing. Skip entirely and leave the existing presentation, which SWT shifts along
-                // with the edit; the fetch triggered by that later edit delivers matching tokens.
-                if (cachedStamp != modificationStamp(doc)) {
-                    return;
-                }
-                TextPresentation presentation = new TextPresentation(new Region(0, doc.getLength()), 100);
-                createPresentation(presentation, null);
-                if (!viewer.getTextWidget().isDisposed()) {
-                    viewer.changeTextPresentation(presentation, false);
-                }
-            } catch (Exception e) {
-                e.printStackTrace(System.err);
+        display.asyncExec(this::repaint);
+    }
+
+    // Paints the cached tokens (UI thread only).
+    void repaint() {
+        try {
+            if (viewer.getTextWidget().isDisposed()) {
+                return;
             }
-        });
+            IDocument doc = document;
+            if (doc == null) {
+                return;
+            }
+            // The cached tokens describe the revision captured when the request was sent. If the
+            // user has typed since then, those offsets no longer line up with the current text.
+            // Applying them now would either shift styling around the edit point or — since
+            // createPresentation bails out for stale tokens — wipe all coloring to default while
+            // typing. Skip entirely and leave the existing presentation, which SWT shifts along
+            // with the edit; the fetch triggered by that later edit delivers matching tokens.
+            if (cachedStamp != modificationStamp(doc)) {
+                return;
+            }
+            TextPresentation presentation = new TextPresentation(new Region(0, doc.getLength()), 100);
+            createPresentation(presentation, null);
+            if (!viewer.getTextWidget().isDisposed()) {
+                viewer.changeTextPresentation(presentation, false);
+            }
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
+        }
     }
 
     @Override

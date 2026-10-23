@@ -18,12 +18,14 @@ package org.modelingvalue.nelumbo.lsp.eclipse;
 
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.ITextInputListener;
+import org.eclipse.jface.text.ITextListener;
 import org.eclipse.jface.text.ITextViewer;
+import org.eclipse.jface.text.TextEvent;
 import org.eclipse.jface.text.presentation.IPresentationDamager;
 import org.eclipse.jface.text.presentation.IPresentationReconciler;
 import org.eclipse.jface.text.presentation.IPresentationRepairer;
 
-public class NelumboReconciler implements IPresentationReconciler, ITextInputListener {
+public class NelumboReconciler implements IPresentationReconciler, ITextInputListener, ITextListener {
     private ITextViewer                    viewer;
     private NelumboSemanticDamagerRepairer damagerRepairer;
 
@@ -32,12 +34,14 @@ public class NelumboReconciler implements IPresentationReconciler, ITextInputLis
         this.viewer = textViewer;
         damagerRepairer = new NelumboSemanticDamagerRepairer(textViewer);
         textViewer.addTextInputListener(this);
+        textViewer.addTextListener(this);
     }
 
     @Override
     public void uninstall() {
         if (viewer != null) {
             viewer.removeTextInputListener(this);
+            viewer.removeTextListener(this);
         }
         if (damagerRepairer != null) {
             damagerRepairer.uninstall();
@@ -53,6 +57,17 @@ public class NelumboReconciler implements IPresentationReconciler, ITextInputLis
     public void inputDocumentChanged(IDocument oldInput, IDocument newInput) {
         if (damagerRepairer != null) {
             damagerRepairer.setDocument(newInput);
+        }
+    }
+
+    // A text event without a document event means the viewer reset its widget (e.g. projection/folding
+    // replacing the visible document: StyledText.setContent drops all StyleRanges) or someone called
+    // invalidateTextPresentation(). JFace's standard PresentationReconciler repaints then; so must we,
+    // else the editor stays uncolored until the next edit.
+    @Override
+    public void textChanged(TextEvent event) {
+        if (event.getDocumentEvent() == null && event.getViewerRedrawState() && damagerRepairer != null) {
+            damagerRepairer.repaint();
         }
     }
 
