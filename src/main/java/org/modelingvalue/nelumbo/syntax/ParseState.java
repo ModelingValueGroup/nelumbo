@@ -786,12 +786,11 @@ public class ParseState extends AbstractState<ParseState> {
     }
 
     private Visibility notVisibility(Token token, PatternResult result) {
-        return isLeftHidden(token, result) ? Visibility.visible : Visibility.hidden;
+        return result == null ? null : isLeftHidden(token, result) ? Visibility.visible : Visibility.hidden;
     }
 
     private boolean isLeftHidden(Token token, PatternResult result) {
-        Node left = result != null ? result.left() : null;
-        return left instanceof Variable var ? var.hidden() && var.lastToken() != token.previous() : false;
+        return result.left() instanceof Variable var ? var.hidden() && var.lastToken() != token.previous() : false;
     }
 
     private boolean isConnectedOk(Token token, ParseState next, ParseContext ctx) {

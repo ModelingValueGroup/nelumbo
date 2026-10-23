@@ -44,7 +44,6 @@ attr Person name String
 attr Person street String
 attr Person number Integer
 attr Person friends Set<Person>
-
 attr Person address String
 
 // Rules
