@@ -108,7 +108,7 @@ L = r  <=>  r = e1  if g1,
 for a fresh variable `r` that the rule introduces itself, so you do not declare it. Everything above about guards, the comma shorthand and merging applies unchanged.
 
 - Each alternative is a **value** of the left-hand side's type, not a condition.
-- `==` is for writing rules only; a query still uses `=`, as in `fib(5)=f ?`.
+- `==` is for writing rules only. A query gets the same shorthand without an operator: `fib(5) ? [(5)][..]` asks for the value of `fib(5)` (see [Function queries](statements.md#function-queries)).
 - Use `<=>` when an alternative is more than a value, for example when it introduces a variable with `E[...]`, or when the left-hand side is a relation such as `even(x)`.
 
 ---
