@@ -22,8 +22,8 @@ Boolean ::= <Integer> ">" <Integer> #30 @com.example.GreaterThan,
 Integer a, b
 Object  n
 
-fib(n)=f <=>  f=n                 if n>=0 & n<=1,
-              f=fib(n-1)+fib(n-2) if n>1
+fib(n) ==  n                 if n>=0 & n<=1,
+           fib(n-1)+fib(n-2) if n>1
 ```
 
 Everything below is a rule the formatter applies to reach a layout like this.
@@ -36,7 +36,7 @@ Everything below is a rule the formatter applies to reach a layout like this.
 - **Continuation lines hang under the first item** of the statement they continue. A line
   is a continuation when the previous line ends with something the parser carries onto the
   next line — a comma, an opening bracket, or a trailing operator such as `|`. The first
-  item is the token after the declaration operator (`::`, `::=`, `<=>`) or, when there is
+  item is the token after the declaration operator (`::`, `::=`, `<=>`, `==`) or, when there is
   no operator, after the leading keyword (e.g. `fact`).
 
 ```nelumbo
@@ -50,12 +50,13 @@ fact pc(Hendrik, Juliana),
 
 ## Spacing after operators
 
-Exactly one space follows `::`, `::=`, and the query `?`. The rule operator `<=>` is
-followed by **two** spaces — the convention used throughout the standard library.
+Exactly one space follows `::`, `::=`, and the query `?`. The rule operators `<=>` and `==`
+are followed by **two** spaces — the convention used throughout the standard library.
 
 ```nelumbo
 Person     :: Object
-fib(n)=f   <=>  f=n
+even(x)    <=>  E[y](y=x/2)
+fib(n)     ==  n
 fib(5)=f    ? [(f=5)][..]
 ```
 
@@ -71,12 +72,12 @@ independently.
 
 | What aligns | Where | Notes |
 |---|---|---|
-| `::`, `::=`, `<=>` | adjacent declaration lines | all share **one** column |
+| `::`, `::=`, `<=>`, `==` | adjacent declaration lines | all share **one** column |
 | `?` | adjacent query lines | its own column |
 | variable names | `Type name, …` blocks | padded under the longest type |
 | `#N` precedence | alternatives of one `::=`/`<=>` body | |
 | `@`-annotations | alternatives of one `::=` body | sits in the column right of `#N` |
-| `if` guards | clauses of one `<=>` rule body | |
+| `if` guards | clauses of one `<=>` or `==` rule body | |
 | trailing `//` comments | one statement | two spaces past the longest line |
 
 ```nelumbo
@@ -108,4 +109,4 @@ unselected block-mates.
 
 - [`grammar.md`](lang/grammar.md) — the syntax these statements follow
 - [`precedence-and-associativity.md`](lang/precedence-and-associativity.md) — the `#N` system the precedence column aligns
-- [`writing-rules.md`](logic/writing-rules.md) — `<=>` rules and `if` guards
+- [`writing-rules.md`](logic/writing-rules.md) — `<=>` and `==` rules and `if` guards

@@ -139,14 +139,12 @@ public final class Parser implements ParseExceptionHandler {
     private Node parseNodeAt(Token token, ParseContext inner, ParseContext outer) throws ParseException {
         String group = inner.group();
         PatternResult result = new PatternResult(this, inner);
-        if (!preParse(group, token, null, result, outer)) {
-            if (!hiddenParse(group, token, result, outer) || inner.precedence() >= result.leftPrecedence()) {
-                return null;
-            }
+        if (!preParse(group, token, null, result, inner, outer)) {
+            return null;
         }
         Node left = result.postParse();
         token = left != null && inner.precedence() < Integer.MAX_VALUE ? left.nextToken() : null;
-        while (token != null && preParse(group, token, left, result, null)) {
+        while (token != null && preParse(group, token, left, result, inner, null)) {
             if (inner.precedence() >= result.leftPrecedence()) {
                 return left;
             }
@@ -156,26 +154,21 @@ public final class Parser implements ParseExceptionHandler {
         return left;
     }
 
-    private boolean preParse(String group, Token token, Node left, PatternResult result, ParseContext outer)
-            throws ParseException {
+    private boolean preParse(String group, Token token, Node left, PatternResult result, ParseContext inner,
+            ParseContext outer) throws ParseException {
         for (ParseContext pc = outer != null ? outer : result.context(); pc != null; pc = outer != null ? null
                 : pc.outer()) {
             if (pc.preParse(group, token, left, result)) {
                 return true;
             }
-        }
-        return false;
-    }
-
-    private boolean hiddenParse(String group, Token token, PatternResult result, ParseContext outer)
-            throws ParseException {
-        for (ParseContext pc = outer != null ? outer : result.context(); pc != null; pc = outer != null ? null
-                : pc.outer()) {
-            Map<Type, Variable> vars = pc.hiddenVariables(group);
-            if (vars != null) {
-                for (Entry<Type, Variable> var : vars) {
-                    if (preParse(group, token, var.getValue(), result, null)) {
-                        return true;
+            if (left == null) {
+                Map<Type, Variable> vars = pc.hiddenVariables(group);
+                if (vars != null) {
+                    for (Entry<Type, Variable> var : vars) {
+                        if (preParse(group, token, var.getValue(), result, inner, null)
+                                && inner.precedence() < result.leftPrecedence()) {
+                            return true;
+                        }
                     }
                 }
             }

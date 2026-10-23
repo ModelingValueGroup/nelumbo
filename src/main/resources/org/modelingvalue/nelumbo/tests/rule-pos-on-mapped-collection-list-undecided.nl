@@ -18,6 +18,6 @@ Set<Integer> ::= at(<List<Set<Integer>>>,<Integer>)
 
 at(l,c)=s <=> s pos l = c
 
-at([{1},{2}],1)=s                        ? [(s={2})][..]   // literal list: works
+at([{1},{2}],1)                          ? [({2})][..]   // literal list: works
 E[l](l=[0,1] map [j]({1}) & s pos l = 0) ? [(s={1})][..]   // native pos on mapped list: works
 E[l](l=[0,1] map [j]({1}) & at(l,0)=s)   ? [(s={1})][..]   // rule on mapped list: was UNDECIDED

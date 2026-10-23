@@ -2,7 +2,7 @@
 
 > **Level:** `nelumbo.logic`. Available after `import nelumbo.logic`, or transitively through any package (`nelumbo.integers` and up).
 
-This page is the reference for the `<=>` rule operator: how rules are written, how multiple rules for the same relation combine, how guards work, and what constitutes an inconsistency.
+This page is the reference for the rule operators `<=>` and its function shorthand `==`: how rules are written, how multiple rules for the same relation combine, how guards work, and what constitutes an inconsistency.
 
 For the semantic background, read [`three-valued-logic.md`](three-valued-logic.md) first.
 
@@ -89,6 +89,30 @@ It is tempting to read multiple rules as `L <=> R1 | R2 | ...`. That reading is 
 
 ---
 
+## Function rules — `==`
+
+Most rules define a function: the left-hand side is `F(...) = v`, and every alternative on the right only says what `v` is. `==` writes that shape without the result variable:
+
+```nelumbo
+fib(n)  ==  n                    if n >= 0 & n <= 1,
+            fib(n-1) + fib(n-2)  if n > 1
+```
+
+`L == e1 if g1, e2 if g2` means exactly
+
+```nelumbo
+L = r  <=>  r = e1  if g1,
+            r = e2  if g2
+```
+
+for a fresh variable `r` that the rule introduces itself, so you do not declare it. Everything above about guards, the comma shorthand and merging applies unchanged.
+
+- Each alternative is a **value** of the left-hand side's type, not a condition.
+- `==` is for writing rules only. A query gets the same shorthand without an operator: `fib(5) ? [(5)][..]` asks for the value of `fib(5)` (see [Function queries](statements.md#function-queries)).
+- Use `<=>` when an alternative is more than a value, for example when it introduces a variable with `E[...]`, or when the left-hand side is a relation such as `even(x)`.
+
+---
+
 ## Contradictions
 
 A contradiction arises when two rules with the same LHS make incompatible closed claims about the same binding:
@@ -128,15 +152,15 @@ a - b = c  <=>  add(c, b, a)
 a * b = c  <=>  mult(a, b, c)
 a / b = c  <=>  mult(c, b, a)
 
--a = b  <=>  0 - a = b
+-a   ==  0 - a
 
-|a| = b  <=>  b = a   if a >= 0,
-              b = -a  if a < 0
+|a|  ==  a   if a >= 0,
+         -a  if a < 0
 ```
 
-Notice the rewriting idiom. Subtraction `a - b = c` is defined as addition with arguments swapped: `add(c, b, a)`. This is possible because `add` is a three-argument relation, not a function — it can be asked for any missing argument given the others. Division and negation use the same trick.
+Notice the rewriting idiom. Subtraction `a - b = c` is defined as addition with arguments swapped: `add(c, b, a)`. This is possible because `add` is a three-argument relation, not a function — it can be asked for any missing argument given the others. Division uses the same trick.
 
-Notice also the absolute-value rule: two clauses, `if a >= 0` and `if a < 0`, covering the full domain with mutually exclusive guards. Clean and contradiction-free.
+Negation and absolute value are functions of one value, so they use `==`. Notice the absolute-value rule: two clauses, `if a >= 0` and `if a < 0`, covering the full domain with mutually exclusive guards. Clean and contradiction-free.
 
 ### From `family.nl`
 
@@ -161,6 +185,7 @@ The `a` (ancestor) rule is defined in terms of `d`: ancestor is just descendant 
 
 - **Prefer mutually exclusive guards** over overlapping ones. Mutually exclusive guards make rules compositional: you can add a new case without auditing the existing ones for contradictions.
 - **Use `|` on the RHS** when multiple patterns of the *same* binding can make the rule hold — for example, `child-or-descendant-of-child`.
+- **Use `==` for functions.** When every alternative only computes the value of the left-hand side, `fib(n) == ...` is shorter and clearer than `fib(n) = f <=> f = ...`.
 - **Use multiple rules (or comma shorthand)** when the cases are genuinely distinct and selected by different guards.
 - **Close a side with an exhaustive case when you can.** A rule whose facts side is closed for all relevant bindings is stronger than one that leaves `..` everywhere, and enables stronger falsehood reasoning downstream.
 - **Let negation do its work.** Because Nelumbo has genuine `!`, you rarely need to hand-enumerate falsehood cases. The reasoner will derive them from rule structure.

@@ -45,6 +45,8 @@ where each list is a comma-separated sequence of bindings, optionally ending in 
 
 A binding is written as `(v1=value1, v2=value2, ...)` or as `()` for the empty binding (a solution with no free variables). An empty list `[]` is the closed claim "no bindings on this side."
 
+A [function query](statements.md#function-queries) such as `fib(5) ?` binds a result variable that the query introduces itself. That variable has no name, so its value is written alone: `[(5)][..]` for `fib(5) ?` is the same result as `[(f=5)][..]` for `fib(5)=f ?`.
+
 ### Examples of printed forms
 
 | Printed form | FactsSet | Facts closed? | FalsehoodsSet | Falsehoods closed? |
@@ -53,6 +55,7 @@ A binding is written as `(v1=value1, v2=value2, ...)` or as `()` for the empty b
 | `[][()]` | `{}` | yes | `{()}` | yes |
 | `[..][..]` | `{}` | no | `{}` | no |
 | `[(f=5)][..]` | `{(f=5)}` | yes | `{}` | no |
+| `[(5)][..]` | `{(r=5)}`, `r` the query's own result variable | yes | `{}` | no |
 | `[(a=T1),(a=T2)][..]` | `{(a=T1),(a=T2)}` | yes | `{}` | no |
 | `[][..]` | `{}` | yes | `{}` | no |
 | `[(a=0),..][..]` | `{(a=0)}` | no | `{}` | no |

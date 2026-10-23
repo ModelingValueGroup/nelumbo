@@ -142,6 +142,25 @@ public class DocumentFormattingServiceTest {
     }
 
     /**
+     * The function shorthand {@code ==} is a rule operator like {@code <=>}: aligned in the
+     * declaration column, two spaces after it, branches hanging under the first one.
+     */
+    @Test
+    void formatsFunctionRuleOperatorLikeBiImplication() throws Exception {
+        String out = format("""
+                fib(n) == n if n<=1,
+                   fib(n-1)+fib(n-2) if n>1
+                maxFib(m)   ==   maxFib(0,m)
+                """);
+        assertEquals("""
+                fib(n)    ==  n                 if n<=1,
+                              fib(n-1)+fib(n-2) if n>1
+                maxFib(m) ==  maxFib(0,m)
+                """, out);
+        assertEquals(out, format(out), "idempotent");
+    }
+
+    /**
      * A double (2+) blank-line gap is a hard separator: each group aligns
      * independently.
      */

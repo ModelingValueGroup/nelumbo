@@ -35,10 +35,9 @@ Jan.friend   := Piet
 
 // Queries
 
-String s
 Person p
 
 p.name="Piet"            ? [(p=Piet)][..]
-Piet.address=s           ? [(s="Kalverstraat")][..]
+Piet.address             ? [("Kalverstraat")][..]
 p.address="Kalverstraat" ? [(p=Piet),(p=Jan)][..]
-Jan.friend.name=s        ? [(s="Piet")][..]
+Jan.friend.name          ? [("Piet")][..]

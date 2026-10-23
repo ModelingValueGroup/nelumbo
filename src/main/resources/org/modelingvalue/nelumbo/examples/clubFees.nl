@@ -23,10 +23,10 @@ Boolean ::= age(<Person>,<Integer>)
 Integer  ::= fee(<Person>)
 
 Person  p
-Integer n, f
+Integer n
 
-fee(p)=f <=>  f=50  if E[n](age(p,n) & (n<18 | n>65)),
-              f=100 if E[n](age(p,n) & n>=18 & n<=65)
+fee(p) ==  50  if E[n](age(p,n) & (n<18 | n>65)),
+           100 if E[n](age(p,n) & n>=18 & n<=65)
 
 Person ::= Alice, Bob, Carol, Dave, Eve
 
@@ -36,8 +36,8 @@ fact age(Alice, 34),
      age(Dave, 18),
      age(Eve, 65)
 
-fee(Alice)=f ? [(f=100)][..]
-fee(Bob)=f   ? [(f=50)][..]
-fee(Carol)=f ? [(f=50)][..]
-fee(Dave)=f  ? [(f=100)][..]
-fee(Eve)=f   ? [(f=100)][..]
+fee(Alice) ? [(100)][..]
+fee(Bob)   ? [(50)][..]
+fee(Carol) ? [(50)][..]
+fee(Dave)  ? [(100)][..]
+fee(Eve)   ? [(100)][..]

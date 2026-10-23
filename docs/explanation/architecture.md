@@ -150,7 +150,7 @@ What actually happens when this runs:
 1. **Parser (Java + loaded `.nl` declarations)** tokenises the line. The tokenizer is Java; the actual grammar (`?`, `[..][..]`, `=`, `fib(<Integer>)`, the `<NUMBER>` `5`) is recognised using pattern declarations loaded from `lang.nl`, `logic.nl`, `integers.nl`, and your own file.
 2. **Name resolver (Java)** ties `f` to its variable declaration (`Integer n, f`), `fib` to your pattern declaration, `=` to the native `NIs` predicate declared in `logic.nl`.
 3. **Reasoner (Java)** starts with the query `fib(5) = f`. Because `=` is a relation, the reasoner treats it as an equation to solve.
-4. **Your rule in Nelumbo** fires: `fib(n) = f <=> f = fib(n-1) + fib(n-2) if n > 1`. The reasoner recursively evaluates `fib(4)` and `fib(3)`.
+4. **Your rule in Nelumbo** fires: `fib(n) == fib(n-1) + fib(n-2) if n > 1` (shorthand for `fib(n) = f <=> f = fib(n-1) + fib(n-2) if n > 1`). The reasoner recursively evaluates `fib(4)` and `fib(3)`.
 5. **Stdlib rule in Nelumbo** (`integers.nl`): `a + b = c <=> add(a, b, c)`. The reasoner turns each addition into a call to the private `add` relation.
 6. **Native `Add` (Java)**: with two arguments bound and one unbound (the sum), it returns `set(2, NInteger.of(...)).factCI()` — a fact, facts side closed, falsehoods side open.
 7. **Result bubbles back up** through all the rule invocations, unifying `f = 5` at the top.

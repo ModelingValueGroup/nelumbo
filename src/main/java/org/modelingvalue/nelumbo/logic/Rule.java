@@ -100,8 +100,11 @@ public final class Rule extends Node implements Evaluatable {
         if (reason == ConstructionReason.transforming) {
             return this;
         }
-        Predicate c = consequence();
-        Node left = c instanceof NIs ? (Node) c.get(0) : c;
+        boolean equals = functor().name().equals("==");
+        Node node = (Node) get(0);
+        Variable var = equals ? new Variable(List.of(), false, node.type().nonFunction(), "r" + uniqueId()) : null;
+        Predicate c = equals ? new NIs(node.astElements(), node, var) : (Predicate) node;
+        Node left = equals ? node : c instanceof NIs ? (Node) c.get(0) : c;
         Predicate cons = (Predicate) c.replace(e -> e != c && e instanceof BooleanVariable v ? v.variable() : e);
         Map<Variable, Object> consVars = cons.getBinding(cons);
         Functor nodeFunctor = left.functor();
@@ -110,7 +113,8 @@ public final class Rule extends Node implements Evaluatable {
         NList roots = new NList(elements.sublist(0, 2), Type.ROOT);
         int i = 0;
         for (List<Object> condIf : (List<List<Object>>) get(1)) {
-            Predicate cond = (Predicate) condIf.get(0);
+            node = (Node) condIf.get(0);
+            Predicate cond = equals ? new NIs(node.astElements(), node, var) : (Predicate) node;
             Predicate when = (Predicate) ((Optional<Object>) condIf.get(1)).orElse(null);
             Map<Variable, Object> condVars = cond.getBinding(cond);
             Map<Variable, Object> whenVars = when != null ? when.getBinding(when) : null;

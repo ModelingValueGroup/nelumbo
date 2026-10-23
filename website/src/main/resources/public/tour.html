@@ -169,13 +169,15 @@ friends(Klaas, Kees) ? [()][]
   </section>
   <section class="tour-section" id="rules">
     <h2>Rules &amp; recursion</h2>
-    <p>A rule <code>&lt;=&gt;</code> defines how a functor is derived; <code>if</code> attaches a guard
-       to each alternative, and a rule may reference itself to recurse. The classic Fibonacci rule has
-       a base case for <code>n&lt;=1</code> and a recursive step for <code>n&gt;1</code>.</p>
+    <p>A rule <code>&lt;=&gt;</code> defines how a functor is derived. For a function, <code>==</code> gives
+       its value directly: <code>fib(n) == e</code> is short for <code>fib(n)=f &lt;=&gt; f=e</code>.
+       <code>if</code> attaches a guard to each alternative, and a rule may reference itself to recurse.
+       The classic Fibonacci rule has a base case for <code>n&lt;=1</code> and a recursive step for
+       <code>n&gt;1</code>.</p>
     <div class="nelumbo-field" data-height="200px">import nelumbo.integers
 Integer ::= fib(&lt;Integer&gt;)
-Integer n, f
-fib(n)=f &lt;=&gt; f=n if n&lt;=1, f=fib(n-1)+fib(n-2) if n&gt;1
+Integer n
+fib(n) == n if n&lt;=1, fib(n-1)+fib(n-2) if n&gt;1
 Integer r
 fib(7)=r ?
 </div>
@@ -185,13 +187,13 @@ fib(7)=r ?
 Integer ::= factorial(&lt;Integer&gt;)
 Integer n, r
 // fix this rule so factorial(5)=120  (hint: 1 if n&lt;=0, else n*factorial(n-1))
-factorial(n)=r &lt;=&gt; r=n
+factorial(n) == n
 factorial(5)=r ? [(r=120)][..]
 </div>
       <pre class="nelumbo-solution">import nelumbo.integers
 Integer ::= factorial(&lt;Integer&gt;)
 Integer n, r
-factorial(n)=r &lt;=&gt; r=1 if n&lt;=0, r=n*factorial(n-1) if n&gt;0
+factorial(n) == 1 if n&lt;=0, n*factorial(n-1) if n&gt;0
 factorial(5)=r ? [(r=120)][..]
 </pre>
     </div>

@@ -53,15 +53,15 @@ From [`scoping.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/exampl
 
 ## Visibility modifiers
 
-Three modifiers control how widely a pattern is visible:
+Two modifiers change what a declaration does beyond its scope:
 
-| Modifier | Scope of visibility |
+| Modifier | Effect |
 |---|---|
 | *(none)* — the default | Exported from the module; imports see it |
 | `private` | Visible only within the module (or scope) where it is declared |
-| `hidden` | Visible for parsing but not for use at call sites — see below |
+| `hidden` | On a variable: filled in where the source leaves an operand out — see below |
 
-The `visible` keyword is the complement of `hidden`; see the section on hidden declarations below.
+`<hidden T>` and `<visible T>` holes in a pattern say whether that operand may be left out; see the section on `hidden` below.
 
 ### `private` — module-internal
 
@@ -75,35 +75,81 @@ From `logic.nl`. The `eq` predicate is the native literal-equality primitive; it
 
 Other `private` patterns in the stdlib include `add`, `mult`, `string_concat`, `string_length`, `integer_string`. All of them are native-backed primitives that the module wraps in friendlier operators.
 
-### `hidden` — callable but not at call sites
+### `hidden` — implicit operands
 
-`hidden` restricts visibility in a more nuanced way: a hidden hole is present for parsing but cannot be supplied at the call site; it has to come from another rule or declaration.
-
-The [`hidden.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/hidden.nl) example illustrates the mechanism:
+A `hidden` variable is filled in by the parser where the source leaves an operand out. When an expression starts with an operator that needs a left operand, the parser uses the hidden variable in scope as that operand. The [`hidden.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/hidden.nl) example starts with the simplest case:
 
 ```nelumbo
-{
-  Integer ::= <hidden Integer> && <Integer> #35
-  Integer ::= <visible Integer> & <Integer> #35
+hidden Integer a
 
-  hidden Integer x
-  Integer y, z
-
-  x & y = z  <=>  x * 100 + y = z
-  && y = z   <=>  x & y = z
-
-  && 11 = 2211 ? [(x=22)][..]
-  x & 11 = 2211 ? [(x=22)][..]
-}
+>10 & <20 & =15 ? [(a=15)][(a=10),(a=20),..]
 ```
 
-Notes on this example:
+`>10 & <20 & =15` reads as `a>10 & a<20 & a=15`. This works for any operator with a left operand, also inside a rule body, where `*100+y` reads as `x*100+y` (see below).
 
-- `<hidden Integer>` is a hole that accepts an integer-typed value which must be a `hidden` variable (or derivable as one). It is absent at the call site: `&& 11 = 2211` — there is no left operand in the source.
-- `<visible Integer>` is the opposite: the hole requires a *non*-hidden value.
-- `hidden Integer x` declares `x` as a hidden variable — it will fill hidden holes.
+- A hidden variable is declared like any variable, with `hidden` in front: `hidden Integer a`.
+- One hidden variable per scope. A second one in the same scope, even of another type, is an error. A hidden variable of an outer scope is also used inside nested `{ }` blocks, so give each use its own block, as `hidden.nl` does.
+- The result names the hidden variable's value without its name: the test above prints `a>10&a<20&a=15 ? [(15)][(10),(20),..]`. In an expected result, still write the name (`(a=15)`). A bare value is only accepted for a [function query](../logic/statements.md#function-queries), whose result variable is a hidden variable the query introduces itself.
+- A printed node shows the variable the parser filled in (`a>10`).
 
-Hidden declarations are how Nelumbo supports operators with implicit operands and similar DSL constructs. They are an advanced feature.
+#### `<hidden T>` and `<visible T>` holes
+
+A pattern can say whether its left operand may be implicit:
+
+| Hole | Accepts |
+|---|---|
+| `<T>` | a written operand, or the hidden variable when the operand is left out |
+| `<hidden T>` | only the hidden variable, filled in because the operand is left out |
+| `<visible T>` | only a written operand |
+
+`<visible T>` still accepts the hidden variable when you write its name. That lets one operator have a shorthand with a meaning of its own:
+
+```nelumbo
+Integer ::= <hidden Integer> $$ <Integer> #35
+Integer ::= <visible Integer> $ <Integer> #35
+
+hidden Integer x
+Integer y
+
+x$y ==  *100+y
+$$y ==  x$y
+
+$$11=2211 ? [(x=22)][..]
+x$11=2211 ? [(x=22)][..]
+```
+
+`x$y` is `x*100+y`, with `*100+y` using the implicit `x`. `$$y` exists only in the shorthand form and means `x$y`. The other two combinations are syntax errors: `x$$11` (`$$` takes no written operand) and `$11` (`$` needs one).
+
+#### Implicit objects
+
+A hidden hole in front of a name gives a name that reads as a property of an implicit object:
+
+```nelumbo
+Test   :: Object
+
+String ::= <Test>.name       #35,
+           <hidden Test>name #35
+
+Test   ::= T1, T2
+
+fact T1.name = "T1", T2.name = "T2"
+
+hidden Test t
+
+name ==  t.name
+
+name="T1" ? [(t=T1),..][..]
+```
+
+`name` on its own is the name of the hidden `t`, so `name="T1"` asks which `Test` is called `"T1"`. [`transformation.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/transformation.nl) uses this for derived attributes. Its `attr` transformation adds `<hidden OT>AN` next to `<OT>.AN`, so a rule about one object can name that object's other attributes without naming the object:
+
+```nelumbo
+hidden Person p
+
+address := street + " " + str(number) if number >= 100
+```
+
+Here `address`, `street` and `number` are all attributes of the same implicit `p`.
 
 ---
 
@@ -129,5 +175,6 @@ Visibility modifiers apply relative to the declaration's scope. A `private` patt
 ## See also
 
 - [`grammar.md`](grammar.md) — where these declarations fit syntactically
-- [`hidden.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/hidden.nl) — working hidden-operator example
+- [`hidden.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/hidden.nl) — implicit operands, hidden/visible holes, implicit objects
+- [`transformation.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/transformation.nl) — implicit objects in derived attributes
 - [`scoping.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/scoping.nl) — working scope example

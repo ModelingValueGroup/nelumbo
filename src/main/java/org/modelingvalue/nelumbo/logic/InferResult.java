@@ -687,8 +687,9 @@ public interface InferResult {
 
         private String toString(Set<Map<Variable, Object>> binding, boolean complete) {
             List<String> stringList = binding.map(m -> {
-                String map = m.toString();
-                return "(" + map.substring(4, map.length() - 1) + ")";
+                Set<Object> set = m.map(e -> e.getKey().hidden() ? e.getValue() : e).asSet();
+                String str = set.toString();
+                return "(" + str.substring(4, str.length() - 1) + ")";
             }).sorted().asList();
             String result = stringList.toString().substring(4);
             return complete ? result : result.substring(0, result.length() - 1) + (binding.isEmpty() ? "..]" : ",..]");

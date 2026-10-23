@@ -26,11 +26,11 @@ Set<Integer>        bs, cs
 // ---- access ---------------------------------------------------------
 at(l,i)=x        <=>  x pos l = i
 row(g,r)=rw      <=>  rw pos g = r
-cell(g,r,c)=x    <=>  x = at(row(g,r),c)
+cell(g,r,c)      ==  at(row(g,r),c)
 
 // ---- update (functional) -------------------------------------------
-sel(j,i,d,x)=y         <=>  y=d if j=i,  y=x if j!=i
-putRow(l,i,d)=rw       <=>  rw = [0,1,2,3] map [j](sel(j,i,d,at(l,j)))
+sel(j,i,d,x)           ==  d if j=i,  x if j!=i
+putRow(l,i,d)          ==  [0,1,2,3] map [j](sel(j,i,d,at(l,j)))
 rowsBefore(g,r)=s      <=>  s=[]                                                    if r=0,
                             E[rw,p](row(g,r-1)=rw & rowsBefore(g,r-1)=p & s=p+[rw])    if r>0
 rowsFrom(g,r)=s        <=>  s=[]                                                    if r=4,
@@ -39,8 +39,8 @@ put(g,r,c,d)=s         <=>  E[p,q](rowsBefore(g,r)=p & rowsFrom(g,r+1)=q &
                                    E[rw,rw2](row(g,r)=rw & putRow(rw,c,d)=rw2 & s=p+[rw2]+q))
 
 // ---- 4x4 boxes are 2 rows x 2 cols ---------------------------------
-boxRows(r)=bs    <=>  bs={0,1} if r<2,  bs={2,3} if r>=2
-boxCols(c)=bs    <=>  bs={0,1} if c<2,  bs={2,3} if c>=2
+boxRows(r)       ==  {0,1} if r<2,  {2,3} if r>=2
+boxCols(c)       ==  {0,1} if c<2,  {2,3} if c>=2
 
 // ---- constraint -----------------------------------------------------
 ok(g,r,c,d)      <=>  !E[rw](row(g,r)=rw & d in rw) &
@@ -54,22 +54,22 @@ solve(g,r,c)=s   <=>  s=g                                          if r=4,
                       E[d,g2](d in {1,2,3,4} & ok(g,r,c,d) &
                               put(g,r,c,d)=g2 & s=solve(g2,r,c+1))  if r<4 & c<4 & cell(g,r,c)=0
 
-sudoku(g)=s      <=>  s=solve(g,0,0)
+sudoku(g)        ==  solve(g,0,0)
 
 // ---- tests ----------------------------------------------------------
-at([4,1,2,3],1)=x                            ? [(x=1)][..]
-putRow([1,0,3,4],1,2)=l                      ? [(l=[1,2,3,4])][..]
-boxRows(3)=bs                                ? [(bs={2,3})][..]
-boxCols(1)=bs                                ? [(bs={0,1})][..]
+at([4,1,2,3],1)       ? [(1)][..]
+putRow([1,0,3,4],1,2) ? [([1,2,3,4])][..]
+boxRows(3)            ? [({2,3})][..]
+boxCols(1)            ? [({0,1})][..]
 ok([[1,2,3,4],[0,0,0,0],[0,0,0,0],[0,0,0,0]],1,0,3) ? [()][]
 ok([[1,2,3,4],[0,0,0,0],[0,0,0,0],[0,0,0,0]],1,0,1) ? [][()]
 ok([[1,2,3,4],[0,0,0,0],[0,0,0,0],[0,0,0,0]],3,0,1) ? [][()]
 
 // one blank per row, unique solution
-sudoku([[0,2,3,4],[3,4,1,0],[2,0,4,3],[4,3,0,1]])=s ? [(s=[[1,2,3,4],[3,4,1,2],[2,1,4,3],[4,3,2,1]]),..][..]
+sudoku([[0,2,3,4],[3,4,1,0],[2,0,4,3],[4,3,0,1]]) ? [([[1,2,3,4],[3,4,1,2],[2,1,4,3],[4,3,2,1]]),..][..]
 
 // first row empty plus one blank per remaining row, unique solution
-sudoku([[0,0,0,0],[0,4,1,2],[2,1,0,3],[4,3,2,0]])=s ? [(s=[[1,2,3,4],[3,4,1,2],[2,1,4,3],[4,3,2,1]]),..][..]
+sudoku([[0,0,0,0],[0,4,1,2],[2,1,0,3],[4,3,2,0]]) ? [([[1,2,3,4],[3,4,1,2],[2,1,4,3],[4,3,2,1]]),..][..]
 
 // a 'real' puzzle, formatted in a more intuitive way:
 sudoku([

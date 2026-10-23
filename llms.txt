@@ -15,12 +15,16 @@ Reading `.nl` code - the whole notation in eight lines:
 - `Integer n, f` declares variables (namespace-scoped, untyped use is not allowed).
 - `fib(n)=f <=> f=n if n<=1, f=fib(n-1)+fib(n-2) if n>1` is a rule: `<=>` with `if` guards,
   alternatives separated by commas.
+- `fib(n) == n if n<=1, fib(n-1)+fib(n-2) if n>1` is the same rule in function form:
+  `L == e if g` means `L=r <=> r=e if g` with a fresh result variable `r`.
 - `fact pc(Hendrik, Juliana)` states a fact.
 - `!` `&` `|` `->` `<->` are the connectives, `E[x](...)` and `A[x](...)` the quantifiers,
   `=` and `!=` equality.
 - `fib(5)=f ? [(f=5)][..]` is a query with its expected result: facts on the left,
   falsehoods on the right, and `..` is the incompleteness marker ("this side may hold more
   bindings than are listed") - it is not a wildcard and matches no value.
+- `fib(5) ? [(5)][..]` is the same query in function form: the query introduces the result
+  variable itself, so the value is listed without a name. Not for a single literal (`5 ?`).
 - `@nelumbo.logic.And` after a functor binds it to a Java native.
 - Open world: the extent of a type is unknown, so a variable is never bound by enumerating
   a type; `q(x)` with all arguments unbound, and `E[x](q(x))`, are unknown even over facts.
@@ -45,11 +49,11 @@ example file in the project is unreadable.
 - [Grammar](https://nelumbo.nl/docs/reference/lang/grammar.html): types, patterns, variables, scope blocks and `::>` - the syntax-shaping declarations from `nelumbo.lang`
 - [Built-in tokens and pattern holes](https://nelumbo.nl/docs/reference/lang/built-in-tokens.html): `<NUMBER>`, `<STRING>`, `<Variable>` and friends
 - [Precedence and associativity](https://nelumbo.nl/docs/reference/lang/precedence-and-associativity.html): the `#N` system
-- [Visibility](https://nelumbo.nl/docs/reference/lang/visibility.html): `private`, `hidden`, `visible`, and scope blocks
+- [Visibility](https://nelumbo.nl/docs/reference/lang/visibility.html): `private`, `hidden` variables (implicit operands: `hidden Integer a` makes `>10` read `a>10`), `<hidden T>`/`<visible T>` holes, and scope blocks
 - [nelumbo.logic](https://nelumbo.nl/docs/reference/logic/index.html): Boolean, connectives, quantifiers, equality, and the `fact` / `<=>` / `?` statements
 - [Operators](https://nelumbo.nl/docs/reference/logic/operators.html): the logical operators and the `fact` / `<=>` / `?` forms from `nelumbo.logic`
 - [Statements](https://nelumbo.nl/docs/reference/logic/statements.html): facts, queries and tests
-- [Writing rules](https://nelumbo.nl/docs/reference/logic/writing-rules.html): `<=>`, guards, merging, contradictions
+- [Writing rules](https://nelumbo.nl/docs/reference/logic/writing-rules.html): `<=>`, the function form `==`, guards, merging, contradictions
 - [Three-valued logic](https://nelumbo.nl/docs/reference/logic/three-valued-logic.html): the semantic foundation, with truth tables
 - [Lambdas](https://nelumbo.nl/docs/reference/logic/lambdas.html): `[x](body)` values behind the quantifiers and the collection operations
 - [Test expression semantics](https://nelumbo.nl/docs/reference/logic/test-expression-semantics.html): formal definition of when a test passes

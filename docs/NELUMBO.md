@@ -69,8 +69,8 @@
 ```text
   a<=b    <=>  a<b | a=b
   
-  |a|=b   <=>  b=a   if a>=0,
-               b=-a  if a<0
+  |a|     ==  a   if a>=0,
+               -a  if a<0
  
   descendant(x)=z <=> child(x)=z |
                       E[y](descendant(x)=y & child(y)=z)
@@ -153,8 +153,8 @@ The logic is a `@NelumboMethod` whose name and parameter count match the functor
 
   Integer n, f
 
-  fib(n)=f <=> f=n                 if n<=1,
-               f=fib(n-1)+fib(n-2) if n>1  
+  fib(n) ==  n                 if n<=1,
+             fib(n-1)+fib(n-2) if n>1
     
   fib(0)=f       ? [(f=0)][..]
   fib(1)=f       ? [(f=1)][..]
