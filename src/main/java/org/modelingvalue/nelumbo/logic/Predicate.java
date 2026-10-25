@@ -288,10 +288,16 @@ public class Predicate extends Node {
                     }
                 }
                 return (InferResult) method.invoke(this, args);
-            } catch (IllegalAccessException | InvocationTargetException e) {
+            } catch (IllegalAccessException e) {
+                throw new IllegalArgumentException(e);
+            } catch (InvocationTargetException e) {
+                if (e.getTargetException() instanceof RuntimeException re) {
+                    throw re;
+                }
                 throw new IllegalArgumentException(e);
             }
         });
+
     }
 
     protected InferResult infer(int nrOfUnbound, InferContext context) {

@@ -44,7 +44,7 @@ public interface ParseContext {
 
     MutableMap<String, Map<Type, Variable>> hiddenVariables();
 
-    static ParseContext of(String group, MutableMap<String, Map<Type, ParseState>> preStates,
+    static ParseContext of(String group, int precedence, MutableMap<String, Map<Type, ParseState>> preStates,
             MutableMap<String, Map<Type, ParseState>> postStates,
             MutableMap<String, Map<Type, Variable>> hiddenVariables) {
         return new ParseContext() {
@@ -61,7 +61,7 @@ public interface ParseContext {
 
             @Override
             public int precedence() {
-                throw new UnsupportedOperationException();
+                return precedence;
             }
 
             @Override
