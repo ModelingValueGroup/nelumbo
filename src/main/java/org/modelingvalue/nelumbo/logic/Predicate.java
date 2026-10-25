@@ -292,7 +292,7 @@ public class Predicate extends Node {
                 throw new IllegalArgumentException(e);
             } catch (InvocationTargetException e) {
                 if (e.getTargetException() instanceof RuntimeException re) {
-                    throw re;
+                    throw new InconsistencyException(re);
                 }
                 throw new IllegalArgumentException(e);
             }

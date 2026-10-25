@@ -32,4 +32,8 @@ public class InconsistencyException extends RuntimeException {
                 + result.predicate().toBaseString());
     }
 
+    public InconsistencyException(RuntimeException re) {
+        super(" Inconsistency " + re.getMessage());
+    }
+
 }

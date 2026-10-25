@@ -176,8 +176,8 @@ public final class Query extends Node implements Evaluatable {
         InferResult found;
         try {
             found = predicate.infer().predicate(predicate);
-        } catch (RuntimeException re) {
-            handler.addException(new ParseException(re.getMessage(), predicate));
+        } catch (InconsistencyException ie) {
+            handler.addException(new ParseException(ie, ie.getMessage(), predicate));
             return;
         }
         inferResult = found;
