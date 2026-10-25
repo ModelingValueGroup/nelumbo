@@ -364,32 +364,29 @@ public class ParseState extends AbstractState<ParseState> {
         MutableMap<Variable, Type> typeArgs = MutableMap.of(tas);
         Map<DirectionContext, Set<TokenStateContext>> dirTokenStates = dirTokenStates(token, outerRepetitions, ctx,
                 typeArgs, 0);
+        dirTokenStates = align(outerRepetitions, typeArgs, dirTokenStates);
         printLookahead(token, null, this, dirTokenStates);
         int depth = 0;
         while (dirTokenStates.size() > 1 && depth++ < LOOK_AHEAD && !hasTheSameStates(dirTokenStates)) {
-            Map<DirectionContext, Set<TokenStateContext>> notEmpty = dirTokenStates;
-            int max = max(dirTokenStates);
+            Map<DirectionContext, Set<TokenStateContext>> prev = dirTokenStates;
             for (Entry<DirectionContext, Set<TokenStateContext>> e1 : dirTokenStates) {
-                Set<TokenStateContext> prev, next = e1.getValue();
-                do {
-                    prev = next;
-                    next = Set.of();
-                    for (TokenStateContext pts : prev) {
-                        Map<DirectionContext, Set<TokenStateContext>> nextDirTokenStates = pts.state
-                                .dirTokenStates(pts.token, outerRepetitions, pts.ctx, typeArgs, pts.nrOfTokenTypes);
-                        printLookahead(pts.token, e1.getKey(), pts.state, nextDirTokenStates);
-                        for (Entry<DirectionContext, Set<TokenStateContext>> e2 : nextDirTokenStates) {
-                            next = next.addAll(e2.getValue());
-                        }
+                Set<TokenStateContext> states = Set.of();
+                for (TokenStateContext tsc : e1.getValue()) {
+                    Map<DirectionContext, Set<TokenStateContext>> next = tsc.state.dirTokenStates(tsc.token,
+                            outerRepetitions, tsc.ctx, typeArgs, tsc.nrOfTokenTypes);
+                    printLookahead(tsc.token, e1.getKey(), tsc.state, next);
+                    for (Entry<DirectionContext, Set<TokenStateContext>> e2 : next) {
+                        states = states.addAll(e2.getValue());
                     }
-                } while (!next.isEmpty() && max(next) <= max);
-                dirTokenStates = next.isEmpty() ? dirTokenStates.removeKey(e1.getKey())
-                        : dirTokenStates.put(e1.getKey(), next);
+                }
+                dirTokenStates = states.isEmpty() ? dirTokenStates.removeKey(e1.getKey())
+                        : dirTokenStates.put(e1.getKey(), states);
             }
             if (dirTokenStates.isEmpty()) {
-                dirTokenStates = notEmpty;
+                dirTokenStates = prev;
                 break;
             }
+            dirTokenStates = align(outerRepetitions, typeArgs, dirTokenStates);
         }
         while (dirTokenStates.size() > 1) {
             int min = minTokenTypes(dirTokenStates);
@@ -408,6 +405,34 @@ public class ParseState extends AbstractState<ParseState> {
         DirectionContext result = dirTokenStates.size() == 1 ? dirTokenStates.get(0).getKey() : null;
         printLookahead(token, result);
         return result;
+    }
+
+    private static Map<DirectionContext, Set<TokenStateContext>> align(Map<String, ParseState> outerRepetitions,
+            MutableMap<Variable, Type> typeArgs, Map<DirectionContext, Set<TokenStateContext>> dirTokenStates) {
+        boolean changed;
+        do {
+            changed = false;
+            int max = max(dirTokenStates);
+            for (Entry<DirectionContext, Set<TokenStateContext>> e : dirTokenStates) {
+                Set<TokenStateContext> set = e.getValue();
+                for (TokenStateContext tsc : set) {
+                    if (tsc.token != null && tsc.token.index() < max) {
+                        changed = true;
+                        set = set.remove(tsc);
+                        Set<TokenStateContext> states = Set.of();
+                        for (Entry<DirectionContext, Set<TokenStateContext>> inner : tsc.state.dirTokenStates(tsc.token,
+                                outerRepetitions, tsc.ctx, typeArgs, tsc.nrOfTokenTypes)) {
+                            states = states.addAll(inner.getValue().replaceAll(
+                                    t -> new TokenStateContext(t.token, t.state, t.ctx, tsc.nrOfTokenTypes)));
+                        }
+                        set = set.addAll(states);
+                    }
+                }
+                dirTokenStates = set.isEmpty() ? dirTokenStates.removeKey(e.getKey())
+                        : dirTokenStates.put(e.getKey(), set);
+            }
+        } while (changed);
+        return dirTokenStates;
     }
 
     private static Map<DirectionContext, Set<TokenStateContext>> removeIfMoreThenOne(
@@ -482,7 +507,7 @@ public class ParseState extends AbstractState<ParseState> {
     private static int max(Set<TokenStateContext> states) {
         int max = -1;
         for (TokenStateContext ts : states) {
-            max = Math.max(max, ts.token.index());
+            max = Math.max(max, ts.token == null ? Integer.MAX_VALUE : ts.token.index());
         }
         return max;
     }
@@ -538,10 +563,10 @@ public class ParseState extends AbstractState<ParseState> {
         Map<DirectionContext, Set<StateContext>> map = dirStates.get();
         dirStates.clear();
         for (Entry<DirectionContext, Set<StateContext>> e1 : map) {
-            for (StateContext state : e1.getValue()) {
-                if (state.state != this) {
-                    for (Entry<DirectionContext, Set<StateContext>> e2 : state.state.dirStates(outerRepetitions,
-                            state.ctx, typeArgs)) {
+            for (StateContext sc : e1.getValue()) {
+                if (sc.state != this) {
+                    for (Entry<DirectionContext, Set<StateContext>> e2 : sc.state.dirStates(outerRepetitions, sc.ctx,
+                            typeArgs)) {
                         if (!e2.getValue().isEmpty()) {
                             dirStates.compute(e1.getKey(),
                                     (d, s) -> s == null ? e2.getValue() : s.addAll(e2.getValue()));
@@ -584,7 +609,7 @@ public class ParseState extends AbstractState<ParseState> {
                 if (hidden != null) {
                     for (Entry<Type, Variable> var : hidden) {
                         Type type = var.getValue().type();
-                        states = postStates(inner, type, states, group, typeArgs);
+                        states = postStates(inner, type, states, group, typeArgs.get());
                     }
                 }
                 if (!states.isEmpty()) {
@@ -619,7 +644,7 @@ public class ParseState extends AbstractState<ParseState> {
             if (state != null) {
                 states = states.add(new StateContext(state, ctx.outer()));
             }
-            states = postStates(ctx, type, states, ctx.group(), typeArgs);
+            states = postStates(ctx, type, states, ctx.group(), typeArgs.get());
             if (!states.isEmpty()) {
                 dirStates.put(new DirectionContext(Direction.outer, null), states);
             }
@@ -627,12 +652,12 @@ public class ParseState extends AbstractState<ParseState> {
     }
 
     private static Set<StateContext> postStates(ParseContext ctx, Type type, Set<StateContext> states, String group,
-            MutableMap<Variable, Type> typeArgs) {
+            Map<Variable, Type> typeArgs) {
         for (ParseContext pc = ctx; pc != null; pc = pc.outer()) {
             Map<Type, ParseState> posts = pc.postStates(group);
             if (posts != null) {
                 for (Entry<Type, ParseState> e : posts) {
-                    ParseState state = e.getValue().matchType(type, false, typeArgs);
+                    ParseState state = e.getValue().matchType(type, false, MutableMap.of(typeArgs));
                     if (state != null) {
                         states = states.add(new StateContext(state, ctx));
                     }
