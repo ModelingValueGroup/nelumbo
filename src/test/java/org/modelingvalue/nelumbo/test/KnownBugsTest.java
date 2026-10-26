@@ -185,6 +185,12 @@ public class KnownBugsTest extends NelumboTestBase {
         bugResource("import-merge-closes-facts.nl");
     }
 
+    @KnownBug("variable nested in a fact argument (owns(Piet,box(n))) is not bound by the lookup")
+    @Test
+    public void nestedArgumentVariableNotNavigated() {
+        bugResource("nested-argument-variable-not-navigated.nl");
+    }
+
     // the correct behavior is an error per query, which bugResource (pass = no
     // error) cannot express: count the inconsistency diagnostics instead
     @KnownBug("inconsistency between two rules detected in one rule order only")
