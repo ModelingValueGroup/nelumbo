@@ -33,6 +33,11 @@ function NELUMBO.setup(user_config)
     --print("Config dir: " .. config_dir)
 
     vim.filetype.add({ extension = { nl = "nelumbo" } })
+    -- gc/gcc (Neovim 0.10+) and comment plugins read 'commentstring'
+    vim.api.nvim_create_autocmd("FileType", {
+        pattern  = "nelumbo",
+        callback = function() vim.bo.commentstring = "// %s" end,
+    })
 
     local lsp     = require('lspconfig')
     local configs = require('lspconfig.configs')
