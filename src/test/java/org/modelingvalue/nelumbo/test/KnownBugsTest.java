@@ -179,6 +179,12 @@ public class KnownBugsTest extends NelumboTestBase {
         bugResource("single-unique-hole-not-closed.nl");
     }
 
+    @KnownBug("facts of two imported modules under one lookup are merged as complete (closed)")
+    @Test
+    public void importMergeClosesFacts() {
+        bugResource("import-merge-closes-facts.nl");
+    }
+
     // the correct behavior is an error per query, which bugResource (pass = no
     // error) cannot express: count the inconsistency diagnostics instead
     @KnownBug("inconsistency between two rules detected in one rule order only")
