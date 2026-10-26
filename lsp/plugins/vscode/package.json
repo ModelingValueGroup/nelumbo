@@ -29,6 +29,7 @@
         "aliases": [
           "nelumbo"
         ],
+        "configuration": "./language-configuration.json",
         "icon": {
           "light": "./icons/logo.svg",
           "dark": "./icons/logo.svg"

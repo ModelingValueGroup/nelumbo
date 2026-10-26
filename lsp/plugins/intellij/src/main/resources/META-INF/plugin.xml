@@ -38,6 +38,10 @@
                 language="nelumbo"
                 implementationClass="org.modelingvalue.nelumbo.lsp.intellij.lang.NelumboParserDefinition"
         />
+        <lang.commenter
+                language="nelumbo"
+                implementationClass="org.modelingvalue.nelumbo.lsp.intellij.lang.NelumboCommenter"
+        />
         <usageTypeProvider
                 implementation="org.modelingvalue.nelumbo.lsp.intellij.lang.NelumboUsageTypeProvider"
         />
