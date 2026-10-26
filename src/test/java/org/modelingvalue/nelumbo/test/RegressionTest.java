@@ -19,13 +19,16 @@ package org.modelingvalue.nelumbo.test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Timeout;
+import org.modelingvalue.nelumbo.NelumboConstants;
 import org.modelingvalue.nelumbo.tools.NelumboEvaluator;
 import org.modelingvalue.nelumbo.tools.NelumboEvaluator.Diagnostic;
 import org.modelingvalue.nelumbo.tools.NelumboEvaluator.EvalResult;
+import org.modelingvalue.nelumbo.tools.NelumboEvaluator.QueryOutcome;
 
 // Regression tests promoted from the known-bug suite (KnownBugsTest) once the
 // engine fix landed. Each guards a previously-broken behavior; the .nl file's
@@ -137,6 +140,97 @@ public class RegressionTest extends NelumboTestBase {
     @RepeatedTest(10)
     public void unboundPredicateNotResolved() {
         testResource("unbound-predicate-not-resolved.nl");
+    }
+
+    // an index error next to a false bound check is irrelevant, in every operand order
+    @RepeatedTest(10)
+    public void speculativeGuardIndexCrash() {
+        testResource("speculative-guard-index-crash.nl");
+    }
+
+    // An exception in a built-in operation leaves the query unknown: an error
+    // with the exception's message and no result; the other queries still
+    // evaluate (was bugs/integers-div-zero.nl, bugs/collections-index-out-of-range.nl
+    // and bugs/datetime-multiply-overflow.nl, which crashed the whole evaluation).
+    @RepeatedTest(10)
+    public void nativeExceptionWithoutResult() throws IOException {
+        String name = "native-exception-without-result.nl";
+        String source = new String(RegressionTest.class.getResourceAsStream(NelumboConstants.NELUMBO_TESTS + name).readAllBytes());
+        List<String> lines = source.lines().toList();
+        // an exception without a message (IndexOutOfBoundsException) is named by
+        // its class and the built-in call that threw it
+        List<String> expected = List.of( //
+                lineOf(lines, "6 / 0 = x") + ":1: BigInteger divide by zero", //
+                lineOf(lines, "0 * x = 6") + ":1: BigInteger divide by zero", //
+                lineOf(lines, "i pos [1,2,3] = 7") + ":1: IndexOutOfBoundsException in indexOf([1,2,3],e,7)", //
+                lineOf(lines, "P1D * 9999999999 = y") + ":1: BigInteger out of int range");
+        EvalResult result = NelumboEvaluator.evaluate(source, name, 60_000);
+        List<String> found = result.diagnostics().stream().map(d -> d.line() + ":" + d.col() + ": " + d.message()).toList();
+        assertEquals(expected.stream().sorted().toList(), found.stream().sorted().toList());
+        List<String> unanswered = result.queries().stream().filter(q -> q.result() == null).map(QueryOutcome::query).sorted().toList();
+        assertEquals(List.of("0*x=6", "6/0=x", "P1D*9999999999=y", "ipos[1,2,3]=7"), unanswered);
+        // the queries after each error still evaluate, to their expected result
+        List<QueryOutcome> checked = result.queries().stream().filter(q -> q.expectationMatched() != null).toList();
+        assertEquals(4, checked.size(), "queries with an expectation: " + result.queries());
+        assertTrue(checked.stream().allMatch(QueryOutcome::expectationMatched), "mismatch: " + checked);
+    }
+
+    // An undeclared name in a rule body is not a variable: the rule is not
+    // well-formed, the parse error is on the name itself and the query is
+    // unknown (was bugs/undeclared-variable-diagnostics.nl, whose error was on
+    // a nearby token).
+    @RepeatedTest(10)
+    public void undeclaredNameInRule() throws IOException {
+        String name = "undeclared-name-in-rule.nl";
+        String source = new String(RegressionTest.class.getResourceAsStream(NelumboConstants.NELUMBO_TESTS + name).readAllBytes());
+        List<String> lines = source.lines().toList();
+        int line = lineOf(lines, "f(a,b)=z");
+        int col = lines.get(line - 1).indexOf('q') + 1;
+        EvalResult result = NelumboEvaluator.evaluate(source, name, 60_000);
+        assertEquals(1, result.diagnostics().size(), "diagnostics: " + result.diagnostics());
+        Diagnostic error = result.diagnostics().get(0);
+        assertTrue(error.message().startsWith("Unexpected token 'q'"), "message: " + error.message());
+        assertEquals(List.of(line, col, 1), List.of(error.line(), error.col(), error.length()), "position of " + error);
+        assertEquals(1, result.queries().size(), "queries: " + result.queries());
+        QueryOutcome query = result.queries().get(0);
+        assertEquals("[..][..]", query.result());
+        assertEquals(Boolean.TRUE, query.expectationMatched());
+    }
+
+    // A NEWLINE after a non-operator ends the statement: an `if` guard on its
+    // own line is a parse error there, the alternative before it stays
+    // guardless, and f(3) is a conflict (was bugs/guard-on-continuation-line-dropped.nl,
+    // which took this for a bug).
+    @RepeatedTest(10)
+    public void guardOnOwnLine() throws IOException {
+        String name = "guard-on-own-line.nl";
+        String source = new String(RegressionTest.class.getResourceAsStream(NelumboConstants.NELUMBO_TESTS + name).readAllBytes());
+        List<String> lines = source.lines().toList();
+        int guardLine = lineOf(lines, "if x>=5");
+        int guardCol = lines.get(guardLine - 1).indexOf('x') + 1;
+        int conflictLine = lineOf(lines, "f(3)=y");
+        EvalResult result = NelumboEvaluator.evaluate(source, name, 60_000);
+        assertEquals(2, result.diagnostics().size(), "diagnostics: " + result.diagnostics());
+        Diagnostic parse = result.diagnostics().get(0);
+        assertTrue(parse.message().startsWith("Unexpected token 'x'"), "message: " + parse.message());
+        assertEquals(List.of(guardLine, guardCol), List.of(parse.line(), parse.col()), "position of " + parse);
+        Diagnostic conflict = result.diagnostics().get(1);
+        assertTrue(conflict.message().startsWith("Inconsistent results"), "message: " + conflict.message());
+        assertEquals(List.of(conflictLine, 1), List.of(conflict.line(), conflict.col()), "position of " + conflict);
+        List<QueryOutcome> checked = result.queries().stream().filter(q -> q.expectationMatched() != null).toList();
+        assertEquals(1, checked.size(), "queries with an expectation: " + result.queries());
+        assertEquals(Boolean.TRUE, checked.get(0).expectationMatched(), "f(7): " + checked.get(0));
+    }
+
+    // 1-based number of the line that starts with the given text (after its
+    // indentation, followed by a space or the line end)
+    private static int lineOf(List<String> lines, String query) {
+        for (int i = 0; i < lines.size(); i++) {
+            if ((lines.get(i).strip() + " ").startsWith(query + " ")) {
+                return i + 1;
+            }
+        }
+        throw new IllegalArgumentException("no line starts with: " + query);
     }
 
     // A lambda variable ([i](...)) is local to its lambda: using the same

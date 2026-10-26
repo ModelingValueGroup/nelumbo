@@ -16,6 +16,8 @@
 
 package org.modelingvalue.nelumbo.logic;
 
+import java.io.Serial;
+
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.AstElement;
@@ -24,8 +26,6 @@ import org.modelingvalue.nelumbo.NelumboFunctorField;
 import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.lang.Variable;
-
-import java.io.Serial;
 
 public final class UniversalQuantifier extends Quantifier {
     @Serial
@@ -60,7 +60,8 @@ public final class UniversalQuantifier extends Quantifier {
         for (Predicate predFact : predResult.facts()) {
             Predicate fact = setBinding(this, predFact.getBinding(predicate).removeAllKey(localVars));
             if (!falsehoods.contains(fact)) {
-                // A is true only when no candidate is false: that needs all falsehoods of the body
+                // A is true only when no candidate is false: that needs all falsehoods of the
+                // body
                 if (fact.isFullyBound() && predResult.completeFalsehoods()) {
                     facts = facts.add(fact);
                 } else {
@@ -83,7 +84,8 @@ public final class UniversalQuantifier extends Quantifier {
                 completeFalsehoods = false;
             }
         }
-        return InferResult.of(this, facts, completeFacts, falsehoods, completeFalsehoods, predResult.cycles());
+        return InferResult.of(this, facts, completeFacts, falsehoods, completeFalsehoods, predResult.cycles(),
+                predResult.exceptions());
     }
 
 }

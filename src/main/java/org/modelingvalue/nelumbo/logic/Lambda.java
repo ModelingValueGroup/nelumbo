@@ -139,7 +139,8 @@ public final class Lambda extends Node {
 
     public boolean test(Object... vals) {
         Predicate p = (Predicate) setVariables(vals);
-        return resolve(p, true).isTrueCC();
+        InferResult result = resolve(p, true);
+        return result != null && result.isTrueCC();
     }
 
     @SuppressWarnings("unchecked")
@@ -167,7 +168,7 @@ public final class Lambda extends Node {
                 }
             });
         }
-        return result;
+        return ctx.hasIncompleteResult() ? null : result;
     }
 
     private static boolean isComplete(InferResult result, boolean bool) {

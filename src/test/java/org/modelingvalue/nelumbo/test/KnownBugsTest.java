@@ -30,11 +30,21 @@ import org.modelingvalue.nelumbo.tools.NelumboEvaluator.EvalResult;
 // from src/main/resources/org/modelingvalue/nelumbo/bugs/ whose query
 // expectations state the CORRECT behavior. While the bug exists the method is
 // ABORTED (grey); once fixed it FAILS with "KNOWN BUG APPEARS FIXED" - then
-// remove the @KnownBug and promote the method to RegressionTest (sixteen
+// remove the @KnownBug and promote the method to RegressionTest (twenty
 // promoted so far: two on 2026-09-11, three on 2026-09-24, four on 2026-09-25,
-// one on 2026-10-02, five on 2026-10-06, and on 2026-10-18 one merged from
+// one on 2026-10-02, five on 2026-10-06, on 2026-10-18 one merged from
 // three unbound-lookup repros whose remaining expectations were wrong: a
-// variable is never bound by enumerating a type).
+// variable is never bound by enumerating a type, and on 2026-10-26 one merged
+// from the three crash repros integers-div-zero, collections-index-out-of-range
+// and datetime-multiply-overflow: an exception in a built-in operation leaves
+// the query unknown, an error without a result; also on 2026-10-26
+// speculative-guard-index-crash (an exception next to a false operand is
+// irrelevant), and
+// undeclared-variable-diagnostics, whose expectation was wrong: an undeclared
+// name is not a variable, so the rule is not well-formed and the query unknown,
+// and guard-on-continuation-line-dropped, which is no bug: a NEWLINE after a
+// non-operator ends the statement, so a guard on its own line is a parse error
+// and the guardless alternative gives a conflict).
 //
 // The CLI twin is ./run-all-tests-with-CLI (repo root): the SAME bug can
 // manifest differently on the CLI vs this test JVM (proven 2026-09-13: the
@@ -43,8 +53,8 @@ import org.modelingvalue.nelumbo.tools.NelumboEvaluator.EvalResult;
 //
 // Dedup review 2026-09-13 (criterion: truly identical construct): no merges.
 // collections-index-out-of-range (bare native pos crash) != speculative-guard
-// (guard evaluation semantics); datetime multiply-overflow != year-360;
-// rational sign != zero-factor; the three reduction repros (bba88fc8 family)
+// (guard evaluation semantics); datetime multiply-overflow != year-360 (the
+// two crash repros were promoted on 2026-10-26); rational sign != zero-factor; the three reduction repros (bba88fc8 family)
 // were all fixed and promoted to RegressionTest on 2026-09-24, and the whole
 // state/race cluster (empty-set-branch-in-map-lambda, neighbor-query-changes-
 // result, nondeterministic-inference) plus rule-pos-on-mapped-collection-list-
@@ -125,33 +135,19 @@ public class KnownBugsTest extends NelumboTestBase {
         bugResource("where-filter-npe-in-recursion.nl");
     }
 
+    @KnownBug("shallow unknown of a call in a conjunction decided false is remembered: the same call later is unknown")
+    @Test
+    public void decidedConjunctionHidesLaterResult() {
+        bugResource("decided-conjunction-hides-later-result.nl");
+    }
+
     @KnownBug("call over an empty set goes unknown after an earlier query over an empty set of another type")
     @Test
     public void emptySetQueryChangesLaterResult() {
         bugResource("empty-set-query-changes-later-result.nl");
     }
 
-    // ==== speculative evaluation ====
-
-    @KnownBug("rule guards evaluated speculatively: unguarded pos crashes out-of-range")
-    @Test
-    public void speculativeGuardIndexCrash() {
-        bugResource("speculative-guard-index-crash.nl");
-    }
-
     // ==== parser / diagnostics ====
-
-    @KnownBug("if-guard on its own continuation line silently dropped")
-    @Test
-    public void guardOnContinuationLineDropped() {
-        bugResource("guard-on-continuation-line-dropped.nl");
-    }
-
-    @KnownBug("undeclared variable: misleading error, rule silently dropped")
-    @Test
-    public void undeclaredVariableDiagnostics() {
-        bugResource("undeclared-variable-diagnostics.nl");
-    }
 
     @KnownBug("// directly after operator char swallowed into operator token")
     @Test
@@ -207,22 +203,24 @@ public class KnownBugsTest extends NelumboTestBase {
         bugResource("rational-zero-factor.nl");
     }
 
-    @KnownBug("division by zero crashes the whole evaluation")
-    @Test
-    public void integersDivZero() {
-        bugResource("integers-div-zero.nl");
-    }
-
     @KnownBug("int(...) uses Integer.parseInt: silent 32-bit limit")
     @Test
     public void integerString32bit() {
         bugResource("integer-string-32bit.nl");
     }
 
-    @KnownBug("indexOf crashes on out-of-range index; 2^32 wraps to element 0")
+    // the correct behavior is an error per query, which bugResource (pass = no
+    // error) cannot express: every query must have an error and no result
+    @KnownBug("pos index outside the int range wraps to its low 32 bits instead of an index error")
     @Test
-    public void collectionsIndexOutOfRange() {
-        bugResource("collections-index-out-of-range.nl");
+    public void collectionsIndexWrapsPastIntRange() throws IOException {
+        String       name    = "collections-index-wraps-past-int-range.nl";
+        String       source  = new String(KnownBugsTest.class.getResourceAsStream(NelumboConstants.NELUMBO_BUGS + name).readAllBytes());
+        EvalResult   result  = NelumboEvaluator.evaluate(source, name, 60_000);
+        long         errors  = result.diagnostics().size();
+        List<String> wrapped = result.queries().stream().filter(q -> q.result() != null).map(q -> q.query() + " ? " + q.result()).toList();
+        assertEquals(List.of(), wrapped, "queries answered from a wrapped index");
+        assertEquals(result.queries().size(), errors, "diagnostics: " + result.diagnostics());
     }
 
     @KnownBug("set-builder compared with a closed set literal holds for any set")
@@ -253,12 +251,6 @@ public class KnownBugsTest extends NelumboTestBase {
     @Test
     public void emptyCollectionLiteralRejectedAsArgument() {
         bugResource("empty-collection-literal-rejected-as-argument.nl");
-    }
-
-    @KnownBug("period_multiply crashes on multipliers outside int range")
-    @Test
-    public void datetimeMultiplyOverflow() {
-        bugResource("datetime-multiply-overflow.nl");
     }
 
     @KnownBug("year counted as 360 days in period comparison")

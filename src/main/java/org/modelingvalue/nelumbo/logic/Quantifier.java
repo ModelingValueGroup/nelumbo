@@ -53,8 +53,8 @@ public abstract class Quantifier extends CompoundPredicate {
         if (predResult.hasStackOverflow()) {
             return predResult;
         }
-        if (predResult.isUnknownWithPossibleCycles()) {
-            return InferResult.of(this, Set.of(), false, Set.of(), false, predResult.cycles());
+        if (predResult.isUnknownWithPossibleCyclesOrExceptions()) {
+            return InferResult.of(this, Set.of(), false, Set.of(), false, predResult.cycles(), predResult.exceptions());
         }
         return resolve(context, predResult);
     }

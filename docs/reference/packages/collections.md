@@ -265,7 +265,7 @@ i pos [1,2,3] = 2   ?   [(i=3)][..]          ▸ index 2 holds the element 3
 5 pos [1,2,3] = i   ?   [][..]               ▸ not present
 ```
 
-(An index outside the list is a known problem — see [`bugs/collections-index-out-of-range.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/bugs/collections-index-out-of-range.nl).)
+An index outside the list (`i pos [1,2,3] = 7`) leaves the query unknown: it has no result and reports the index error.
 
 ### Filter — `where`
 

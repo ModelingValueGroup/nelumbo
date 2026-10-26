@@ -36,6 +36,7 @@ public abstract class CompoundPredicate extends Predicate {
     public InferResult resolve(InferContext context) {
         Map<Map<Variable, Object>, Predicate> now, next = Map.of(Entry.of(getBinding(this), this));
         Set<Predicate> facts = Set.of(), falsehoods = Set.of(), cycles = Set.of();
+        Map<Predicate, RuntimeException> exceptions = Map.of();
         boolean completeFacts = true, completeFalsehoods = true;
         InferContext deep = context.toDeep(); // Resolve variables shallow (bind)
         InferContext shallow = context.toShallow(); // Resolve variables deep (bind)
@@ -58,6 +59,7 @@ public abstract class CompoundPredicate extends Predicate {
                     predicate = result.predicate();
                     resolve = deep;
                     cycles = cycles.addAll(result.cycles());
+                    exceptions = exceptions.addAll(result.exceptions());
                 }
                 result = predicate.infer(resolve);
                 if (result.hasStackOverflow()) {
@@ -83,6 +85,7 @@ public abstract class CompoundPredicate extends Predicate {
                         completeFacts &= ir.completeFacts();
                         completeFalsehoods &= ir.completeFalsehoods();
                         cycles = cycles.addAll(ir.cycles());
+                        exceptions = exceptions.addAll(ir.exceptions());
                     }
                 } else if (resolve == deep) {
                     completeFacts = false;
@@ -90,7 +93,7 @@ public abstract class CompoundPredicate extends Predicate {
                 }
             }
         } while (!next.isEmpty());
-        return InferResult.of(this, facts, completeFacts, falsehoods, completeFalsehoods, cycles);
+        return InferResult.of(this, facts, completeFacts, falsehoods, completeFalsehoods, cycles, exceptions);
     }
 
 }

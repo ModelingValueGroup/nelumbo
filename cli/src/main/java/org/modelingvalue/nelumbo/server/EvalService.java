@@ -130,7 +130,7 @@ public final class EvalService implements AutoCloseable {
         EvalResult result;
         try {
             result = evaluate(request.document(), request.limit(), request.stdlib());
-        } catch (EvalTimeoutException e) {
+        } catch (NelumboTimeoutException e) {
             Map<String, Object> timeout = new LinkedHashMap<>();
             timeout.put("error", "timeout");
             timeout.put("timeoutMs", timeoutMs);
@@ -182,11 +182,6 @@ public final class EvalService implements AutoCloseable {
             import nelumbo.rationals
             import nelumbo.datetime
             """;
-
-    /** Signals that a request exceeded its inference budget. */
-    private static final class EvalTimeoutException extends RuntimeException {
-        private static final long serialVersionUID = 1L;
-    }
 
     private static void addTraceStub(Map<String, Object> response) {
         response.put("trace", null);
@@ -251,15 +246,15 @@ public final class EvalService implements AutoCloseable {
             future.get(timeoutMs + GRACE_MS, TimeUnit.MILLISECONDS);
         } catch (TimeoutException e) {
             future.cancel(true);
-            throw new EvalTimeoutException();
+            throw new NelumboTimeoutException();
         } catch (ExecutionException e) {
             if (e.getCause() instanceof NelumboTimeoutException) {
-                throw new EvalTimeoutException();
+                throw new NelumboTimeoutException();
             }
             throw e.getCause() instanceof RuntimeException re ? re : new IllegalStateException(e.getCause());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new EvalTimeoutException();
+            throw new NelumboTimeoutException();
         }
     }
 

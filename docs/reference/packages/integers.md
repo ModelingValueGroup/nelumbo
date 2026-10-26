@@ -122,6 +122,8 @@ Integer division truncates toward zero. A query with a non-exact dividend gets a
 21 / 10 = 2    ? [][()]
 ```
 
+Division by zero (`6 / 0 = a`, also when solving `0 * a = 6`) leaves the query unknown: it has no result and reports `BigInteger divide by zero`. Where the rest of the expression already decides the result (`1 > 2 & 6 / 0 = a`), the error is irrelevant and not reported.
+
 ---
 
 ## Comparison

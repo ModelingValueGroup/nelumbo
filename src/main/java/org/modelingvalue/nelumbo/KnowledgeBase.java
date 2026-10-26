@@ -584,7 +584,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 }
             }
             return InferResult.of(predicate, facts, result.completeFacts(), falsehoods, result.completeFalsehoods(),
-                    Set.of());
+                    Set.of(), Map.of());
         }
         if (vars.isEmpty()) {
             for (int i : predicate.functor().unique()) {

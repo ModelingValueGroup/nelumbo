@@ -17,8 +17,8 @@ import nelumbo.collections
 // the run - fixed 2026-10-06, E takes up to 6 now, see
 // tests/four-var-quantifier-crash.nl); at/row are bounds-guarded because guards are probed speculatively and an
 // out-of-range pos crashes; an alternative's `if` guard must never sit
-// alone on a continuation line (it is silently dropped - break only inside
-// unbalanced parens); and results can depend on unrelated file content and
+// alone on its own line (a NEWLINE after a non-operator ends the statement, so
+// it is a parse error - break only inside unbalanced parens); and results can depend on unrelated file content and
 // on run-to-run scheduling, so the rule shapes here stick closely to the
 // ones sudoku-9x9.nl proves out (guard-pruned alternatives, direct recursion).
 

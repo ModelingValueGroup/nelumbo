@@ -27,6 +27,7 @@ import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
+import org.modelingvalue.nelumbo.NelumboException;
 import org.modelingvalue.nelumbo.NelumboTimeoutException;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
@@ -205,11 +206,15 @@ public class Predicate extends Node {
     }
 
     public final InferResult unknown() {
-        return InferResult.unknown(this, Set.of());
+        return InferResult.unknown(this, Set.of(), Map.of());
     }
 
-    public final InferResult unknown(Set<Predicate> cycles) {
-        return InferResult.unknown(this, cycles);
+    public final InferResult unknown(Set<Predicate> cycles, Map<Predicate, RuntimeException> exceptions) {
+        return InferResult.unknown(this, cycles, exceptions);
+    }
+
+    public final InferResult unknown(RuntimeException exception) {
+        return InferResult.unknown(this, Set.of(), Map.of(Entry.of(this, exception)));
     }
 
     public final InferResult factCC() {
@@ -275,7 +280,19 @@ public class Predicate extends Node {
 
     private InferResult doInfer(int nrOfUnbound, InferContext context) {
         Method method = functor().method();
-        return method != null ? callMethod(method, context) : infer(nrOfUnbound, context);
+        if (method != null) {
+            return callMethod(method, context);
+        }
+        if (!Predicate.class.equals(getClass())) {
+            try {
+                return infer(nrOfUnbound, context);
+            } catch (NelumboException ne) {
+                throw ne;
+            } catch (RuntimeException re) {
+                return unknown(re);
+            }
+        }
+        return infer(nrOfUnbound, context);
     }
 
     private InferResult callMethod(Method method, InferContext context) {
@@ -291,8 +308,11 @@ public class Predicate extends Node {
             } catch (IllegalAccessException e) {
                 throw new IllegalArgumentException(e);
             } catch (InvocationTargetException e) {
+                if (e.getTargetException() instanceof NelumboException ne) {
+                    throw ne;
+                }
                 if (e.getTargetException() instanceof RuntimeException re) {
-                    throw new InconsistencyException(re);
+                    return unknown(re);
                 }
                 throw new IllegalArgumentException(e);
             }
@@ -409,7 +429,7 @@ public class Predicate extends Node {
             if (nextResult.equals(previousResult)) {
                 return InferResult.of(this, nextResult.facts(), nextResult.completeFacts(), //
                         nextResult.falsehoods(), nextResult.completeFalsehoods(), //
-                        Set.of());
+                        Set.of(), nextResult.exceptions());
             } else {
                 previousResult = nextResult;
                 cycleResult = nextResult;

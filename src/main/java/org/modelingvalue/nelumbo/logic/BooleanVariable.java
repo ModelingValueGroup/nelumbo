@@ -97,7 +97,7 @@ public class BooleanVariable extends Predicate {
         }
         if (result == null) {
             result = InferResult.of(this, Set.of(set(0, NBoolean.TRUE)), true, Set.of(set(0, NBoolean.FALSE)), true,
-                    Set.of());
+                    Set.of(), Map.of());
         }
         return result;
     }

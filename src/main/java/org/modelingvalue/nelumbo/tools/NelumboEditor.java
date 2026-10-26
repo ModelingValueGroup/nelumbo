@@ -67,6 +67,7 @@ import javax.swing.text.ViewFactory;
 
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstants;
+import org.modelingvalue.nelumbo.NelumboException;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 import com.formdev.flatlaf.FlatLightLaf;
@@ -650,7 +651,7 @@ public class NelumboEditor {
      * Thrown when an EDT call via {@link #callOnEDT} or {@link #runOnEDT} fails due
      * to thread interruption or an exception in the invoked code.
      */
-    public static class EDTException extends RuntimeException {
+    public static class EDTException extends NelumboException {
         @Serial
         private static final long serialVersionUID = -1432595155043617847L;
 

@@ -18,7 +18,9 @@ package org.modelingvalue.nelumbo.logic;
 
 import java.io.Serial;
 
-public class InconsistencyException extends RuntimeException {
+import org.modelingvalue.nelumbo.NelumboException;
+
+public class InconsistencyException extends NelumboException {
     @Serial
     private static final long serialVersionUID = -30585101694801066L;
 
@@ -30,15 +32,6 @@ public class InconsistencyException extends RuntimeException {
     public InconsistencyException(InferResult result) {
         super("Inconsistent result: " + result + " has non unique bindings for function "
                 + result.predicate().toBaseString());
-    }
-
-    public InconsistencyException(RuntimeException re) {
-        super("Inconsistency: " + message(re), re);
-    }
-
-    private static String message(RuntimeException re) {
-        String message = re.getMessage();
-        return message != null ? message : re.getClass().getSimpleName();
     }
 
 }

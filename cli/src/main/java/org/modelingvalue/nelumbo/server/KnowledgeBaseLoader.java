@@ -20,23 +20,29 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.modelingvalue.nelumbo.KnowledgeBase;
+import org.modelingvalue.nelumbo.NelumboException;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.Parser;
 import org.modelingvalue.nelumbo.syntax.ParserResult;
 import org.modelingvalue.nelumbo.syntax.Tokenizer;
 
 /**
- * Builds the server's base {@link KnowledgeBase} from a set of {@code .nl} sources. Each source is parsed and evaluated
- * into a fresh child of {@link KnowledgeBase#BASE}, so all their declarations accumulate. Any parse/evaluation error
- * aborts loading with a {@link LoadException} listing every problem.
+ * Builds the server's base {@link KnowledgeBase} from a set of {@code .nl}
+ * sources. Each source is parsed and evaluated into a fresh child of
+ * {@link KnowledgeBase#BASE}, so all their declarations accumulate. Any
+ * parse/evaluation error aborts loading with a {@link LoadException} listing
+ * every problem.
  */
 public final class KnowledgeBaseLoader {
 
     private KnowledgeBaseLoader() {
     }
 
-    /** Raised when one or more sources fail to parse or evaluate. The message lists every {@code file:line:col} problem. */
-    public static final class LoadException extends RuntimeException {
+    /**
+     * Raised when one or more sources fail to parse or evaluate. The message lists
+     * every {@code file:line:col} problem.
+     */
+    public static final class LoadException extends NelumboException {
         private static final long serialVersionUID = 1L;
 
         public LoadException(String message) {
@@ -46,7 +52,8 @@ public final class KnowledgeBaseLoader {
 
     public static KnowledgeBase load(List<NamedSource> sources) {
         List<String> problems = new ArrayList<>();
-        // run(...) creates a fresh child of BASE, runs the body with that child as CURRENT (so all
+        // run(...) creates a fresh child of BASE, runs the body with that child as
+        // CURRENT (so all
         // declarations/imports register into it), and returns that populated child.
         KnowledgeBase base = KnowledgeBase.BASE.invoke(() -> {
             for (NamedSource source : sources) {

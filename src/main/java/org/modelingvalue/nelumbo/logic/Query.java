@@ -176,7 +176,20 @@ public final class Query extends Node implements Evaluatable {
         InferResult found;
         try {
             found = predicate.infer().predicate(predicate);
-        } catch (InconsistencyException ie) {
+            if (found.isUnknownWithPossibleCyclesOrExceptions() && !found.exceptions().isEmpty()) {
+                for (Entry<Predicate, RuntimeException> e : found.exceptions()) {
+                    RuntimeException exc = e.getValue();
+                    String message = exc.getMessage();
+                    Predicate pred = e.getKey();
+                    handler.addException(new ParseException(exc,
+                            message != null ? message : exc.getClass().getSimpleName() + " in " + pred.toBaseString(),
+                            predicate));
+                }
+                return;
+            }
+        } catch (
+
+        InconsistencyException ie) {
             handler.addException(new ParseException(ie, ie.getMessage(), predicate));
             return;
         }
@@ -189,7 +202,7 @@ public final class Query extends Node implements Evaluatable {
             Set<Predicate> falsePredicates = falseBindings.map(b -> predicate.setBinding(predicate, b)).asSet();
             boolean completeFalsehoods = completeFalsehoods();
             InferResult expected = InferResult.of(predicate, truePredicates, completeFacts, falsePredicates,
-                    completeFalsehoods, Set.of());
+                    completeFalsehoods, Set.of(), Map.of());
             if (!found.equals(expected)) {
                 List<AstElement> astElements = astElements();
                 handler.addException(new ParseException("Expected result " + expected + ", found " + found, //
