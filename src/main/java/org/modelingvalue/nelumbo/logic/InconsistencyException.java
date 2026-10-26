@@ -33,7 +33,12 @@ public class InconsistencyException extends RuntimeException {
     }
 
     public InconsistencyException(RuntimeException re) {
-        super(" Inconsistency " + re.getMessage());
+        super("Inconsistency: " + message(re), re);
+    }
+
+    private static String message(RuntimeException re) {
+        String message = re.getMessage();
+        return message != null ? message : re.getClass().getSimpleName();
     }
 
 }
