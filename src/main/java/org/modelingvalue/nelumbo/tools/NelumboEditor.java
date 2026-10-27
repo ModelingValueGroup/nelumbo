@@ -166,14 +166,13 @@ public class NelumboEditor {
             { "Examples", "scoping.nl", "Scoping" }, { "Examples", "koningsdag.nl", "Koningsdag" },
             // Assignments
             { "Assignments", "powerAssignment.nl", "Power Assignment" },
-            { "Assignments", "ternaryAssignment.nl", "Ternary Assignment" },
             { "Assignments", "maxAssignment.nl", "Max Assignment" },
             { "Assignments", "evenAssignment.nl", "Even Assignment" },
             { "Assignments", "familyAssignment.nl", "Family Assignment" },
             { "Assignments", "maxFibAssignment.nl", "Maximal Fibonacci Assignment" },
             { "Assignments", "transformationAssignment.nl", "Transformation Assignment" },
             // Answers
-            { "Answers", "power.nl", "Power Answer" }, { "Answers", "ternary.nl", "Ternary Answer" },
+            { "Answers", "power.nl", "Power Answer" },
             { "Answers", "max.nl", "Max Answer" }, { "Answers", "even.nl", "Even Answer" },
             { "Answers", "family.nl", "Family Answer" }, { "Answers", "maxFib.nl", "Maximal Fibonacci Answer" },
             { "Answers", "transformation.nl", "Transformation Answer" }, };

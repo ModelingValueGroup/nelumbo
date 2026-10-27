@@ -30,7 +30,7 @@ import org.modelingvalue.nelumbo.tools.NelumboEvaluator.EvalResult;
 // from src/main/resources/org/modelingvalue/nelumbo/bugs/ whose query
 // expectations state the CORRECT behavior. While the bug exists the method is
 // ABORTED (grey); once fixed it FAILS with "KNOWN BUG APPEARS FIXED" - then
-// remove the @KnownBug and promote the method to RegressionTest (twenty-one
+// remove the @KnownBug and promote the method to RegressionTest (twenty-two
 // promoted so far: two on 2026-09-11, three on 2026-09-24, four on 2026-09-25,
 // one on 2026-10-02, five on 2026-10-06, on 2026-10-18 one merged from
 // three unbound-lookup repros whose remaining expectations were wrong: a
@@ -46,7 +46,8 @@ import org.modelingvalue.nelumbo.tools.NelumboEvaluator.EvalResult;
 // non-operator ends the statement, so a guard on its own line is a parse error
 // and the guardless alternative gives a conflict; and on 2026-10-27
 // decided-conjunction-hides-later-result: a shallow unknown is no longer
-// remembered).
+// remembered, and inconsistency-missed-by-rule-order: the consistency check
+// between rules is symmetric).
 //
 // The CLI twin is ./run-all-tests-with-CLI (repo root): the SAME bug can
 // manifest differently on the CLI vs this test JVM (proven 2026-09-13: the
@@ -183,18 +184,10 @@ public class KnownBugsTest extends NelumboTestBase {
         bugResource("nested-argument-variable-not-navigated.nl");
     }
 
-    // the correct behavior is an error per query, which bugResource (pass = no
-    // error) cannot express: count the inconsistency diagnostics instead
-    @KnownBug("inconsistency between two rules detected in one rule order only")
+    @KnownBug("conditional expression (c then x else y) whose condition and branch share a variable NPEs")
     @Test
-    public void inconsistencyMissedByRuleOrder() throws IOException {
-        String       name         = "inconsistency-missed-by-rule-order.nl";
-        String       source       = new String(KnownBugsTest.class.getResourceAsStream(NelumboConstants.NELUMBO_BUGS + name).readAllBytes());
-        EvalResult   result       = NelumboEvaluator.evaluate(source, name, 60_000);
-        long         inconsistent = result.diagnostics().stream().filter(d -> d.message().startsWith("Inconsistent results")).count();
-        List<String> silent       = result.queries().stream().filter(q -> q.result() != null).map(q -> q.query() + " ? " + q.result()).toList();
-        assertEquals(List.of(), silent, "queries answered without reporting the inconsistency");
-        assertEquals(result.queries().size(), inconsistent, "diagnostics: " + result.diagnostics());
+    public void thenElseSharedVariableNpe() {
+        bugResource("then-else-shared-variable-npe.nl");
     }
 
     // ==== stdlib: numbers / strings / collections / datetime ====

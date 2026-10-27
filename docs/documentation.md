@@ -156,7 +156,7 @@ The `.nl` files under [`src/main/resources/org/modelingvalue/nelumbo/examples/`]
 | `family.nl` | Types, subtypes, `Boolean`, literal enumerations, ancestor/descendant recursion |
 | `friends.nl` | Mutually-recursive relations, symmetric + transitive closure |
 | `even.nl` | Simplest useful predicate using an existential quantifier |
-| `max.nl`, `ternary.nl` | Generic types (`Type T`), conditional expressions, user-defined operators |
+| `max.nl` | Function rule with a conditional expression (`b then x else y`) |
 | `power.nl`, `maxFib.nl` | Composed recursive definitions |
 | `belasting.nl` | Natural-language DSL (Dutch tax rules) using multi-word pattern syntax |
 | `transformation.nl`, `deHet.nl` | Language transformations with `::>` — defining new top-level keywords |

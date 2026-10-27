@@ -49,7 +49,7 @@ A type hole can carry its own precedence annotation:
 T ::= <Boolean#5> ? <T> : <T>
 ```
 
-From `ternary.nl`. `<Boolean#5>` says "this hole accepts a Boolean expression with precedence at least 5." An expression with lower precedence (like `p | q` at #20, or an unparenthesised conjunction) would need parentheses to appear in the hole.
+A user-defined conditional `b ? t : f` (`Type T`). `<Boolean#5>` says "this hole accepts a Boolean expression with precedence at least 5." An expression with lower precedence (like `p | q` at #20, or an unparenthesised conjunction) would need parentheses to appear in the hole.
 
 This is how you express "tighter-binding" requirements on specific hole positions — for example, to say the condition of a ternary must be a primary expression, not a raw disjunction.
 

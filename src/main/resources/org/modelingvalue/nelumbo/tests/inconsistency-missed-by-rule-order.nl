@@ -1,9 +1,9 @@
-// expect-error-per-query: Inconsistent results
-// Bug: an inconsistency between two rules of one relation is detected in only one of
-// the two rule orders. For f(1), rule A gives r=1 and rule B gives no facts (its body
-// is false); in the order B-then-A the query silently answers [(r=1)][(r=2),..].
-// The rule order is hash-dependent, hence 32 copies that differ only in the functor name.
-// Correct: every query reports "Inconsistent results".
+// Regression test (fixed 2026-10-27; was bugs/inconsistency-missed-by-rule-order.nl).
+// Two rules of one relation that disagree are an inconsistency in every rule order. For
+// f(1), rule A gives r=1 and rule B gives no facts (its body is false), so every query
+// reports "Inconsistent results" (the bug: in the order B-then-A the query silently
+// answered [(r=1)][(r=2),..]). The rule order is hash-dependent, hence 32 copies that
+// differ only in the functor name. RegressionTest.inconsistencyMissedByRuleOrder checks the errors.
 import nelumbo.integers
 
 Integer ::= f1(<Integer>),

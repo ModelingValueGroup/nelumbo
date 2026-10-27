@@ -250,6 +250,21 @@ public class RegressionTest extends NelumboTestBase {
         assertTrue(checked.stream().allMatch(QueryOutcome::expectationMatched), "mismatch: " + checked);
     }
 
+    // Two rules of one relation that disagree are an inconsistency in every rule
+    // order (RANDOM_NELUMBO): every query reports it and none has a result (was
+    // bugs/inconsistency-missed-by-rule-order.nl, detected in one order only).
+    @RepeatedTest(10)
+    public void inconsistencyMissedByRuleOrder() throws IOException {
+        String name = "inconsistency-missed-by-rule-order.nl";
+        String source = new String(RegressionTest.class.getResourceAsStream(NelumboConstants.NELUMBO_TESTS + name).readAllBytes());
+        EvalResult result = NelumboEvaluator.evaluate(source, name, 60_000);
+        List<String> silent = result.queries().stream().filter(q -> q.result() != null).map(q -> q.query() + " ? " + q.result()).toList();
+        assertEquals(List.of(), silent, "queries answered without reporting the inconsistency");
+        long inconsistent = result.diagnostics().stream().filter(d -> d.message().startsWith("Inconsistent results")).count();
+        assertEquals(32, result.queries().size(), "queries: " + result.queries());
+        assertEquals(32, inconsistent, "diagnostics: " + result.diagnostics());
+    }
+
     // A lambda variable ([i](...)) is local to its lambda: using the same
     // variable outside it is an error (was bugs/size-of-lambda-result-closes-falsehoods.nl,
     // where the reused i made the size queries report a closed falsehoods side).
