@@ -109,6 +109,8 @@ public interface InferResult {
 
     InferResult setTypeArgs(Map<Variable, Type> typeArgs);
 
+    InferResult biimply(InferResult other);
+
     static InferResult of(Predicate predicate, Set<Predicate> facts, boolean completeFacts, Set<Predicate> falsehoods,
             boolean completeFalsehoods, Set<Predicate> cycles, Map<Predicate, RuntimeException> exceptions) {
         return new InferResultImpl() {
@@ -752,6 +754,27 @@ public interface InferResult {
             return of(predicate().setTypeArgs(typeArgs), facts().replaceAll(f -> f.setTypeArgs(typeArgs)),
                     completeFacts(), falsehoods().replaceAll(f -> f.setTypeArgs(typeArgs)), completeFalsehoods(),
                     cycles(), exceptions());
+        }
+
+        @Override
+        public InferResult biimply(InferResult other) {
+            Set<Predicate> facts = facts().addAll(other.facts()), falsehoods = falsehoods().addAll(other.falsehoods());
+            boolean completeFacts = completeFacts() || other.completeFacts(),
+                    completeFalsehoods = completeFalsehoods() || other.completeFalsehoods();
+            for (Predicate fact : facts) {
+                if (falsehoods.contains(fact) || (completeFacts() && !facts().contains(fact))
+                        || (other.completeFacts() && !other.facts().contains(fact))) {
+                    throw new InconsistencyException(other, this);
+                }
+            }
+            for (Predicate falsehood : falsehoods) {
+                if (facts.contains(falsehood) || (completeFalsehoods() && !falsehoods().contains(falsehood))
+                        || (other.completeFalsehoods() && !other.falsehoods().contains(falsehood))) {
+                    throw new InconsistencyException(other, this);
+                }
+            }
+            return InferResult.of(predicate(), facts, completeFacts, falsehoods, completeFalsehoods,
+                    cycles().addAll(other.cycles()), exceptions().addAll(other.exceptions()));
         }
     }
 

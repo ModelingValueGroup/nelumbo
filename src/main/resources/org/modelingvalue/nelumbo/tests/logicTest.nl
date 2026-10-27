@@ -104,6 +104,15 @@ a=T1&a=T2         ? [][(a=T1),(a=T2),..]
 
 a$b               ? [..][..]
 
+(true then T1 else T2)    ? [(T1)][..]
+(false then T1 else T2)   ? [(T2)][..]
+(unknown then T1 else T2) ? [..][..]       
+
+(true then a else T2) = T1   ? [(a=T1)][..]
+(false then T1 else a) = T2  ? [(a=T2)][..]
+(false then a else T2) = T1  ? [][(a=T1),..]
+(true then T1 else a) = T2   ? [][(a=T2),..] 
+
 true&true&unknown ? [..][..]
 a=T1&b=T2&unknown ? [..][..]
 a=T1&b=T2&a$b     ? [..][..]

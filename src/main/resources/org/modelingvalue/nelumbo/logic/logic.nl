@@ -24,7 +24,9 @@ Lambda4<A1,A2,A3,A4,R>       ::= [<{Variable,A1}>,<{Variable,A2}>,<{Variable,A3}
 Lambda5<A1,A2,A3,A4,A5,R>    ::= [<{Variable,A1}>,<{Variable,A2}>,<{Variable,A3}>,<{Variable,A4}>,<{Variable,A5}>](<R#0>)                 @nelumbo.logic.Lambda
 Lambda6<A1,A2,A3,A4,A5,A6,R> ::= [<{Variable,A1}>,<{Variable,A2}>,<{Variable,A3}>,<{Variable,A4}>,<{Variable,A5}>,<{Variable,A6}>](<R#0>) @nelumbo.logic.Lambda
 
-private Boolean              ::= eq(<Literal>,<Literal>) @nelumbo.logic.Equal
+private Boolean              ::= eq(<Literal>,<Literal>)        @nelumbo.logic.Equal
+
+R                            ::= <Boolean#0> "then" <R#0> "else" <R#0> #32
 
 Boolean                      ::= true                            @nelumbo.logic.NBoolean,
                                  false                           @nelumbo.logic.NBoolean,
@@ -47,17 +49,19 @@ Root                         ::= "fact" <(> <Boolean#0> <,> , <)+>              
                                  <Boolean#0> ? <(> <BINDING> <BINDING> <)?>                             #0 @nelumbo.logic.Query,
                                  <{Function,R}#0> ? <(> <BINDING> <BINDING> <)?>                        #0 @nelumbo.logic.Query
 
+
 Boolean p1, p2
 
 p1->p2  <=>  !p1|p2
 p1<->p2 <=>  (p1->p2)&(p2->p1)
 
 Type E
-E    n1, n2
-{E,Literal}  l1, l2
+E    n1, n2, n3
+{E,Literal}  l1, l2, l3
 {E,Function} f1, f2
 
-l1=l2  <=>  eq(l1, l2)
-l1=f1  <=>  f1=l1
-n1!=n2 <=>  !(n1=n2)
-f1=f2  <=>  E[l1](f1=l1 & f2=l1)
+l1=l2                     <=>  eq(l1, l2)
+l1=f1                     <=>  f1=l1
+n1!=n2                    <=>  !(n1=n2)
+f1=f2                     <=>  E[l1](f1=l1 & f2=l1)
+(p1 then n1 else n2) = n3 <=>  (p1 & n3=n1) | (!p1 & n3=n2)

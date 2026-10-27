@@ -595,12 +595,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 }
             }
         }
-        result = predicate.unknown();
-        if (context.trace()) {
-            InferResult r = result;
-            context.trace(() -> predicate + " " + r);
-        }
-        return result;
+        return predicate.unknown();
     }
 
     public void print(PrintStream stream, boolean withTokens) {

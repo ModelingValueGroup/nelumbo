@@ -103,6 +103,14 @@ public class BooleanVariable extends Predicate {
     }
 
     @Override
+    public String toString(RenderOptions options) {
+        if (get(0) instanceof Predicate pred) {
+            return pred.toString(options);
+        }
+        return super.toString(options);
+    }
+
+    @Override
     public Variable variable() {
         if (get(0) instanceof Variable var) {
             return var;

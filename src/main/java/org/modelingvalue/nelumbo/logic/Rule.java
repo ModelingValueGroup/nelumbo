@@ -181,17 +181,18 @@ public final class Rule extends Node implements Evaluatable {
         Set<Predicate> facts = Set.of(), falsehoods = Set.of();
         boolean completeFacts = true, completeFalsehoods = true;
         for (Predicate condFact : condResult.facts()) {
-            Predicate fact = predicate.castFrom(consequence.setBinding(consequence, condFact.getBinding(condition)));
-            if (fact.isFullyBound()) {
+            Map<Variable, Object> bind = condFact.getBinding(condition);
+            Predicate fact = bind != null ? predicate.castFrom(consequence.setBinding(consequence, bind)) : null;
+            if (fact != null && fact.isFullyBound()) {
                 facts = facts.add(fact);
             } else {
                 completeFacts = false;
             }
         }
         for (Predicate condFalsehood : condResult.falsehoods()) {
-            Predicate falsehood = predicate
-                    .castFrom(consequence.setBinding(consequence, condFalsehood.getBinding(condition)));
-            if (falsehood.isFullyBound()) {
+            Map<Variable, Object> bind = condFalsehood.getBinding(condition);
+            Predicate falsehood = bind != null ? predicate.castFrom(consequence.setBinding(consequence, bind)) : null;
+            if (falsehood != null && falsehood.isFullyBound()) {
                 falsehoods = falsehoods.add(falsehood);
             } else {
                 completeFalsehoods = false;
@@ -210,40 +211,7 @@ public final class Rule extends Node implements Evaluatable {
         if (context.trace() && !isSyntatic()) {
             context.trace(() -> consequence + " " + ruleResult.predicate(consequence));
         }
-        for (Predicate fact : result.facts()) {
-            if (falsehoods.contains(fact)) {
-                throw new InconsistencyException(ruleResult, result);
-            }
-            if (completeFacts) {
-                InferResult factResult = biimply(fact, context, fact.unknown());
-                if (factResult.hasStackOverflow()) {
-                    return factResult;
-                }
-                if (factResult.isFalseCC()) {
-                    throw new InconsistencyException(ruleResult, result);
-                }
-            }
-            facts = facts.add(fact);
-        }
-        for (Predicate falsehood : result.falsehoods()) {
-            if (facts.contains(falsehood)) {
-                throw new InconsistencyException(ruleResult, result);
-            }
-            if (completeFalsehoods) {
-                InferResult falsehoodResult = biimply(falsehood, context, falsehood.unknown());
-                if (falsehoodResult.hasStackOverflow()) {
-                    return falsehoodResult;
-                }
-                if (falsehoodResult.isTrueCC()) {
-                    throw new InconsistencyException(ruleResult, result);
-                }
-            }
-            falsehoods = falsehoods.add(falsehood);
-        }
-        completeFacts |= result.completeFacts();
-        completeFalsehoods |= result.completeFalsehoods();
-        return InferResult.of(predicate, facts, completeFacts, falsehoods, completeFalsehoods, //
-                result.cycles().addAll(ruleResult.cycles()), result.exceptions().addAll(ruleResult.exceptions()));
+        return result.biimply(ruleResult);
     }
 
     @Override
