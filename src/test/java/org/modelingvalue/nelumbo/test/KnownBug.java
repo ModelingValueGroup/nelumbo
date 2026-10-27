@@ -27,11 +27,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 // - test fails  -> ABORTED (grey): bug still present, build stays green
 // - test passes -> FAILED: the bug appears fixed - remove @KnownBug and
 //   promote the method to RegressionTest
-// (the former flaky=true attribute - a pass also aborts - went with its only
-// user, nondeterministic-inference, promoted 2026-09-25)
+// flaky = true: a pass also aborts. For repros that depend on the rule order:
+// RANDOM_NELUMBO/REVERSE_NELUMBO are static finals, so the test class that
+// initializes Predicate first decides the order for the whole test JVM. The
+// CLI runner (./run-all-tests-with-CLI, default order) is their strict check.
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 @ExtendWith(KnownBugExtension.class)
 public @interface KnownBug {
     String value();
+
+    boolean flaky() default false;
 }

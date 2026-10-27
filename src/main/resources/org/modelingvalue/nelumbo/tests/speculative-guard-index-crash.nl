@@ -3,7 +3,9 @@
 // r<9 & c<9) may throw an index error, but the false check decides the conjunction:
 // the error is irrelevant and the alternative is false. Either operand can go first
 // (REVERSE_NELUMBO, RANDOM_NELUMBO), so first/last hold the check on either side.
-// The solveS query scans an already solved grid: s = the grid itself.
+// The first solveS query scans an already solved grid: s = the grid itself. The second
+// solves 3 blanks, so the `where` filter in fits runs deep in the recursion (the crash
+// in bugs/where-filter-npe-in-recursion.nl needs a harder grid).
 import nelumbo.collections
 
 // ---- types ----------------------------------------------------------
@@ -93,3 +95,5 @@ last(1)=x                             ? [(x=1)][..]
 
 // 72 clues, one blank per row/column/box, unique solution
 solveS([[1,2,3,4,5,6,7,8,9],[4,5,6,7,8,9,1,2,3],[7,8,9,1,2,3,4,5,6],[2,3,1,5,6,4,8,9,7],[5,6,4,8,9,7,2,3,1],[8,9,7,2,3,1,5,6,4],[3,1,2,6,4,5,9,7,8],[6,4,5,9,7,8,3,1,2],[9,7,8,3,1,2,6,4,5]],0,0)=s ? [(s=[[1,2,3,4,5,6,7,8,9],[4,5,6,7,8,9,1,2,3],[7,8,9,1,2,3,4,5,6],[2,3,1,5,6,4,8,9,7],[5,6,4,8,9,7,2,3,1],[8,9,7,2,3,1,5,6,4],[3,1,2,6,4,5,9,7,8],[6,4,5,9,7,8,3,1,2],[9,7,8,3,1,2,6,4,5]])][..]
+// 3 blanks, one candidate each: every placement rescans, so fits (where over ok) runs deep in the recursion
+solveS([[0,2,3,4,5,6,7,8,9],[4,5,6,0,8,9,1,2,3],[7,8,9,1,2,3,0,5,6],[2,3,1,5,6,4,8,9,7],[5,6,4,8,9,7,2,3,1],[8,9,7,2,3,1,5,6,4],[3,1,2,6,4,5,9,7,8],[6,4,5,9,7,8,3,1,2],[9,7,8,3,1,2,6,4,5]],0,0)=s ? [(s=[[1,2,3,4,5,6,7,8,9],[4,5,6,7,8,9,1,2,3],[7,8,9,1,2,3,4,5,6],[2,3,1,5,6,4,8,9,7],[5,6,4,8,9,7,2,3,1],[8,9,7,2,3,1,5,6,4],[3,1,2,6,4,5,9,7,8],[6,4,5,9,7,8,3,1,2],[9,7,8,3,1,2,6,4,5]])][..]

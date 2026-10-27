@@ -132,10 +132,16 @@ public class KnownBugsTest extends NelumboTestBase {
     // results, an unused rule being load-bearing) reproduced only against
     // intermediate sudoku-9x9-smart.nl versions - facets of the same defects
 
-    @KnownBug("where-filter over user Boolean rule NPEs inside deep recursion")
+    @KnownBug(value = "where-filter over user Boolean rule NPEs inside deep recursion", flaky = true)
     @Test
     public void whereFilterNpeInRecursion() {
         bugResource("where-filter-npe-in-recursion.nl");
+    }
+
+    @KnownBug(value = "solving a grid whose only blank is the last cell is unknown unless an earlier query evaluated ok/fits on it", flaky = true)
+    @Test
+    public void solveDependsOnEarlierQuery() {
+        bugResource("solve-depends-on-earlier-query.nl");
     }
 
     @KnownBug("call over an empty set goes unknown after an earlier query over an empty set of another type")
