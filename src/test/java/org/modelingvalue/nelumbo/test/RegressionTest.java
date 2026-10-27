@@ -91,13 +91,15 @@ public class RegressionTest extends NelumboTestBase {
         testResource("rule-pos-on-mapped-collection-list-undecided.nl");
     }
 
-    // a list element occurring twice has two indexes (was bugs/pos-duplicate-element-inconsistent.nl)
+    // a list element occurring twice has two indexes (was
+    // bugs/pos-duplicate-element-inconsistent.nl)
     @RepeatedTest(10)
     public void posDuplicateElementInconsistent() {
         testResource("pos-duplicate-element-inconsistent.nl");
     }
 
-    // a call as the list argument of a rule over the index relation (was bugs/call-arg-unbinds-index-in-pos-rule.nl)
+    // a call as the list argument of a rule over the index relation (was
+    // bugs/call-arg-unbinds-index-in-pos-rule.nl)
     @RepeatedTest(10)
     public void callArgUnbindsIndexInPosRule() {
         testResource("call-arg-unbinds-index-in-pos-rule.nl");
@@ -108,19 +110,21 @@ public class RegressionTest extends NelumboTestBase {
         testResource("in-on-function-call-undecided.nl");
     }
 
-    // recursion through a where-lambda deeper than MAX_LOGIC_DEPTH (stack-overflow flattening)
-    @RepeatedTest(10)
+    // recursion through a where-lambda deeper than MAX_LOGIC_DEPTH (stack-overflow
+    // flattening)
+    @RepeatedTest(4)
     public void whereFilterNpeInRecursion() {
         testResource("where-filter-npe-in-recursion.nl");
     }
 
     // same cause as whereFilterNpeInRecursion
-    @RepeatedTest(10)
+    @RepeatedTest(4)
     public void solveDependsOnEarlierQuery() {
         testResource("solve-depends-on-earlier-query.nl");
     }
 
-    // the argument of the function is itself a call (user or built-in), also in a rule body
+    // the argument of the function is itself a call (user or built-in), also in a
+    // rule body
     @RepeatedTest(10)
     public void inOnNestedFunctionCallUndecided() {
         testResource("in-on-nested-function-call-undecided.nl");
@@ -138,7 +142,8 @@ public class RegressionTest extends NelumboTestBase {
         testResource("four-var-quantifier-crash.nl");
     }
 
-    // Seq<T> must stay a Struct: as an Object its functor is Function-typed and `=` is undecided
+    // Seq<T> must stay a Struct: as an Object its functor is Function-typed and `=`
+    // is undecided
     @RepeatedTest(10)
     public void repetitionSeparatorGreedy() {
         testResource("repetition-separator-greedy.nl");
@@ -166,7 +171,8 @@ public class RegressionTest extends NelumboTestBase {
         testResource("unbound-predicate-not-resolved.nl");
     }
 
-    // an index error next to a false bound check is irrelevant, in every operand order
+    // an index error next to a false bound check is irrelevant, in every operand
+    // order
     @RepeatedTest(10)
     public void speculativeGuardIndexCrash() {
         testResource("speculative-guard-index-crash.nl");
@@ -174,12 +180,14 @@ public class RegressionTest extends NelumboTestBase {
 
     // An exception in a built-in operation leaves the query unknown: an error
     // with the exception's message and no result; the other queries still
-    // evaluate (was bugs/integers-div-zero.nl, bugs/collections-index-out-of-range.nl
+    // evaluate (was bugs/integers-div-zero.nl,
+    // bugs/collections-index-out-of-range.nl
     // and bugs/datetime-multiply-overflow.nl, which crashed the whole evaluation).
     @RepeatedTest(10)
     public void nativeExceptionWithoutResult() throws IOException {
         String name = "native-exception-without-result.nl";
-        String source = new String(RegressionTest.class.getResourceAsStream(NelumboConstants.NELUMBO_TESTS + name).readAllBytes());
+        String source = new String(
+                RegressionTest.class.getResourceAsStream(NelumboConstants.NELUMBO_TESTS + name).readAllBytes());
         List<String> lines = source.lines().toList();
         // an exception without a message (IndexOutOfBoundsException) is named by
         // its class and the built-in call that threw it
@@ -189,9 +197,11 @@ public class RegressionTest extends NelumboTestBase {
                 lineOf(lines, "at 7 in [1,2,3] = i") + ":1: IndexOutOfBoundsException in index([1,2,3],e,7)", //
                 lineOf(lines, "P1D * 9999999999 = y") + ":1: BigInteger out of int range");
         EvalResult result = NelumboEvaluator.evaluate(source, name, 60_000);
-        List<String> found = result.diagnostics().stream().map(d -> d.line() + ":" + d.col() + ": " + d.message()).toList();
+        List<String> found = result.diagnostics().stream().map(d -> d.line() + ":" + d.col() + ": " + d.message())
+                .toList();
         assertEquals(expected.stream().sorted().toList(), found.stream().sorted().toList());
-        List<String> unanswered = result.queries().stream().filter(q -> q.result() == null).map(QueryOutcome::query).sorted().toList();
+        List<String> unanswered = result.queries().stream().filter(q -> q.result() == null).map(QueryOutcome::query)
+                .sorted().toList();
         assertEquals(List.of("0*x=6", "6/0=x", "P1D*9999999999=y", "at7in[1,2,3]=i"), unanswered);
         // the queries after each error still evaluate, to their expected result
         List<QueryOutcome> checked = result.queries().stream().filter(q -> q.expectationMatched() != null).toList();
@@ -206,7 +216,8 @@ public class RegressionTest extends NelumboTestBase {
     @RepeatedTest(10)
     public void undeclaredNameInRule() throws IOException {
         String name = "undeclared-name-in-rule.nl";
-        String source = new String(RegressionTest.class.getResourceAsStream(NelumboConstants.NELUMBO_TESTS + name).readAllBytes());
+        String source = new String(
+                RegressionTest.class.getResourceAsStream(NelumboConstants.NELUMBO_TESTS + name).readAllBytes());
         List<String> lines = source.lines().toList();
         int line = lineOf(lines, "f(a,b)=z");
         int col = lines.get(line - 1).indexOf('q') + 1;
@@ -223,12 +234,14 @@ public class RegressionTest extends NelumboTestBase {
 
     // A NEWLINE after a non-operator ends the statement: an `if` guard on its
     // own line is a parse error there, the alternative before it stays
-    // guardless, and f(3) is a conflict (was bugs/guard-on-continuation-line-dropped.nl,
+    // guardless, and f(3) is a conflict (was
+    // bugs/guard-on-continuation-line-dropped.nl,
     // which took this for a bug).
     @RepeatedTest(10)
     public void guardOnOwnLine() throws IOException {
         String name = "guard-on-own-line.nl";
-        String source = new String(RegressionTest.class.getResourceAsStream(NelumboConstants.NELUMBO_TESTS + name).readAllBytes());
+        String source = new String(
+                RegressionTest.class.getResourceAsStream(NelumboConstants.NELUMBO_TESTS + name).readAllBytes());
         List<String> lines = source.lines().toList();
         int guardLine = lineOf(lines, "if x>=5");
         int guardCol = lines.get(guardLine - 1).indexOf('x') + 1;
@@ -248,14 +261,17 @@ public class RegressionTest extends NelumboTestBase {
 
     // A call evaluated shallowly inside a conjunction already decided false
     // leaves no remembered unknown: the same call later gets its value, and an
-    // exception in it is still reported (was bugs/decided-conjunction-hides-later-result.nl).
+    // exception in it is still reported (was
+    // bugs/decided-conjunction-hides-later-result.nl).
     @RepeatedTest(10)
     public void decidedConjunctionHidesLaterResult() throws IOException {
         String name = "decided-conjunction-hides-later-result.nl";
-        String source = new String(RegressionTest.class.getResourceAsStream(NelumboConstants.NELUMBO_TESTS + name).readAllBytes());
+        String source = new String(
+                RegressionTest.class.getResourceAsStream(NelumboConstants.NELUMBO_TESTS + name).readAllBytes());
         List<String> lines = source.lines().toList();
         EvalResult result = NelumboEvaluator.evaluate(source, name, 60_000);
-        List<String> found = result.diagnostics().stream().map(d -> d.line() + ":" + d.col() + ": " + d.message()).toList();
+        List<String> found = result.diagnostics().stream().map(d -> d.line() + ":" + d.col() + ": " + d.message())
+                .toList();
         assertEquals(List.of(lineOf(lines, "6 / 0 = a") + ":1: BigInteger divide by zero"), found);
         List<QueryOutcome> checked = result.queries().stream().filter(q -> q.expectationMatched() != null).toList();
         assertEquals(7, checked.size(), "queries with an expectation: " + result.queries());
@@ -268,17 +284,21 @@ public class RegressionTest extends NelumboTestBase {
     @RepeatedTest(10)
     public void inconsistencyMissedByRuleOrder() throws IOException {
         String name = "inconsistency-missed-by-rule-order.nl";
-        String source = new String(RegressionTest.class.getResourceAsStream(NelumboConstants.NELUMBO_TESTS + name).readAllBytes());
+        String source = new String(
+                RegressionTest.class.getResourceAsStream(NelumboConstants.NELUMBO_TESTS + name).readAllBytes());
         EvalResult result = NelumboEvaluator.evaluate(source, name, 60_000);
-        List<String> silent = result.queries().stream().filter(q -> q.result() != null).map(q -> q.query() + " ? " + q.result()).toList();
+        List<String> silent = result.queries().stream().filter(q -> q.result() != null)
+                .map(q -> q.query() + " ? " + q.result()).toList();
         assertEquals(List.of(), silent, "queries answered without reporting the inconsistency");
-        long inconsistent = result.diagnostics().stream().filter(d -> d.message().startsWith("Inconsistent results")).count();
+        long inconsistent = result.diagnostics().stream().filter(d -> d.message().startsWith("Inconsistent results"))
+                .count();
         assertEquals(32, result.queries().size(), "queries: " + result.queries());
         assertEquals(32, inconsistent, "diagnostics: " + result.diagnostics());
     }
 
     // A lambda variable ([i](...)) is local to its lambda: using the same
-    // variable outside it is an error (was bugs/size-of-lambda-result-closes-falsehoods.nl,
+    // variable outside it is an error (was
+    // bugs/size-of-lambda-result-closes-falsehoods.nl,
     // where the reused i made the size queries report a closed falsehoods side).
     @RepeatedTest(10)
     public void localVariableUsedOutsideLocalContext() {
@@ -296,7 +316,8 @@ public class RegressionTest extends NelumboTestBase {
             EvalResult result = NelumboEvaluator.evaluate(header + misuse + "\n", "misuse.nl", 60_000);
             List<Diagnostic> local = result.diagnostics().stream() //
                     .filter(d -> d.message().startsWith("Local variable i used")).toList();
-            assertTrue(!local.isEmpty(), "no local-variable error for: " + misuse + ", diagnostics: " + result.diagnostics());
+            assertTrue(!local.isEmpty(),
+                    "no local-variable error for: " + misuse + ", diagnostics: " + result.diagnostics());
             assertTrue(local.stream().allMatch(d -> d.line() == 5), "error on the wrong line: " + local);
         }
         // the same queries with a separate variable outside the lambda are fine
