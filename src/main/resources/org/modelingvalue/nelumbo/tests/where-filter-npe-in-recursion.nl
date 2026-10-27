@@ -1,8 +1,7 @@
-// Bug: solving this sudoku with a singles-first solver, whose scan filters with `where`
-// over a user Boolean rule (fits(g,r,c) = {1..9} where [d](ok(g,r,c,d))), crashes deep in
-// the recursion with a NullPointerException in that filter instead of returning the solved
-// grid. The rule order is hash-dependent (REVERSE_NELUMBO=true solves it), hence 4 copies
-// of the solver that differ only in functor names.
+// Regression test (fixed 2026-10-27; was bugs/where-filter-npe-in-recursion.nl).
+// A singles-first sudoku solver whose scan filters with `where` over a user Boolean rule
+// recurses deeper than MAX_LOGIC_DEPTH; it must still return the solved grid in every
+// rule order. 4 copies of the solver that differ only in functor names vary the rule order.
 import nelumbo.collections
 // ---- types ----------------------------------------------------------
 Grid :: Object        // placeholder so we can name the nested list type

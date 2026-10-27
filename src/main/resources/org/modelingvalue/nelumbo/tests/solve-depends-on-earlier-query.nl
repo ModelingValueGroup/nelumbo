@@ -1,7 +1,7 @@
-// Bug: a query's result depends on what was evaluated before. Solving a grid whose only
-// blank is the last cell gives [..][..]; after a query ok(g,8,8,5) or fits(g,8,8)=cs on
-// the same grid it gives the solved grid, and REVERSE_NELUMBO=true solves it too. The rule
-// order is hash-dependent, hence 8 copies of the solver that differ only in functor names.
+// Regression test (fixed 2026-10-27; was bugs/solve-depends-on-earlier-query.nl).
+// Solving a grid whose only blank is the last cell gives the solved grid, without an
+// earlier query on the same grid and in every rule order. 8 copies of the solver that
+// differ only in functor names vary the rule order.
 import nelumbo.collections
 // ---- types ----------------------------------------------------------
 Grid :: Object        // placeholder so we can name the nested list type

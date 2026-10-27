@@ -108,6 +108,18 @@ public class RegressionTest extends NelumboTestBase {
         testResource("in-on-function-call-undecided.nl");
     }
 
+    // recursion through a where-lambda deeper than MAX_LOGIC_DEPTH (stack-overflow flattening)
+    @RepeatedTest(10)
+    public void whereFilterNpeInRecursion() {
+        testResource("where-filter-npe-in-recursion.nl");
+    }
+
+    // same cause as whereFilterNpeInRecursion
+    @RepeatedTest(10)
+    public void solveDependsOnEarlierQuery() {
+        testResource("solve-depends-on-earlier-query.nl");
+    }
+
     // the argument of the function is itself a call (user or built-in), also in a rule body
     @RepeatedTest(10)
     public void inOnNestedFunctionCallUndecided() {

@@ -153,6 +153,12 @@ public final class Lambda extends Node {
 
     private static InferResult resolve(Predicate p, boolean bool) {
         InferContext ctx = CURRENT_CONTEXT.get();
+        InferResult incomplete = ctx.incompleteResult().get();
+        if (incomplete != null && incomplete.hasStackOverflow()) {
+            // Keep the first overflow path: flatten re-runs only that path, so a second
+            // overflow would leave the first path's cycle placeholders in the memoization.
+            return null;
+        }
         InferResult result = p.resolve(ctx);
         if (result.hasStackOverflow()) {
             ctx.incompleteResult().set(result);
