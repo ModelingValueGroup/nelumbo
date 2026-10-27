@@ -51,7 +51,7 @@ public class Collections extends Predicate {
     }
 
     @NelumboMethod
-    protected InferResult indexOf(NList list, Object element, NInteger index) {
+    protected InferResult index(NList list, Object element, NInteger index) {
         if (list == null || !list.complete()) {
             return unknown();
         }
@@ -75,6 +75,78 @@ public class Collections extends Predicate {
             facts = facts.add(set(2, i));
         }
         return InferResult.factsCI(this, facts);
+    }
+
+    @NelumboMethod
+    protected InferResult firstIndex(NList list, Object element, NInteger index) {
+        if (list == null || !list.complete()) {
+            return unknown();
+        }
+        if (element == null && index == null) {
+            return unknown();
+        }
+        List<?> coll = list.collection();
+        if (element != null) {
+            int i = coll.firstIndexOf(element);
+            if (index != null) {
+                int in = index.value().intValue();
+                return i >= 0 && i == in ? factCC() : falsehoodCC();
+            }
+            return i >= 0 ? set(2, NInteger.of(BigInteger.valueOf(i))).factCI() : falsehoodCI();
+        }
+        int in = index.value().intValue();
+        Object e = coll.get(in);
+        int i = coll.firstIndexOf(e);
+        return i == in ? set(1, e).factCI() : falsehoodCI();
+    }
+
+    @NelumboMethod
+    protected InferResult lastIndex(NList list, Object element, NInteger index) {
+        if (list == null || !list.complete()) {
+            return unknown();
+        }
+        if (element == null && index == null) {
+            return unknown();
+        }
+        List<?> coll = list.collection();
+        if (element != null) {
+            int i = coll.lastIndexOf(element);
+            if (index != null) {
+                int in = index.value().intValue();
+                return i >= 0 && i == in ? factCC() : falsehoodCC();
+            }
+            return i >= 0 ? set(2, NInteger.of(BigInteger.valueOf(i))).factCI() : falsehoodCI();
+        }
+        int in = index.value().intValue();
+        Object e = coll.get(in);
+        int i = coll.lastIndexOf(e);
+        return i == in ? set(1, e).factCI() : falsehoodCI();
+    }
+
+    @NelumboMethod
+    protected InferResult first(NList list, Object element) {
+        if (list == null || !list.complete()) {
+            return unknown();
+        }
+        List<?> coll = list.collection();
+        Object e = coll.first();
+        if (element != null) {
+            return element.equals(e) ? factCC() : falsehoodCC();
+        }
+        return e != null ? set(1, e).factCI() : falsehoodCI();
+    }
+
+    @NelumboMethod
+    protected InferResult last(NList list, Object element) {
+        if (list == null || !list.complete()) {
+            return unknown();
+        }
+        List<?> coll = list.collection();
+        Object e = coll.last();
+        if (element != null) {
+            return element.equals(e) ? factCC() : falsehoodCC();
+        }
+        return e != null ? set(1, e).factCI() : falsehoodCI();
     }
 
     @NelumboMethod

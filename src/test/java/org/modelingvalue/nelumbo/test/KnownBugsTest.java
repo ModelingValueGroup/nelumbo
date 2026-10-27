@@ -30,7 +30,7 @@ import org.modelingvalue.nelumbo.tools.NelumboEvaluator.EvalResult;
 // from src/main/resources/org/modelingvalue/nelumbo/bugs/ whose query
 // expectations state the CORRECT behavior. While the bug exists the method is
 // ABORTED (grey); once fixed it FAILS with "KNOWN BUG APPEARS FIXED" - then
-// remove the @KnownBug and promote the method to RegressionTest (twenty
+// remove the @KnownBug and promote the method to RegressionTest (twenty-one
 // promoted so far: two on 2026-09-11, three on 2026-09-24, four on 2026-09-25,
 // one on 2026-10-02, five on 2026-10-06, on 2026-10-18 one merged from
 // three unbound-lookup repros whose remaining expectations were wrong: a
@@ -44,7 +44,9 @@ import org.modelingvalue.nelumbo.tools.NelumboEvaluator.EvalResult;
 // name is not a variable, so the rule is not well-formed and the query unknown,
 // and guard-on-continuation-line-dropped, which is no bug: a NEWLINE after a
 // non-operator ends the statement, so a guard on its own line is a parse error
-// and the guardless alternative gives a conflict).
+// and the guardless alternative gives a conflict; and on 2026-10-27
+// decided-conjunction-hides-later-result: a shallow unknown is no longer
+// remembered).
 //
 // The CLI twin is ./run-all-tests-with-CLI (repo root): the SAME bug can
 // manifest differently on the CLI vs this test JVM (proven 2026-09-13: the
@@ -52,7 +54,7 @@ import org.modelingvalue.nelumbo.tools.NelumboEvaluator.EvalResult;
 // unreduced-term expectation mismatch here), so both harnesses stay.
 //
 // Dedup review 2026-09-13 (criterion: truly identical construct): no merges.
-// collections-index-out-of-range (bare native pos crash) != speculative-guard
+// collections-index-out-of-range (bare native index crash) != speculative-guard
 // (guard evaluation semantics); datetime multiply-overflow != year-360 (the
 // two crash repros were promoted on 2026-10-26); rational sign != zero-factor; the three reduction repros (bba88fc8 family)
 // were all fixed and promoted to RegressionTest on 2026-09-24, and the whole
@@ -133,12 +135,6 @@ public class KnownBugsTest extends NelumboTestBase {
     @Test
     public void whereFilterNpeInRecursion() {
         bugResource("where-filter-npe-in-recursion.nl");
-    }
-
-    @KnownBug("shallow unknown of a call in a conjunction decided false is remembered: the same call later is unknown")
-    @Test
-    public void decidedConjunctionHidesLaterResult() {
-        bugResource("decided-conjunction-hides-later-result.nl");
     }
 
     @KnownBug("call over an empty set goes unknown after an earlier query over an empty set of another type")
@@ -223,7 +219,7 @@ public class KnownBugsTest extends NelumboTestBase {
 
     // the correct behavior is an error per query, which bugResource (pass = no
     // error) cannot express: every query must have an error and no result
-    @KnownBug("pos index outside the int range wraps to its low 32 bits instead of an index error")
+    @KnownBug("list index outside the int range wraps to its low 32 bits instead of an index error")
     @Test
     public void collectionsIndexWrapsPastIntRange() throws IOException {
         String       name    = "collections-index-wraps-past-int-range.nl";
@@ -245,18 +241,6 @@ public class KnownBugsTest extends NelumboTestBase {
     @Test
     public void setBuilderEmptyResultMissing() {
         bugResource("set-builder-empty-result-missing.nl");
-    }
-
-    @KnownBug("pos/in on a list with a duplicated element: inconsistent result (pos is a function)")
-    @Test
-    public void posDuplicateElementInconsistent() {
-        bugResource("pos-duplicate-element-inconsistent.nl");
-    }
-
-    @KnownBug("call as list argument leaves the bound index unbound in a pos rule: inconsistent result")
-    @Test
-    public void callArgUnbindsIndexInPosRule() {
-        bugResource("call-arg-unbinds-index-in-pos-rule.nl");
     }
 
     @KnownBug("empty collection literal ({} or []) rejected as the argument of a typed hole")

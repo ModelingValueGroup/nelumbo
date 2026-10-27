@@ -21,7 +21,7 @@ List<List<Set<Integer>>> ::= rowsBefore(<List<List<Set<Integer>>>>,<Integer>),
                              rowsFrom(<List<List<Set<Integer>>>>,<Integer>),
                              put(<List<List<Set<Integer>>>>,<Integer>,<Integer>,<Set<Integer>>)
 
-crow(g,r)=rw        <=> rw pos g = r if r>=0 & r<4
+crow(g,r)=rw        <=> at r in g = rw if r>=0 & r<4
 putRow(rw,c,ns)=rw2 <=> rw2=[ns]
 rowsBefore(g,r)=s   <=> s=[] if r=0, E[rw,pre](crow(g,r-1)=rw & rowsBefore(g,r-1)=pre & s=pre+[rw]) if r>0
 rowsFrom(g,r)=s     <=> s=[] if r=4, E[rw,suf](crow(g,r)=rw & rowsFrom(g,r+1)=suf & s=[rw]+suf)     if r<4

@@ -42,7 +42,7 @@ public abstract class Quantifier extends CompoundPredicate {
     }
 
     @Override
-    protected InferResult infer(int nrOfUnbound, InferContext context) {
+    public InferResult infer(int nrOfUnbound, InferContext context) {
         return context.shallow() ? unknown() : resolve(context.toDeep());
     }
 

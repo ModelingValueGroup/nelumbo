@@ -27,9 +27,9 @@ Set<Integer>        cs
 Integer             r, c, d, x, y, i, j, n
 
 // ---- access (bounds-guarded: the engine probes rule guards speculatively,
-// ---- an unguarded out-of-range pos crashes instead of failing) -------
-at(l,i)=x        <=>  x pos l = i   if i>=0 & i<9
-row(g,r)=rw      <=>  rw pos g = r  if r>=0 & r<9
+// ---- an unguarded out-of-range index is an error, not false) ---------
+at(l,i)=x        <=>  at i in l = x   if i>=0 & i<9
+row(g,r)=rw      <=>  at r in g = rw  if r>=0 & r<9
 cell(g,r,c)=x    <=>  x = at(row(g,r),c)
 
 // ---- update (functional) -------------------------------------------

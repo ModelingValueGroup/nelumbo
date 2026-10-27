@@ -23,8 +23,8 @@ List<List<Integer>> g
 List<Integer>       l, rw
 Integer             r, c, d, x, y, i, j, a, b
 
-at(l,i)=x     <=>  x pos l = i
-row(g,r)=rw   <=>  rw pos g = r
+at(l,i)=x     <=>  at i in l = x
+row(g,r)=rw   <=>  at r in g = rw
 cell(g,r,c)=x <=>  x = at(row(g,r),c)
 chk(g,r,c,d)  <=>  !E[x,y,i,j](x in {0} & y in {0} & i in {0,1,2} & j in {0,1,2} & cell(g,x+i,y+j)=d)
 chk6(g,d)     <=>  !E[x,y,i,j,a,b](x in {0} & y in {0} & i in {0,1} & j in {0,1} & a in {0,1} & b in {0,1} & cell(g,x+i+a,y+j+b)=d)

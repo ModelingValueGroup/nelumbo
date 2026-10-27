@@ -104,7 +104,7 @@ public interface InferResult {
                 .addAll(Node.diff(completeFacts(), other.completeFacts()))
                 .addAll(Node.diff(falsehoods(), other.falsehoods()))
                 .addAll(Node.diff(completeFalsehoods(), other.completeFalsehoods()))
-                .addAll(Node.diff(cycles(), other.cycles()));
+                .addAll(Node.diff(cycles(), other.cycles())).addAll(Node.diff(exceptions(), other.exceptions()));
     }
 
     InferResult setTypeArgs(Map<Variable, Type> typeArgs);
@@ -702,8 +702,13 @@ public interface InferResult {
                         cycleString = cycles().toString().substring(3);
                         cycleString = "{" + cycleString.substring(1, cycleString.length() - 1) + "}";
                     }
+                    String exceptionString = "";
+                    if (!exceptions().isEmpty()) {
+                        exceptionString = exceptions().toString().substring(3);
+                        exceptionString = "{" + exceptionString.substring(1, exceptionString.length() - 1) + "}";
+                    }
                     return toString(trueBindings(), completeFacts()) + toString(falseBindings(), completeFalsehoods())
-                            + cycleString;
+                            + cycleString + exceptionString;
                 }
             });
         }

@@ -19,7 +19,7 @@ Set<Integer>       ds, cs
 List<Set<Integer>> sl, crw
 Integer            n, j
 
-sat(crw,j)=cs <=>  cs pos crw = j
+sat(crw,j)=cs <=>  at j in crw = cs
 mt(j)=ds      <=>  ds={}  if j=0,  ds={1} if j!=0
 mtAll(n)=sl   <=>  sl = [0,1,2] map [j](mt(j))
 

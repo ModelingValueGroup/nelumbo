@@ -32,8 +32,8 @@ Set<Integer>        cs
 Integer             r, c, d, x, y, i, j
 
 // ---- access ---------------------------------------------------------
-at(l,i)=x        <=>  x pos l = i
-row(g,r)=rw      <=>  rw pos g = r
+at(l,i)=x        <=>  at i in l = x
+row(g,r)=rw      <=>  at r in g = rw
 cell(g,r,c)=x    <=>  x = at(row(g,r),c)
 
 // ---- minimal: the bound check before (first) or after (last) the read --

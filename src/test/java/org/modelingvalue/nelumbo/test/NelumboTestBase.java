@@ -97,4 +97,15 @@ public class NelumboTestBase {
         });
     }
 
+    // 1-based number of the line that starts with the given text (after its
+    // indentation, followed by a space or the line end)
+    protected static int lineOf(java.util.List<String> lines, String query) {
+        for (int i = 0; i < lines.size(); i++) {
+            if ((lines.get(i).strip() + " ").startsWith(query + " ")) {
+                return i + 1;
+            }
+        }
+        throw new IllegalArgumentException("no line starts with: " + query);
+    }
+
 }

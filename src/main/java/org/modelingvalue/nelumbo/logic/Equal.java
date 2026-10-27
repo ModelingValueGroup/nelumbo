@@ -48,7 +48,7 @@ public class Equal extends Predicate {
     }
 
     @Override
-    protected InferResult infer(int nrOfUnbound, InferContext context) {
+    public InferResult infer(int nrOfUnbound, InferContext context) {
         boolean[] complete = new boolean[] { true };
         Node eq = eq(left(), right(), complete);
         if (eq == null) {

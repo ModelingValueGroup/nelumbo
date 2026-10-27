@@ -40,6 +40,7 @@ import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.collections.NList;
 import org.modelingvalue.nelumbo.logic.And;
 import org.modelingvalue.nelumbo.logic.ExistentialQuantifier;
+import org.modelingvalue.nelumbo.logic.InferContext;
 import org.modelingvalue.nelumbo.logic.NIs;
 import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.logic.Rule;
@@ -70,13 +71,23 @@ public class Functor extends Node implements FunctorOrType {
                 leftPrecedence,
                 clazz != null ? NelumboMethod.Finder.find(clazz, pattern.name(), KnowledgeBase.current(), List.of())
                         : null,
-                hasLiteral);
+                hasLiteral, clazz != null && Predicate.class.isAssignableFrom(clazz) && overridesInfer(clazz));
+    }
+
+    private static boolean overridesInfer(Class<?> clazz) {
+        try {
+            return clazz.getMethod("infer", int.class, InferContext.class).getDeclaringClass().equals(clazz);
+        } catch (NoSuchMethodException | SecurityException e) {
+            throw new IllegalArgumentException(e);
+        }
     }
 
     private static Functor of(List<AstElement> elements, Pattern pattern, Type result, Type local,
-            Constructor<?> constructor, Integer leftPrecedence, Method method, boolean hasLiteral) {
+            Constructor<?> constructor, Integer leftPrecedence, Method method, boolean hasLiteral,
+            boolean overridesInfer) {
         pattern = pattern.setPresedence(leftPrecedence != null ? leftPrecedence : Integer.MIN_VALUE);
-        return new Functor(elements, pattern, result, local, constructor, leftPrecedence, method, hasLiteral);
+        return new Functor(elements, pattern, result, local, constructor, leftPrecedence, method, hasLiteral,
+                overridesInfer);
     }
 
     private String        name;
@@ -155,6 +166,13 @@ public class Functor extends Node implements FunctorOrType {
 
     public boolean hasLiteral() {
         return (Boolean) get(6);
+    }
+
+    public boolean overridesInfer() {
+        if (hasLiteral()) {
+            return false;
+        }
+        return (Boolean) get(7);
     }
 
     @Override
@@ -471,7 +489,7 @@ public class Functor extends Node implements FunctorOrType {
             Type type = (Type) get(1);
             Type litType = type.isStruct() ? type.toLiteral() : type;
             Functor f = Functor.of(astElements(), litPattern, litType, local(), (Constructor<?>) get(3),
-                    leftPrecedence(), (Method) get(5), false).incrementVariables("$");
+                    leftPrecedence(), (Method) get(5), false, (boolean) get(7)).incrementVariables("$");
             Functor original = original();
             if (original == this) {
                 f = f.resetOriginal();

@@ -1,10 +1,9 @@
 // Norvig candidate-set CSP sudoku solver (4x4), options as a Digit enum.
 // CLI-only. Run with: java -jar nelumbo-cli-*.jar <this file>
 //
-// STATUS (2026-10-19): Tasks 1-8, 10-12 done (10-12 probed without parse). A Norvig
+// STATUS (2026-10-27): Tasks 1-12 done. A Norvig
 // `return False` is an explicit `false` branch: a branch whose guard fails is silent
 // (unknown), not false. `/` is exact division: floor division via bro/bco/fr/fc.
-// Task 9 (parse) BLOCKED on bugs/call-arg-unbinds-index-in-pos-rule.nl; probes commented out.
 // Task 17 (grid DSL) BLOCKED on bugs/single-hole-functor-parser-npe.nl: `Cell ::= ".", <Integer>`
 // crashes the parser; its section at the end is commented out.
 // History of fixed blocks and the plan: docs/superpowers/plans/2026-09-11-sudoku-csp.md.
@@ -81,12 +80,12 @@ List<List<Set<Digit>>> g, g2, g3, s, pre, suf
 dig(i)     == D1 if i=1, D2 if i=2, D3 if i=3, D4 if i=4
 undig(d)   == 1 if d=D1, 2 if d=D2, 3 if d=D3, 4 if d=D4
 
-iat(il,i)=k    <=> k pos il = i  if i>=0 & i<4
-irow(p,r)=il   <=> il pos p = r  if r>=0 & r<4
+iat(il,i)=k    <=> at i in il = k  if i>=0 & i<4
+irow(p,r)=il   <=> at r in p = il  if r>=0 & r<4
 icell(p,r,c)   == iat(irow(p,r),c)
 
-catRow(rw,c)=sc <=> sc pos rw = c if c>=0 & c<4
-crow(g,r)=rw    <=> rw pos g = r  if r>=0 & r<4
+catRow(rw,c)=sc <=> at c in rw = sc if c>=0 & c<4
+crow(g,r)=rw    <=> at r in g = rw  if r>=0 & r<4
 cell(g,r,c)     == catRow(crow(g,r),c)
 
 fullGrid(p)   == [[{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4}],
@@ -232,11 +231,10 @@ boxFree(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,D1,0) ? [({0,1,2
 cell(elim([[{D1,D2,D3},{D2,D3},{D2,D3,D4},{D1,D4}],[{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4}],[{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4}],[{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4}]],0,0,D1),0,3) ? [({D1})][..]
 cell(elim([[{D1,D2,D3},{D2,D3},{D2,D3,D4},{D1,D4}],[{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4}],[{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4}],[{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4}]],0,0,D1),0,2) ? [({D4})][..]
 // Task 9: parse; propagation alone solves P0 (solution [[1,2,4,3],[3,4,1,2],[4,3,2,1],[2,1,3,4]])
-// BLOCKED on bugs/call-arg-unbinds-index-in-pos-rule.nl: icell(p,r,c)=0 -> "Inconsistent result"
-//cell(parse([[1,0,0,0],[0,0,1,0],[0,3,0,0],[0,0,0,4]]),0,0) ? [({D1})][..]
-//cell(parse([[1,0,0,0],[0,0,1,0],[0,3,0,0],[0,0,0,4]]),0,1) ? [({D2})][..]
-//cell(parse([[1,0,0,0],[0,0,1,0],[0,3,0,0],[0,0,0,4]]),3,0) ? [({D2})][..]
-// Task 10: solved + MRV; parse is blocked, so on literal grids: Q2=[[0,0,3,4],[3,4,1,2],[0,0,4,3],[4,3,2,1]]
+cell(parse([[1,0,0,0],[0,0,1,0],[0,3,0,0],[0,0,0,4]]),0,0) ? [({D1})][..]
+cell(parse([[1,0,0,0],[0,0,1,0],[0,3,0,0],[0,0,0,4]]),0,1) ? [({D2})][..]
+cell(parse([[1,0,0,0],[0,0,1,0],[0,3,0,0],[0,0,0,4]]),3,0) ? [({D2})][..]
+// Task 10: solved + MRV, on literal grids: Q2=[[0,0,3,4],[3,4,1,2],[0,0,4,3],[4,3,2,1]]
 // after propagation (4 blanks {D1,D2}, 2 solutions), and a solved grid
 solved([[{D1,D2},{D1,D2},{D3},{D4}],[{D3},{D4},{D1},{D2}],[{D1,D2},{D1,D2},{D4},{D3}],[{D4},{D3},{D2},{D1}]]) ? [][()]
 solved([[{D1},{D2},{D3},{D4}],[{D3},{D4},{D1},{D2}],[{D2},{D1},{D4},{D3}],[{D4},{D3},{D2},{D1}]]) ? [()][]
@@ -248,16 +246,16 @@ solved(search([[{D1},{D2},{D3},{D4}],[{D3},{D4},{D1},{D2}],[{D2},{D1},{D4},{D3}]
 search([[{D1,D2},{D1,D2},{D3},{D4}],[{D3},{D4},{D1},{D2}],[{D1,D2},{D1,D2},{D4},{D3}],[{D4},{D3},{D2},{D1}]]) ? [([[{D1},{D2},{D3},{D4}],[{D3},{D4},{D1},{D2}],[{D2},{D1},{D4},{D3}],[{D4},{D3},{D2},{D1}]])][..]
 // backtracking: D1 at (0,0) empties (2,0), so D2 wins
 search([[{D1,D2},{D1,D2},{D3},{D4}],[{D3},{D4},{D1},{D2}],[{D1},{D1,D2},{D4},{D3}],[{D4},{D3},{D2},{D1}]]) ? [([[{D2},{D1},{D3},{D4}],[{D3},{D4},{D1},{D2}],[{D1},{D2},{D4},{D3}],[{D4},{D3},{D2},{D1}]])][..]
-// Task 12: unparse on a literal solved grid; the solve oracle needs parse (Task 9 BLOCKED)
+// Task 12: unparse on a literal solved grid, then the solve oracle
 toNums([[{D1},{D2},{D3},{D4}],[{D3},{D4},{D1},{D2}],[{D2},{D1},{D4},{D3}],[{D4},{D3},{D2},{D1}]]) ? [([[1,2,3,4],[3,4,1,2],[2,1,4,3],[4,3,2,1]])][..]
 // end to end without parse: the givens assigned by hand (P0: propagation alone; Q2: DFS)
 toNums(search(assign(assign(assign(assign(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,D1),1,2,D1),2,1,D3),3,3,D4))) ? [([[1,2,4,3],[3,4,1,2],[4,3,2,1],[2,1,3,4]])][..]
 toNums(search(assign(assign(assign(assign(assign(assign(assign(assign(assign(assign(assign(assign(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,2,D3),0,3,D4),1,0,D3),1,1,D4),1,2,D1),1,3,D2),2,2,D4),2,3,D3),3,0,D4),3,1,D3),3,2,D2),3,3,D1))) ? [([[1,2,3,4],[3,4,1,2],[2,1,4,3],[4,3,2,1]])][..]
-//solve([[1,0,0,0],[0,0,1,0],[0,3,0,0],[0,0,0,4]]) ? [([[1,2,4,3],[3,4,1,2],[4,3,2,1],[2,1,3,4]])][..]
-//solve([[0,2,3,4],[3,4,1,0],[2,0,4,3],[4,3,0,1]]) ? [([[1,2,3,4],[3,4,1,2],[2,1,4,3],[4,3,2,1]])][..]
-//solve([[0,0,0,0],[0,4,1,2],[2,1,0,3],[4,3,2,0]]) ? [([[1,2,3,4],[3,4,1,2],[2,1,4,3],[4,3,2,1]])][..]
+solve([[1,0,0,0],[0,0,1,0],[0,3,0,0],[0,0,0,4]]) ? [([[1,2,4,3],[3,4,1,2],[4,3,2,1],[2,1,3,4]])][..]
+solve([[0,2,3,4],[3,4,1,0],[2,0,4,3],[4,3,0,1]]) ? [([[1,2,3,4],[3,4,1,2],[2,1,4,3],[4,3,2,1]])][..]
+solve([[0,0,0,0],[0,4,1,2],[2,1,0,3],[4,3,2,0]]) ? [([[1,2,3,4],[3,4,1,2],[2,1,4,3],[4,3,2,1]])][..]
 // Q2 has two solutions; search keeps the first (D1 at (0,0))
-//solve([[0,0,3,4],[3,4,1,2],[0,0,4,3],[4,3,2,1]]) ? [([[1,2,3,4],[3,4,1,2],[2,1,4,3],[4,3,2,1]])][..]
+solve([[0,0,3,4],[3,4,1,2],[0,0,4,3],[4,3,2,1]]) ? [([[1,2,3,4],[3,4,1,2],[2,1,4,3],[4,3,2,1]])][..]
 
 // ---- Grid DSL (plan Task 17): row notation -> List<Integer>, `.` = blank = 0 ----
 // BLOCKED on bugs/single-hole-functor-parser-npe.nl: the cell's lone-hole

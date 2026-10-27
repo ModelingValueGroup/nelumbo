@@ -132,7 +132,11 @@ Every operation is a relation, so it works in both directions where that is mean
 ```nelumbo
 private Boolean ::= build(<Lambda1<E,Boolean>>, <Set<E>>)                    @nelumbo.collections.BuildSet,
                     size(<Collection<E>>, <Integer>)                         @nelumbo.collections.Collections,
-                    indexOf(<List<E>>, <E>, <Integer>)                       @nelumbo.collections.Collections,
+                    index(<List<E>>, <E>, <Integer>)                         @nelumbo.collections.Collections,
+                    firstIndex(<List<E>>, <E>, <Integer>)                    @nelumbo.collections.Collections,
+                    lastIndex(<List<E>>, <E>, <Integer>)                     @nelumbo.collections.Collections,
+                    first(<List<E>>, <E>)                                    @nelumbo.collections.Collections,
+                    last(<List<E>>, <E>)                                     @nelumbo.collections.Collections,
                     elementOf(<Set<E>>, <E>)                                 @nelumbo.collections.Collections,
                     subset(<Set<E>>, <Set<E>>)                               @nelumbo.collections.Collections,
                     intersection(<Set<E>>, <Set<E>>, <Set<E>>)               @nelumbo.collections.Collections,
@@ -152,7 +156,11 @@ private Boolean ::= build(<Lambda1<E,Boolean>>, <Set<E>>)                    @ne
 | subset / superset                 | `<Set<E>> < <=  > >= <Set<E>>`                       | 30   | `Boolean`   |
 | intersection / union / difference | `<Set<E>> && \|\| - <Set<E>>`                        | 60 / 60 / 50 | `Set<E>` |
 | concatenation                     | `<List<E>> + <List<E>>`                              | 50   | `List<E>`   |
-| index                             | `<E> pos <List<E>>`                                  | 40   | `Integer`   |
+| element at an index               | `at <Integer> in <List<E>>`                          | 40   | `E`         |
+| first / last element              | `first in <List<E>>` / `last in <List<E>>`           | 40   | `E`         |
+| first / last index of an element  | `<E> first index <List<E>>` / `<E> last index <List<E>>` | 40 | `Integer` |
+| index of an element (= first)     | `<E> index <List<E>>`                                | 40   | `Integer`   |
+| all indexes of an element         | `<E> indexes <List<E>>`                              | 40   | `Set<Integer>` |
 | filter                            | `<Set<E>> where <Lambda1<E,Boolean>>` / the `List` form | 37 | `Set<E>` / `List<E>` |
 | map                               | `<Collection<F>> map <Lambda1<F,E>>`                 | 37   | `List<E>`   |
 | sort                              | `<Collection<E>> sort <Lambda2<E,E,Boolean>>`        | 37   | `List<E>`   |
@@ -201,7 +209,7 @@ Boolean ::= <E> "in" <Collection<E>> #30
 i in {1,2,3}    ?   [(i=1),(i=2),(i=3)][..]      ▸ enumerates members
 ```
 
-For a list, `in` is defined through the index relation (`e in l <=> E[i](e pos l = i)`); for a set it uses the native `elementOf`.
+For a list, `in` is defined through the first index (`e in l <=> E[i](firstIndex(l, e, i))`); for a set it uses the native `elementOf`.
 
 ### Subset / superset — `<` `>` `<=` `>=`
 
@@ -250,22 +258,43 @@ List<E> ::= <List<E>> + <List<E>> #50
 
 Both operands must be known; `concat` does not split a known result.
 
-### List index — `e pos l`
+### List index — `at`, `first`, `last`, `index`, `indexes`
 
 ```nelumbo
-Integer ::= <E> "pos" <List<E>> #40
+E            ::= "first" "in" <List<E>>        #40,
+                 "last" "in" <List<E>>         #40,
+                 "at" <Integer> "in" <List<E>> #40
+Integer      ::= <E> "first" "index" <List<E>> #40,
+                 <E> "last" "index" <List<E>>  #40,
+                 <E> "index" <List<E>>         #40
+Set<Integer> ::= <E> "indexes" <List<E>>       #40
 ```
 
-`e pos l = i` relates an element `e` to its **0-based** index `i` in list `l`. It runs either way — find the index of an element, or find the element at an index — and a duplicated element yields one solution per occurrence:
+Indexes are **0-based**. `at i in l = e` relates the index `i` to the element `e` at that index. It runs either way, find the element at an index or the index of an element, and a duplicated element yields one solution per occurrence:
 
 ```nelumbo
-2 pos [1,2,3] = i   ?   [(i=1)][..]          ▸ 2 sits at index 1
-i pos [1,2,3] = 2   ?   [(i=3)][..]          ▸ index 2 holds the element 3
-2 pos [1,2,2] = i   ?   [(i=1),(i=2)][..]    ▸ one solution per occurrence
-5 pos [1,2,3] = i   ?   [][..]               ▸ not present
+at 1 in [5,6,7] = e   ?   [(e=6)][..]          ▸ index 1 holds 6
+at i in [5,6,7] = 6   ?   [(i=1)][..]          ▸ 6 sits at index 1
+at i in [5,6,5] = 5   ?   [(i=0),(i=2)][..]    ▸ one solution per occurrence
+at i in [5,6,7] = 9   ?   [][..]               ▸ not present
 ```
 
-An index outside the list (`i pos [1,2,3] = 7`) leaves the query unknown: it has no result and reports the index error.
+The other forms are functions, with one result each:
+
+```nelumbo
+first in [1,2,3]          ?   [(1)][..]
+last in [1,2,3]           ?   [(3)][..]
+2 first index [1,2,3,2]   ?   [(1)][..]
+2 last index [1,2,3,2]    ?   [(3)][..]
+2 index [1,2,3,2]         ?   [(1)][..]        ▸ the first index
+2 indexes [1,2,3,2]       ?   [({1,3})][..]    ▸ every index, as a set
+4 first index [1,2,3,2]   ?   [][..]           ▸ not present
+first in []               ?   [][..]           ▸ an empty list has no first element
+```
+
+`first index` and `last index` also run backwards: `i first index [1,2,3,2] = 1` gives `i=2`.
+
+An index outside the list (`at 7 in [1,2,3]`) is an error, not false: the query has no result and reports an `IndexOutOfBoundsException`. Three-valued logic absorbs the error only next to an operand that already decides: `at 7 in [1,2,3] = 1 | 1 in [1]` is true and `at 7 in [1,2,3] = 1 & 4 in [1]` is false.
 
 ### Filter — `where`
 
@@ -337,7 +366,7 @@ i in {1,2,3}                           ?   [(i=1),(i=2),(i=3)][..]
 
 {3,4,5} && {1,2,3} = s                 ?   [(s={3})][..]
 [1,2,3] + [4,5] = l                    ?   [(l=[1,2,3,4,5])][..]
-2 pos [1,2,3] = i                      ?   [(i=1)][..]
+at i in [1,2,3] = 2                    ?   [(i=1)][..]
 
 {1,2} where [i](i>1) = s               ?   [(s={2})][..]
 [1,2,2,3] map [i](i+1) = l             ?   [(l=[2,3,3,4])][..]
@@ -350,7 +379,7 @@ Collection values print back in their literal form on the facts side. The CSP-st
 
 ## Status
 
-`collections` provides type declarations, literal constructors (closed and open), set-builder comprehension, the algebraic operations (cardinality, membership, subset/superset, set intersection/union/difference, list concatenation, list indexing) and the lambda-based higher-order operations `where`, `map` and `sort`. Still absent are folds/reductions (`fold`, `sum`), element access by index in expression position (use `e pos l = i`), `head`/`tail`, and union/intersection for lists. The native classes are `NSet` and `NList` (literals), `BuildSet` (the comprehension form) and `Collections` (every other operation); the lambda value itself is `nelumbo.logic.Lambda`.
+`collections` provides type declarations, literal constructors (closed and open), set-builder comprehension, the algebraic operations (cardinality, membership, subset/superset, set intersection/union/difference, list concatenation, list indexing) and the lambda-based higher-order operations `where`, `map` and `sort`. Still absent are folds/reductions (`fold`, `sum`), `tail`, and union/intersection for lists. The native classes are `NSet` and `NList` (literals), `BuildSet` (the comprehension form) and `Collections` (every other operation); the lambda value itself is `nelumbo.logic.Lambda`.
 
 ---
 
@@ -367,10 +396,10 @@ Added to what `nelumbo.integers` and `nelumbo.logic` already export:
 | Membership    | `e in c`                                                                     |
 | Set relations | `<` `>` `<=` `>=` — subset / superset                                        |
 | Set algebra   | `&&` intersection, `\|\|` union, `-` difference                              |
-| List ops      | `+` concatenation, `e pos l` — 0-based index                                 |
+| List ops      | `+` concatenation; 0-based index: `at i in l`, `first in l`, `last in l`, `e first index l`, `e last index l`, `e index l`, `e indexes l` |
 | Higher-order  | `c where [x](p)`, `c map [x](e)`, `c sort [a,b](p)`                          |
 
-(The native predicates `build`, `size`, `indexOf`, `elementOf`, `subset`, `intersection`, `union`, `diff`, `concat`, `setFilter`, `listFilter`, `map` and `sort` are all `private`; the operator syntax above is their public surface.)
+(The native predicates `build`, `size`, `index`, `firstIndex`, `lastIndex`, `first`, `last`, `elementOf`, `subset`, `intersection`, `union`, `diff`, `concat`, `setFilter`, `listFilter`, `map` and `sort` are all `private`; the operator syntax above is their public surface.)
 
 (The `Type E, F` declaration introduces the parameter bindings inside `collections.nl`; the *mechanism* of generic-type parameters is supplied by `nelumbo.lang` and is available to importers regardless of `collections`.)
 

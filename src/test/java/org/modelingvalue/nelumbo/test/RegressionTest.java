@@ -91,6 +91,18 @@ public class RegressionTest extends NelumboTestBase {
         testResource("rule-pos-on-mapped-collection-list-undecided.nl");
     }
 
+    // a list element occurring twice has two indexes (was bugs/pos-duplicate-element-inconsistent.nl)
+    @RepeatedTest(10)
+    public void posDuplicateElementInconsistent() {
+        testResource("pos-duplicate-element-inconsistent.nl");
+    }
+
+    // a call as the list argument of a rule over the index relation (was bugs/call-arg-unbinds-index-in-pos-rule.nl)
+    @RepeatedTest(10)
+    public void callArgUnbindsIndexInPosRule() {
+        testResource("call-arg-unbinds-index-in-pos-rule.nl");
+    }
+
     @RepeatedTest(10)
     public void inOnFunctionCallUndecided() {
         testResource("in-on-function-call-undecided.nl");
@@ -162,13 +174,13 @@ public class RegressionTest extends NelumboTestBase {
         List<String> expected = List.of( //
                 lineOf(lines, "6 / 0 = x") + ":1: BigInteger divide by zero", //
                 lineOf(lines, "0 * x = 6") + ":1: BigInteger divide by zero", //
-                lineOf(lines, "i pos [1,2,3] = 7") + ":1: IndexOutOfBoundsException in indexOf([1,2,3],e,7)", //
+                lineOf(lines, "at 7 in [1,2,3] = i") + ":1: IndexOutOfBoundsException in index([1,2,3],e,7)", //
                 lineOf(lines, "P1D * 9999999999 = y") + ":1: BigInteger out of int range");
         EvalResult result = NelumboEvaluator.evaluate(source, name, 60_000);
         List<String> found = result.diagnostics().stream().map(d -> d.line() + ":" + d.col() + ": " + d.message()).toList();
         assertEquals(expected.stream().sorted().toList(), found.stream().sorted().toList());
         List<String> unanswered = result.queries().stream().filter(q -> q.result() == null).map(QueryOutcome::query).sorted().toList();
-        assertEquals(List.of("0*x=6", "6/0=x", "P1D*9999999999=y", "ipos[1,2,3]=7"), unanswered);
+        assertEquals(List.of("0*x=6", "6/0=x", "P1D*9999999999=y", "at7in[1,2,3]=i"), unanswered);
         // the queries after each error still evaluate, to their expected result
         List<QueryOutcome> checked = result.queries().stream().filter(q -> q.expectationMatched() != null).toList();
         assertEquals(4, checked.size(), "queries with an expectation: " + result.queries());
@@ -222,15 +234,20 @@ public class RegressionTest extends NelumboTestBase {
         assertEquals(Boolean.TRUE, checked.get(0).expectationMatched(), "f(7): " + checked.get(0));
     }
 
-    // 1-based number of the line that starts with the given text (after its
-    // indentation, followed by a space or the line end)
-    private static int lineOf(List<String> lines, String query) {
-        for (int i = 0; i < lines.size(); i++) {
-            if ((lines.get(i).strip() + " ").startsWith(query + " ")) {
-                return i + 1;
-            }
-        }
-        throw new IllegalArgumentException("no line starts with: " + query);
+    // A call evaluated shallowly inside a conjunction already decided false
+    // leaves no remembered unknown: the same call later gets its value, and an
+    // exception in it is still reported (was bugs/decided-conjunction-hides-later-result.nl).
+    @RepeatedTest(10)
+    public void decidedConjunctionHidesLaterResult() throws IOException {
+        String name = "decided-conjunction-hides-later-result.nl";
+        String source = new String(RegressionTest.class.getResourceAsStream(NelumboConstants.NELUMBO_TESTS + name).readAllBytes());
+        List<String> lines = source.lines().toList();
+        EvalResult result = NelumboEvaluator.evaluate(source, name, 60_000);
+        List<String> found = result.diagnostics().stream().map(d -> d.line() + ":" + d.col() + ": " + d.message()).toList();
+        assertEquals(List.of(lineOf(lines, "6 / 0 = a") + ":1: BigInteger divide by zero"), found);
+        List<QueryOutcome> checked = result.queries().stream().filter(q -> q.expectationMatched() != null).toList();
+        assertEquals(7, checked.size(), "queries with an expectation: " + result.queries());
+        assertTrue(checked.stream().allMatch(QueryOutcome::expectationMatched), "mismatch: " + checked);
     }
 
     // A lambda variable ([i](...)) is local to its lambda: using the same

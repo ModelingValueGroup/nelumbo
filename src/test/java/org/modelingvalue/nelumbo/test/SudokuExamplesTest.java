@@ -42,9 +42,9 @@ public class SudokuExamplesTest extends NelumboTestBase {
     }
 
     // Solves (~2.5s, 10/10 locally) but crashed in CI (2026-09-24, run 35982650165)
-    // with IndexOutOfBoundsException in a native pos via Predicate.callMethod - the
+    // with IndexOutOfBoundsException in the native list index via Predicate.callMethod - the
     // speculative-guard-index-crash.nl bug (KnownBugsTest), timing-dependent.
-    @Disabled("flaky: speculative guard evaluation crashes an out-of-range pos (see speculative-guard-index-crash.nl); green locally, red in CI")
+    @Disabled("flaky: speculative guard evaluation crashes an out-of-range list index (see speculative-guard-index-crash.nl); green locally, red in CI")
     @Test
     public void sudoku4x4() {
         exampleResource("sudoku-4x4.nl");
@@ -56,9 +56,9 @@ public class SudokuExamplesTest extends NelumboTestBase {
     // promoted to RegressionTest; re-measured the same day at f52a88cf: 5/5 green
     // on the CLI with -DPARALLEL_COLLECTIONS=false and green here (2.4s) - but
     // WITHOUT the flag the CLI crashes 3/3 with IndexOutOfBoundsException in
-    // Collections.indexOf (the speculative-guard-index-crash.nl bug), which is
+    // Collections.index (the speculative-guard-index-crash.nl bug), which is
     // the same crash that hit sudoku4x4() in CI, so it stays gated with it.
-    @Disabled("flaky: speculative guard evaluation crashes an out-of-range pos (see speculative-guard-index-crash.nl); green locally, same crash as sudoku4x4() in CI without PARALLEL_COLLECTIONS=false")
+    @Disabled("flaky: speculative guard evaluation crashes an out-of-range list index (see speculative-guard-index-crash.nl); green locally, same crash as sudoku4x4() in CI without PARALLEL_COLLECTIONS=false")
     @Test
     public void sudoku4x4Smart() {
         exampleResource("sudoku-4x4-smart.nl");

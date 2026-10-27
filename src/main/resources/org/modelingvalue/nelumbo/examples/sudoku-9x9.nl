@@ -21,8 +21,8 @@ Integer             r, c, d, x, y, i, j
 Set<Integer>        bs, cs
 
 // ---- access ---------------------------------------------------------
-at(l,i)=x        <=>  x pos l = i
-row(g,r)=rw      <=>  rw pos g = r
+at(l,i)=x        <=>  at i in l = x
+row(g,r)=rw      <=>  at r in g = rw
 cell(g,r,c)      ==  at(row(g,r),c)
 
 // ---- update (functional) -------------------------------------------

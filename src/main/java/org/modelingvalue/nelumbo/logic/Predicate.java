@@ -279,11 +279,12 @@ public class Predicate extends Node {
     }
 
     private InferResult doInfer(int nrOfUnbound, InferContext context) {
-        Method method = functor().method();
+        Functor functor = functor();
+        Method method = functor.method();
         if (method != null) {
             return callMethod(method, context);
         }
-        if (!Predicate.class.equals(getClass())) {
+        if (functor.overridesInfer()) {
             try {
                 return infer(nrOfUnbound, context);
             } catch (NelumboException ne) {
@@ -320,7 +321,13 @@ public class Predicate extends Node {
 
     }
 
-    protected InferResult infer(int nrOfUnbound, InferContext context) {
+    public InferResult infer(int nrOfUnbound, InferContext context) {
+        Functor functor = functor();
+        if (nrOfUnbound > 1 || nrOfUnbound >= functor.argTypes().size()
+                || (context.shallow() && !isShallow(nrOfUnbound, functor))) {
+            return unknown();
+        }
+
         KnowledgeBase knowledgebase = context.knowledgebase();
 
         InferResult result = knowledgebase.getMemoiz(this);
@@ -328,26 +335,21 @@ public class Predicate extends Node {
             return result;
         }
 
+        List<Predicate> stack = context.stack();
+        if (stack.size() >= MAX_LOGIC_DEPTH) {
+            return InferResult.overflow(stack.append(this));
+        }
+
         result = knowledgebase.getFacts(this, context);
+        result = fixpoint(context.pushOnStack(this), result);
 
-        Functor functor = functor();
-        if (nrOfUnbound <= 1 && nrOfUnbound < functor.argTypes().size() && //
-                (!context.shallow() || isShallow(nrOfUnbound, functor))) {
-
-            List<Predicate> stack = context.stack();
-            if (stack.size() >= MAX_LOGIC_DEPTH) {
-                return InferResult.overflow(stack.append(this));
-            }
-
-            result = fixpoint(context.pushOnStack(this), result);
-            if (stack.size() >= MAX_LOGIC_DEPTH_D2) {
-                List<Predicate> overflow = result.stackOverflow();
-                if (overflow != null) {
-                    if (stack.size() == MAX_LOGIC_DEPTH_D2) {
-                        result = flatten(result, overflow, context);
-                    }
-                    return result;
+        if (stack.size() >= MAX_LOGIC_DEPTH_D2) {
+            List<Predicate> overflow = result.stackOverflow();
+            if (overflow != null) {
+                if (stack.size() == MAX_LOGIC_DEPTH_D2) {
+                    result = flatten(result, overflow, context);
                 }
+                return result;
             }
         }
 
