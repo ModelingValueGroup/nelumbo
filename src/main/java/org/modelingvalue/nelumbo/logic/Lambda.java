@@ -156,8 +156,7 @@ public final class Lambda extends Node {
         InferResult result = p.resolve(ctx);
         if (result.hasStackOverflow()) {
             ctx.incompleteResult().set(result);
-        }
-        if (!isComplete(result, bool)) {
+        } else if (!isComplete(result, bool)) {
             ctx.incompleteResult().accumulateAndGet(result, (a, b) -> {
                 if (a == null) {
                     return b;
