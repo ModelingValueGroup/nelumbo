@@ -51,7 +51,7 @@ public final class Query extends Node implements Evaluatable {
         if (reason == ConstructionReason.parsing) {
             Node node = (Node) get(0);
             Variable var = node instanceof Predicate ? null
-                    : new Variable(List.of(), true, node.type().nonFunction(), "r" + uniqueId());
+                    : new Variable(List.of(), true, node.type().nonFunction(), "r$" + uniqueId());
             Predicate nodePred = var == null ? (Predicate) node : new NIs(node.astElements(), node, var);
             Predicate predicate = nodePred.setVariables(knowledgeBase,
                     Predicate.literals(nodePred.getBinding(nodePred)), ctx);

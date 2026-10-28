@@ -57,7 +57,7 @@ nelumbo (root)   -> core: syntax, semantics, patterns, knowledge base
 - `patterns/`: `Pattern` + Sequence/Alternation/Optional/Repetition/TokenText/TokenType/NodeType patterns, `Functor`.
 - `logic/`: `And`, `Or`, `Not`, `Equal`, `When`, quantifiers, `Predicate`, `BinaryPredicate`, `CompoundPredicate`.
 - `integers/`, `strings/`, `collections/`: built-in types.
-- `tools/`: Swing `NelumboEditor`, AST/KB viewers, `NelumboEvaluator` (shared by CLI and MCP).
+- `tools/`: Swing `NelumboEditor`, AST/KB viewers, `NelumboEvaluator` (shared by CLI and MCP). Its `QueryOutcome` carries `completeFacts`/`completeFalsehoods` (null without a result): an empty facts/falsehoods list means "none" only when complete. The JSON outputs (CLI `--json`, the CLI window's json tab, MCP `eval_nl`) emit them as `complete: {facts, falsehoods}`, the shape of `EvalService`'s `/eval`; text outputs show them as `..`.
 - Each editor window evaluates in its own loop (one `KnowledgeBase.BASE.invoke` per window, re-`init()` per edit). An engine crash (`RuntimeException`, `StackOverflowError`) shows as `Internal error: <innermost cause>` in that window's messages and the loop keeps running, so the next edit evaluates again. It is placed on the crashing line: for a parse crash at `Parser.crashToken()` (first token of the innermost node being parsed; the exception itself is rethrown unchanged), with all token colors cleared to black (no parse, no reliable colors), for an evaluation crash at that statement (the other statements still evaluate).
 - Untitled editor windows keep their text in `java.util.prefs.Preferences` via `PreferenceText`: one value holds at most 8 KB (`MAX_VALUE_LENGTH`, else "Value too long"), so the text is split over `content`, `content.1`, ...
 - Core classes: `KnowledgeBase` (engine), `Node`, `Type`, `Variable`, `Fact`, `Rule`, `Transform`, `Query`, `InferResult`, `InferContext`.
@@ -212,7 +212,7 @@ Deployment (`.github/workflows/deploy.yml`, on push to `master` or manual):
 
 ## MCP Module
 
-- `mcp.Main` (official MCP Java SDK, stdio): tools `eval_nl` (diagnostics via `NelumboEvaluator` + curated `Hints`, per-query expectation results), `search_docs` (bundled `docs/**/*.md`, terms < 3 chars ignored), `get_example`, `new_model` (`ModelSkeleton`; its test evaluates it, so keep it valid; decision functors do not enumerate free variables).
+- `mcp.Main` (official MCP Java SDK, stdio): tools `eval_nl` (diagnostics via `NelumboEvaluator` + curated `Hints`, per-query expectation results and `complete`), `search_docs` (bundled `docs/**/*.md`, terms < 3 chars ignored), `get_example`, `new_model` (`ModelSkeleton`; its test evaluates it, so keep it valid; decision functors do not enumerate free variables).
 - Handlers SDK-free in `NelumboTools`; `Main` owns protocol, `--eval-deadline-ms` (10 s) and reroutes `System.out` to stderr (stdout is JSON-RPC).
 - Design: `docs/superpowers/specs/2026-07-12-mcp-server-design.md`; install story in the README "MCP Server" section.
 - A new example in `examples/` must be registered in `ExampleCatalog.ENTRIES` (mcp) AND `ExamplesTest` (core); nothing auto-discovers.

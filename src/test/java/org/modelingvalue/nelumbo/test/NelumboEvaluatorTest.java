@@ -19,11 +19,13 @@ package org.modelingvalue.nelumbo.test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 import org.modelingvalue.nelumbo.tools.NelumboEvaluator;
 import org.modelingvalue.nelumbo.tools.NelumboEvaluator.EvalResult;
+import org.modelingvalue.nelumbo.tools.NelumboEvaluator.QueryOutcome;
 
 public class NelumboEvaluatorTest {
 
@@ -152,5 +154,65 @@ public class NelumboEvaluatorTest {
         assertTrue(redeclared.result().ok(), () -> "diagnostics: " + redeclared.result().diagnostics());
         assertTrue(redeclared.result().queries().get(0).result().contains("r=9"),
                 () -> "result: " + redeclared.result().queries().get(0).result());
+    }
+
+    /** One query per combination of the two completeness flags. */
+    static final String COMPLETENESS = """
+            import  nelumbo.integers
+
+            Integer ::= fib(<Integer>)
+
+            Integer n, f, a
+
+            fib(n)=f <=>  f=n                 if n>=0 & n<=1,
+                          f=fib(n-1)+fib(n-2) if n>1
+
+            1+1=2       ? [()][]
+            fib(5)=f    ? [(f=5)][..]
+            !(fib(5)=f) ? [..][(f=5)]
+            a>3 ?
+            """;
+
+    /**
+     * The completeness flags are part of the outcome: without them an empty facts or falsehoods
+     * list cannot be told apart from an unknown one (!(fib(5)=f) has no facts, but not "none").
+     */
+    @Test
+    public void queryOutcomeCarriesTheCompletenessFlags() {
+        EvalResult r = NelumboEvaluator.evaluate(COMPLETENESS, "complete.nl", 0);
+        assertCompleteness(r);
+    }
+
+    /** The session overload (REPL) gives the same flags. */
+    @Test
+    public void sessionEvaluationCarriesTheCompletenessFlags() {
+        NelumboEvaluator.SessionResult s = NelumboEvaluator.evaluate(org.modelingvalue.nelumbo.KnowledgeBase.BASE, COMPLETENESS, "complete.nl", 0);
+        assertCompleteness(s.result());
+    }
+
+    static void assertCompleteness(EvalResult r) {
+        assertTrue(r.ok(), () -> "diagnostics: " + r.diagnostics());
+        assertEquals(4, r.queries().size(), () -> "queries: " + r.queries());
+
+        QueryOutcome bothComplete = r.queries().get(0);
+        assertEquals(Boolean.TRUE, bothComplete.completeFacts(), bothComplete::toString);
+        assertEquals(Boolean.TRUE, bothComplete.completeFalsehoods(), bothComplete::toString);
+
+        QueryOutcome factsComplete = r.queries().get(1);
+        assertEquals(java.util.List.of(java.util.Map.of("f", "5")), factsComplete.facts());
+        assertEquals(Boolean.TRUE, factsComplete.completeFacts(), factsComplete::toString);
+        assertTrue(factsComplete.falsehoods().isEmpty(), factsComplete::toString);
+        assertEquals(Boolean.FALSE, factsComplete.completeFalsehoods(), factsComplete::toString);
+
+        QueryOutcome falsehoodsComplete = r.queries().get(2);
+        assertTrue(falsehoodsComplete.facts().isEmpty(), falsehoodsComplete::toString);
+        assertEquals(Boolean.FALSE, falsehoodsComplete.completeFacts(), falsehoodsComplete::toString);
+        assertEquals(java.util.List.of(java.util.Map.of("f", "5")), falsehoodsComplete.falsehoods());
+        assertEquals(Boolean.TRUE, falsehoodsComplete.completeFalsehoods(), falsehoodsComplete::toString);
+
+        QueryOutcome noneComplete = r.queries().get(3);
+        assertNull(noneComplete.expectationMatched());
+        assertEquals(Boolean.FALSE, noneComplete.completeFacts(), noneComplete::toString);
+        assertEquals(Boolean.FALSE, noneComplete.completeFalsehoods(), noneComplete::toString);
     }
 }

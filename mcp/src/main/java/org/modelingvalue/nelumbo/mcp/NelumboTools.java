@@ -67,6 +67,13 @@ public final class NelumboTools {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("query", q.query());
             m.put("result", q.result());
+            if (q.result() != null) {
+                // whether the facts/falsehoods in result are all of them (no ..)
+                Map<String, Object> complete = new LinkedHashMap<>();
+                complete.put("facts", q.completeFacts());
+                complete.put("falsehoods", q.completeFalsehoods());
+                m.put("complete", complete);
+            }
             if (q.expectationMatched() != null) {
                 m.put("expectationMatched", q.expectationMatched());
             }
