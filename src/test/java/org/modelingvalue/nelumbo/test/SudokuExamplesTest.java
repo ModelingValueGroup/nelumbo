@@ -68,7 +68,7 @@ public class SudokuExamplesTest extends NelumboTestBase {
         exampleResource("sudoku-9x9-smart.nl");
     }
 
-    @Disabled("To Slow")
+    @Disabled("To Slow ~235s per run")
     @Test
     public void sudoku9x9Csp() {
         exampleResource("sudoku-9x9-csp.nl");
