@@ -16,6 +16,7 @@
 
 package org.modelingvalue.nelumbo.test;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.modelingvalue.nelumbo.KnowledgeBase;
@@ -65,6 +66,12 @@ public class SudokuExamplesTest extends NelumboTestBase {
     @Test
     public void sudoku9x9Smart() {
         exampleResource("sudoku-9x9-smart.nl");
+    }
+
+    @Disabled("To Slow")
+    @Test
+    public void sudoku9x9Csp() {
+        exampleResource("sudoku-9x9-csp.nl");
     }
 
 }
