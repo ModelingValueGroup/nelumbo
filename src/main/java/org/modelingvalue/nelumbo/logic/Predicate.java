@@ -446,9 +446,12 @@ public class Predicate extends Node {
         }
         Set<Rule> rules = knowledgebase.getRules(this);
         for (Rule rule : REVERSE_NELUMBO ? rules.reverse() : RANDOM_NELUMBO ? rules.random() : rules) {
-            result = rule.biimply(this, context, result);
-            if (result.hasStackOverflow()) {
-                return result;
+            InferResult ruleResult = rule.infer(this, context);
+            if (ruleResult != null) {
+                if (ruleResult.hasStackOverflow()) {
+                    return ruleResult;
+                }
+                result = result.biimply(ruleResult);
             }
         }
         return result;

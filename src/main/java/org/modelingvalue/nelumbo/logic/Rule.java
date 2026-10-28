@@ -161,11 +161,11 @@ public final class Rule extends Node implements Evaluatable {
         return roots;
     }
 
-    public final InferResult biimply(Predicate predicate, InferContext context, InferResult result) {
+    public final InferResult infer(Predicate predicate, InferContext context) {
         Predicate consDecl = consequence();
         Map<Variable, Object> binding = predicate.getBinding(consDecl);
         if (binding == null) {
-            return result;
+            return null;
         }
         Predicate condDecl = condition();
         binding = getBinding(this).putAll(binding);
@@ -206,12 +206,12 @@ public final class Rule extends Node implements Evaluatable {
                 completeFalsehoods = false;
             }
         }
-        InferResult ruleResult = InferResult.of(predicate, facts, completeFacts, falsehoods, completeFalsehoods, //
+        InferResult result = InferResult.of(predicate, facts, completeFacts, falsehoods, completeFalsehoods, //
                 condResult.cycles(), condResult.exceptions());
         if (context.trace() && !isSyntatic()) {
-            context.trace(() -> consequence + " " + ruleResult.predicate(consequence));
+            context.trace(() -> consequence + " " + result.predicate(consequence));
         }
-        return result.biimply(ruleResult);
+        return result;
     }
 
     @Override
