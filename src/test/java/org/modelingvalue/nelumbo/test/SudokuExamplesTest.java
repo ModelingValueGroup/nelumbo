@@ -16,65 +16,47 @@
 
 package org.modelingvalue.nelumbo.test;
 
-import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
-// Both 4x4 examples solve again (~2.5s each) but are gated as flaky (see the
-// methods): the engine's state/race and speculative-evaluation bugs make them
-// fail occasionally, and in CI. From bba88fc8 (2026-09-09, "rename
-// generic types...") until the 2026-09-24 fix they failed EVERYWHERE
-// deterministically - CLI: ClassCast "Variable cannot be cast to List" at
-// NList.collection; test JVM: expectation mismatches with unreduced terms
-// (map/scanF left unevaluated); minimal repro recursive-list-concat-classcast.nl
-// (now in RegressionTest). The old note here ("crashes in the test JVM yet
-// never in a fresh CLI JVM, 20/20") was an artifact of a STALE cliJar built
-// before bba88fc8 - investigated and explained 2026-09-13, no environment
-// factor. The 9x9 methods stay gated for the reasons noted below.
+// All sudoku examples run (2026-10-28): every file green on the CLI in default,
+// reversed and random rule order. The 9x9 ones need MAX_LOGIC_MEMOIZ=100000
+// (set below); with the default 10000 the brute-force 9x9 runs 2+ hours.
 public class SudokuExamplesTest extends NelumboTestBase {
 
     static {
+        setProp("MAX_LOGIC_MEMOIZ", "100000");
         setProp("PARALLEL_COLLECTIONS", "false");
         setProp("REVERSE_NELUMBO", "false");
-        setProp("RANDOM_NELUMBO", "false");
+        setProp("RANDOM_NELUMBO", "true");
         setProp("TRACE_NELUMBO", "false");
         setProp("TRACE_SYNTATIC", "false");
         setProp("VERBOSE_TESTS", "false");
     }
 
-    // Solves (~2.5s, 10/10 locally) but crashed in CI (2026-09-24, run 35982650165)
-    // with IndexOutOfBoundsException in the native list index via Predicate.callMethod - the
-    // speculative-guard-index-crash.nl bug (KnownBugsTest), timing-dependent.
-    @Disabled("flaky: speculative guard evaluation crashes an out-of-range list index (see speculative-guard-index-crash.nl); green locally, red in CI")
-    @Test
+    @RepeatedTest(10)
     public void sudoku4x4() {
         exampleResource("sudoku-4x4.nl");
     }
 
-    // 2026-09-24: solved (~2.5s) but 1 in ~10 runs returned undecided ([][..]) -
-    // the run-to-run nondeterminism of nondeterministic-inference.nl (in a JVM
-    // shared with other test classes). 2026-09-25: that repro is fixed and
-    // promoted to RegressionTest; re-measured the same day at f52a88cf: 5/5 green
-    // on the CLI with -DPARALLEL_COLLECTIONS=false and green here (2.4s) - but
-    // WITHOUT the flag the CLI crashes 3/3 with IndexOutOfBoundsException in
-    // Collections.index (the speculative-guard-index-crash.nl bug), which is
-    // the same crash that hit sudoku4x4() in CI, so it stays gated with it.
-    @Disabled("flaky: speculative guard evaluation crashes an out-of-range list index (see speculative-guard-index-crash.nl); green locally, same crash as sudoku4x4() in CI without PARALLEL_COLLECTIONS=false")
-    @Test
+    @RepeatedTest(10)
     public void sudoku4x4Smart() {
         exampleResource("sudoku-4x4-smart.nl");
     }
 
-    // Also brute-force 9x9: its third "real" puzzle ran 2+ hours without
-    // finishing, so it would hang the build even if the race above were fixed.
-    @Disabled("CLI-only (parallel-collections race) and the 'real' puzzle runs 2+ hours")
+    // ~16s per run, so not repeated (10/10 green as @RepeatedTest(10)).
+    @Test
+    public void sudoku4x4Csp() {
+        exampleResource("sudoku-4x4-csp.nl");
+    }
+
+    // ~10s with MAX_LOGIC_MEMOIZ=100000.
     @Test
     public void sudoku9x9() {
         exampleResource("sudoku-9x9.nl");
     }
 
-    // Also singles-first 9x9: ~45s per run and run-to-run nondeterministic
-    // (inference has its own parallel pool), so unfit for CI even if fixed.
-    @Disabled("CLI-only (parallel-collections race), ~45s and run-to-run nondeterministic")
+    // ~75s (four puzzles).
     @Test
     public void sudoku9x9Smart() {
         exampleResource("sudoku-9x9-smart.nl");

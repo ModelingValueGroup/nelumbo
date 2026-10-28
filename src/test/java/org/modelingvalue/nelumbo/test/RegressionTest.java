@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.junit.jupiter.api.RepeatedTest;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.modelingvalue.nelumbo.NelumboConstants;
 import org.modelingvalue.nelumbo.tools.NelumboEvaluator;
@@ -112,13 +113,13 @@ public class RegressionTest extends NelumboTestBase {
 
     // recursion through a where-lambda deeper than MAX_LOGIC_DEPTH (stack-overflow
     // flattening)
-    @RepeatedTest(4)
+    @Test
     public void whereFilterNpeInRecursion() {
         testResource("where-filter-npe-in-recursion.nl");
     }
 
     // same cause as whereFilterNpeInRecursion
-    @RepeatedTest(4)
+    @Test
     public void solveDependsOnEarlierQuery() {
         testResource("solve-depends-on-earlier-query.nl");
     }

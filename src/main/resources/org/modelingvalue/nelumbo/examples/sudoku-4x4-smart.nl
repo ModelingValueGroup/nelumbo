@@ -68,8 +68,9 @@ scanF(g,r,c)     ==  solveBX(g,0,0)   if r=4,
                      scanB(g,r,c)     if r<4 & c<4 & cell(g,r,c)=0
 scanB(g,r,c)=s   <=>  s=scanF(g,r,c+1)   if E[x,y](x in {1,2,3} & y in {2,3,4} & x<y &
                                                    ok(g,r,c,x) & ok(g,r,c,y)),
-                      E[d,g2](forced(g,r,c) & d in {1,2,3,4} & ok(g,r,c,d) &
-                              put(g,r,c,d)=g2 & s=scanF(g2,0,0))
+                      E[d,g2](d in {1,2,3,4} & ok(g,r,c,d) &
+                              put(g,r,c,d)=g2 & s=scanF(g2,0,0))  if !E[x,y](x in {1,2,3} & y in {2,3,4} & x<y &
+                                                   ok(g,r,c,x) & ok(g,r,c,y))
 solveBX(g,r,c)=s <=>  s=g                 if r=4,
                       s=solveBX(g,r+1,0)  if r<4 & c=4,
                       s=solveBX(g,r,c+1)  if r<4 & c<4 & cell(g,r,c)!=0,
@@ -80,9 +81,9 @@ sudokuSmart(g)       ==  scanF(g,0,0)
 
 // ---- puzzles ------------------------------------------------------
 // one blank per row, unique solution
-//sudokuSmart([[0,2,3,4],[3,4,1,0],[2,0,4,3],[4,3,0,1]]) ? [([[1,2,3,4],[3,4,1,2],[2,1,4,3],[4,3,2,1]]),..][..]
+sudokuSmart([[0,2,3,4],[3,4,1,0],[2,0,4,3],[4,3,0,1]]) ? [([[1,2,3,4],[3,4,1,2],[2,1,4,3],[4,3,2,1]])][..]
 // first row empty plus one blank per remaining row, unique solution
-//sudokuSmart([[0,0,0,0],[0,4,1,2],[2,1,0,3],[4,3,2,0]]) ? [([[1,2,3,4],[3,4,1,2],[2,1,4,3],[4,3,2,1]]),..][..]
+sudokuSmart([[0,0,0,0],[0,4,1,2],[2,1,0,3],[4,3,2,0]]) ? [([[1,2,3,4],[3,4,1,2],[2,1,4,3],[4,3,2,1]])][..]
 // a 'real' puzzle, needs guessing (unique solution)
 sudokuSmart([
     [1,0,/**/0,0],
