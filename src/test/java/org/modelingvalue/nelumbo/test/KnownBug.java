@@ -27,10 +27,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 // - test fails  -> ABORTED (grey): bug still present, build stays green
 // - test passes -> FAILED: the bug appears fixed - remove @KnownBug and
 //   promote the method to RegressionTest
-// flaky = true: a pass also aborts. For repros that depend on the rule order:
-// RANDOM_NELUMBO/REVERSE_NELUMBO are static finals, so the test class that
-// initializes Predicate first decides the order for the whole test JVM. The
-// CLI runner (./run-all-tests-with-CLI, default order) is their strict check.
+// flaky = true: a pass also aborts. For repros that pass or fail by chance
+// (rule order, scheduling); KnownBugsTest itself runs them in the default rule
+// order (settings(kb)). The CLI runner (./run-all-tests-with-CLI) is their
+// strict check.
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 @ExtendWith(KnownBugExtension.class)

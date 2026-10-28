@@ -86,7 +86,7 @@ public final class When extends BinaryPredicate {
     }
 
     @Override
-    protected boolean order(Predicate[] predicate, Predicate[] decl) {
+    protected boolean order(Predicate[] predicate, Predicate[] decl, InferContext context) {
         return false;
     }
 

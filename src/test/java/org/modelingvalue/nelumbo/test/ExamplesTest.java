@@ -17,16 +17,21 @@
 package org.modelingvalue.nelumbo.test;
 
 import org.junit.jupiter.api.RepeatedTest;
+import org.modelingvalue.nelumbo.KnowledgeBase;
 
 public class ExamplesTest extends NelumboTestBase {
 
     static {
         setProp("PARALLEL_COLLECTIONS", "false");
-        setProp("REVERSE_NELUMBO", "false");
-        setProp("RANDOM_NELUMBO", "true");
-        setProp("TRACE_NELUMBO", "false");
         setProp("TRACE_SYNTATIC", "false");
         setProp("VERBOSE_TESTS", "false");
+    }
+
+    @Override
+    protected void settings(KnowledgeBase kb) {
+        kb.setReverseOrder(env("REVERSE_NELUMBO", false));
+        kb.setRandomOrder(env("RANDOM_NELUMBO", true));
+        kb.setTrace(env("TRACE_NELUMBO", false));
     }
 
     @RepeatedTest(10)

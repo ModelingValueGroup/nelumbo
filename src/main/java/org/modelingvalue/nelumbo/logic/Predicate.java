@@ -44,12 +44,6 @@ public class Predicate extends Node {
 
     protected static final boolean CHECK_SINGLE_FUNCTION_RESULT = Boolean.getBoolean("CHECK_SINGLE_FUNCTION_RESULT");
 
-    protected static final boolean RANDOM_NELUMBO  = Boolean.getBoolean("RANDOM_NELUMBO");
-    protected static final boolean REVERSE_NELUMBO = Boolean.getBoolean("REVERSE_NELUMBO");
-    protected static final int     MAX_LOGIC_DEPTH = Integer.getInteger("MAX_LOGIC_DEPTH", 64);
-
-    private static final int MAX_LOGIC_DEPTH_D2 = MAX_LOGIC_DEPTH / 2;
-
     public static Node INCOMPLETE = new Predicate(NodeInfo.of(Type.BOOLEAN), "..");
 
     // cash
@@ -336,17 +330,18 @@ public class Predicate extends Node {
         }
 
         List<Predicate> stack = context.stack();
-        if (stack.size() >= MAX_LOGIC_DEPTH) {
+        int maxDepth = knowledgebase.getMaxLogicDepth();
+        if (stack.size() >= maxDepth) {
             return InferResult.overflow(stack.append(this));
         }
 
         result = knowledgebase.getFacts(this, context);
         result = fixpoint(context.pushOnStack(this), result);
 
-        if (stack.size() >= MAX_LOGIC_DEPTH_D2) {
+        if (stack.size() >= maxDepth / 2) {
             List<Predicate> overflow = result.stackOverflow();
             if (overflow != null) {
-                if (stack.size() == MAX_LOGIC_DEPTH_D2) {
+                if (stack.size() == maxDepth / 2) {
                     result = flatten(result, overflow, context);
                 }
                 return result;
@@ -445,7 +440,7 @@ public class Predicate extends Node {
             throw new NelumboTimeoutException();
         }
         Set<Rule> rules = knowledgebase.getRules(this);
-        for (Rule rule : REVERSE_NELUMBO ? rules.reverse() : RANDOM_NELUMBO ? rules.random() : rules) {
+        for (Rule rule : knowledgebase.isReverseOrder() ? rules.reverse() : knowledgebase.isRandomOrder() ? rules.random() : rules) {
             InferResult ruleResult = rule.infer(this, context);
             if (ruleResult != null) {
                 if (ruleResult.hasStackOverflow()) {

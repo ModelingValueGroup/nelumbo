@@ -23,8 +23,8 @@ import java.io.IOException;
 import java.util.List;
 
 import org.junit.jupiter.api.RepeatedTest;
+import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstants;
-import org.modelingvalue.nelumbo.tools.NelumboEvaluator;
 import org.modelingvalue.nelumbo.tools.NelumboEvaluator.EvalResult;
 import org.modelingvalue.nelumbo.tools.NelumboEvaluator.QueryOutcome;
 
@@ -32,11 +32,15 @@ public class NelumboTest extends NelumboTestBase {
 
     static {
         setProp("PARALLEL_COLLECTIONS", "false");
-        setProp("REVERSE_NELUMBO", "false");
-        setProp("RANDOM_NELUMBO", "true");
-        setProp("TRACE_NELUMBO", "false");
         setProp("TRACE_SYNTATIC", "false");
         setProp("VERBOSE_TESTS", "false");
+    }
+
+    @Override
+    protected void settings(KnowledgeBase kb) {
+        kb.setReverseOrder(env("REVERSE_NELUMBO", false));
+        kb.setRandomOrder(env("RANDOM_NELUMBO", true));
+        kb.setTrace(env("TRACE_NELUMBO", false));
     }
 
     @RepeatedTest(10)
@@ -96,7 +100,7 @@ public class NelumboTest extends NelumboTestBase {
                 lineOf(lines, "at 0 in []") + ":1: IndexOutOfBoundsException in index([],e,0)", //
                 lineOf(lines, "i first index [1,2] = 5") + ":1: IndexOutOfBoundsException in firstIndex([1,2],e,5)", //
                 lineOf(lines, "i last index [1,2] = -1") + ":1: IndexOutOfBoundsException in lastIndex([1,2],e,-1)");
-        EvalResult result = NelumboEvaluator.evaluate(source, name, 60_000);
+        EvalResult result = evaluate(source, name, 60_000);
         List<String> found = result.diagnostics().stream().map(d -> d.line() + ":" + d.col() + ": " + d.message()).toList();
         assertEquals(expected.stream().sorted().toList(), found.stream().sorted().toList());
         List<String> unanswered = result.queries().stream().filter(q -> q.result() == null).map(QueryOutcome::query).sorted().toList();

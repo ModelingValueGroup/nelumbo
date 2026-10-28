@@ -18,20 +18,25 @@ package org.modelingvalue.nelumbo.test;
 
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
+import org.modelingvalue.nelumbo.KnowledgeBase;
 
 // All sudoku examples run (2026-10-28): every file green on the CLI in default,
-// reversed and random rule order. The 9x9 ones need MAX_LOGIC_MEMOIZ=100000
+// reversed and random rule order. The 9x9 ones need a memoization of 100000
 // (set below); with the default 10000 the brute-force 9x9 runs 2+ hours.
 public class SudokuExamplesTest extends NelumboTestBase {
 
     static {
-        setProp("MAX_LOGIC_MEMOIZ", "100000");
         setProp("PARALLEL_COLLECTIONS", "false");
-        setProp("REVERSE_NELUMBO", "false");
-        setProp("RANDOM_NELUMBO", "true");
-        setProp("TRACE_NELUMBO", "false");
         setProp("TRACE_SYNTATIC", "false");
         setProp("VERBOSE_TESTS", "false");
+    }
+
+    @Override
+    protected void settings(KnowledgeBase kb) {
+        kb.setMaxLogicMemoiz(env("MAX_LOGIC_MEMOIZ", 100000));
+        kb.setReverseOrder(env("REVERSE_NELUMBO", false));
+        kb.setRandomOrder(env("RANDOM_NELUMBO", true));
+        kb.setTrace(env("TRACE_NELUMBO", false));
     }
 
     @RepeatedTest(10)
@@ -56,7 +61,7 @@ public class SudokuExamplesTest extends NelumboTestBase {
         exampleResource("sudoku-9x9.nl");
     }
 
-    // ~75s (four puzzles).
+    // ~75-100s (four puzzles plus unit tests).
     @Test
     public void sudoku9x9Smart() {
         exampleResource("sudoku-9x9-smart.nl");

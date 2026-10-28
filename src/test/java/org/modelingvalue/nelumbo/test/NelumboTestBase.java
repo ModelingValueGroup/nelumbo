@@ -29,6 +29,8 @@ import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.Parser;
 import org.modelingvalue.nelumbo.syntax.Tokenizer;
+import org.modelingvalue.nelumbo.tools.NelumboEvaluator;
+import org.modelingvalue.nelumbo.tools.NelumboEvaluator.EvalResult;
 
 @SuppressWarnings("unused")
 public class NelumboTestBase {
@@ -37,10 +39,39 @@ public class NelumboTestBase {
         String env = System.getenv(name);
         System.setProperty(name, env != null ? env : System.getProperty(name, def));
     }
+    // an environment variable overrides the value a test class picks
+    static boolean env(String name, boolean def) {
+        String env = System.getenv(name);
+        return env != null ? Boolean.parseBoolean(env) : def;
+    }
+
+    static int env(String name, int def) {
+        String env = System.getenv(name);
+        return env != null ? Integer.parseInt(env) : def;
+    }
+
+    // Evaluation settings of the knowledge base every test of this class runs in
+    // (rule order, memoization size, ...). Override per test class: unlike the
+    // system properties, which are read once per JVM, this works whatever test
+    // class ran first.
+    protected void settings(KnowledgeBase kb) {
+    }
+
     // Utilities
 
     public KnowledgeBase run(Runnable test) {
-        return KnowledgeBase.BASE.invoke(test);
+        return KnowledgeBase.BASE.invoke(() -> {
+            settings(KnowledgeBase.current());
+            test.run();
+        });
+    }
+
+    // NelumboEvaluator.evaluate with this class's settings (its knowledge base is
+    // a child of the configured one, so it copies them)
+    public EvalResult evaluate(String source, String name, long deadlineMs) {
+        KnowledgeBase base = new KnowledgeBase(KnowledgeBase.BASE);
+        settings(base);
+        return NelumboEvaluator.evaluate(base, source, name, deadlineMs).result();
     }
 
     public static InferResult getResult(Predicate pred) {

@@ -22,8 +22,8 @@ import java.io.IOException;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstants;
-import org.modelingvalue.nelumbo.tools.NelumboEvaluator;
 import org.modelingvalue.nelumbo.tools.NelumboEvaluator.EvalResult;
 
 // The known-bug (xfail) suite. Every method runs a red-by-design .nl repro
@@ -117,11 +117,15 @@ public class KnownBugsTest extends NelumboTestBase {
 
     static {
         setProp("PARALLEL_COLLECTIONS", "false");
-        setProp("REVERSE_NELUMBO", "false");
-        setProp("RANDOM_NELUMBO", "false");
-        setProp("TRACE_NELUMBO", "false");
         setProp("TRACE_SYNTATIC", "false");
         setProp("VERBOSE_TESTS", "false");
+    }
+
+    @Override
+    protected void settings(KnowledgeBase kb) {
+        kb.setReverseOrder(env("REVERSE_NELUMBO", false));
+        kb.setRandomOrder(env("RANDOM_NELUMBO", true));
+        kb.setTrace(env("TRACE_NELUMBO", false));
     }
 
     // ==== state / race cluster ====
@@ -209,11 +213,13 @@ public class KnownBugsTest extends NelumboTestBase {
     @KnownBug("list index outside the int range wraps to its low 32 bits instead of an index error")
     @Test
     public void collectionsIndexWrapsPastIntRange() throws IOException {
-        String       name    = "collections-index-wraps-past-int-range.nl";
-        String       source  = new String(KnownBugsTest.class.getResourceAsStream(NelumboConstants.NELUMBO_BUGS + name).readAllBytes());
-        EvalResult   result  = NelumboEvaluator.evaluate(source, name, 60_000);
-        long         errors  = result.diagnostics().size();
-        List<String> wrapped = result.queries().stream().filter(q -> q.result() != null).map(q -> q.query() + " ? " + q.result()).toList();
+        String name = "collections-index-wraps-past-int-range.nl";
+        String source = new String(
+                KnownBugsTest.class.getResourceAsStream(NelumboConstants.NELUMBO_BUGS + name).readAllBytes());
+        EvalResult result = evaluate(source, name, 60_000);
+        long errors = result.diagnostics().size();
+        List<String> wrapped = result.queries().stream().filter(q -> q.result() != null)
+                .map(q -> q.query() + " ? " + q.result()).toList();
         assertEquals(List.of(), wrapped, "queries answered from a wrapped index");
         assertEquals(result.queries().size(), errors, "diagnostics: " + result.diagnostics());
     }

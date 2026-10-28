@@ -25,8 +25,8 @@ import java.util.List;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
+import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstants;
-import org.modelingvalue.nelumbo.tools.NelumboEvaluator;
 import org.modelingvalue.nelumbo.tools.NelumboEvaluator.Diagnostic;
 import org.modelingvalue.nelumbo.tools.NelumboEvaluator.EvalResult;
 import org.modelingvalue.nelumbo.tools.NelumboEvaluator.QueryOutcome;
@@ -39,11 +39,15 @@ public class RegressionTest extends NelumboTestBase {
 
     static {
         setProp("PARALLEL_COLLECTIONS", "false");
-        setProp("REVERSE_NELUMBO", "false");
-        setProp("RANDOM_NELUMBO", "true");
-        setProp("TRACE_NELUMBO", "false");
         setProp("TRACE_SYNTATIC", "false");
         setProp("VERBOSE_TESTS", "false");
+    }
+
+    @Override
+    protected void settings(KnowledgeBase kb) {
+        kb.setReverseOrder(env("REVERSE_NELUMBO", false));
+        kb.setRandomOrder(env("RANDOM_NELUMBO", true));
+        kb.setTrace(env("TRACE_NELUMBO", false));
     }
 
     @RepeatedTest(10)
@@ -197,7 +201,7 @@ public class RegressionTest extends NelumboTestBase {
                 lineOf(lines, "0 * x = 6") + ":1: BigInteger divide by zero", //
                 lineOf(lines, "at 7 in [1,2,3] = i") + ":1: IndexOutOfBoundsException in index([1,2,3],e,7)", //
                 lineOf(lines, "P1D * 9999999999 = y") + ":1: BigInteger out of int range");
-        EvalResult result = NelumboEvaluator.evaluate(source, name, 60_000);
+        EvalResult result = evaluate(source, name, 60_000);
         List<String> found = result.diagnostics().stream().map(d -> d.line() + ":" + d.col() + ": " + d.message())
                 .toList();
         assertEquals(expected.stream().sorted().toList(), found.stream().sorted().toList());
@@ -222,7 +226,7 @@ public class RegressionTest extends NelumboTestBase {
         List<String> lines = source.lines().toList();
         int line = lineOf(lines, "f(a,b)=z");
         int col = lines.get(line - 1).indexOf('q') + 1;
-        EvalResult result = NelumboEvaluator.evaluate(source, name, 60_000);
+        EvalResult result = evaluate(source, name, 60_000);
         assertEquals(1, result.diagnostics().size(), "diagnostics: " + result.diagnostics());
         Diagnostic error = result.diagnostics().get(0);
         assertTrue(error.message().startsWith("Unexpected token 'q'"), "message: " + error.message());
@@ -247,7 +251,7 @@ public class RegressionTest extends NelumboTestBase {
         int guardLine = lineOf(lines, "if x>=5");
         int guardCol = lines.get(guardLine - 1).indexOf('x') + 1;
         int conflictLine = lineOf(lines, "f(3)=y");
-        EvalResult result = NelumboEvaluator.evaluate(source, name, 60_000);
+        EvalResult result = evaluate(source, name, 60_000);
         assertEquals(2, result.diagnostics().size(), "diagnostics: " + result.diagnostics());
         Diagnostic parse = result.diagnostics().get(0);
         assertTrue(parse.message().startsWith("Unexpected token 'x'"), "message: " + parse.message());
@@ -270,7 +274,7 @@ public class RegressionTest extends NelumboTestBase {
         String source = new String(
                 RegressionTest.class.getResourceAsStream(NelumboConstants.NELUMBO_TESTS + name).readAllBytes());
         List<String> lines = source.lines().toList();
-        EvalResult result = NelumboEvaluator.evaluate(source, name, 60_000);
+        EvalResult result = evaluate(source, name, 60_000);
         List<String> found = result.diagnostics().stream().map(d -> d.line() + ":" + d.col() + ": " + d.message())
                 .toList();
         assertEquals(List.of(lineOf(lines, "6 / 0 = a") + ":1: BigInteger divide by zero"), found);
@@ -287,7 +291,7 @@ public class RegressionTest extends NelumboTestBase {
         String name = "inconsistency-missed-by-rule-order.nl";
         String source = new String(
                 RegressionTest.class.getResourceAsStream(NelumboConstants.NELUMBO_TESTS + name).readAllBytes());
-        EvalResult result = NelumboEvaluator.evaluate(source, name, 60_000);
+        EvalResult result = evaluate(source, name, 60_000);
         List<String> silent = result.queries().stream().filter(q -> q.result() != null)
                 .map(q -> q.query() + " ? " + q.result()).toList();
         assertEquals(List.of(), silent, "queries answered without reporting the inconsistency");
@@ -314,7 +318,7 @@ public class RegressionTest extends NelumboTestBase {
                 "|{1,2,3} where [i](i>1)|=i ? [(i=2)][..]", //
                 "|[1,2,3] map [i](i+1)|=i ? [(i=3)][..]");
         for (String misuse : misuses) {
-            EvalResult result = NelumboEvaluator.evaluate(header + misuse + "\n", "misuse.nl", 60_000);
+            EvalResult result = evaluate(header + misuse + "\n", "misuse.nl", 60_000);
             List<Diagnostic> local = result.diagnostics().stream() //
                     .filter(d -> d.message().startsWith("Local variable i used")).toList();
             assertTrue(!local.isEmpty(),
@@ -327,7 +331,7 @@ public class RegressionTest extends NelumboTestBase {
                 |{1,2,3} where [i](i>1)|=n ? [(n=2)][..]
                 |[1,2,3] map [i](i+1)|=n ? [(n=3)][..]
                 """;
-        EvalResult result = NelumboEvaluator.evaluate(correct, "correct.nl", 60_000);
+        EvalResult result = evaluate(correct, "correct.nl", 60_000);
         assertEquals(List.of(), result.diagnostics());
         assertTrue(result.ok());
     }

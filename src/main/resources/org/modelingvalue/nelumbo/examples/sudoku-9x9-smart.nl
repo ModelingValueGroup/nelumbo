@@ -1,26 +1,17 @@
 import nelumbo.collections
 
-// Faster sudoku solver than sudoku-9x9.nl: singles-first search.
-// sudoku-9x9.nl branches at the first blank with up to 9 digits, which explodes on
-// puzzles that need guessing. Here scanF walks the grid looking for a forced
-// blank (at most one fitting digit): exactly one is a forced move (placed
-// without branching), zero is a dead end (the placing E fails, backtracking
-// immediately). Only when no forced blank exists solveBX guesses at the first
-// blank. The "real" puzzle of sudoku-9x9.nl (2+ hours there) solves here as a
-// chain of 41 forced moves without any backtracking, in seconds.
+// Singles-first sudoku solver: a hand-tuned alternative to sudoku-9x9.nl.
+// scanF walks the grid looking for a forced blank (at most one fitting digit):
+// exactly one is a forced move (placed without branching), zero is a dead end
+// (the placing E fails, backtracking immediately). Only when no forced blank
+// exists solveBX guesses at the first blank. With enough memoization
+// (-DMAX_LOGIC_MEMOIZ=100000) the plain brute force of sudoku-9x9.nl is faster.
 //
-// Engine notes (hard-won, each verified in the known-bug suite - see
-// KnownBugsTest and the repro file headers under resources bugs/): no `where`-filters in the
-// recursion (setFilter over an ok-lambda NPEs in deep recursion), so "forced
-// cell" is a pure E/!E pair-check over ok; the E's are nested because E took
-// at most 3 variables back then (a 4th parsed in rule bodies and then crashed
-// the run - fixed 2026-10-06, E takes up to 6 now, see
-// tests/four-var-quantifier-crash.nl); at/row are bounds-guarded because guards are probed speculatively and an
-// out-of-range index is an error; an alternative's `if` guard must never sit
-// alone on its own line (a NEWLINE after a non-operator ends the statement, so
-// it is a parse error - break only inside unbalanced parens); and results can depend on unrelated file content and
-// on run-to-run scheduling, so the rule shapes here stick closely to the
-// ones sudoku-9x9.nl proves out (guard-pruned alternatives, direct recursion).
+// Rule-shape notes: at/row are bounds-guarded because guards are probed
+// speculatively and an out-of-range index is an error; the alternatives of
+// scanB have disjoint guards (otherwise Inconsistent results); an
+// alternative's `if` guard must never sit alone on its own line (a NEWLINE
+// after a non-operator ends the statement - break only inside unbalanced parens).
 
 // ---- types ----------------------------------------------------------
 Grid :: Object        // placeholder so we can name the nested list type
@@ -69,9 +60,7 @@ forced(g,r,c)    <=>  cell(g,r,c)=0 &
 
 // ---- search: scanF walks filled cells, scanB decides each blank (scan on
 // ---- vs forced move), solveBX guesses at the first blank when no blank is
-// ---- forced. scanB's guard pair-check is written verbatim like forced's
-// ---- inner E: during development, near-identical variants of the same
-// ---- check correlated with inconsistent results (see known-bug suite) --
+// ---- forced --------------------------------------------------------
 List<List<Integer>> ::= scanF(<List<List<Integer>>>,<Integer>,<Integer>),
                         scanB(<List<List<Integer>>>,<Integer>,<Integer>),
                         solveBX(<List<List<Integer>>>,<Integer>,<Integer>),
@@ -98,7 +87,7 @@ sudokuSmart(g)       ==  scanF(g,0,0)
 sudokuSmart([[0,2,3,4,5,6,7,8,9],[4,5,6,0,8,9,1,2,3],[7,8,9,1,2,3,0,5,6],[2,0,1,5,6,4,8,9,7],[5,6,4,8,0,7,2,3,1],[8,9,7,2,3,1,5,0,4],[3,1,0,6,4,5,9,7,8],[6,4,5,9,7,0,3,1,2],[9,7,8,3,1,2,6,4,0]]) ? [([[1,2,3,4,5,6,7,8,9],[4,5,6,7,8,9,1,2,3],[7,8,9,1,2,3,4,5,6],[2,3,1,5,6,4,8,9,7],[5,6,4,8,9,7,2,3,1],[8,9,7,2,3,1,5,6,4],[3,1,2,6,4,5,9,7,8],[6,4,5,9,7,8,3,1,2],[9,7,8,3,1,2,6,4,5]])][..]
 // 64 clues: first row empty plus one blank per remaining row, unique solution
 sudokuSmart([[0,0,0,0,0,0,0,0,0],[0,5,6,7,8,9,1,2,3],[7,0,9,1,2,3,4,5,6],[2,3,0,5,6,4,8,9,7],[5,6,4,0,9,7,2,3,1],[8,9,7,2,0,1,5,6,4],[3,1,2,6,4,0,9,7,8],[6,4,5,9,7,8,0,1,2],[9,7,8,3,1,2,6,0,5]]) ? [([[1,2,3,4,5,6,7,8,9],[4,5,6,7,8,9,1,2,3],[7,8,9,1,2,3,4,5,6],[2,3,1,5,6,4,8,9,7],[5,6,4,8,9,7,2,3,1],[8,9,7,2,3,1,5,6,4],[3,1,2,6,4,5,9,7,8],[6,4,5,9,7,8,3,1,2],[9,7,8,3,1,2,6,4,5]])][..]
-// the 'real' puzzle of sudoku-9x9.nl (2+ hours there): only forced moves here
+// the 'real' puzzle of sudoku-9x9.nl: only forced moves here
 sudokuSmart([[1,0,0,8,5,7,0,9,0],[0,3,0,0,2,0,0,0,8],[0,0,9,6,0,0,5,0,0],[0,0,5,3,1,0,9,0,0],[0,1,0,0,8,0,0,0,2],[6,0,0,0,0,4,0,0,0],[3,5,6,4,7,8,0,1,0],[2,4,1,9,3,5,0,0,7],[0,9,7,2,6,1,3,0,0]]) ? [([[1,6,2,8,5,7,4,9,3],[5,3,4,1,2,9,6,7,8],[7,8,9,6,4,3,5,2,1],[4,7,5,3,1,2,9,8,6],[9,1,3,5,8,6,7,4,2],[6,2,8,7,9,4,1,3,5],[3,5,6,4,7,8,2,1,9],[2,4,1,9,3,5,8,6,7],[8,9,7,2,6,1,3,5,4]])][..]
 // 26 clues, needs real guessing (unique solution, verified externally)
 sudokuSmart([
@@ -126,14 +115,13 @@ sudokuSmart([
     [1,7,8,/**/6,4,3,/**/9,5,2],
     [4,9,5,/**/8,1,2,/**/6,3,7]])][..]
 
-// ---- unit tests (after the puzzles: earlier queries flip the
-// ---- open/closed form of later results) -----------------------------
-//t([4,5,6,7,8,9,1,2,3],1)       ? [(5)][..]
-//utRow([1,0,3,0,5,6,7,0,9],1,8) ? [([1,8,3,0,5,6,7,0,9])][..]
-//ut([[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0]],1,2,5) ? [([[0,0,0,0,0,0,0,0,0],[0,0,5,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0]])][..]
-//b(4) ? [(3)][..]
-//k([[1,2,3,4,5,6,7,8,9],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0]],1,0,4) ? [()][]
-//k([[1,2,3,4,5,6,7,8,9],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0]],1,0,1) ? [][()]
-//k([[1,2,3,4,5,6,7,8,9],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0]],8,0,1) ? [][()]
-//orced([[1,0,0,8,5,7,0,9,0],[0,3,0,0,2,0,0,0,8],[0,0,9,6,0,0,5,0,0],[0,0,5,3,1,0,9,0,0],[0,1,0,0,8,0,0,0,2],[6,0,0,0,0,4,0,0,0],[3,5,6,4,7,8,0,1,0],[2,4,1,9,3,5,0,0,7],[0,9,7,2,6,1,3,0,0]],2,4) ? [()][]
-//orced([[1,0,0,8,5,7,0,9,0],[0,3,0,0,2,0,0,0,8],[0,0,9,6,0,0,5,0,0],[0,0,5,3,1,0,9,0,0],[0,1,0,0,8,0,0,0,2],[6,0,0,0,0,4,0,0,0],[3,5,6,4,7,8,0,1,0],[2,4,1,9,3,5,0,0,7],[0,9,7,2,6,1,3,0,0]],1,0) ? [][()]
+// ---- unit tests ---------------------------------------------------
+at([4,5,6,7,8,9,1,2,3],1)       ? [(5)][..]
+putRow([1,0,3,0,5,6,7,0,9],1,8) ? [([1,8,3,0,5,6,7,0,9])][..]
+put([[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0]],1,2,5) ? [([[0,0,0,0,0,0,0,0,0],[0,0,5,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0]])][..]
+bb(4) ? [(3)][..]
+ok([[1,2,3,4,5,6,7,8,9],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0]],1,0,4) ? [()][]
+ok([[1,2,3,4,5,6,7,8,9],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0]],1,0,1) ? [][()]
+ok([[1,2,3,4,5,6,7,8,9],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0]],8,0,1) ? [][()]
+forced([[1,0,0,8,5,7,0,9,0],[0,3,0,0,2,0,0,0,8],[0,0,9,6,0,0,5,0,0],[0,0,5,3,1,0,9,0,0],[0,1,0,0,8,0,0,0,2],[6,0,0,0,0,4,0,0,0],[3,5,6,4,7,8,0,1,0],[2,4,1,9,3,5,0,0,7],[0,9,7,2,6,1,3,0,0]],2,4) ? [()][]
+forced([[1,0,0,8,5,7,0,9,0],[0,3,0,0,2,0,0,0,8],[0,0,9,6,0,0,5,0,0],[0,0,5,3,1,0,9,0,0],[0,1,0,0,8,0,0,0,2],[6,0,0,0,0,4,0,0,0],[3,5,6,4,7,8,0,1,0],[2,4,1,9,3,5,0,0,7],[0,9,7,2,6,1,3,0,0]],1,0) ? [][()]

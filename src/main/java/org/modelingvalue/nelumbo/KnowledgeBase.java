@@ -68,19 +68,23 @@ import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public final class KnowledgeBase implements ParseExceptionHandler {
 
-    private static final boolean TRACE_NELUMBO  = Boolean.getBoolean("TRACE_NELUMBO");
-    public static final boolean  TRACE_SYNTATIC = Boolean.getBoolean("TRACE_SYNTATIC");
+    public static final boolean TRACE_SYNTATIC = Boolean.getBoolean("TRACE_SYNTATIC");
+    //
+    // Defaults of the evaluation settings of BASE (read once, at class load). Every
+    // other knowledge base copies the settings of the one it is created from; change
+    // them per knowledge base with the setters below.
+    private static final boolean TRACE_NELUMBO       = Boolean.getBoolean("TRACE_NELUMBO");
+    private static final boolean RANDOM_NELUMBO      = Boolean.getBoolean("RANDOM_NELUMBO");
+    private static final boolean REVERSE_NELUMBO     = Boolean.getBoolean("REVERSE_NELUMBO");
+    private static final int     MAX_LOGIC_DEPTH     = Integer.getInteger("MAX_LOGIC_DEPTH", 64);
+    private static final int     MAX_LOGIC_MEMOIZ    = Integer.getInteger("MAX_LOGIC_MEMOIZ", 10000);
+    private static final int     INITIAL_USAGE_COUNT = Integer.getInteger("INITIAL_USAGE_COUNT", 4);
     //
     private static final Context<KnowledgeBase> CURRENT = Context.of();
     //
-    private static final ContextPool                        POOL                = ContextThread.createPool()
+    private static final ContextPool                        POOL         = ContextThread.createPool()
             .setWorkerThreadName("nelumbo");
-    private static final QualifiedSet<Predicate, Inference> EMPTY_MEMOIZ        = QualifiedSet.of(Inference::premise);
-    private static final int                                MAX_LOGIC_MEMOIZ    = Integer.getInteger("MAX_LOGIC_MEMOIZ",
-            10000);
-    private static final int                                MAX_LOGIC_MEMOIZ_D4 = KnowledgeBase.MAX_LOGIC_MEMOIZ / 4;
-    private static final int                                INITIAL_USAGE_COUNT = Integer
-            .getInteger("INITIAL_USAGE_COUNT", 4);
+    private static final QualifiedSet<Predicate, Inference> EMPTY_MEMOIZ = QualifiedSet.of(Inference::premise);
     //
     public static final KnowledgeBase BASE = new KnowledgeBase(null).initBase();
 
@@ -88,10 +92,11 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         @Serial
         private static final long serialVersionUID = 1531759272582548244L;
 
-        public int count = INITIAL_USAGE_COUNT;
+        public int count;
 
-        public Inference(Predicate predicate, InferResult result) {
+        public Inference(Predicate predicate, InferResult result, int count) {
             super(predicate, result);
+            this.count = count;
         }
 
         public Predicate premise() {
@@ -314,7 +319,6 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     private final MutableMap<Pair<Type, Type>, Type>                superSubTypes = MutableMap.concurrent(Map.of());
     //
     private final AtomicReference<QualifiedSet<Predicate, Inference>[]> memoization = new AtomicReference<>();
-    private final InferContext                                          context;
     private final ParseContext                                          parseContext;
     private final KnowledgeBase                                         init;
 
@@ -322,15 +326,85 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     private ParseExceptionHandler exceptionHandler;
     private long                  deadlineNanos;
     private boolean               worldScopedVariables;
+    // evaluation settings (trace lives in context)
+    private InferContext          context;
+    private boolean               randomOrder;
+    private boolean               reverseOrder;
+    private int                   maxLogicDepth;
+    private int                   maxLogicMemoiz;
+    private int                   initialUsageCount;
 
     public KnowledgeBase(KnowledgeBase init) {
         this.init = init;
         this.deadlineNanos = init != null ? init.deadlineNanos : 0;
         this.worldScopedVariables = init != null && init.worldScopedVariables;
-        context = InferContext.of(KnowledgeBase.this, List.of(), false, false, TRACE_NELUMBO, null);
+        this.randomOrder = init != null ? init.randomOrder : RANDOM_NELUMBO;
+        this.reverseOrder = init != null ? init.reverseOrder : REVERSE_NELUMBO;
+        this.maxLogicDepth = init != null ? init.maxLogicDepth : MAX_LOGIC_DEPTH;
+        this.maxLogicMemoiz = init != null ? init.maxLogicMemoiz : MAX_LOGIC_MEMOIZ;
+        this.initialUsageCount = init != null ? init.initialUsageCount : INITIAL_USAGE_COUNT;
+        context = InferContext.of(KnowledgeBase.this, List.of(), false, false,
+                init != null ? init.context.trace() : TRACE_NELUMBO, null);
         parseContext = ParseContext.of(Type.DEFAULT_GROUP, Integer.MIN_VALUE, prePatterns, postPatterns,
                 hiddenVariables);
         init();
+    }
+
+    // ---- evaluation settings: defaults from the system properties of the same
+    // ---- name (see the constants above), inherited by child knowledge bases
+
+    /** Rules in random order (RANDOM_NELUMBO); also randomly flips binary operands. */
+    public void setRandomOrder(boolean randomOrder) {
+        this.randomOrder = randomOrder;
+    }
+
+    public boolean isRandomOrder() {
+        return randomOrder;
+    }
+
+    /** Rules in reverse order (REVERSE_NELUMBO); also flips binary operands. Wins over random. */
+    public void setReverseOrder(boolean reverseOrder) {
+        this.reverseOrder = reverseOrder;
+    }
+
+    public boolean isReverseOrder() {
+        return reverseOrder;
+    }
+
+    /** Inference stack depth after which a predicate reports an overflow (MAX_LOGIC_DEPTH). */
+    public void setMaxLogicDepth(int maxLogicDepth) {
+        this.maxLogicDepth = maxLogicDepth;
+    }
+
+    public int getMaxLogicDepth() {
+        return maxLogicDepth;
+    }
+
+    /** Number of memoized inferences kept before cleanup starts (MAX_LOGIC_MEMOIZ). */
+    public void setMaxLogicMemoiz(int maxLogicMemoiz) {
+        this.maxLogicMemoiz = maxLogicMemoiz;
+    }
+
+    public int getMaxLogicMemoiz() {
+        return maxLogicMemoiz;
+    }
+
+    /** Cleanup rounds a memoized inference survives (INITIAL_USAGE_COUNT); every hit adds one. */
+    public void setInitialUsageCount(int initialUsageCount) {
+        this.initialUsageCount = initialUsageCount;
+    }
+
+    public int getInitialUsageCount() {
+        return initialUsageCount;
+    }
+
+    /** Inference tracing (TRACE_NELUMBO). */
+    public void setTrace(boolean trace) {
+        context = context.trace(trace);
+    }
+
+    public boolean isTrace() {
+        return context.trace();
     }
 
     /**
@@ -464,28 +538,28 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     public void memoization(Predicate predicate, InferResult result) {
         QualifiedSet<Predicate, Inference>[] mem = memoization.updateAndGet(array -> {
             array = array.clone();
-            array[0] = array[0].put(new Inference(predicate, result));
+            array[0] = array[0].put(new Inference(predicate, result, initialUsageCount));
             for (Predicate fact : result.facts()) {
-                array[0] = array[0].put(new Inference(fact, fact.factCC()));
+                array[0] = array[0].put(new Inference(fact, fact.factCC(), initialUsageCount));
             }
             for (Predicate falsehood : result.falsehoods()) {
-                array[0] = array[0].put(new Inference(falsehood, falsehood.falsehoodCC()));
+                array[0] = array[0].put(new Inference(falsehood, falsehood.falsehoodCC(), initialUsageCount));
             }
-            if (array[0].size() >= MAX_LOGIC_MEMOIZ_D4) {
+            if (array[0].size() >= maxLogicMemoiz / 4) {
                 array[2] = array[2].putAll(array[1]);
                 array[1] = array[0];
                 array[0] = EMPTY_MEMOIZ;
             }
             return array;
         });
-        if (mem[2].size() > MAX_LOGIC_MEMOIZ) {
+        if (mem[2].size() > maxLogicMemoiz) {
             POOL.execute(this::cleanup);
         }
     }
 
     private void cleanup() {
         QualifiedSet<Predicate, Inference>[] mem = memoization.get();
-        while (mem[2].size() > MAX_LOGIC_MEMOIZ) {
+        while (mem[2].size() > maxLogicMemoiz) {
             for (int i = 0; i < mem[2].size(); i++) {
                 if (stopped) {
                     return;

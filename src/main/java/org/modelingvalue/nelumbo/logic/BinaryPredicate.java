@@ -44,7 +44,7 @@ public abstract class BinaryPredicate extends CompoundPredicate {
         InferResult[] predResult = new InferResult[2];
         predicate[0] = predicate(0);
         predicate[1] = predicate(1);
-        order(predicate, predDecl);
+        order(predicate, predDecl, context);
         for (int i = 0; i < 2; i++) {
             predResult[i] = predicate[i].infer(context);
             if (predResult[i].hasStackOverflow()) {
@@ -92,14 +92,14 @@ public abstract class BinaryPredicate extends CompoundPredicate {
 
     protected abstract boolean isRight(InferResult[] predResult);
 
-    protected boolean order(Predicate[] predicate, Predicate[] decl) {
+    protected boolean order(Predicate[] predicate, Predicate[] decl, InferContext context) {
         if (predicate[0] instanceof NBoolean && !(predicate[1] instanceof NBoolean)) {
             return false;
         } else if (predicate[1] instanceof NBoolean && !(predicate[0] instanceof NBoolean)) {
             return flip(predicate) && flip(decl);
-        } else if (REVERSE_NELUMBO) {
+        } else if (context.knowledgebase().isReverseOrder()) {
             return flip(predicate) && flip(decl);
-        } else if (RANDOM_NELUMBO && ThreadLocalRandom.current().nextBoolean()) {
+        } else if (context.knowledgebase().isRandomOrder() && ThreadLocalRandom.current().nextBoolean()) {
             return flip(predicate) && flip(decl);
         } else {
             return false;
