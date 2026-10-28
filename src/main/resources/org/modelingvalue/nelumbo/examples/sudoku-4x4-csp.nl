@@ -1,12 +1,16 @@
-// Norvig candidate-set CSP sudoku solver (4x4), options as a Digit enum.
-// CLI-only. Run with: java -jar nelumbo-cli-*.jar <this file>
+// Norvig candidate-set CSP sudoku solver (4x4): every cell holds the set of digits
+// still possible, assign/eliminate propagate naked and hidden singles, search is a
+// DFS on the cell with the fewest candidates (MRV). Options are a Digit enum, not
+// integers; puzzles go in and out as List<List<Integer>> (0 = blank).
+// CLI-only (not in ExamplesTest): java -jar nelumbo-cli-*.jar <this file>
+// (-DPARALLEL_COLLECTIONS=false is not needed: evaluation runs sequentially).
 //
-// STATUS (2026-10-27): Tasks 1-12 done. A Norvig
-// `return False` is an explicit `false` branch: a branch whose guard fails is silent
-// (unknown), not false. `/` is exact division: floor division via bro/bco/fr/fc.
-// Task 17 (grid DSL) BLOCKED on bugs/single-hole-functor-parser-npe.nl: `Cell ::= ".", <Integer>`
-// crashes the parser; its section at the end is commented out.
-// History of fixed blocks and the plan: docs/superpowers/plans/2026-09-11-sudoku-csp.md.
+// A Norvig `return False` is an explicit `false` branch: a branch whose guard fails
+// is silent (unknown), not false. `/` is exact division: floor division via
+// bro/bco/fr/fc. Task 17 (grid DSL) BLOCKED on bugs/single-hole-functor-parser-npe.nl:
+// `Cell ::= ".", <Integer>` crashes the parser; its section at the end is commented out.
+// Spec: docs/superpowers/specs/2026-09-11-sudoku-csp-design.md,
+// plan: docs/superpowers/plans/2026-09-11-sudoku-csp.md.
 
 import nelumbo.collections
 
@@ -211,46 +215,14 @@ E[g](fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]])=g & cell(g,1,2)=sc) ? [
 peer(0,0,1,1) ? [()][]
 peer(0,0,2,2) ? [][()]
 peer(0,0,0,0) ? [][()]
-// were undecided until the 2026-09-25 fix of rule-pos-on-mapped-collection-list-undecided
 cell(put(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,{D2}),0,0) ? [({D2})][..]
 cell(put(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,{D2}),0,1) ? [({D1,D2,D3,D4})][..]
-// Task 6: bare eliminate
+// eliminate
 cell(elim(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,D1),0,0) ? [({D2,D3,D4})][..]
 cell(elim(put(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,{D2}),0,0,D1),0,0) ? [({D2})][..]
 // [][..] alone, [..][..] after the first probe above: bugs/empty-set-query-changes-later-result.nl
 //elim(put(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,{D2}),0,0,D2) ? [][..]
-// Task 7: assign + naked single
-cell(assign(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,D1),0,0) ? [({D1})][..]
-cell(assign(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,D1),0,1) ? [({D2,D3,D4})][..]
-cell(assign(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,D1),1,1) ? [({D2,D3,D4})][..]
-cell(assign(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,D1),2,2) ? [({D1,D2,D3,D4})][..]
-// Task 8: hidden single
-rowFree(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,D1,0) ? [({0,1,2,3})][..]
-boxFree(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,D1,0) ? [({0,1,2,3})][..]
-// D1 left only at (0,3) in row 0 -> placed there; that removes D4 from (0,3) -> D4 placed at (0,2)
-cell(elim([[{D1,D2,D3},{D2,D3},{D2,D3,D4},{D1,D4}],[{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4}],[{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4}],[{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4}]],0,0,D1),0,3) ? [({D1})][..]
-cell(elim([[{D1,D2,D3},{D2,D3},{D2,D3,D4},{D1,D4}],[{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4}],[{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4}],[{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4}]],0,0,D1),0,2) ? [({D4})][..]
-// Task 9: parse; propagation alone solves P0 (solution [[1,2,4,3],[3,4,1,2],[4,3,2,1],[2,1,3,4]])
-cell(parse([[1,0,0,0],[0,0,1,0],[0,3,0,0],[0,0,0,4]]),0,0) ? [({D1})][..]
-cell(parse([[1,0,0,0],[0,0,1,0],[0,3,0,0],[0,0,0,4]]),0,1) ? [({D2})][..]
-cell(parse([[1,0,0,0],[0,0,1,0],[0,3,0,0],[0,0,0,4]]),3,0) ? [({D2})][..]
-// Task 10: solved + MRV, on literal grids: Q2=[[0,0,3,4],[3,4,1,2],[0,0,4,3],[4,3,2,1]]
-// after propagation (4 blanks {D1,D2}, 2 solutions), and a solved grid
-solved([[{D1,D2},{D1,D2},{D3},{D4}],[{D3},{D4},{D1},{D2}],[{D1,D2},{D1,D2},{D4},{D3}],[{D4},{D3},{D2},{D1}]]) ? [][()]
-solved([[{D1},{D2},{D3},{D4}],[{D3},{D4},{D1},{D2}],[{D2},{D1},{D4},{D3}],[{D4},{D3},{D2},{D1}]]) ? [()][]
-minCand([[{D1,D2},{D1,D2},{D3},{D4}],[{D3},{D4},{D1},{D2}],[{D1,D2},{D1,D2},{D4},{D3}],[{D4},{D3},{D2},{D1}]]) ? [(2)][..]
-pickCell([[{D1,D2},{D1,D2},{D3},{D4}],[{D3},{D4},{D1},{D2}],[{D1,D2},{D1,D2},{D4},{D3}],[{D4},{D3},{D2},{D1}]],2,0) ? [(0)][..]
-pickCell([[{D1},{D2},{D3},{D4}],[{D3},{D4},{D1},{D2}],[{D1,D2},{D1,D2},{D4},{D3}],[{D4},{D3},{D2},{D1}]],2,0) ? [(8)][..]
-// Task 11: search; Q2's first success puts D1 at (0,0)
-solved(search([[{D1},{D2},{D3},{D4}],[{D3},{D4},{D1},{D2}],[{D2},{D1},{D4},{D3}],[{D4},{D3},{D2},{D1}]])) ? [()][]
-search([[{D1,D2},{D1,D2},{D3},{D4}],[{D3},{D4},{D1},{D2}],[{D1,D2},{D1,D2},{D4},{D3}],[{D4},{D3},{D2},{D1}]]) ? [([[{D1},{D2},{D3},{D4}],[{D3},{D4},{D1},{D2}],[{D2},{D1},{D4},{D3}],[{D4},{D3},{D2},{D1}]])][..]
-// backtracking: D1 at (0,0) empties (2,0), so D2 wins
-search([[{D1,D2},{D1,D2},{D3},{D4}],[{D3},{D4},{D1},{D2}],[{D1},{D1,D2},{D4},{D3}],[{D4},{D3},{D2},{D1}]]) ? [([[{D2},{D1},{D3},{D4}],[{D3},{D4},{D1},{D2}],[{D1},{D2},{D4},{D3}],[{D4},{D3},{D2},{D1}]])][..]
-// Task 12: unparse on a literal solved grid, then the solve oracle
-toNums([[{D1},{D2},{D3},{D4}],[{D3},{D4},{D1},{D2}],[{D2},{D1},{D4},{D3}],[{D4},{D3},{D2},{D1}]]) ? [([[1,2,3,4],[3,4,1,2],[2,1,4,3],[4,3,2,1]])][..]
-// end to end without parse: the givens assigned by hand (P0: propagation alone; Q2: DFS)
-toNums(search(assign(assign(assign(assign(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,D1),1,2,D1),2,1,D3),3,3,D4))) ? [([[1,2,4,3],[3,4,1,2],[4,3,2,1],[2,1,3,4]])][..]
-toNums(search(assign(assign(assign(assign(assign(assign(assign(assign(assign(assign(assign(assign(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,2,D3),0,3,D4),1,0,D3),1,1,D4),1,2,D1),1,3,D2),2,2,D4),2,3,D3),3,0,D4),3,1,D3),3,2,D2),3,3,D1))) ? [([[1,2,3,4],[3,4,1,2],[2,1,4,3],[4,3,2,1]])][..]
+// oracle: P0 and the two easy 4x4-smart puzzles (propagation alone), Q2 (DFS)
 solve([[1,0,0,0],[0,0,1,0],[0,3,0,0],[0,0,0,4]]) ? [([[1,2,4,3],[3,4,1,2],[4,3,2,1],[2,1,3,4]])][..]
 solve([[0,2,3,4],[3,4,1,0],[2,0,4,3],[4,3,0,1]]) ? [([[1,2,3,4],[3,4,1,2],[2,1,4,3],[4,3,2,1]])][..]
 solve([[0,0,0,0],[0,4,1,2],[2,1,0,3],[4,3,2,0]]) ? [([[1,2,3,4],[3,4,1,2],[2,1,4,3],[4,3,2,1]])][..]

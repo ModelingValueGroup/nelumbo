@@ -452,6 +452,9 @@ afterElim(g,r,c,d,ns)=s <=> E[g2](nakedSingle(g,r,c)=g2 & hidden(g2,r,c,d)=s) if
 
 **Files:** Modify `examples/sudoku-4x4-csp.nl`
 
+> **DONE (2026-10-27, Wim):** the blocker below is fixed (now `tests/call-arg-unbinds-index-in-pos-rule.nl`);
+> the probes are live.
+
 > **BLOCKED (2026-10-19)** on `bugs/call-arg-unbinds-index-in-pos-rule.nl` (`@KnownBug` in
 > `KnownBugsTest`): `parseAt`'s guard `icell(p,r,c)=0` gives "Inconsistent result ... non unique
 > bindings" on every row with two blanks: `iat(irow(p,r),c)=0` runs `0 pos il = i` with the bound
@@ -578,6 +581,9 @@ search(g)=s <=> s=g if solved(g),
 
 **Files:** Modify `examples/sudoku-4x4-csp.nl`
 
+> **DONE (2026-10-27, Wim):** the `solve` oracle is live now that `parse` works (Task 9); green
+> on the CLI twice, also with `-DREVERSE_NELUMBO=true` and `-DRANDOM_NELUMBO=true` (2026-10-28).
+
 > **PARTLY DONE (2026-10-19):** rules in the file (`q` declared). `toNums` decides on a literal
 > solved grid, and two end-to-end probes run `toNums(search(...))` with the givens assigned by
 > nested `assign` calls instead of `parse`: P0 (solved by propagation alone) and Q2 (DFS after
@@ -616,6 +622,11 @@ solve(p)=q    <=> q=toNums(search(parse(p)))
 
 **Files:** Modify `examples/sudoku-4x4-csp.nl`
 
+> **DONE (2026-10-28):** kept the accessor/`put`/`peer`/`elim` probes (the commented third `elim`
+> probe documents `bugs/empty-set-query-changes-later-result.nl`) and the `solve` oracle; the
+> header says `-DPARALLEL_COLLECTIONS=false` is no longer needed (evaluation runs sequentially).
+> ~9 s per run.
+
 - [ ] **Step 1:** Delete the intermediate probe queries from Tasks 1-11 (keep the accessor/`put`/`peer` ones only if they document behaviour cheaply). Keep the Task 12 `solve` oracle query as the file's assertion.
 - [ ] **Step 2:** Add a header comment block: what the file is (Norvig CSP, options-as-`Digit`), that it is CLI-only, the `-DPARALLEL_COLLECTIONS=false` note, and a pointer to this plan + the spec.
 - [ ] **Step 3: Run CLI, verify the oracle query PASSES, grep clean, twice.**
@@ -631,6 +642,10 @@ Line-for-line rescale of phase 1: digits 1-9, 3x3 boxes, indices 0-8, base cases
 
 **Files:** Create `examples/sudoku-9x9-csp.nl` (copy phase-1 file)
 
+> **DONE (2026-10-28)** together with Task 15 (ruling: not runnable alone). `/` is exact
+> division, so the steps' `/9`, `-(i/9)*9` are the `fr`/`fc` helpers with remainders
+> `{0..8}`; the DSL section is not copied (Task 17 BLOCKED).
+
 - [ ] **Step 1:** Copy `examples/sudoku-4x4-csp.nl` to `examples/sudoku-9x9-csp.nl`.
 - [ ] **Step 2:** Change `Digit ::= D1, D2, D3, D4` to `Digit ::= D1, D2, D3, D4, D5, D6, D7, D8, D9`.
 - [ ] **Step 3:** Extend `dig`/`undig` to 1-9. Extend `assignOthers` upper bound `i=5`->`i=10`.
@@ -642,6 +657,11 @@ Line-for-line rescale of phase 1: digits 1-9, 3x3 boxes, indices 0-8, base cases
 
 **Files:** Modify `examples/sudoku-9x9-csp.nl`
 
+> **DONE (2026-10-28):** `bb` 0/3/6, `bro(m)=k <=> E[t](t in {0,1,2} & (m-t)/3=k)`,
+> `bco(m) == m-3*bro(m)`. Fresh 9x9 probes (ruling): `dig`/`undig`, `icell`, `fullGrid`, box
+> and flat-index math, `peer` across a 3x3 box, `put`, `elim`, `assign`: all green, ~12 s. One
+> `assign` on the full grid takes ~10 s (4x4: ~0.4 s).
+
 - [ ] **Step 1:** `bb(r) <=> k=0 if r<3, k=3 if r>=3 & r<6, k=6 if r>=6`.
 - [ ] **Step 2:** In `boxFree`/`hBox`, change the 2x2 offset math `m/2`,`m-(m/2)*2` to 3x3: `m/3`,`m-(m/3)*3`.
 - [ ] **Step 3:** Re-point the phase-1 probes (Tasks 3-10) at 9x9 shapes (full set `{D1..D9}`, `minCand` etc.).
@@ -651,6 +671,16 @@ Line-for-line rescale of phase 1: digits 1-9, 3x3 boxes, indices 0-8, base cases
 ### Task 16: 9x9 puzzles + oracle
 
 **Files:** Modify `examples/sudoku-9x9-csp.nl`
+
+> **SLOW (2026-10-28), finding:** the oracle (the four `sudoku-9x9-smart.nl` puzzles, closed
+> expectations) is in the file, only the easiest (72 clues) active. `parse` costs ~7 s per
+> clue (1, 2, 3, 4, 6 clues: 20, 28, 35, 42, 54 s, all correct); `cell(parse(P1),0,0)` alone
+> did not finish within 30 minutes. Profile of one `assign` (JFR): most samples under
+> `Predicate.infer` -> `nrOfUnbound` -> `Node.allVars`/`allLocalVars`, plus
+> `Node.getBinding`: every new predicate instance walks its whole argument terms, here
+> 81-cell grid literals. Re-measured on develop 2c9672c2: unchanged, and
+> `-DMAX_LOGIC_MEMOIZ=100000` (which makes `sudoku-9x9.nl` fast) does not help (one `assign`
+> 11 s vs 12 s, 3 clues 26 s vs 28 s).
 
 - [ ] **Step 1:** Add the `solve(...)=p ? [...]` oracle for the puzzles from `sudoku-9x9-smart.nl` (copy the exact grids + solutions).
 - [ ] **Step 2: Run CLI twice.** A 9x9 search is heavy; if it does not terminate, note the timeout as a finding (not a workaround target) and keep the forced/easy puzzle as the primary oracle.
