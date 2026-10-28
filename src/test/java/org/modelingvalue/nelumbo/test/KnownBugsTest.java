@@ -170,12 +170,6 @@ public class KnownBugsTest extends NelumboTestBase {
         bugResource("single-unique-hole-not-closed.nl");
     }
 
-    @KnownBug("facts of two imported modules under one lookup are merged as complete (closed)")
-    @Test
-    public void importMergeClosesFacts() {
-        bugResource("import-merge-closes-facts.nl");
-    }
-
     @KnownBug("variable nested in a fact argument (owns(Piet,box(n))) is not bound by the lookup")
     @Test
     public void nestedArgumentVariableNotNavigated() {

@@ -1,4 +1,4 @@
 // Facts for import-merge-closes-facts.nl.
-import org.modelingvalue.nelumbo.bugs.importmerge.base
+import org.modelingvalue.nelumbo.tests.importmerge.base
 
 fact r(X,Z)

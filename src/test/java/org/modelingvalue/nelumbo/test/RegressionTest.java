@@ -176,6 +176,12 @@ public class RegressionTest extends NelumboTestBase {
         testResource("unbound-predicate-not-resolved.nl");
     }
 
+    // facts of two imported modules under one lookup stay open (not complete)
+    @RepeatedTest(10)
+    public void importMergeClosesFacts() {
+        testResource("import-merge-closes-facts.nl");
+    }
+
     // an index error next to a false bound check is irrelevant, in every operand
     // order
     @RepeatedTest(10)

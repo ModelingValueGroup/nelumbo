@@ -71,7 +71,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     public static final boolean TRACE_SYNTATIC = Boolean.getBoolean("TRACE_SYNTATIC");
     //
     // Defaults of the evaluation settings of BASE (read once, at class load). Every
-    // other knowledge base copies the settings of the one it is created from; change
+    // other knowledge base copies the settings of the one it is created from;
+    // change
     // them per knowledge base with the setters below.
     private static final boolean TRACE_NELUMBO       = Boolean.getBoolean("TRACE_NELUMBO");
     private static final boolean RANDOM_NELUMBO      = Boolean.getBoolean("RANDOM_NELUMBO");
@@ -327,12 +328,12 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     private long                  deadlineNanos;
     private boolean               worldScopedVariables;
     // evaluation settings (trace lives in context)
-    private InferContext          context;
-    private boolean               randomOrder;
-    private boolean               reverseOrder;
-    private int                   maxLogicDepth;
-    private int                   maxLogicMemoiz;
-    private int                   initialUsageCount;
+    private InferContext context;
+    private boolean      randomOrder;
+    private boolean      reverseOrder;
+    private int          maxLogicDepth;
+    private int          maxLogicMemoiz;
+    private int          initialUsageCount;
 
     public KnowledgeBase(KnowledgeBase init) {
         this.init = init;
@@ -353,7 +354,9 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     // ---- evaluation settings: defaults from the system properties of the same
     // ---- name (see the constants above), inherited by child knowledge bases
 
-    /** Rules in random order (RANDOM_NELUMBO); also randomly flips binary operands. */
+    /**
+     * Rules in random order (RANDOM_NELUMBO); also randomly flips binary operands.
+     */
     public void setRandomOrder(boolean randomOrder) {
         this.randomOrder = randomOrder;
     }
@@ -362,7 +365,10 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return randomOrder;
     }
 
-    /** Rules in reverse order (REVERSE_NELUMBO); also flips binary operands. Wins over random. */
+    /**
+     * Rules in reverse order (REVERSE_NELUMBO); also flips binary operands. Wins
+     * over random.
+     */
     public void setReverseOrder(boolean reverseOrder) {
         this.reverseOrder = reverseOrder;
     }
@@ -371,7 +377,10 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return reverseOrder;
     }
 
-    /** Inference stack depth after which a predicate reports an overflow (MAX_LOGIC_DEPTH). */
+    /**
+     * Inference stack depth after which a predicate reports an overflow
+     * (MAX_LOGIC_DEPTH).
+     */
     public void setMaxLogicDepth(int maxLogicDepth) {
         this.maxLogicDepth = maxLogicDepth;
     }
@@ -380,7 +389,9 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return maxLogicDepth;
     }
 
-    /** Number of memoized inferences kept before cleanup starts (MAX_LOGIC_MEMOIZ). */
+    /**
+     * Number of memoized inferences kept before cleanup starts (MAX_LOGIC_MEMOIZ).
+     */
     public void setMaxLogicMemoiz(int maxLogicMemoiz) {
         this.maxLogicMemoiz = maxLogicMemoiz;
     }
@@ -389,7 +400,10 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return maxLogicMemoiz;
     }
 
-    /** Cleanup rounds a memoized inference survives (INITIAL_USAGE_COUNT); every hit adds one. */
+    /**
+     * Cleanup rounds a memoized inference survives (INITIAL_USAGE_COUNT); every hit
+     * adds one.
+     */
     public void setInitialUsageCount(int initialUsageCount) {
         this.initialUsageCount = initialUsageCount;
     }
@@ -473,7 +487,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     // facts of two knowledge bases under the same index key (e.g. two modules
     // adding facts to one fact type)
     private static InferResult mergeFacts(InferResult a, InferResult b) {
-        return a.facts().equals(b.facts()) ? a : InferResult.factsCI(a.predicate(), a.facts().addAll(b.facts()));
+        return a.facts().equals(b.facts()) ? a : a.biimply(b);
     }
 
     @SuppressWarnings("unchecked")
