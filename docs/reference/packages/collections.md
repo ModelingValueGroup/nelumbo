@@ -373,7 +373,7 @@ at i in [1,2,3] = 2                    ?   [(i=1)][..]
 [3,2,2,1] sort [ib,ia](ib<ia) = l      ?   [(l=[1,2,2,3])][..]
 ```
 
-Collection values print back in their literal form on the facts side. The CSP-style sudoku solver [`sudoku-4x4-csp.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/sudoku-4x4-csp.nl) is a larger user of `map` over lists of lists.
+Collection values print back in their literal form on the facts side. The CSP-style sudoku solver [`sudoku/csp4x4.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/sudoku/csp4x4.nl) is a larger user of `map` over lists of lists.
 
 ---
 

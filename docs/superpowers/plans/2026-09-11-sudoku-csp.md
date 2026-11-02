@@ -682,6 +682,13 @@ Line-for-line rescale of phase 1: digits 1-9, 3x3 boxes, indices 0-8, base cases
 > `-DMAX_LOGIC_MEMOIZ=100000` (which makes `sudoku-9x9.nl` fast) does not help (one `assign`
 > 11 s vs 12 s, 3 clues 26 s vs 28 s).
 
+> **DONE (2026-10-29), correcting the above:** short probes never fill the memoization, so
+> they hid it: with `-DMAX_LOGIC_MEMOIZ=100000` (develop 3f0f9312) all four puzzles solve
+> correctly, one query per run, 6 runs in parallel: 72 clues 240 s, 64 clues 1154 s, the
+> "real" one 1041 s, 26 clues 1108 s. With the default (10000) none finishes within 10
+> minutes. Only the 72-clue puzzle stays active; `SudokuExamplesTest.sudoku9x9Csp` (Wim) is
+> `@Disabled` at ~235 s.
+
 - [ ] **Step 1:** Add the `solve(...)=p ? [...]` oracle for the puzzles from `sudoku-9x9-smart.nl` (copy the exact grids + solutions).
 - [ ] **Step 2: Run CLI twice.** A 9x9 search is heavy; if it does not terminate, note the timeout as a finding (not a workaround target) and keep the forced/easy puzzle as the primary oracle.
 - [ ] **Step 3:** Trim intermediate probes, add the header comment.
