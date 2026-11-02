@@ -19,11 +19,11 @@ package org.modelingvalue.nelumbo;
 import java.io.Serial;
 
 /**
- * Thrown by the inference engine when the current {@link KnowledgeBase} is past its deadline (see
- * {@link KnowledgeBase#setDeadlineNanos(long)}). Unwinds the in-progress inference so a long-running query can be
- * aborted cooperatively.
+ * Thrown by the inference engine when the current {@link KnowledgeBase} is past
+ * its deadline (see {@link KnowledgeBase#setDeadlineNanos(long)}). Unwinds the
+ * in-progress inference so a long-running query can be aborted cooperatively.
  */
-public final class NelumboTimeoutException extends RuntimeException {
+public final class NelumboTimeoutException extends NelumboException {
     @Serial
     private static final long serialVersionUID = 1L;
 

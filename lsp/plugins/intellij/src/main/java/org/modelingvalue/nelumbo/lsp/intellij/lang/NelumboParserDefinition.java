@@ -29,11 +29,12 @@ import com.intellij.psi.tree.IFileElementType;
 import com.intellij.psi.tree.TokenSet;
 import org.jetbrains.annotations.NotNull;
 import org.modelingvalue.nelumbo.lsp.intellij.Constants;
+import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public class NelumboParserDefinition implements ParserDefinition {
     private static final IFileElementType FILE        = new IFileElementType(Constants.NELUMBO);
     private static final TokenSet         WHITESPACES = TokenSet.create(com.intellij.psi.TokenType.WHITE_SPACE);
-    private static final TokenSet         COMMENTS    = TokenSet.EMPTY;
+    private static final TokenSet         COMMENTS    = TokenSet.create(NelumboTokenType.forNelumbo(TokenType.END_LINE_COMMENT), NelumboTokenType.forNelumbo(TokenType.IN_LINE_COMMENT));
     private static final TokenSet         STRINGS     = TokenSet.EMPTY;
 
     @Override

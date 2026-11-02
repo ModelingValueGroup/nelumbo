@@ -67,6 +67,7 @@ import javax.swing.text.ViewFactory;
 
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstants;
+import org.modelingvalue.nelumbo.NelumboException;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 import com.formdev.flatlaf.FlatLightLaf;
@@ -165,14 +166,13 @@ public class NelumboEditor {
             { "Examples", "scoping.nl", "Scoping" }, { "Examples", "koningsdag.nl", "Koningsdag" },
             // Assignments
             { "Assignments", "powerAssignment.nl", "Power Assignment" },
-            { "Assignments", "ternaryAssignment.nl", "Ternary Assignment" },
             { "Assignments", "maxAssignment.nl", "Max Assignment" },
             { "Assignments", "evenAssignment.nl", "Even Assignment" },
             { "Assignments", "familyAssignment.nl", "Family Assignment" },
             { "Assignments", "maxFibAssignment.nl", "Maximal Fibonacci Assignment" },
             { "Assignments", "transformationAssignment.nl", "Transformation Assignment" },
             // Answers
-            { "Answers", "power.nl", "Power Answer" }, { "Answers", "ternary.nl", "Ternary Answer" },
+            { "Answers", "power.nl", "Power Answer" },
             { "Answers", "max.nl", "Max Answer" }, { "Answers", "even.nl", "Even Answer" },
             { "Answers", "family.nl", "Family Answer" }, { "Answers", "maxFib.nl", "Maximal Fibonacci Answer" },
             { "Answers", "transformation.nl", "Transformation Answer" }, };
@@ -650,7 +650,7 @@ public class NelumboEditor {
      * Thrown when an EDT call via {@link #callOnEDT} or {@link #runOnEDT} fails due
      * to thread interruption or an exception in the invoked code.
      */
-    public static class EDTException extends RuntimeException {
+    public static class EDTException extends NelumboException {
         @Serial
         private static final long serialVersionUID = -1432595155043617847L;
 

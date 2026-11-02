@@ -16,68 +16,114 @@
 
 package org.modelingvalue.nelumbo.test;
 
-import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
+import org.modelingvalue.nelumbo.KnowledgeBase;
 
-// Both 4x4 examples solve again (~2.5s each) but are gated as flaky (see the
-// methods): the engine's state/race and speculative-evaluation bugs make them
-// fail occasionally, and in CI. From bba88fc8 (2026-09-09, "rename
-// generic types...") until the 2026-09-24 fix they failed EVERYWHERE
-// deterministically - CLI: ClassCast "Variable cannot be cast to List" at
-// NList.collection; test JVM: expectation mismatches with unreduced terms
-// (map/scanF left unevaluated); minimal repro recursive-list-concat-classcast.nl
-// (now in RegressionTest). The old note here ("crashes in the test JVM yet
-// never in a fresh CLI JVM, 20/20") was an artifact of a STALE cliJar built
-// before bba88fc8 - investigated and explained 2026-09-13, no environment
-// factor. The 9x9 methods stay gated for the reasons noted below.
+// All sudoku examples run (2026-10-28): every file green on the CLI in default,
+// reversed and random rule order. The 9x9 ones need a memoization of 100000
+// (set below); with the default 10000 the brute-force 9x9 runs 2+ hours.
+// Solvers and puzzles are modules in sudoku/; the example files of one size are
+// identical except for the solver import.
+// The slow ones only run with SLOW_SUDOKU=true in the environment.
 public class SudokuExamplesTest extends NelumboTestBase {
 
     static {
         setProp("PARALLEL_COLLECTIONS", "false");
-        setProp("REVERSE_NELUMBO", "false");
-        setProp("RANDOM_NELUMBO", "false");
-        setProp("TRACE_NELUMBO", "false");
         setProp("TRACE_SYNTATIC", "false");
         setProp("VERBOSE_TESTS", "false");
     }
 
-    // Solves (~2.5s, 10/10 locally) but crashed in CI (2026-09-24, run 35982650165)
-    // with IndexOutOfBoundsException in a native pos via Predicate.callMethod - the
-    // speculative-guard-index-crash.nl bug (KnownBugsTest), timing-dependent.
-    @Disabled("flaky: speculative guard evaluation crashes an out-of-range pos (see speculative-guard-index-crash.nl); green locally, red in CI")
-    @Test
-    public void sudoku4x4() {
-        exampleResource("sudoku-4x4.nl");
+    @Override
+    protected void settings(KnowledgeBase kb) {
+        kb.setMaxLogicMemoiz(env("MAX_LOGIC_MEMOIZ", 100000));
+        kb.setReverseOrder(env("REVERSE_NELUMBO", false));
+        kb.setRandomOrder(env("RANDOM_NELUMBO", true));
+        kb.setTrace(env("TRACE_NELUMBO", false));
     }
 
-    // 2026-09-24: solved (~2.5s) but 1 in ~10 runs returned undecided ([][..]) -
-    // the run-to-run nondeterminism of nondeterministic-inference.nl (in a JVM
-    // shared with other test classes). 2026-09-25: that repro is fixed and
-    // promoted to RegressionTest; re-measured the same day at f52a88cf: 5/5 green
-    // on the CLI with -DPARALLEL_COLLECTIONS=false and green here (2.4s) - but
-    // WITHOUT the flag the CLI crashes 3/3 with IndexOutOfBoundsException in
-    // Collections.indexOf (the speculative-guard-index-crash.nl bug), which is
-    // the same crash that hit sudoku4x4() in CI, so it stays gated with it.
-    @Disabled("flaky: speculative guard evaluation crashes an out-of-range pos (see speculative-guard-index-crash.nl); green locally, same crash as sudoku4x4() in CI without PARALLEL_COLLECTIONS=false")
-    @Test
-    public void sudoku4x4Smart() {
-        exampleResource("sudoku-4x4-smart.nl");
+    @RepeatedTest(10)
+    public void sudokuBrute4x4Easy() {
+        exampleResource("sudoku-brute-4x4-easy.nl");
     }
 
-    // Also brute-force 9x9: its third "real" puzzle ran 2+ hours without
-    // finishing, so it would hang the build even if the race above were fixed.
-    @Disabled("CLI-only (parallel-collections race) and the 'real' puzzle runs 2+ hours")
-    @Test
-    public void sudoku9x9() {
-        exampleResource("sudoku-9x9.nl");
+    @RepeatedTest(10)
+    public void sudokuSmart4x4Easy() {
+        exampleResource("sudoku-smart-4x4-easy.nl");
     }
 
-    // Also singles-first 9x9: ~45s per run and run-to-run nondeterministic
-    // (inference has its own parallel pool), so unfit for CI even if fixed.
-    @Disabled("CLI-only (parallel-collections race), ~45s and run-to-run nondeterministic")
+    // ~8s per run, so not repeated (10/10 green as @RepeatedTest(10)).
     @Test
-    public void sudoku9x9Smart() {
-        exampleResource("sudoku-9x9-smart.nl");
+    public void sudokuCsp4x4Easy() {
+        exampleResource("sudoku-csp-4x4-easy.nl");
+    }
+
+    // ~95-145s with MAX_LOGIC_MEMOIZ=100000, most of it the 26-clue puzzle.
+    @Test
+    public void sudokuBrute9x9Easy() {
+        exampleResource("sudoku-brute-9x9-easy.nl");
+    }
+
+    // ~65-95s.
+    @Test
+    public void sudokuSmart9x9Easy() {
+        exampleResource("sudoku-smart-9x9-easy.nl");
+    }
+
+    // ~1 hour (estimated from single-puzzle runs: 72 clues ~4 min, the rest ~17-19 min).
+    @Test
+    @EnabledIfEnvironmentVariable(named = "SLOW_SUDOKU", matches = "true")
+    public void sudokuCsp9x9Easy() {
+        exampleResource("sudoku-csp-9x9-easy.nl");
+    }
+
+    // A puzzle where the CSP wins (25 clues, naked + hidden singles only), one file
+    // per solver: csp ~290s, brute force and singles-first did not finish within
+    // 60 min each (2026-11-02, CLI, memo 100000).
+    @Test
+    @EnabledIfEnvironmentVariable(named = "SLOW_SUDOKU", matches = "true")
+    public void sudokuCsp9x9Hard() {
+        exampleResource("sudoku-csp-9x9-hard.nl");
+    }
+
+    @Test
+    @EnabledIfEnvironmentVariable(named = "SLOW_SUDOKU", matches = "true")
+    public void sudokuSmart9x9Hard() {
+        exampleResource("sudoku-smart-9x9-hard.nl");
+    }
+
+    @Test
+    @EnabledIfEnvironmentVariable(named = "SLOW_SUDOKU", matches = "true")
+    public void sudokuBrute9x9Hard() {
+        exampleResource("sudoku-brute-9x9-hard.nl");
+    }
+
+    // unit tests of the solver modules (the example files hold only puzzles)
+
+    @Test
+    public void brute4x4Units() {
+        testResource("sudokuBrute4x4Test.nl");
+    }
+
+    @Test
+    public void csp4x4Units() {
+        testResource("sudokuCsp4x4Test.nl");
+    }
+
+    @Test
+    public void brute9x9Units() {
+        testResource("sudokuBrute9x9Test.nl");
+    }
+
+    @Test
+    public void smart9x9Units() {
+        testResource("sudokuSmart9x9Test.nl");
+    }
+
+    @Test
+    public void csp9x9Units() {
+        testResource("sudokuCsp9x9Test.nl");
     }
 
 }

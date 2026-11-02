@@ -96,7 +96,8 @@ public final class ExistentialQuantifier extends Quantifier {
                 completeFalsehoods = false;
             }
         }
-        return InferResult.of(this, facts, completeFacts, falsehoods, completeFalsehoods, predResult.cycles());
+        return InferResult.of(this, facts, completeFacts, falsehoods, completeFalsehoods, predResult.cycles(),
+                predResult.exceptions());
     }
 
 }

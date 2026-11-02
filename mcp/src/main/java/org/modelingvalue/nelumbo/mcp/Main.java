@@ -154,7 +154,8 @@ public final class Main {
                 Tool.builder("eval_nl", schema)
                         .description("Parse and evaluate a self-contained Nelumbo (.nl) decision model. Returns ok, "
                                 + "diagnostics (line/col/message/sourceLine/caret, plus hint and docRef for known "
-                                + "traps) and per-query results incl. whether embedded expected results matched.\n\n"
+                                + "traps) and per-query results incl. whether the facts/falsehoods are complete and "
+                                + "whether embedded expected results matched.\n\n"
                                 + PRIMER)
                         .build(),
                 args -> tools.evalNl((String) args.get("content"), (String) args.get("name")));

@@ -48,9 +48,16 @@ public final class NelumboEvaluator {
     public record Diagnostic(int line, int col, int length, String message) {
     }
 
-    /** expectationMatched is null when the query carries no expected result. */
+    /**
+     * expectationMatched is null when the query carries no expected result.
+     * completeFacts/completeFalsehoods tell whether facts/falsehoods are all of
+     * them (no {@code ..} in the result); without them an empty list could mean
+     * "none" or "unknown". All three are null, like result, when the query has no
+     * result.
+     */
     public record QueryOutcome(String query, String result, Boolean expectationMatched,
-            List<java.util.Map<String, String>> facts, List<java.util.Map<String, String>> falsehoods) {
+            List<java.util.Map<String, String>> facts, List<java.util.Map<String, String>> falsehoods,
+            Boolean completeFacts, Boolean completeFalsehoods) {
     }
 
     public record EvalResult(boolean ok, List<Diagnostic> diagnostics, List<QueryOutcome> queries,
@@ -203,7 +210,9 @@ public final class NelumboEvaluator {
         Boolean expectation = query.hasExpected() ? matched : null;
         return new QueryOutcome(sb.toString().trim(), ir == null ? null : ir.toString(), expectation,
                 ir == null ? List.of() : bindings(ir.trueBindings()),
-                ir == null ? List.of() : bindings(ir.falseBindings()));
+                ir == null ? List.of() : bindings(ir.falseBindings()),
+                ir == null ? null : ir.completeFacts(),
+                ir == null ? null : ir.completeFalsehoods());
     }
 
     private static List<java.util.Map<String, String>> bindings(

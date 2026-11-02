@@ -51,7 +51,7 @@ public final class Query extends Node implements Evaluatable {
         if (reason == ConstructionReason.parsing) {
             Node node = (Node) get(0);
             Variable var = node instanceof Predicate ? null
-                    : new Variable(List.of(), true, node.type().nonFunction(), "r" + uniqueId());
+                    : new Variable(List.of(), true, node.type().nonFunction(), "r$" + uniqueId());
             Predicate nodePred = var == null ? (Predicate) node : new NIs(node.astElements(), node, var);
             Predicate predicate = nodePred.setVariables(knowledgeBase,
                     Predicate.literals(nodePred.getBinding(nodePred)), ctx);
@@ -176,8 +176,21 @@ public final class Query extends Node implements Evaluatable {
         InferResult found;
         try {
             found = predicate.infer().predicate(predicate);
-        } catch (InconsistencyException ie) {
-            handler.addException(new ParseException(ie.getMessage(), predicate));
+            if (found.isUnknownWithPossibleCyclesOrExceptions() && !found.exceptions().isEmpty()) {
+                for (Entry<Predicate, RuntimeException> e : found.exceptions()) {
+                    RuntimeException exc = e.getValue();
+                    String message = exc.getMessage();
+                    Predicate pred = e.getKey();
+                    handler.addException(new ParseException(exc,
+                            message != null ? message : exc.getClass().getSimpleName() + " in " + pred.toBaseString(),
+                            predicate));
+                }
+                return;
+            }
+        } catch (
+
+        InconsistencyException ie) {
+            handler.addException(new ParseException(ie, ie.getMessage(), predicate));
             return;
         }
         inferResult = found;
@@ -189,7 +202,7 @@ public final class Query extends Node implements Evaluatable {
             Set<Predicate> falsePredicates = falseBindings.map(b -> predicate.setBinding(predicate, b)).asSet();
             boolean completeFalsehoods = completeFalsehoods();
             InferResult expected = InferResult.of(predicate, truePredicates, completeFacts, falsePredicates,
-                    completeFalsehoods, Set.of());
+                    completeFalsehoods, Set.of(), Map.of());
             if (!found.equals(expected)) {
                 List<AstElement> astElements = astElements();
                 handler.addException(new ParseException("Expected result " + expected + ", found " + found, //

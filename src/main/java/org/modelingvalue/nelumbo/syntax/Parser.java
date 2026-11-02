@@ -145,9 +145,6 @@ public final class Parser implements ParseExceptionHandler {
         Node left = result.postParse();
         token = left != null && inner.precedence() < Integer.MAX_VALUE ? left.nextToken() : null;
         while (token != null && preParse(group, token, left, result, inner, null)) {
-            if (inner.precedence() >= result.leftPrecedence()) {
-                return left;
-            }
             left = result.postParse();
             token = left != null ? left.nextToken() : null;
         }
@@ -159,7 +156,12 @@ public final class Parser implements ParseExceptionHandler {
         for (ParseContext pc = outer != null ? outer : result.context(); pc != null; pc = outer != null ? null
                 : pc.outer()) {
             if (pc.preParse(group, token, left, result)) {
-                return true;
+                if (left != null && inner.precedence() < result.leftPrecedence()) {
+                    return true;
+                }
+                if (left == null && inner.precedence() <= result.leftPrecedence()) {
+                    return true;
+                }
             }
             if (left == null) {
                 Map<Type, Variable> vars = pc.hiddenVariables(group);

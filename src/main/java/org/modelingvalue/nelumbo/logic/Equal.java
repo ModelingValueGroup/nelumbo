@@ -48,7 +48,7 @@ public class Equal extends Predicate {
     }
 
     @Override
-    protected InferResult infer(int nrOfUnbound, InferContext context) {
+    public InferResult infer(int nrOfUnbound, InferContext context) {
         boolean[] complete = new boolean[] { true };
         Node eq = eq(left(), right(), complete);
         if (eq == null) {
@@ -62,7 +62,7 @@ public class Equal extends Predicate {
     private static Node eq(Node left, Node right, boolean[] complete) {
         if (left instanceof Variable && right instanceof Variable) {
             complete[0] = false;
-            return Objects.equals(left, right) ? left : null;
+            return Objects.equals(left.type(), right.type()) ? left : null;
         } else if (right instanceof Variable var) {
             complete[0] = false;
             return var.type().getAssigned(left);

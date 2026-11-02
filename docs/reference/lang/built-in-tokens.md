@@ -87,7 +87,7 @@ A type hole may carry a **precedence annotation**:
 T ::= <Boolean#5> ? <T> : <T>
 ```
 
-From `ternary.nl`. The `#5` restricts what can appear in the hole to expressions with precedence at least 5 — used to avoid ambiguity with surrounding operators. See [`precedence-and-associativity.md`](precedence-and-associativity.md).
+A user-defined conditional `b ? t : f` (`Type T`). The `#5` restricts what can appear in the hole to expressions with precedence at least 5 — used to avoid ambiguity with surrounding operators. See [`precedence-and-associativity.md`](precedence-and-associativity.md).
 
 A type hole may also be marked with a visibility modifier:
 

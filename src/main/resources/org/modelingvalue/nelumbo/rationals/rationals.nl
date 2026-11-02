@@ -37,8 +37,7 @@ a/b=c <=>  mult(c,b,a)
 
 -a    ==  0.0-a
 
-|a|   ==  a  if a>=0.0,
-          -a if a<0.0
+|a|   ==  (a<0.0 then -a else a)
 
 Integer x, y
 

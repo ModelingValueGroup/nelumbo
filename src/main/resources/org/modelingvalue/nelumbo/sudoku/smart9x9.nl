@@ -1,0 +1,85 @@
+import nelumbo.collections
+
+// Singles-first sudoku solver: a hand-tuned alternative to brute9x9.nl.
+// scanF walks the grid looking for a forced blank (at most one fitting digit):
+// exactly one is a forced move (placed without branching), zero is a dead end
+// (the placing E fails, backtracking immediately). Only when no forced blank
+// exists solveBX guesses at the first blank. With enough memoization
+// (-DMAX_LOGIC_MEMOIZ=100000) the plain brute force of brute9x9.nl is faster.
+// Puzzles: examples/sudoku-smart-9x9-easy.nl, unit tests: tests/sudokuSmart9x9Test.nl.
+//
+// Rule-shape notes: at/row are bounds-guarded because guards are probed
+// speculatively and an out-of-range index is an error; the alternatives of
+// scanB have disjoint guards (otherwise Inconsistent results); an
+// alternative's `if` guard must never sit alone on its own line (a NEWLINE
+// after a non-operator ends the statement - break only inside unbalanced parens).
+
+// ---- types ----------------------------------------------------------
+Grid :: Object        // placeholder so we can name the nested list type
+Integer             ::= at(<List<Integer>>,<Integer>),
+                        cell(<List<List<Integer>>>,<Integer>,<Integer>),
+                        sel(<Integer>,<Integer>,<Integer>,<Integer>),
+                        bb(<Integer>)
+Boolean             ::= ok(<List<List<Integer>>>,<Integer>,<Integer>,<Integer>),
+                        forced(<List<List<Integer>>>,<Integer>,<Integer>)
+List<Integer>       ::= row(<List<List<Integer>>>,<Integer>),
+                        putRow(<List<Integer>>,<Integer>,<Integer>)
+List<List<Integer>> ::= rowsBefore(<List<List<Integer>>>,<Integer>),
+                        rowsFrom(<List<List<Integer>>>,<Integer>),
+                        put(<List<List<Integer>>>,<Integer>,<Integer>,<Integer>)
+
+List<List<Integer>> g, g2, s, p, q
+List<Integer>       l, rw, rw2
+Integer             r, c, d, x, y, i, j
+
+// ---- access (bounds-guarded: the engine probes rule guards speculatively,
+// ---- an unguarded out-of-range index is an error, not false) ---------
+at(l,i)=x        <=>  at i in l = x   if i>=0 & i<9
+row(g,r)=rw      <=>  at r in g = rw  if r>=0 & r<9
+cell(g,r,c)      ==  at(row(g,r),c)
+
+// ---- update (functional) -------------------------------------------
+sel(j,i,d,x)        ==  d if j=i,  x if j!=i
+putRow(l,i,d)       ==  [0,1,2,3,4,5,6,7,8] map [j](sel(j,i,d,at(l,j)))
+rowsBefore(g,r)=s   <=>  s=[]                                                       if r=0,
+                         E[rw,p](row(g,r-1)=rw & rowsBefore(g,r-1)=p & s=p+[rw])    if r>0
+rowsFrom(g,r)=s     <=>  s=[]                                                       if r=9,
+                         E[rw,q](row(g,r)=rw & rowsFrom(g,r+1)=q & s=[rw]+q)        if r<9
+put(g,r,c,d)=s      <=>  E[p,q](rowsBefore(g,r)=p & rowsFrom(g,r+1)=q &
+                                E[rw,rw2](row(g,r)=rw & putRow(rw,c,d)=rw2 & s=p+[rw2]+q))
+
+// ---- constraint: d allowed at (r,c)? bb = box base row/column --------
+bb(r)            ==  0 if r<3,  3 if r>=3 & r<6,  6 if r>=6
+ok(g,r,c,d)      <=>  !E[rw](row(g,r)=rw & d in rw) &
+                      !E[i](i in {0,1,2,3,4,5,6,7,8} & cell(g,i,c)=d) &
+                      !E[x,y](bb(r)=x & bb(c)=y & E[i,j](i in {0,1,2} & j in {0,1,2} & cell(g,x+i,y+j)=d))
+
+// ---- forced: a blank where at most one digit fits (no two distinct
+// ---- fitting digits) -------------------------------------------------
+forced(g,r,c)    <=>  cell(g,r,c)=0 &
+                      !E[x,y](x in {1,2,3,4,5,6,7,8} & y in {2,3,4,5,6,7,8,9} & x<y & ok(g,r,c,x) & ok(g,r,c,y))
+
+// ---- search: scanF walks filled cells, scanB decides each blank (scan on
+// ---- vs forced move), solveBX guesses at the first blank when no blank is
+// ---- forced --------------------------------------------------------
+List<List<Integer>> ::= scanF(<List<List<Integer>>>,<Integer>,<Integer>),
+                        scanB(<List<List<Integer>>>,<Integer>,<Integer>),
+                        solveBX(<List<List<Integer>>>,<Integer>,<Integer>),
+                        sudoku(<List<List<Integer>>>)
+scanF(g,r,c)     ==  solveBX(g,0,0)   if r=9,
+                     scanF(g,r+1,0)   if r<9 & c=9,
+                     scanF(g,r,c+1)   if r<9 & c<9 & cell(g,r,c)!=0,
+                     scanB(g,r,c)     if r<9 & c<9 & cell(g,r,c)=0
+scanB(g,r,c)=s   <=>  s=scanF(g,r,c+1)   if E[x,y](x in {1,2,3,4,5,6,7,8} & y in {2,3,4,5,6,7,8,9} & x<y &
+                                                   ok(g,r,c,x) & ok(g,r,c,y)),
+                      E[d,g2](d in {1,2,3,4,5,6,7,8,9} & ok(g,r,c,d) &
+                              put(g,r,c,d)=g2 & s=scanF(g2,0,0))  if !E[x,y](x in {1,2,3,4,5,6,7,8} & y in {2,3,4,5,6,7,8,9} & x<y &
+                                                   ok(g,r,c,x) & ok(g,r,c,y))
+solveBX(g,r,c)=s <=>  s=g                 if r=9,
+                      s=solveBX(g,r+1,0)  if r<9 & c=9,
+                      s=solveBX(g,r,c+1)  if r<9 & c<9 & cell(g,r,c)!=0,
+                      E[d,g2](d in {1,2,3,4,5,6,7,8,9} & ok(g,r,c,d) &
+                              put(g,r,c,d)=g2 & s=scanF(g2,0,0))  if r<9 & c<9 & cell(g,r,c)=0
+
+sudoku(g)            ==  scanF(g,0,0)
+

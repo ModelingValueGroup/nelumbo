@@ -20,7 +20,7 @@ Set<Integer>       ds, cs
 List<Set<Integer>> sl, crw
 Integer            n, j, i
 
-sat(crw,j)=cs <=>  cs pos crw = j
+sat(crw,j)=cs <=>  at j in crw = cs
 me(j)=ds      <=>  ds={1} if E[i](i in {0,1,2} & i=j),  ds={2} if !E[i](i in {0,1,2} & i=j)
 meAll(n)=sl   <=>  sl = [0,1,5] map [j](me(j))
 

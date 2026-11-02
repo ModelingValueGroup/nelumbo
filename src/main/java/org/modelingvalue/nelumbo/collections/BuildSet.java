@@ -81,7 +81,8 @@ public final class BuildSet extends Quantifier {
             falsehoods = falsehoods
                     .add(setBinding(this, falshood.getBinding(predicate)).set(1, new NSet(type, Set.of(val), false)));
         }
-        return InferResult.of(this, facts, true, falsehoods, completeFalsehoods, predResult.cycles());
+        return InferResult.of(this, facts, true, falsehoods, completeFalsehoods, predResult.cycles(),
+                predResult.exceptions());
     }
 
     @Override

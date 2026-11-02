@@ -172,6 +172,8 @@ function ensureServices(): void {
     }
     MonacoServices.install(monaco);
     monaco.languages.register({ id: LANGUAGE_ID, extensions: ['.nl'] });
+    // Toggle Line Comment (Cmd/Ctrl+/) and Toggle Block Comment (Shift+Alt+A)
+    monaco.languages.setLanguageConfiguration(LANGUAGE_ID, { comments: { lineComment: '//', blockComment: ['/*', '*/'] } });
     // Query-result inlay hints: the server picks the style bucket via the hint kind
     // (QueryResultCache): no kind = matched expectation (green checkmark), Type = plain result
     // value (purple chip), Parameter = failed expectation/error (red on pink chip).

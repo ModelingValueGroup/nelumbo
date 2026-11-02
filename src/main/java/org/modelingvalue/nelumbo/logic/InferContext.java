@@ -50,7 +50,8 @@ public interface InferContext {
 
     default InferResult incompleteResult(Predicate predicate) {
         InferResult incompleteResult = incompleteResult().get();
-        return incompleteResult.hasStackOverflow() ? incompleteResult : predicate.unknown(incompleteResult.cycles());
+        return incompleteResult.hasStackOverflow() ? incompleteResult
+                : predicate.unknown(incompleteResult.cycles(), incompleteResult.exceptions());
     }
 
     static InferContext of(KnowledgeBase knowledgebase, List<Predicate> stack, //

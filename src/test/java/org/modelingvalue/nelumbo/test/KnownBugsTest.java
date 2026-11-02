@@ -22,19 +22,32 @@ import java.io.IOException;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstants;
-import org.modelingvalue.nelumbo.tools.NelumboEvaluator;
 import org.modelingvalue.nelumbo.tools.NelumboEvaluator.EvalResult;
 
 // The known-bug (xfail) suite. Every method runs a red-by-design .nl repro
 // from src/main/resources/org/modelingvalue/nelumbo/bugs/ whose query
 // expectations state the CORRECT behavior. While the bug exists the method is
 // ABORTED (grey); once fixed it FAILS with "KNOWN BUG APPEARS FIXED" - then
-// remove the @KnownBug and promote the method to RegressionTest (sixteen
+// remove the @KnownBug and promote the method to RegressionTest (twenty-two
 // promoted so far: two on 2026-09-11, three on 2026-09-24, four on 2026-09-25,
-// one on 2026-10-02, five on 2026-10-06, and on 2026-10-18 one merged from
+// one on 2026-10-02, five on 2026-10-06, on 2026-10-18 one merged from
 // three unbound-lookup repros whose remaining expectations were wrong: a
-// variable is never bound by enumerating a type).
+// variable is never bound by enumerating a type, and on 2026-10-26 one merged
+// from the three crash repros integers-div-zero, collections-index-out-of-range
+// and datetime-multiply-overflow: an exception in a built-in operation leaves
+// the query unknown, an error without a result; also on 2026-10-26
+// speculative-guard-index-crash (an exception next to a false operand is
+// irrelevant), and
+// undeclared-variable-diagnostics, whose expectation was wrong: an undeclared
+// name is not a variable, so the rule is not well-formed and the query unknown,
+// and guard-on-continuation-line-dropped, which is no bug: a NEWLINE after a
+// non-operator ends the statement, so a guard on its own line is a parse error
+// and the guardless alternative gives a conflict; and on 2026-10-27
+// decided-conjunction-hides-later-result: a shallow unknown is no longer
+// remembered, and inconsistency-missed-by-rule-order: the consistency check
+// between rules is symmetric).
 //
 // The CLI twin is ./run-all-tests-with-CLI (repo root): the SAME bug can
 // manifest differently on the CLI vs this test JVM (proven 2026-09-13: the
@@ -42,9 +55,9 @@ import org.modelingvalue.nelumbo.tools.NelumboEvaluator.EvalResult;
 // unreduced-term expectation mismatch here), so both harnesses stay.
 //
 // Dedup review 2026-09-13 (criterion: truly identical construct): no merges.
-// collections-index-out-of-range (bare native pos crash) != speculative-guard
-// (guard evaluation semantics); datetime multiply-overflow != year-360;
-// rational sign != zero-factor; the three reduction repros (bba88fc8 family)
+// collections-index-out-of-range (bare native index crash) != speculative-guard
+// (guard evaluation semantics); datetime multiply-overflow != year-360 (the
+// two crash repros were promoted on 2026-10-26); rational sign != zero-factor; the three reduction repros (bba88fc8 family)
 // were all fixed and promoted to RegressionTest on 2026-09-24, and the whole
 // state/race cluster (empty-set-branch-in-map-lambda, neighbor-query-changes-
 // result, nondeterministic-inference) plus rule-pos-on-mapped-collection-list-
@@ -104,11 +117,15 @@ public class KnownBugsTest extends NelumboTestBase {
 
     static {
         setProp("PARALLEL_COLLECTIONS", "false");
-        setProp("REVERSE_NELUMBO", "false");
-        setProp("RANDOM_NELUMBO", "false");
-        setProp("TRACE_NELUMBO", "false");
         setProp("TRACE_SYNTATIC", "false");
         setProp("VERBOSE_TESTS", "false");
+    }
+
+    @Override
+    protected void settings(KnowledgeBase kb) {
+        kb.setReverseOrder(env("REVERSE_NELUMBO", false));
+        kb.setRandomOrder(env("RANDOM_NELUMBO", true));
+        kb.setTrace(env("TRACE_NELUMBO", false));
     }
 
     // ==== state / race cluster ====
@@ -119,39 +136,13 @@ public class KnownBugsTest extends NelumboTestBase {
     // results, an unused rule being load-bearing) reproduced only against
     // intermediate sudoku-9x9-smart.nl versions - facets of the same defects
 
-    @KnownBug("where-filter over user Boolean rule NPEs inside deep recursion")
-    @Test
-    public void whereFilterNpeInRecursion() {
-        bugResource("where-filter-npe-in-recursion.nl");
-    }
-
     @KnownBug("call over an empty set goes unknown after an earlier query over an empty set of another type")
     @Test
     public void emptySetQueryChangesLaterResult() {
         bugResource("empty-set-query-changes-later-result.nl");
     }
 
-    // ==== speculative evaluation ====
-
-    @KnownBug("rule guards evaluated speculatively: unguarded pos crashes out-of-range")
-    @Test
-    public void speculativeGuardIndexCrash() {
-        bugResource("speculative-guard-index-crash.nl");
-    }
-
     // ==== parser / diagnostics ====
-
-    @KnownBug("if-guard on its own continuation line silently dropped")
-    @Test
-    public void guardOnContinuationLineDropped() {
-        bugResource("guard-on-continuation-line-dropped.nl");
-    }
-
-    @KnownBug("undeclared variable: misleading error, rule silently dropped")
-    @Test
-    public void undeclaredVariableDiagnostics() {
-        bugResource("undeclared-variable-diagnostics.nl");
-    }
 
     @KnownBug("// directly after operator char swallowed into operator token")
     @Test
@@ -179,18 +170,16 @@ public class KnownBugsTest extends NelumboTestBase {
         bugResource("single-unique-hole-not-closed.nl");
     }
 
-    // the correct behavior is an error per query, which bugResource (pass = no
-    // error) cannot express: count the inconsistency diagnostics instead
-    @KnownBug("inconsistency between two rules detected in one rule order only")
+    @KnownBug("variable nested in a fact argument (owns(Piet,box(n))) is not bound by the lookup")
     @Test
-    public void inconsistencyMissedByRuleOrder() throws IOException {
-        String       name         = "inconsistency-missed-by-rule-order.nl";
-        String       source       = new String(KnownBugsTest.class.getResourceAsStream(NelumboConstants.NELUMBO_BUGS + name).readAllBytes());
-        EvalResult   result       = NelumboEvaluator.evaluate(source, name, 60_000);
-        long         inconsistent = result.diagnostics().stream().filter(d -> d.message().startsWith("Inconsistent results")).count();
-        List<String> silent       = result.queries().stream().filter(q -> q.result() != null).map(q -> q.query() + " ? " + q.result()).toList();
-        assertEquals(List.of(), silent, "queries answered without reporting the inconsistency");
-        assertEquals(result.queries().size(), inconsistent, "diagnostics: " + result.diagnostics());
+    public void nestedArgumentVariableNotNavigated() {
+        bugResource("nested-argument-variable-not-navigated.nl");
+    }
+
+    @KnownBug("conditional expression (c then x else y) whose condition and branch share a variable NPEs")
+    @Test
+    public void thenElseSharedVariableNpe() {
+        bugResource("then-else-shared-variable-npe.nl");
     }
 
     // ==== stdlib: numbers / strings / collections / datetime ====
@@ -207,22 +196,26 @@ public class KnownBugsTest extends NelumboTestBase {
         bugResource("rational-zero-factor.nl");
     }
 
-    @KnownBug("division by zero crashes the whole evaluation")
-    @Test
-    public void integersDivZero() {
-        bugResource("integers-div-zero.nl");
-    }
-
     @KnownBug("int(...) uses Integer.parseInt: silent 32-bit limit")
     @Test
     public void integerString32bit() {
         bugResource("integer-string-32bit.nl");
     }
 
-    @KnownBug("indexOf crashes on out-of-range index; 2^32 wraps to element 0")
+    // the correct behavior is an error per query, which bugResource (pass = no
+    // error) cannot express: every query must have an error and no result
+    @KnownBug("list index outside the int range wraps to its low 32 bits instead of an index error")
     @Test
-    public void collectionsIndexOutOfRange() {
-        bugResource("collections-index-out-of-range.nl");
+    public void collectionsIndexWrapsPastIntRange() throws IOException {
+        String name = "collections-index-wraps-past-int-range.nl";
+        String source = new String(
+                KnownBugsTest.class.getResourceAsStream(NelumboConstants.NELUMBO_BUGS + name).readAllBytes());
+        EvalResult result = evaluate(source, name, 60_000);
+        long errors = result.diagnostics().size();
+        List<String> wrapped = result.queries().stream().filter(q -> q.result() != null)
+                .map(q -> q.query() + " ? " + q.result()).toList();
+        assertEquals(List.of(), wrapped, "queries answered from a wrapped index");
+        assertEquals(result.queries().size(), errors, "diagnostics: " + result.diagnostics());
     }
 
     @KnownBug("set-builder compared with a closed set literal holds for any set")
@@ -237,33 +230,33 @@ public class KnownBugsTest extends NelumboTestBase {
         bugResource("set-builder-empty-result-missing.nl");
     }
 
-    @KnownBug("pos/in on a list with a duplicated element: inconsistent result (pos is a function)")
-    @Test
-    public void posDuplicateElementInconsistent() {
-        bugResource("pos-duplicate-element-inconsistent.nl");
-    }
-
-    @KnownBug("call as list argument leaves the bound index unbound in a pos rule: inconsistent result")
-    @Test
-    public void callArgUnbindsIndexInPosRule() {
-        bugResource("call-arg-unbinds-index-in-pos-rule.nl");
-    }
-
     @KnownBug("empty collection literal ({} or []) rejected as the argument of a typed hole")
     @Test
     public void emptyCollectionLiteralRejectedAsArgument() {
         bugResource("empty-collection-literal-rejected-as-argument.nl");
     }
 
-    @KnownBug("period_multiply crashes on multipliers outside int range")
-    @Test
-    public void datetimeMultiplyOverflow() {
-        bugResource("datetime-multiply-overflow.nl");
-    }
-
     @KnownBug("year counted as 360 days in period comparison")
     @Test
     public void datetimeYear360() {
         bugResource("datetime-year-360.nl");
+    }
+
+    @KnownBug("0-arity function (lst == [1,2,3]) passed as an argument crashes a native with argument type mismatch")
+    @Test
+    public void zeroArityFunctionArgumentCrash() {
+        bugResource("zero-arity-function-argument-crash.nl");
+    }
+
+    @KnownBug("function query with its result given (f(x) = [..] ? [()][]) diverges where f(x)=s ? answers in a second")
+    @Test
+    public void givenResultQueryDiverges() {
+        bugResource("given-result-query-diverges.nl");
+    }
+
+    @KnownBug("function query whose given result is a call (f(x) = g(0) ? [()][]) crashes with argument type mismatch")
+    @Test
+    public void givenResultCallCrash() {
+        bugResource("given-result-call-crash.nl");
     }
 }

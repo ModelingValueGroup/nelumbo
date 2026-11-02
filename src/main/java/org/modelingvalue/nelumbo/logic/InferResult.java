@@ -53,6 +53,10 @@ public interface InferResult {
         return Set.of();
     }
 
+    default Map<Predicate, RuntimeException> exceptions() {
+        return Map.of();
+    }
+
     default List<Predicate> stackOverflow() {
         return null;
     }
@@ -61,12 +65,12 @@ public interface InferResult {
         return stackOverflow() != null;
     }
 
-    default boolean isUnknownWithPossibleCycles() {
+    default boolean isUnknownWithPossibleCyclesOrExceptions() {
         return allFalsehoods().isEmpty() && allFacts().isEmpty() && !completeFalsehoods() && !completeFacts();
     }
 
     default boolean isUnknown() {
-        return isUnknownWithPossibleCycles() && cycles().isEmpty();
+        return isUnknownWithPossibleCyclesOrExceptions() && cycles().isEmpty() && exceptions().isEmpty();
     }
 
     default boolean isTrueCC() {
@@ -100,13 +104,15 @@ public interface InferResult {
                 .addAll(Node.diff(completeFacts(), other.completeFacts()))
                 .addAll(Node.diff(falsehoods(), other.falsehoods()))
                 .addAll(Node.diff(completeFalsehoods(), other.completeFalsehoods()))
-                .addAll(Node.diff(cycles(), other.cycles()));
+                .addAll(Node.diff(cycles(), other.cycles())).addAll(Node.diff(exceptions(), other.exceptions()));
     }
 
     InferResult setTypeArgs(Map<Variable, Type> typeArgs);
 
+    InferResult biimply(InferResult other);
+
     static InferResult of(Predicate predicate, Set<Predicate> facts, boolean completeFacts, Set<Predicate> falsehoods,
-            boolean completeFalsehoods, Set<Predicate> cycles) {
+            boolean completeFalsehoods, Set<Predicate> cycles, Map<Predicate, RuntimeException> exceptions) {
         return new InferResultImpl() {
 
             @Override
@@ -138,11 +144,17 @@ public interface InferResult {
             public Set<Predicate> cycles() {
                 return cycles;
             }
+
+            @Override
+            public Map<Predicate, RuntimeException> exceptions() {
+                return exceptions;
+            }
         };
     }
 
     static InferResult of(Predicate predicate, Collection<Predicate> facts, boolean completeFacts,
-            Collection<Predicate> falsehoods, boolean completeFalsehoods, Set<Predicate> cycles) {
+            Collection<Predicate> falsehoods, boolean completeFalsehoods, Set<Predicate> cycles,
+            Map<Predicate, RuntimeException> exceptions) {
         return new InferResultImpl() {
 
             @Override
@@ -185,10 +197,15 @@ public interface InferResult {
                 return cycles;
             }
 
+            @Override
+            public Map<Predicate, RuntimeException> exceptions() {
+                return exceptions;
+            }
+
         };
     }
 
-    static InferResult unknown(Predicate unknown, Set<Predicate> cycles) {
+    static InferResult unknown(Predicate unknown, Set<Predicate> cycles, Map<Predicate, RuntimeException> exceptions) {
         return new InferResultImpl() {
             @Override
             public Set<Predicate> facts() {
@@ -218,6 +235,11 @@ public interface InferResult {
             @Override
             public Set<Predicate> cycles() {
                 return cycles;
+            }
+
+            @Override
+            public Map<Predicate, RuntimeException> exceptions() {
+                return exceptions;
             }
         };
     }
@@ -625,31 +647,34 @@ public interface InferResult {
         boolean completeFacts = completeFacts() && other.completeFacts();
         boolean completeFalsehoods = completeFalsehoods() && other.completeFalsehoods();
         Set<Predicate> cycles = cycles().addAll(other.cycles());
-        return of(predicate(), facts, completeFacts, falsehoods, completeFalsehoods, cycles);
+        Map<Predicate, RuntimeException> exceptions = exceptions().addAll(other.exceptions());
+        return of(predicate(), facts, completeFacts, falsehoods, completeFalsehoods, cycles, exceptions);
     }
 
     default InferResult flipComplete() {
-        return of(predicate(), allFacts(), completeFalsehoods(), allFalsehoods(), completeFacts(), cycles());
+        return of(predicate(), allFacts(), completeFalsehoods(), allFalsehoods(), completeFacts(), cycles(),
+                exceptions());
     }
 
     default InferResult complete() {
-        return of(predicate(), allFacts(), true, allFalsehoods(), true, cycles());
+        return of(predicate(), allFacts(), true, allFalsehoods(), true, cycles(), exceptions());
     }
 
     default InferResult factsComplete() {
-        return of(predicate(), allFacts(), true, allFalsehoods(), completeFalsehoods(), cycles());
+        return of(predicate(), allFacts(), true, allFalsehoods(), completeFalsehoods(), cycles(), exceptions());
     }
 
     default InferResult falsehoodsComplete() {
-        return of(predicate(), allFacts(), completeFacts(), allFalsehoods(), true, cycles());
+        return of(predicate(), allFacts(), completeFacts(), allFalsehoods(), true, cycles(), exceptions());
     }
 
     default InferResult cast(Predicate to) {
-        return of(to, cast(facts(), to), completeFacts(), cast(falsehoods(), to), completeFalsehoods(), cycles());
+        return of(to, cast(facts(), to), completeFacts(), cast(falsehoods(), to), completeFalsehoods(), cycles(),
+                exceptions());
     }
 
     default InferResult predicate(Predicate predicate) {
-        return of(predicate, facts(), completeFacts(), falsehoods(), completeFalsehoods(), cycles());
+        return of(predicate, facts(), completeFacts(), falsehoods(), completeFalsehoods(), cycles(), exceptions());
     }
 
     static Set<Predicate> cast(Set<Predicate> set, Predicate to) {
@@ -679,8 +704,13 @@ public interface InferResult {
                         cycleString = cycles().toString().substring(3);
                         cycleString = "{" + cycleString.substring(1, cycleString.length() - 1) + "}";
                     }
+                    String exceptionString = "";
+                    if (!exceptions().isEmpty()) {
+                        exceptionString = exceptions().toString().substring(3);
+                        exceptionString = "{" + exceptionString.substring(1, exceptionString.length() - 1) + "}";
+                    }
                     return toString(trueBindings(), completeFacts()) + toString(falseBindings(), completeFalsehoods())
-                            + cycleString;
+                            + cycleString + exceptionString;
                 }
             });
         }
@@ -714,7 +744,8 @@ public interface InferResult {
                         && completeFacts() == other.completeFacts() && //
                         allFalsehoods().equals(other.allFalsehoods())
                         && completeFalsehoods() == other.completeFalsehoods() && //
-                        cycles().equals(other.cycles());
+                        cycles().equals(other.cycles()) //
+                        && exceptions().equals(other.exceptions());
             }
         }
 
@@ -722,7 +753,28 @@ public interface InferResult {
         public InferResult setTypeArgs(Map<Variable, Type> typeArgs) {
             return of(predicate().setTypeArgs(typeArgs), facts().replaceAll(f -> f.setTypeArgs(typeArgs)),
                     completeFacts(), falsehoods().replaceAll(f -> f.setTypeArgs(typeArgs)), completeFalsehoods(),
-                    cycles());
+                    cycles(), exceptions());
+        }
+
+        @Override
+        public InferResult biimply(InferResult other) {
+            Set<Predicate> facts = facts().addAll(other.facts()), falsehoods = falsehoods().addAll(other.falsehoods());
+            boolean completeFacts = completeFacts() || other.completeFacts(),
+                    completeFalsehoods = completeFalsehoods() || other.completeFalsehoods();
+            for (Predicate fact : facts) {
+                if (falsehoods.contains(fact) || (completeFacts() && !facts().contains(fact))
+                        || (other.completeFacts() && !other.facts().contains(fact))) {
+                    throw new InconsistencyException(other, this);
+                }
+            }
+            for (Predicate falsehood : falsehoods) {
+                if (facts.contains(falsehood) || (completeFalsehoods() && !falsehoods().contains(falsehood))
+                        || (other.completeFalsehoods() && !other.falsehoods().contains(falsehood))) {
+                    throw new InconsistencyException(other, this);
+                }
+            }
+            return InferResult.of(predicate(), facts, completeFacts, falsehoods, completeFalsehoods,
+                    cycles().addAll(other.cycles()), exceptions().addAll(other.exceptions()));
         }
     }
 

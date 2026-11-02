@@ -83,7 +83,7 @@ public final class NelumboCli {
     }
 
     /** In {@code --json} mode all output is collected here and printed as one JSON object at the end. */
-    private static final class JsonOutput {
+    static final class JsonOutput {
         final java.util.List<String>                        errors    = new ArrayList<>();
         final java.util.List<java.util.Map<String, Object>> queries   = new ArrayList<>();
         final java.util.List<java.util.Map<String, Object>> parseTree = new ArrayList<>();
@@ -367,7 +367,7 @@ public final class NelumboCli {
         }
     }
 
-    private static boolean runSource(String source, String name, boolean quiet, JsonOutput json, String preamble) {
+    static boolean runSource(String source, String name, boolean quiet, JsonOutput json, String preamble) {
         NelumboEvaluator.EvalResult result = NelumboEvaluator.evaluate(source, name, 0, preamble);
         for (NelumboEvaluator.Diagnostic d : result.diagnostics()) {
             report(json, name + ":" + d.line() + ":" + d.col() + ": " + d.message());
@@ -385,11 +385,17 @@ public final class NelumboCli {
         return result.ok();
     }
 
-    private static java.util.Map<String, Object> queryEntry(NelumboEvaluator.QueryOutcome q) {
+    // complete has the shape of the eval server's (EvalService): without it an
+    // empty facts/falsehoods list could mean "none" or "unknown"
+    static java.util.Map<String, Object> queryEntry(NelumboEvaluator.QueryOutcome q) {
         java.util.Map<String, Object> entry = new LinkedHashMap<>();
         entry.put("query", q.query());
         entry.put("facts", q.facts());
         entry.put("falsehoods", q.falsehoods());
+        java.util.Map<String, Object> complete = new LinkedHashMap<>();
+        complete.put("facts", q.completeFacts());
+        complete.put("falsehoods", q.completeFalsehoods());
+        entry.put("complete", complete);
         return entry;
     }
 
@@ -420,7 +426,7 @@ public final class NelumboCli {
     }
 
     /** The same JSON object shape as batch {@code --json} mode, for one result. */
-    private static java.util.Map<String, Object> jsonObject(NelumboEvaluator.EvalResult result, String name) {
+    static java.util.Map<String, Object> jsonObject(NelumboEvaluator.EvalResult result, String name) {
         java.util.List<String> errors = new ArrayList<>();
         for (NelumboEvaluator.Diagnostic d : result.diagnostics()) {
             errors.add(name + ":" + d.line() + ":" + d.col() + ": " + d.message());
@@ -743,7 +749,7 @@ public final class NelumboCli {
         });
     }
 
-    private static String renderText(NelumboEvaluator.EvalResult result) {
+    static String renderText(NelumboEvaluator.EvalResult result) {
         StringBuilder text = new StringBuilder();
         for (NelumboEvaluator.Diagnostic d : result.diagnostics()) {
             text.append(d.line()).append(":").append(d.col()).append(": ").append(d.message()).append("\n");
@@ -785,7 +791,8 @@ public final class NelumboCli {
                                    the served knowledge base): all, logic, integers, strings,
                                    collections, rationals, datetime
                   -j, --json       output one JSON object: errors as an array of messages,
-                                   per query the facts/falsehoods as name/value pairs,
+                                   per query the facts/falsehoods as name/value pairs
+                                   and whether each list is complete,
                                    and the parse tree of the input
                   --trace          add the (currently stubbed) trace field to the output
                   -i, --interactive read-eval-print loop; any given files and --prep

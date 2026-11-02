@@ -77,6 +77,25 @@ class NelumboReplTest {
         assertTrue(s.out().contains("3*4=r ? [(r=12)]"), () -> "stdout: " + s.out());
     }
 
+    /** The REPL prints each result with its completeness ({@code ..} where facts/falsehoods are open). */
+    @Test
+    void queryResultsShowTheirCompleteness() {
+        String input = """
+                import nelumbo.integers
+                Integer ::= fib(<Integer>)
+                Integer n, f, a
+                fib(n)=f <=> f=n if n>=0 & n<=1, f=fib(n-1)+fib(n-2) if n>1
+                1+1=2 ?
+                fib(5)=f ?
+                !(fib(5)=f) ?
+                a>3 ?
+                """;
+        Session s = new Session(input, false).run();
+        assertEquals(0, s.exitCode);
+        assertTrue(s.err().isEmpty(), () -> "stderr: " + s.err());
+        NelumboCliTest.assertCompletenessText(s.out());
+    }
+
     @Test
     void errorLineLeavesPreviousStateIntact() {
         Session s = new Session("import nelumbo.integers\nflurb @@ blarg\nInteger r\n3*4=r ?\n", false).run();

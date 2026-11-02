@@ -27,6 +27,7 @@ import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
+import org.modelingvalue.nelumbo.NelumboException;
 import org.modelingvalue.nelumbo.NelumboTimeoutException;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
@@ -42,12 +43,6 @@ public class Predicate extends Node {
     private static final long serialVersionUID = -1605559565948158856L;
 
     protected static final boolean CHECK_SINGLE_FUNCTION_RESULT = Boolean.getBoolean("CHECK_SINGLE_FUNCTION_RESULT");
-
-    protected static final boolean RANDOM_NELUMBO  = Boolean.getBoolean("RANDOM_NELUMBO");
-    protected static final boolean REVERSE_NELUMBO = Boolean.getBoolean("REVERSE_NELUMBO");
-    protected static final int     MAX_LOGIC_DEPTH = Integer.getInteger("MAX_LOGIC_DEPTH", 64);
-
-    private static final int MAX_LOGIC_DEPTH_D2 = MAX_LOGIC_DEPTH / 2;
 
     public static Node INCOMPLETE = new Predicate(NodeInfo.of(Type.BOOLEAN), "..");
 
@@ -205,11 +200,15 @@ public class Predicate extends Node {
     }
 
     public final InferResult unknown() {
-        return InferResult.unknown(this, Set.of());
+        return InferResult.unknown(this, Set.of(), Map.of());
     }
 
-    public final InferResult unknown(Set<Predicate> cycles) {
-        return InferResult.unknown(this, cycles);
+    public final InferResult unknown(Set<Predicate> cycles, Map<Predicate, RuntimeException> exceptions) {
+        return InferResult.unknown(this, cycles, exceptions);
+    }
+
+    public final InferResult unknown(RuntimeException exception) {
+        return InferResult.unknown(this, Set.of(), Map.of(Entry.of(this, exception)));
     }
 
     public final InferResult factCC() {
@@ -274,8 +273,21 @@ public class Predicate extends Node {
     }
 
     private InferResult doInfer(int nrOfUnbound, InferContext context) {
-        Method method = functor().method();
-        return method != null ? callMethod(method, context) : infer(nrOfUnbound, context);
+        Functor functor = functor();
+        Method method = functor.method();
+        if (method != null) {
+            return callMethod(method, context);
+        }
+        if (functor.overridesInfer()) {
+            try {
+                return infer(nrOfUnbound, context);
+            } catch (NelumboException ne) {
+                throw ne;
+            } catch (RuntimeException re) {
+                return unknown(re);
+            }
+        }
+        return infer(nrOfUnbound, context);
     }
 
     private InferResult callMethod(Method method, InferContext context) {
@@ -288,13 +300,28 @@ public class Predicate extends Node {
                     }
                 }
                 return (InferResult) method.invoke(this, args);
-            } catch (IllegalAccessException | InvocationTargetException e) {
+            } catch (IllegalAccessException e) {
+                throw new IllegalArgumentException(e);
+            } catch (InvocationTargetException e) {
+                if (e.getTargetException() instanceof NelumboException ne) {
+                    throw ne;
+                }
+                if (e.getTargetException() instanceof RuntimeException re) {
+                    return unknown(re);
+                }
                 throw new IllegalArgumentException(e);
             }
         });
+
     }
 
-    protected InferResult infer(int nrOfUnbound, InferContext context) {
+    public InferResult infer(int nrOfUnbound, InferContext context) {
+        Functor functor = functor();
+        if (nrOfUnbound > 1 || nrOfUnbound >= functor.argTypes().size()
+                || (context.shallow() && !isShallow(nrOfUnbound, functor))) {
+            return unknown();
+        }
+
         KnowledgeBase knowledgebase = context.knowledgebase();
 
         InferResult result = knowledgebase.getMemoiz(this);
@@ -302,26 +329,22 @@ public class Predicate extends Node {
             return result;
         }
 
+        List<Predicate> stack = context.stack();
+        int maxDepth = knowledgebase.getMaxLogicDepth();
+        if (stack.size() >= maxDepth) {
+            return InferResult.overflow(stack.append(this));
+        }
+
         result = knowledgebase.getFacts(this, context);
+        result = fixpoint(context.pushOnStack(this), result);
 
-        Functor functor = functor();
-        if (nrOfUnbound <= 1 && nrOfUnbound < functor.argTypes().size() && //
-                (!context.shallow() || isShallow(nrOfUnbound, functor))) {
-
-            List<Predicate> stack = context.stack();
-            if (stack.size() >= MAX_LOGIC_DEPTH) {
-                return InferResult.overflow(stack.append(this));
-            }
-
-            result = fixpoint(context.pushOnStack(this), result);
-            if (stack.size() >= MAX_LOGIC_DEPTH_D2) {
-                List<Predicate> overflow = result.stackOverflow();
-                if (overflow != null) {
-                    if (stack.size() == MAX_LOGIC_DEPTH_D2) {
-                        result = flatten(result, overflow, context);
-                    }
-                    return result;
+        if (stack.size() >= maxDepth / 2) {
+            List<Predicate> overflow = result.stackOverflow();
+            if (overflow != null) {
+                if (stack.size() == maxDepth / 2) {
+                    result = flatten(result, overflow, context);
                 }
+                return result;
             }
         }
 
@@ -403,7 +426,7 @@ public class Predicate extends Node {
             if (nextResult.equals(previousResult)) {
                 return InferResult.of(this, nextResult.facts(), nextResult.completeFacts(), //
                         nextResult.falsehoods(), nextResult.completeFalsehoods(), //
-                        Set.of());
+                        Set.of(), nextResult.exceptions());
             } else {
                 previousResult = nextResult;
                 cycleResult = nextResult;
@@ -417,10 +440,13 @@ public class Predicate extends Node {
             throw new NelumboTimeoutException();
         }
         Set<Rule> rules = knowledgebase.getRules(this);
-        for (Rule rule : REVERSE_NELUMBO ? rules.reverse() : RANDOM_NELUMBO ? rules.random() : rules) {
-            result = rule.biimply(this, context, result);
-            if (result.hasStackOverflow()) {
-                return result;
+        for (Rule rule : knowledgebase.isReverseOrder() ? rules.reverse() : knowledgebase.isRandomOrder() ? rules.random() : rules) {
+            InferResult ruleResult = rule.infer(this, context);
+            if (ruleResult != null) {
+                if (ruleResult.hasStackOverflow()) {
+                    return ruleResult;
+                }
+                result = result.biimply(ruleResult);
             }
         }
         return result;

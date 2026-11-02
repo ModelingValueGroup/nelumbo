@@ -45,10 +45,16 @@ find_jar() {
 }
 
 # a repro whose correct behavior is an error on every query (no .nl
-# expectation can state that) names the error on its first line:
+# expectation can state that) says so on its first line, with the error's
+# text, or without a text for any error:
 #   // expect-error-per-query: <text>
+#   // expect-error-per-query
+expects_error() {
+    head -1 "$1" | grep -q '^// expect-error-per-query'
+}
+
 expected_error() {
-    sed -n '1s|^// expect-error-per-query: ||p' "$1"
+    sed -n '1s|^// expect-error-per-query:\{0,1\} *||p' "$1" | tr -d '\r'
 }
 
 is_fixed() {
@@ -56,10 +62,15 @@ is_fixed() {
     local code=$2
     local out=$3
     local expect
-    expect=$(expected_error "$file")
-    if [ -n "$expect" ]; then
+    if expects_error "$file"; then
+        expect=$(expected_error "$file")
         # the CLI prints one line per query: every one must be that error
-        [ -n "$out" ] && ! echo "$out" | grep -qvF "$expect"
+        # (any error: a file:line:col: diagnostic)
+        if [ -n "$expect" ]; then
+            [ -n "$out" ] && ! echo "$out" | grep -qvF "$expect"
+        else
+            [ -n "$out" ] && ! echo "$out" | grep -qvE ':[0-9]+:[0-9]+: '
+        fi
     else
         [ $code -eq 0 ] && ! echo "$out" | grep -q "Expected result"
     fi

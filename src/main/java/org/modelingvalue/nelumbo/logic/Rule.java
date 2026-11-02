@@ -161,11 +161,11 @@ public final class Rule extends Node implements Evaluatable {
         return roots;
     }
 
-    public final InferResult biimply(Predicate predicate, InferContext context, InferResult result) {
+    public final InferResult infer(Predicate predicate, InferContext context) {
         Predicate consDecl = consequence();
         Map<Variable, Object> binding = predicate.getBinding(consDecl);
         if (binding == null) {
-            return result;
+            return null;
         }
         Predicate condDecl = condition();
         binding = getBinding(this).putAll(binding);
@@ -181,17 +181,18 @@ public final class Rule extends Node implements Evaluatable {
         Set<Predicate> facts = Set.of(), falsehoods = Set.of();
         boolean completeFacts = true, completeFalsehoods = true;
         for (Predicate condFact : condResult.facts()) {
-            Predicate fact = predicate.castFrom(consequence.setBinding(consequence, condFact.getBinding(condition)));
-            if (fact.isFullyBound()) {
+            Map<Variable, Object> bind = condFact.getBinding(condition);
+            Predicate fact = bind != null ? predicate.castFrom(consequence.setBinding(consequence, bind)) : null;
+            if (fact != null && fact.isFullyBound()) {
                 facts = facts.add(fact);
             } else {
                 completeFacts = false;
             }
         }
         for (Predicate condFalsehood : condResult.falsehoods()) {
-            Predicate falsehood = predicate
-                    .castFrom(consequence.setBinding(consequence, condFalsehood.getBinding(condition)));
-            if (falsehood.isFullyBound()) {
+            Map<Variable, Object> bind = condFalsehood.getBinding(condition);
+            Predicate falsehood = bind != null ? predicate.castFrom(consequence.setBinding(consequence, bind)) : null;
+            if (falsehood != null && falsehood.isFullyBound()) {
                 falsehoods = falsehoods.add(falsehood);
             } else {
                 completeFalsehoods = false;
@@ -205,29 +206,12 @@ public final class Rule extends Node implements Evaluatable {
                 completeFalsehoods = false;
             }
         }
-        InferResult ruleResult = InferResult.of(predicate, facts, completeFacts, falsehoods, completeFalsehoods, //
-                condResult.cycles());
+        InferResult result = InferResult.of(predicate, facts, completeFacts, falsehoods, completeFalsehoods, //
+                condResult.cycles(), condResult.exceptions());
         if (context.trace() && !isSyntatic()) {
-            context.trace(() -> consequence + " " + ruleResult.predicate(consequence));
+            context.trace(() -> consequence + " " + result.predicate(consequence));
         }
-        for (Predicate fact : result.facts()) {
-            if (falsehoods.contains(fact) || (completeFacts && //
-                    biimply(fact, context, fact.unknown()).isFalseCC())) {
-                throw new InconsistencyException(ruleResult, result);
-            }
-            facts = facts.add(fact);
-        }
-        for (Predicate falsehood : result.falsehoods()) {
-            if (facts.contains(falsehood) || (completeFalsehoods && //
-                    biimply(falsehood, context, falsehood.unknown()).isTrueCC())) {
-                throw new InconsistencyException(ruleResult, result);
-            }
-            falsehoods = falsehoods.add(falsehood);
-        }
-        completeFacts |= result.completeFacts();
-        completeFalsehoods |= result.completeFalsehoods();
-        return InferResult.of(predicate, facts, completeFacts, falsehoods, completeFalsehoods, //
-                result.cycles().addAll(ruleResult.cycles()));
+        return result;
     }
 
     @Override

@@ -112,14 +112,14 @@ public final class PatternResult implements ParseExceptionHandler {
         this.nextToken = nextToken;
         this.leftPrecedence = leftPrecedence;
         assert (functor != null);
-        assert (!hasLeft || leftPrecedence != null);
+        assert (leftPrecedence != null);
     }
 
     public void endPreParse(ParseState state, Token nextToken, Integer leftPrecedence) {
         this.state = state;
         this.nextToken = nextToken;
         this.leftPrecedence = leftPrecedence;
-        assert (!hasLeft || leftPrecedence != null);
+        assert (leftPrecedence != null);
     }
 
     public void endRepetition(Set<String> endRepetitions, Token nextToken) {

@@ -18,7 +18,9 @@ package org.modelingvalue.nelumbo.logic;
 
 import java.io.Serial;
 
-public class InconsistencyException extends RuntimeException {
+import org.modelingvalue.nelumbo.NelumboException;
+
+public class InconsistencyException extends NelumboException {
     @Serial
     private static final long serialVersionUID = -30585101694801066L;
 

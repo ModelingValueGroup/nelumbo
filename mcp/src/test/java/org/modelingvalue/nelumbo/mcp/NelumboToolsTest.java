@@ -41,6 +41,36 @@ public class NelumboToolsTest {
         assertEquals(Boolean.TRUE, queries.get(0).get("expectationMatched"));
     }
 
+    /** Every query result says whether its facts and falsehoods are complete, one query per combination. */
+    @Test
+    @SuppressWarnings("unchecked")
+    public void evalNlReportsTheCompletenessOfEveryResult() {
+        String model = """
+                import  nelumbo.integers
+
+                Integer ::= fib(<Integer>)
+
+                Integer n, f, a
+
+                fib(n)=f <=>  f=n                 if n>=0 & n<=1,
+                              f=fib(n-1)+fib(n-2) if n>1
+
+                1+1=2       ? [()][]
+                fib(5)=f    ? [(f=5)][..]
+                !(fib(5)=f) ? [..][(f=5)]
+                a>3 ?
+                """;
+        Map<String, Object> r = tools.evalNl(model, "complete.nl");
+        assertEquals(Boolean.TRUE, r.get("ok"), () -> "diagnostics: " + r.get("diagnostics"));
+        List<Map<String, Object>> queries = (List<Map<String, Object>>) r.get("queryResults");
+        boolean[][] expected = { { true, true }, { true, false }, { false, true }, { false, false } };
+        assertEquals(expected.length, queries.size(), () -> "queries: " + queries);
+        for (int i = 0; i < expected.length; i++) {
+            assertEquals(Map.of("facts", expected[i][0], "falsehoods", expected[i][1]), queries.get(i).get("complete"),
+                    queries.get(i).toString());
+        }
+    }
+
     @Test
     @SuppressWarnings("unchecked")
     public void evalNlEnrichesDiagnostics() {

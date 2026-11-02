@@ -58,13 +58,11 @@ public final class ExampleCatalog {
         ENTRIES.put("even", new Entry(BASE + "examples/even.nl",
                 "Boolean predicate using E[] and integer division to test evenness"));
         ENTRIES.put("max", new Entry(BASE + "examples/max.nl",
-                "ternary operator defined as a Root functor, then max(x,y) built on top of it"));
+                "max(x,y) as a function rule with a conditional expression (b then x else y)"));
         ENTRIES.put("maxFib", new Entry(BASE + "examples/maxFib.nl",
                 "composed recursion: fib and maxFib helper finding the largest Fibonacci number below a bound"));
         ENTRIES.put("power", new Entry(BASE + "examples/power.nl",
                 "rational exponentiation via recursive rule with base case x**0=1 and inductive step"));
-        ENTRIES.put("ternary", new Entry(BASE + "examples/ternary.nl",
-                "generic ternary operator (b?t:f) declared as a Type-parametric functor, used with strings"));
         ENTRIES.put("scoping", new Entry(BASE + "examples/scoping.nl",
                 "private functor scope blocks: two independent namespaces each with a private XXX constant"));
         ENTRIES.put("koningsdag", new Entry(BASE + "examples/koningsdag.nl",
@@ -79,12 +77,10 @@ public final class ExampleCatalog {
                 "transform statement (::>): Root functor generates sub-functors, facts, and rules at load time"));
         ENTRIES.put("familyAssignment", new Entry(BASE + "examples/familyAssignment.nl",
                 "exercise template for family.nl: type/fact scaffolding present, rules left for the student"));
-        ENTRIES.put("ternaryAssignment", new Entry(BASE + "examples/ternaryAssignment.nl",
-                "exercise template for ternary.nl: functor declaration present, rule body left for the student"));
         ENTRIES.put("evenAssignment", new Entry(BASE + "examples/evenAssignment.nl",
                 "exercise template for even.nl: Boolean functor declared, rule body left for the student"));
         ENTRIES.put("maxAssignment", new Entry(BASE + "examples/maxAssignment.nl",
-                "exercise template for max.nl: ternary operator and max functor declared, rules left for the student"));
+                "exercise template for max.nl: max functor declared, rule left for the student"));
         ENTRIES.put("maxFibAssignment", new Entry(BASE + "examples/maxFibAssignment.nl",
                 "exercise template for maxFib.nl: fib and maxFib functors declared, rules left for the student"));
         ENTRIES.put("powerAssignment", new Entry(BASE + "examples/powerAssignment.nl",

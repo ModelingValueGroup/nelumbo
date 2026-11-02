@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 import org.modelingvalue.collections.List;
+import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.U;
 import org.modelingvalue.nelumbo.syntax.ParseException;
@@ -35,10 +36,14 @@ public class SyntaxTest extends NelumboTestBase {
 
     static {
         setProp("PARALLEL_COLLECTIONS", "false");
-        setProp("REVERSE_NELUMBO", "false");
-        setProp("RANDOM_NELUMBO", "true");
-        setProp("TRACE_NELUMBO", "false");
         setProp("VERBOSE_TESTS", "false");
+    }
+
+    @Override
+    protected void settings(KnowledgeBase kb) {
+        kb.setReverseOrder(env("REVERSE_NELUMBO", false));
+        kb.setRandomOrder(env("RANDOM_NELUMBO", true));
+        kb.setTrace(env("TRACE_NELUMBO", false));
     }
 
     @Test()

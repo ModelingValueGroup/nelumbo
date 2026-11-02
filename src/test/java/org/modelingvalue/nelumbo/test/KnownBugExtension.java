@@ -35,6 +35,9 @@ public class KnownBugExtension implements InvocationInterceptor {
             String detail = t.getMessage() == null ? t.getClass().getSimpleName() : t.getMessage().lines().findFirst().orElse("");
             throw new TestAbortedException("known bug still present: " + kb.value() + " [" + detail + "]");
         }
+        if (kb.flaky()) {
+            throw new TestAbortedException("known bug, flaky: passed this run (check with ./run-all-tests-with-CLI): " + kb.value());
+        }
         Assertions.fail("KNOWN BUG APPEARS FIXED: " + kb.value() + " - remove @KnownBug and promote to RegressionTest");
     }
 }

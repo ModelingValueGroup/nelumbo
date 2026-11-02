@@ -139,7 +139,8 @@ public final class Lambda extends Node {
 
     public boolean test(Object... vals) {
         Predicate p = (Predicate) setVariables(vals);
-        return resolve(p, true).isTrueCC();
+        InferResult result = resolve(p, true);
+        return result != null && result.isTrueCC();
     }
 
     @SuppressWarnings("unchecked")
@@ -152,11 +153,16 @@ public final class Lambda extends Node {
 
     private static InferResult resolve(Predicate p, boolean bool) {
         InferContext ctx = CURRENT_CONTEXT.get();
+        InferResult incomplete = ctx.incompleteResult().get();
+        if (incomplete != null && incomplete.hasStackOverflow()) {
+            // Keep the first overflow path: flatten re-runs only that path, so a second
+            // overflow would leave the first path's cycle placeholders in the memoization.
+            return null;
+        }
         InferResult result = p.resolve(ctx);
         if (result.hasStackOverflow()) {
             ctx.incompleteResult().set(result);
-        }
-        if (!isComplete(result, bool)) {
+        } else if (!isComplete(result, bool)) {
             ctx.incompleteResult().accumulateAndGet(result, (a, b) -> {
                 if (a == null) {
                     return b;
@@ -167,7 +173,7 @@ public final class Lambda extends Node {
                 }
             });
         }
-        return result;
+        return ctx.hasIncompleteResult() ? null : result;
     }
 
     private static boolean isComplete(InferResult result, boolean bool) {

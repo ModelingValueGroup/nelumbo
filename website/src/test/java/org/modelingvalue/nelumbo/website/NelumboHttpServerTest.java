@@ -156,7 +156,7 @@ class NelumboHttpServerTest {
         assertEquals(200, example.statusCode());
         assertTrue(example.headers().firstValue("Content-Type").orElse("").contains("text/plain"), "served as text, not HTML");
         assertTrue(example.body().contains("fib("), "the fibonacci example source");
-        assertEquals(404, get("/examples/sudoku-4x4").statusCode(), "unlisted examples are not served");
+        assertEquals(404, get("/examples/sudoku-brute-4x4-easy").statusCode(), "unlisted examples are not served");
         assertEquals(404, get("/examples/noSuchExample").statusCode());
     }
 
