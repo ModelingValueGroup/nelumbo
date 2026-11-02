@@ -8,7 +8,7 @@ Nelumbo is a declarative logic programming meta-language in Java: custom syntax 
 
 ## Build Commands
 
-Java 21+, Gradle 9.8.1 (Kotlin DSL) via wrapper.
+Java 21+, Gradle 9.8.2 (Kotlin DSL) via wrapper.
 
 ```sh
 ./gradlew build                          # everything (core + LSP server + tests)
@@ -37,6 +37,7 @@ Test task wiring (root `build.gradle.kts`):
 - immutable-collections is declared ONCE, in the root, as `api(libs.immutable.collections)`; do NOT re-declare it in submodules.
 - immutable-collections and mvg-json are plain versions from Maven Central: no ALLREP_TOKEN needed. Do not reintroduce `-BRANCHED` versions (they resolve per git branch and silently diverge in the CI master build). Tokenless check: `./gradlew -DALLREP_TOKEN=bogus build`.
 - Local immutable-collections checkout: `includeBuild` substitution in `settings.gradle.kts`.
+- VS Code plugin (`lsp/plugins/vscode`, not built by CI): vscode-languageclient 10+ resolves only with `module`/`moduleResolution` `node16` in its `tsconfig.json` (package exports); check with `npx tsc --noEmit -p lsp/plugins/vscode` (esbuild bundles either way).
 - IntelliJ plugin: sandbox in `lsp/plugins/intellij/build/idea-sandbox`. The plugin recreates `.intellijPlatform/` at the repo root on every build; its build script deletes it again (`taskGraph.whenReady` + `removeEmptyPlatformCacheDir`), only the coroutines javaagent keeps it alive. Its location can only be set as an absolute path. `selfUpdateCheck=false` in `gradle.properties` avoids a lock file and a network call.
 - Changing `gradle.properties` with a daemon up trips mvgplugin's "changed in mid air" guard: `./gradlew --stop`.
 
