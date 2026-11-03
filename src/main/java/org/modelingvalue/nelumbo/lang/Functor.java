@@ -487,7 +487,7 @@ public class Functor extends Node implements FunctorOrType {
         if (literal == null) {
             Pattern litPattern = pattern().setTypes(Type::toLiteral);
             Type type = (Type) get(1);
-            Type litType = type.isStruct() ? type.toLiteral() : type;
+            Type litType = type.isStruct() ? type.toLiteralDeep() : type;
             Functor f = Functor.of(astElements(), litPattern, litType, local(), (Constructor<?>) get(3),
                     leftPrecedence(), (Method) get(5), false, (boolean) get(7)).incrementVariables("$");
             Functor original = original();

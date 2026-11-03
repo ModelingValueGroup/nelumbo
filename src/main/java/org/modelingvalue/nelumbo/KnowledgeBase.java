@@ -600,7 +600,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     public Set<Rule> getRules(Predicate predicate) {
-        return ruleSignatures.get().match(predicate, true, this);
+        return ruleSignatures.get().match(predicate, true, Set.of(), this);
     }
 
     public Transform addTransform(Transform transform) {
@@ -613,7 +613,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     public Set<Transform> getTransforms(Node root) {
-        return transformSignatures.get().match(root, false, this);
+        return transformSignatures.get().match(root, false, Set.of(), this);
     }
 
     public void addFact(Predicate fact) {

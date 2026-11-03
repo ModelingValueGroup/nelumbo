@@ -65,10 +65,10 @@ public class Equal extends Predicate {
             return Objects.equals(left.type(), right.type()) ? left : null;
         } else if (right instanceof Variable var) {
             complete[0] = false;
-            return var.type().getAssigned(left);
+            return left.coerceTo(var.type());
         } else if (left instanceof Variable var) {
             complete[0] = false;
-            return var.type().getAssigned(right);
+            return right.coerceTo(var.type());
         } else if (left.equals(right)) {
             return left;
         } else if (!left.functorOrTypeForEquals().equals(right.functorOrTypeForEquals())) {

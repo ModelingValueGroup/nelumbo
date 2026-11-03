@@ -25,12 +25,15 @@ import java.io.Serial;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.nelumbo.AstElement;
+import org.modelingvalue.nelumbo.ConstructionReason;
+import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
+import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 
 public class NIs extends Predicate {
@@ -81,6 +84,27 @@ public class NIs extends Predicate {
         Node b = getVal(1);
         return (b == null && a != null && Type.LITERAL.isAssignableFrom(a.type())) || //
                 (a == null && b != null && Type.LITERAL.isAssignableFrom(b.type()));
+    }
+
+    @Override
+    public Node init(KnowledgeBase knowledgeBase, ParseContext ctx, ConstructionReason reason) throws ParseException {
+        if (reason == ConstructionReason.parsing) {
+            Node a = (Node) get(0);
+            Node b = (Node) get(1);
+            if (!(a instanceof Variable) && Type.LITERAL.isAssignableFrom(a.type())) {
+                Node x = a.coerceTo(b.type().nonFunction());
+                if (x != null && !x.equals(a)) {
+                    return set(0, x);
+                }
+            }
+            if (!(b instanceof Variable) && Type.LITERAL.isAssignableFrom(b.type())) {
+                Node y = b.coerceTo(a.type().nonFunction());
+                if (y != null && !y.equals(b)) {
+                    return set(1, y);
+                }
+            }
+        }
+        return this;
     }
 
 }

@@ -181,7 +181,7 @@ public class Node extends StructImpl implements AstElement {
     }
 
     private void diff(Node other, MutableSet<Pair<Object, Object>> diff) {
-        Object tfe = functorOrType(), otfe = other.functorOrType();
+        Object tfe = functorOrTypeForEquals(), otfe = other.functorOrTypeForEquals();
         if (!Objects.equals(tfe, otfe)) {
             diff.add(Pair.of(tfe, otfe));
         } else {
@@ -797,6 +797,18 @@ public class Node extends StructImpl implements AstElement {
 
     public void check(KnowledgeBase knowledgeBase, ParseContext parseContext, List<Node> ancestors)
             throws ParseException {
+    }
+
+    public Node coerceTo(Type to) {
+        Type from = type();
+        if (to.isAssignableFrom(from)) {
+            return this;
+        }
+        Map<Variable, Type> bind = from.bindTo(to, Map.of());
+        if (bind != null) {
+            return setTypeArgs(bind);
+        }
+        return null;
     }
 
 }

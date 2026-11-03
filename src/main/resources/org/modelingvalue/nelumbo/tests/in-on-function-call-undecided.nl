@@ -17,9 +17,9 @@ Integer       i, j
 Set<Integer>  s
 List<Integer> l
 
-ss(i)=s <=> s={1,2}
-ll(i)=l <=> l=[1,2]
-ff(i)=j <=> j=2
+ss(i)=s <=>  s={1,2}
+ll(i)=l <=>  l=[1,2]
+ff(i)=j <=>  j=2
 
 1 in ss(0)    ? [()][]
 3 in ss(0)    ? [][()]

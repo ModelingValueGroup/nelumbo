@@ -25,6 +25,8 @@ import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
+import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
@@ -47,12 +49,13 @@ public class NSet extends NCollection {
     }
 
     public NSet(Type elementType, Set<?> set, boolean complete) {
-        super(NodeInfo.of(elementType.toSet().toLiteral()), set, complete);
+        super(NodeInfo.of(elementType(elementType, set).toLiteral().toSet().toLiteral().toStruct()), set, complete);
     }
 
     @Override
     public Object functorOrTypeForEquals() {
-        return Type.SET;
+        FunctorOrType fot = functorOrType();
+        return fot instanceof Functor f ? f.resultType() : fot;
     }
 
     @Override

@@ -23,6 +23,7 @@ import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
+import org.modelingvalue.collections.mutable.MutableMap;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.Evaluatable;
@@ -30,6 +31,7 @@ import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
+import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
@@ -83,16 +85,31 @@ public final class Query extends Node implements Evaluatable {
             Map<Variable, Object> map = Map.of();
             for (Object element : list) {
                 if (element instanceof List pair) {
-                    map = map.put(((Node) pair.get(0)).variable().literal(), pair.get(1));
+                    Variable variable = ((Node) pair.get(0)).variable();
+                    Node value = (Node) pair.get(1);
+                    map = map.put(variable.literal(), setType(variable, value));
                 } else if (var == null) {
                     knowledgeBase.addException(new ParseException("No variable in binding", (Node) element));
                 } else {
-                    map = map.put(var.literal(), element);
+                    map = map.put(var.literal(), setType(var, (Node) element));
                 }
             }
             set = set.add(map);
         }
         return set;
+    }
+
+    private static Node setType(Variable variable, Node value) {
+        if (!variable.type().isAssignableFrom(value.type())) {
+            Set<Variable> args = value.type().argumentVariables();
+            if (!args.isEmpty()) {
+                MutableMap<Variable, Type> typeArgs = MutableMap.of(Map.of());
+                if (!variable.type().typeMatcher().match(value.type(), false, args, typeArgs).isEmpty()) {
+                    value = value.setTypeArgs(typeArgs.get());
+                }
+            }
+        }
+        return value;
     }
 
     @Override
@@ -204,6 +221,7 @@ public final class Query extends Node implements Evaluatable {
             InferResult expected = InferResult.of(predicate, truePredicates, completeFacts, falsePredicates,
                     completeFalsehoods, Set.of(), Map.of());
             if (!found.equals(expected)) {
+                // System.err.println("!!!!!!!!!!!!!!!!!!!!!! " + found.diff(expected));
                 List<AstElement> astElements = astElements();
                 handler.addException(new ParseException("Expected result " + expected + ", found " + found, //
                         astElements.sublist(2, astElements.size()).toArray(AstElement[]::new)));

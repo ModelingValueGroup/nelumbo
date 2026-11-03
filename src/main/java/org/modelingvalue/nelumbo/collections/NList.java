@@ -26,6 +26,7 @@ import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
+import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
@@ -47,25 +48,25 @@ public final class NList extends NCollection {
         return new Object[] { List.of(remove(args, open)), open < 0 };
     }
 
-    public NList(Type elementType, List<?> list, boolean complete) {
-        super(NodeInfo.of(elementType.toList().toLiteral()), list, complete);
-    }
-
     public NList(List<AstElement> elements, Type elementType) {
         super(NodeInfo.of(elementType.toList().toLiteral(), elements), List.of(), true);
     }
 
-    public NList(Type elementType, List<AstElement> elements, List<?> args) {
-        super(NodeInfo.of(elementType.toList().toLiteral(), elements), args, true);
-    }
-
-    public NList(Functor functor, List<AstElement> elements, List<?> args) {
-        super(NodeInfo.of(functor, elements), args, true);
+    public NList(Type elementType, List<AstElement> elements, List<?> list) {
+        super(NodeInfo.of(elementType.toList().toLiteral(), elements), list, true);
     }
 
     public NList(List<AstElement> elements, NList list, Node last) {
         super(NodeInfo.of(list.type(), list.astElements().addAll(elements).add(last)), list.collection().add(last),
                 true);
+    }
+
+    public NList(Functor functor, List<AstElement> elements, List<?> list) {
+        super(NodeInfo.of(functor, elements), list, true);
+    }
+
+    public NList(Type elementType, List<?> list, boolean complete) {
+        super(NodeInfo.of(elementType(elementType, list).toLiteral().toList().toLiteral().toStruct()), list, complete);
     }
 
     @Override
@@ -75,7 +76,8 @@ public final class NList extends NCollection {
 
     @Override
     public Object functorOrTypeForEquals() {
-        return Type.LIST;
+        FunctorOrType fot = functorOrType();
+        return fot instanceof Functor f ? f.resultType() : fot;
     }
 
     @Override

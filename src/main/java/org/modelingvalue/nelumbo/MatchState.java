@@ -111,10 +111,10 @@ public class MatchState<E extends Node> extends AbstractState<MatchState<E>> {
     }
 
     @SuppressWarnings("unchecked")
-    public Set<E> match(Object obj, boolean inverse, KnowledgeBase knowledgeBase) {
+    public Set<E> match(Object obj, boolean inverse, Set<Variable> matchVar, KnowledgeBase knowledgeBase) {
         MutableMap<Variable, Type> typeArgs = MutableMap.of(Map.of());
         Set<E> elements = null;
-        for (MatchState<E> state : doMatch(obj, inverse, typeArgs)) {
+        for (MatchState<E> state : doMatch(obj, inverse, matchVar, typeArgs)) {
             if (!state.elements().isEmpty()) {
                 elements = state.elements();
                 break;
@@ -128,18 +128,19 @@ public class MatchState<E extends Node> extends AbstractState<MatchState<E>> {
                 : elements.replaceAll(e -> knowledgeBase.actualize(e, tas, p -> (E) p.a().setTypeArgs(p.b())));
     }
 
-    private List<MatchState<E>> doMatch(Object obj, boolean inverse, MutableMap<Variable, Type> typeArgs) {
+    private List<MatchState<E>> doMatch(Object obj, boolean inverse, Set<Variable> matchVar,
+            MutableMap<Variable, Type> typeArgs) {
         List<MatchState<E>> states = List.of();
         switch (obj) {
         case Type type    -> {
-            MatchState<E> state = matchType(type, false, typeArgs);
+            MatchState<E> state = matchType(type, false, matchVar, typeArgs);
             if (state != null) {
                 states = states.add(state);
             }
             break;
         }
         case Variable var -> {
-            MatchState<E> state = matchType(var.type().toVariable(), inverse, typeArgs);
+            MatchState<E> state = matchType(var.type().toVariable(), inverse, matchVar, typeArgs);
             if (state != null) {
                 states = states.add(state);
             }
@@ -153,13 +154,13 @@ public class MatchState<E extends Node> extends AbstractState<MatchState<E>> {
                 for (Object arg : node.args()) {
                     List<MatchState<E>> next = List.of();
                     for (MatchState<E> inner : inners) {
-                        next = next.addAll(inner.doMatch(arg, inverse, typeArgs));
+                        next = next.addAll(inner.doMatch(arg, inverse, matchVar, typeArgs));
                     }
                     inners = next;
                 }
                 states = states.addAll(inners);
             }
-            state = matchType(node.type(), inverse, typeArgs);
+            state = matchType(node.type(), inverse, matchVar, typeArgs);
             if (state != null) {
                 states = states.add(state);
             }

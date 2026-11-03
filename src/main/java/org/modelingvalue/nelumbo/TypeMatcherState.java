@@ -41,11 +41,13 @@ public class TypeMatcherState implements IState<TypeMatcherState> {
         return type;
     }
 
-    public final Set<Type> match(Type type, boolean inverse, MutableMap<Variable, Type> typeArgs) {
-        return doMatch(type, inverse, typeArgs).replaceAll(TypeMatcherState::type);
+    public final Set<Type> match(Type type, boolean inverse, Set<Variable> matchVar,
+            MutableMap<Variable, Type> typeArgs) {
+        return doMatch(type, inverse, matchVar, typeArgs).replaceAll(TypeMatcherState::type);
     }
 
-    private Set<TypeMatcherState> doMatch(Type type, boolean inverse, MutableMap<Variable, Type> typeArgs) {
+    private Set<TypeMatcherState> doMatch(Type type, boolean inverse, Set<Variable> matchVar,
+            MutableMap<Variable, Type> typeArgs) {
         Set<TypeMatcherState> result = Set.of();
         Entry<Type, TypeMatcherState> found = null;
         Type assigned = null;
@@ -100,6 +102,21 @@ public class TypeMatcherState implements IState<TypeMatcherState> {
                         }
                     }
                 }
+                if (a == null) {
+                    Variable v = type.variable();
+                    if (v != null && matchVar.contains(v)) {
+                        Type t = e.getKey();
+                        if (t.hasArguments()) {
+                            List<Type> args = t.arguments();
+                            for (int i = 0; i < args.size(); i++) {
+
+                            }
+                            t = t.setArguments(args);
+                        }
+                        typeArgs.put(v, t);
+                        a = e.getKey();
+                    }
+                }
                 if (a != null && (found == null || found.getKey().isAssignableFrom(e.getKey()))) {
                     found = e;
                     assigned = a;
@@ -113,7 +130,7 @@ public class TypeMatcherState implements IState<TypeMatcherState> {
                     pre = post;
                     post = Set.of();
                     for (TypeMatcherState s : pre) {
-                        post = post.addAll(s.doMatch(arg, inverse, typeArgs));
+                        post = post.addAll(s.doMatch(arg, inverse, matchVar, typeArgs));
                     }
                 }
                 result = result.addAll(post);

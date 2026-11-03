@@ -235,6 +235,10 @@ public final class Type extends Node implements FunctorOrType {
         return (List<Type>) get(3);
     }
 
+    public Set<Variable> argumentVariables() {
+        return hasArguments() ? arguments().filter(t -> t.variable() != null).map(Type::variable).asSet() : Set.of();
+    }
+
     public Type original() {
         return original;
     }
@@ -491,6 +495,10 @@ public final class Type extends Node implements FunctorOrType {
         return STRUCT.isAssignableFrom(this);
     }
 
+    public Type toStruct() {
+        return equals(OBJECT) ? STRUCT : isStruct() ? this : new Type(many().add(STRUCT), group());
+    }
+
     public Type nonStruct() {
         if (equals(STRUCT)) {
             return OBJECT;
@@ -500,6 +508,13 @@ public final class Type extends Node implements FunctorOrType {
         } else {
             return this;
         }
+    }
+
+    public Type toLiteralDeep() {
+        if (hasArguments()) {
+            return setArguments(arguments().replaceAll(Type::toLiteralDeep)).toLiteral();
+        }
+        return toLiteral();
     }
 
     public Type toList() {
@@ -616,6 +631,11 @@ public final class Type extends Node implements FunctorOrType {
         return assigned == Type.$NONE ? null : assigned;
     }
 
+    public boolean isAssignableFrom(Class<?> type) {
+        Class<?> clss = clss();
+        return clss != null && clss.isAssignableFrom(type);
+    }
+
     public Type common(Type other) {
         if (isAssignableFrom(other)) {
             return this;
@@ -626,7 +646,7 @@ public final class Type extends Node implements FunctorOrType {
             for (Type t : many()) {
                 for (Type o : other.many()) {
                     Type c = t.common(o);
-                    if (c != null) {
+                    if (c != null && !OBJECT.equals(c)) {
                         common = common.add(c);
                     }
                 }
@@ -636,53 +656,46 @@ public final class Type extends Node implements FunctorOrType {
             } else if (common.size() > 1) {
                 return new Type(List.of(), common);
             }
+        } else if (!TYPE.equals(this) && !TYPE.equals(other) && //
+                variable() == null && other.variable() == null) {
+            Set<Type> supers = Set.of();
+            for (Type t : supers()) {
+                for (Type o : other.supers()) {
+                    if (t.equals(o)) {
+                        supers = supers.add(t);
+                    }
+                }
+            }
+            if (supers.size() == 1) {
+                return supers.get(0);
+            } else if (supers.size() > 1) {
+                return new Type(List.of(), supers);
+            }
         }
         return null;
     }
 
-    public Node getAssigned(Node other) {
-        Type otherType = other.type();
-        if (isAssignableFrom(otherType)) {
-            return other;
-        }
-        Type assigned = getAssignedType(otherType);
-        if (assigned != null) {
-            return other.setType(assigned);
-        }
-        return null;
-    }
-
-    private Type getAssignedType(Type other) {
-        if (hasArguments() && other.hasArguments()) {
-            List<Type> tArgs = arguments();
-            List<Type> oArgs = other.arguments();
-            List<Type> args = List.of();
-            if (tArgs.size() == oArgs.size()) {
+    public Map<Variable, Type> bindTo(Type to, Map<Variable, Type> binding) {
+        Variable var = variable();
+        if (var != null) {
+            return binding.put(var, to);
+        } else if (to.isAssignableFrom(this)) {
+            return binding;
+        } else if (hasArguments() && to.hasArguments()) {
+            Type as = to.objectArgsOnly().getAssigned(this);
+            if (as != null) {
+                List<Type> fArgs = as.arguments();
+                List<Type> tArgs = to.arguments();
                 for (int i = 0; i < tArgs.size(); i++) {
-                    Type arg = tArgs.get(i).getAssignedType(oArgs.get(i));
-                    if (arg != null) {
-                        args = args.add(arg);
-                    } else {
+                    binding = fArgs.get(i).bindTo(tArgs.get(i), binding);
+                    if (binding == null) {
                         return null;
                     }
                 }
-                Type te = setArguments(args);
-                Type oe = other.setArguments(args);
-                if (te.isAssignableFrom(oe)) {
-                    return oe;
-                }
+                return binding;
             }
-        } else if (variable() == null && other.variable() != null) {
-            return this;
-        } else if (variable() != null && other.variable() == null) {
-            return other;
         }
         return null;
-    }
-
-    public boolean isAssignableFrom(Class<?> type) {
-        Class<?> clss = clss();
-        return clss != null && clss.isAssignableFrom(type);
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })

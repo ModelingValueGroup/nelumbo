@@ -44,6 +44,10 @@ public abstract class NCollection extends Node {
         return collection().size();
     }
 
+    public boolean isEmpty() {
+        return collection().isEmpty();
+    }
+
     public Type elementType() {
         return type().arguments().first();
     }
@@ -65,6 +69,20 @@ public abstract class NCollection extends Node {
             return result;
         }
         return args;
+    }
+
+    protected static Type elementType(Type type, Collection<?> coll) {
+        Type result = null;
+        for (Object e : coll) {
+            if (e instanceof Node n) {
+                if (result == null) {
+                    result = n.type();
+                } else {
+                    result = result.common(n.type());
+                }
+            }
+        }
+        return result != null ? result : type;
     }
 
 }

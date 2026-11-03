@@ -25,6 +25,7 @@ import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NelumboMethod;
 import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.integers.NInteger;
+import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.logic.InferResult;
 import org.modelingvalue.nelumbo.logic.Lambda;
 import org.modelingvalue.nelumbo.logic.Predicate;
@@ -181,7 +182,7 @@ public class Collections extends Predicate {
         if (a == null || b == null) {
             return unknown();
         }
-        NSet intersection = new NSet(a.elementType(), a.collection().retainAll(b.collection()),
+        NSet intersection = new NSet(elementType(a, b), a.collection().retainAll(b.collection()),
                 a.complete() || b.complete());
         if (i != null) {
             return intersection.equals(i) ? factCC() : falsehoodCC();
@@ -194,7 +195,7 @@ public class Collections extends Predicate {
         if (a == null || b == null) {
             return unknown();
         }
-        NSet union = new NSet(a.elementType(), a.collection().addAll(b.collection()), a.complete() && b.complete());
+        NSet union = new NSet(elementType(a, b), a.collection().addAll(b.collection()), a.complete() && b.complete());
         if (u != null) {
             return union.equals(u) ? factCC() : falsehoodCC();
         }
@@ -208,9 +209,9 @@ public class Collections extends Predicate {
         }
         NSet diff;
         if (!b.complete() && !a.collection().isEmpty()) {
-            diff = new NSet(a.elementType(), Set.of(), false);
+            diff = new NSet(elementType(a, b), Set.of(), false);
         } else {
-            diff = new NSet(a.elementType(), a.collection().removeAll(b.collection()), a.complete());
+            diff = new NSet(elementType(a, b), a.collection().removeAll(b.collection()), a.complete());
         }
         if (d != null) {
             return diff.equals(d) ? factCC() : falsehoodCC();
@@ -223,7 +224,8 @@ public class Collections extends Predicate {
         if (a == null || b == null) {
             return unknown();
         }
-        NList concat = new NList(a.elementType(), a.collection().addAll(b.collection()), a.complete() && b.complete());
+        NList concat = new NList(elementType(a, b), a.collection().addAll(b.collection()),
+                a.complete() && b.complete());
         if (c != null) {
             return concat.equals(c) ? factCC() : falsehoodCC();
         }
@@ -235,7 +237,8 @@ public class Collections extends Predicate {
         if (a == null || l == null) {
             return unknown();
         }
-        NSet filter = new NSet(a.elementType(), a.collection().filter(l::test).asSet(), a.complete());
+        NSet filter = new NSet(a.isEmpty() ? l.localVars().first().type() : a.elementType(),
+                a.collection().filter(l::test).asSet(), a.complete());
         if (hasIncompleteResult()) {
             return incompleteResult();
         }
@@ -250,7 +253,8 @@ public class Collections extends Predicate {
         if (a == null || l == null) {
             return unknown();
         }
-        NList filter = new NList(a.elementType(), a.collection().filter(l::test).asList(), a.complete());
+        NList filter = new NList(a.isEmpty() ? l.localVars().first().type() : a.elementType(),
+                a.collection().filter(l::test).asList(), a.complete());
         if (hasIncompleteResult()) {
             return incompleteResult();
         }
@@ -280,7 +284,7 @@ public class Collections extends Predicate {
         if (a == null || l == null) {
             return unknown();
         }
-        NList sort = new NList(a.elementType(),
+        NList sort = new NList(a.isEmpty() ? l.localVars().first().type() : a.elementType(),
                 a.collection().sorted((x, y) -> l.test(x, y) ? -1 : l.test(y, x) ? 1 : 0).asList(), a.complete());
         if (hasIncompleteResult()) {
             return incompleteResult();
@@ -290,4 +294,9 @@ public class Collections extends Predicate {
         }
         return set(2, sort).factCI();
     }
+
+    private static Type elementType(NCollection a, NCollection b) {
+        return a.isEmpty() ? b.elementType() : a.elementType();
+    }
+
 }

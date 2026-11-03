@@ -440,7 +440,8 @@ public class Predicate extends Node {
             throw new NelumboTimeoutException();
         }
         Set<Rule> rules = knowledgebase.getRules(this);
-        for (Rule rule : knowledgebase.isReverseOrder() ? rules.reverse() : knowledgebase.isRandomOrder() ? rules.random() : rules) {
+        for (Rule rule : knowledgebase.isReverseOrder() ? rules.reverse()
+                : knowledgebase.isRandomOrder() ? rules.random() : rules) {
             InferResult ruleResult = rule.infer(this, context);
             if (ruleResult != null) {
                 if (ruleResult.hasStackOverflow()) {
