@@ -10,13 +10,13 @@
 // was declared `:: Object`, and since bba88fc8 (2026-09-09) every Object
 // functor with arguments - generic or not - is promoted to Function semantics,
 // where `=` between two terms is undecided ([..][..]) without a defining `<=>`
-// rule. Declaring the type `:: Struct` gives it plain structural equality (see
+// rule. Declaring the type `:: Literal` gives it plain structural equality (see
 // langTest.nl "8. Generic type parameter" and logicTest.nl "Structs"), and
 // with that both queries evaluate.)
 import nelumbo.integers
 
 Type T
-Seq<T> :: Struct
+Seq<T> :: Literal
 Seq<T> ::= seq(<(> <T> <,> , <)+> , end)
 
 seq(1, 2, end) = seq(1, 2, end) ? [()][]

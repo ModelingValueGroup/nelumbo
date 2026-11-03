@@ -61,17 +61,18 @@ public class Functor extends Node implements FunctorOrType {
 
     public static Functor of(Pattern pattern, Type result, Type local, Class<?> clazz, Integer leftPrecedence)
             throws ParseException {
-        return of(List.of(), pattern, result, local, clazz, leftPrecedence, false);
+        return of(List.of(), pattern, result, local, clazz, leftPrecedence, false, false);
     }
 
     public static Functor of(List<AstElement> elements, Pattern pattern, Type result, Type local, Class<?> clazz,
-            Integer leftPrecedence, boolean hasLiteral) throws ParseException {
+            Integer leftPrecedence, boolean hasLiteral, boolean function) throws ParseException {
         return of(elements, pattern, result, local,
                 clazz != null ? NelumboConstructor.Finder.find(clazz, KnowledgeBase.current(), List.of()) : null,
                 leftPrecedence,
                 clazz != null ? NelumboMethod.Finder.find(clazz, pattern.name(), KnowledgeBase.current(), List.of())
                         : null,
-                hasLiteral, clazz != null && Predicate.class.isAssignableFrom(clazz) && overridesInfer(clazz));
+                hasLiteral, function,
+                clazz != null && Predicate.class.isAssignableFrom(clazz) && overridesInfer(clazz));
     }
 
     private static boolean overridesInfer(Class<?> clazz) {
@@ -83,10 +84,10 @@ public class Functor extends Node implements FunctorOrType {
     }
 
     private static Functor of(List<AstElement> elements, Pattern pattern, Type result, Type local,
-            Constructor<?> constructor, Integer leftPrecedence, Method method, boolean hasLiteral,
+            Constructor<?> constructor, Integer leftPrecedence, Method method, boolean hasLiteral, boolean function,
             boolean overridesInfer) {
         pattern = pattern.setPresedence(leftPrecedence != null ? leftPrecedence : Integer.MIN_VALUE);
-        return new Functor(elements, pattern, result, local, constructor, leftPrecedence, method, hasLiteral,
+        return new Functor(elements, pattern, result, local, constructor, leftPrecedence, method, hasLiteral, function,
                 overridesInfer);
     }
 
@@ -135,8 +136,8 @@ public class Functor extends Node implements FunctorOrType {
     @Override
     public Type resultType() {
         Type type = (Type) get(1);
-        if (hasLiteral()) {
-            type = type.nonStruct();
+        if (isFunction()) {
+            type = type.toFunction();
         }
         return type;
     }
@@ -168,11 +169,15 @@ public class Functor extends Node implements FunctorOrType {
         return (Boolean) get(6);
     }
 
+    public boolean isFunction() {
+        return (Boolean) get(7);
+    }
+
     public boolean overridesInfer() {
         if (hasLiteral()) {
             return false;
         }
-        return (Boolean) get(7);
+        return (Boolean) get(8);
     }
 
     @Override
@@ -306,7 +311,11 @@ public class Functor extends Node implements FunctorOrType {
     }
 
     public Functor setResultType(Type type) {
-        return set(1, type);
+        Functor r = set(1, type);
+        if (Type.LITERAL.isAssignableFrom(type)) {
+            r = r.set(7, false);
+        }
+        return r;
     }
 
     public Object[] args(List<AstElement> elements, MutableMap<Variable, Type> typeArgs) {
@@ -433,29 +442,21 @@ public class Functor extends Node implements FunctorOrType {
         List<Type> args = pattern.argTypes(List.of());
         args = args.replaceAll(a -> a.nonRepetition());
         if (!Type.ROOT.isAssignableFrom(type) && !Type.NAMESPACE.isAssignableFrom(type)
-                && !Type.PATTERN.isAssignableFrom(type)
-                && (Type.LAMBDA.isAssignableFrom(type) || args.noneMatch(t -> Type.OBJECT.isAssignableFrom(t)))) {
-            type = type.toLiteral();
-        } else if (clazz != Parenthesized.class) {
-            if (!Type.TYPE.isAssignableFrom(type) && !Type.BOOLEAN.isAssignableFrom(type)
-                    && !Type.ROOT.isAssignableFrom(type) && !Type.PATTERN.isAssignableFrom(type)
-                    && !Type.NAMESPACE.isAssignableFrom(type)) {
-                function = true;
-            }
-            if (!Type.TYPE.isAssignableFrom(type) && !Type.ROOT.isAssignableFrom(type)
-                    && !Type.NAMESPACE.isAssignableFrom(type) && !Type.PATTERN.isAssignableFrom(type)
-                    && args.noneMatch(t -> Type.OBJECT.equals(t) //
-                            || Type.BOOLEAN.equals(t) //
-                            || Type.VARIABLE.equals(t) //
-                            || Type.LITERAL.equals(t))) {
-                toLiteral = true;
+                && !Type.PATTERN.isAssignableFrom(type) && !Type.TYPE.isAssignableFrom(type)) {
+            if (Type.LAMBDA.isAssignableFrom(type) || args.noneMatch(t -> Type.OBJECT.isAssignableFrom(t))) {
+                type = type.toLiteral();
+            } else if (clazz != Parenthesized.class) {
+                if (!Type.BOOLEAN.isAssignableFrom(type)) {
+                    function = true;
+                }
+                if (args.noneMatch(t -> Type.OBJECT.equals(t) || Type.BOOLEAN.equals(t) || Type.VARIABLE.equals(t)
+                        || Type.LITERAL.equals(t))) {
+                    toLiteral = true;
+                }
             }
         }
-        if (function && (toLiteral || !type.isStruct())) {
-            type = type.toFunction();
-        }
-        Functor nodFunctor = Functor.of(ast, pattern, type, local, clazz, prec, toLiteral).makeVariablesUnique(ctx)
-                .resetOriginal();
+        Functor nodFunctor = Functor.of(ast, pattern, type, local, clazz, prec, toLiteral, function)
+                .makeVariablesUnique(ctx).resetOriginal();
         nodFunctor.init(knowledgeBase, ctx, ConstructionReason.transforming);
         roots = new NList(List.of(), roots, nodFunctor);
         if (pattern instanceof TokenTextPattern && clazz != null) {
@@ -466,7 +467,7 @@ public class Functor extends Node implements FunctorOrType {
             Functor litFunctor = nodFunctor.toLiteral();
             litFunctor.init(knowledgeBase, ctx, ConstructionReason.transforming);
             roots = new NList(List.of(), roots, litFunctor);
-            roots = node2literalRule(type, roots, knowledgeBase, ctx, function, nodFunctor, litFunctor);
+            roots = node2literalRule(roots, knowledgeBase, ctx, nodFunctor, litFunctor);
         }
         return roots;
     }
@@ -487,9 +488,11 @@ public class Functor extends Node implements FunctorOrType {
         if (literal == null) {
             Pattern litPattern = pattern().setTypes(Type::toLiteral);
             Type type = (Type) get(1);
-            Type litType = type.isStruct() ? type.toLiteralDeep() : type;
-            Functor f = Functor.of(astElements(), litPattern, litType, local(), (Constructor<?>) get(3),
-                    leftPrecedence(), (Method) get(5), false, (boolean) get(7)).incrementVariables("$");
+            boolean lit = Type.LITERAL.isAssignableFrom(type);
+            Functor f = Functor
+                    .of(astElements(), litPattern, lit ? type.toLiteralDeep() : type, local(), (Constructor<?>) get(3),
+                            leftPrecedence(), (Method) get(5), false, !lit && isFunction(), (boolean) get(8))
+                    .incrementVariables("$");
             Functor original = original();
             if (original == this) {
                 f = f.resetOriginal();
@@ -501,8 +504,8 @@ public class Functor extends Node implements FunctorOrType {
         return literal;
     }
 
-    private NList node2literalRule(Type type, NList roots, KnowledgeBase knowledgeBase, ParseContext ctx,
-            boolean function, Functor nodFunctor, Functor litFunctor) throws ParseException {
+    private NList node2literalRule(NList roots, KnowledgeBase knowledgeBase, ParseContext ctx, Functor nodFunctor,
+            Functor litFunctor) throws ParseException {
         nodFunctor = nodFunctor.resetVariables(ctx);
         litFunctor = litFunctor.resetVariables(ctx);
         List<Type> nodArgs = nodFunctor.argTypes();
@@ -516,17 +519,16 @@ public class Functor extends Node implements FunctorOrType {
             while (nodArgs.size() < REPETITION_MAX) {
                 nodArgs = nodArgs.add(nodType);
                 litArgs = litArgs.add(litType);
-                roots = createRule(type, roots, knowledgeBase, ctx, function, nodFunctor, litFunctor, nodArgs, litArgs);
+                roots = createRule(roots, knowledgeBase, ctx, nodFunctor, litFunctor, nodArgs, litArgs);
             }
             return roots;
         } else {
-            return createRule(type, roots, knowledgeBase, ctx, function, nodFunctor, litFunctor, nodArgs, litArgs);
+            return createRule(roots, knowledgeBase, ctx, nodFunctor, litFunctor, nodArgs, litArgs);
         }
     }
 
-    private static NList createRule(Type type, NList roots, KnowledgeBase knowledgeBase, ParseContext ctx,
-            boolean function, Functor nodFunctor, Functor litFunctor, List<Type> nodArgs, List<Type> litArgs)
-            throws ParseException {
+    private static NList createRule(NList roots, KnowledgeBase knowledgeBase, ParseContext ctx, Functor nodFunctor,
+            Functor litFunctor, List<Type> nodArgs, List<Type> litArgs) throws ParseException {
         Variable[] nodVars = new Variable[nodArgs.size()];
         Variable[] litVars = new Variable[litArgs.size()];
         assert nodVars.length == litVars.length;
@@ -542,7 +544,9 @@ public class Functor extends Node implements FunctorOrType {
         }
         Node nodNode = nodFunctor.construct(List.of(), nodConsArgs, knowledgeBase, ctx);
         Node litNode = litFunctor.construct(List.of(), litConsArgs, knowledgeBase, ctx);
-        Variable rigthVar = function ? new Variable(List.of(), false, type.nonFunction().nonStruct(), "r") : null;
+        boolean function = nodFunctor.isFunction();
+        Type type = nodFunctor.resultType();
+        Variable rigthVar = function ? new Variable(List.of(), false, type.nonFunction(), "r") : null;
         Predicate nodCons = function ? new NIs(List.of(), nodNode, rigthVar) : (Predicate) nodNode;
         Predicate litCond = function ? new NIs(List.of(), litNode, rigthVar) : (Predicate) litNode;
         for (int c = nodVars.length - 1; c >= 0; c--) {

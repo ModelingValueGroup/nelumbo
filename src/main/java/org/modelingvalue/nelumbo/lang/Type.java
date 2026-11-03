@@ -71,7 +71,6 @@ public final class Type extends Node implements FunctorOrType {
     public static final Type  FUNCTOR         = new Type("Functor", ROOT);
     public static final Type  PATTERN_PART    = new Type("PatternPart", ROOT);
     public static final Type  PATTERN         = new Type("Pattern", PATTERN_GROUP, OBJECT);
-    public static final Type  STRUCT          = new Type("Struct", OBJECT);
     private static final Type ELEMENT_ARG_VAR = new Type(new Variable(List.of(), false, TYPE, "E"));
     public static final Type  COLLECTION      = new Type("Collection", OBJECT, List.of(ELEMENT_ARG_VAR), DEFAULT_GROUP);
     public static final Type  SET             = new Type("Set", COLLECTION, List.of(ELEMENT_ARG_VAR), DEFAULT_GROUP);
@@ -95,7 +94,6 @@ public final class Type extends Node implements FunctorOrType {
                 FUNCTOR, //
                 PATTERN_PART, //
                 PATTERN, //
-                STRUCT, //
                 COLLECTION, //
                 SET, //
                 LIST, //
@@ -485,25 +483,6 @@ public final class Type extends Node implements FunctorOrType {
             return OBJECT;
         } else if (isVariable()) {
             Set<Type> set = many().remove(VARIABLE);
-            return set.size() == 1 ? set.get(0) : new Type(set, group());
-        } else {
-            return this;
-        }
-    }
-
-    public boolean isStruct() {
-        return STRUCT.isAssignableFrom(this);
-    }
-
-    public Type toStruct() {
-        return equals(OBJECT) ? STRUCT : isStruct() ? this : new Type(many().add(STRUCT), group());
-    }
-
-    public Type nonStruct() {
-        if (equals(STRUCT)) {
-            return OBJECT;
-        } else if (isStruct()) {
-            Set<Type> set = many().remove(STRUCT);
             return set.size() == 1 ? set.get(0) : new Type(set, group());
         } else {
             return this;

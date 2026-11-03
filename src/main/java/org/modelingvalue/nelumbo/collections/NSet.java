@@ -49,7 +49,7 @@ public class NSet extends NCollection {
     }
 
     public NSet(Type elementType, Set<?> set, boolean complete) {
-        super(NodeInfo.of(elementType(elementType, set).toLiteral().toSet().toLiteral().toStruct()), set, complete);
+        super(NodeInfo.of(elementType(elementType, set).toLiteral().toSet().toLiteral()), set, complete);
     }
 
     @Override

@@ -179,7 +179,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             }
         }
         Functor functor = Functor.of(List.of(type), pattern, Type.TYPE, var != null ? Type.NAMESPACE : null, Type.class,
-                null, false);
+                null, false, false);
         functor.init(this, ctx, bootstrapping);
         return functor;
     }
@@ -190,7 +190,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         } else {
             Type type = var.type().toVariable();
             Functor functor = Functor.of(List.of(var), t(List.of(var), var), type,
-                    worldScopedVariables ? null : Type.NAMESPACE, Variable.class, null, false);
+                    worldScopedVariables ? null : Type.NAMESPACE, Variable.class, null, false, false);
             functor.init(this, ctx, bootstrapping);
             return functor;
         }

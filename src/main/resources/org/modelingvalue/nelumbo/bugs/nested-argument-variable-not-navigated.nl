@@ -3,15 +3,15 @@
 import nelumbo.integers
 
 Person  :: Object
-Box     :: Struct
+Box     :: Literal
 Boolean ::= owns(<Person>,<Box>)
 Box     ::= box(<Integer>)
 Person  ::= Piet
 
 Integer n
-Box b
+Box     b
 
 fact owns(Piet, box(1))
 
-owns(Piet,box(n)) ? [(n=1),..][..]
+owns(Piet,box(n))             ? [(n=1),..][..]
 E[b](owns(Piet,b) & b=box(n)) ? [(n=1),..][..]

@@ -6,11 +6,11 @@
 // single-keyword option `cc` was unaffected. Fixed in the patterns' args: the
 // keep flag is passed through SequencePattern.args to its elements now, so the
 // keyword texts of the matched option are kept as its identity.)
-// C is declared `:: Struct` - the supertype for plain structural equality, as
+// C is declared `:: Literal` - the supertype for plain structural equality, as
 // in tests/optional-presence-lost.nl and logicTest.nl "Structs".
 import nelumbo.logic
 
-C :: Struct
+C :: Literal
 C ::= wrap <(> aa bb <|> dd ee <|> cc <)>
 
 wrap aa bb = wrap aa bb ? [()][]

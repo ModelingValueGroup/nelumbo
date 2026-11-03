@@ -138,7 +138,7 @@ A[a,b](a=T1&b=T2&a$b) ? [..][..]
 
 // Structs
 
-Sid :: Struct
+Sid :: Literal
 Sid ::= rep <(> aa <)+>
 Sid ::= opt <(> aa <)?>
 Sid ::= alt <(> aa <|> bb <)>
