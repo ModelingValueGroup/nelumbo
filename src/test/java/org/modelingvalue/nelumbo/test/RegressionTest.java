@@ -147,7 +147,7 @@ public class RegressionTest extends NelumboTestBase {
         testResource("four-var-quantifier-crash.nl");
     }
 
-    // Seq<T> must stay a Struct: as an Object its functor is Function-typed and `=`
+    // Seq<T> must stay a Literal: as an Object its functor is Function-typed and `=`
     // is undecided
     @RepeatedTest(10)
     public void repetitionSeparatorGreedy() {

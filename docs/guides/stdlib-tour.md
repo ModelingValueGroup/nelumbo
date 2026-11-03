@@ -90,7 +90,6 @@ import nelumbo.lang
 Boolean  :: Object
 Function :: Object
 Literal  :: Object
-Struct   :: Object
 
 // Lambdas: [x,...](body), one type per arity (1..6)
 Type A1, A2, A3, A4, A5, A6, R
@@ -417,13 +416,13 @@ private Boolean ::= build(<Lambda1<E,Boolean>>, <Set<E>>)  @...BuildSet,
                     intersection(...), union(...), diff(...), concat(...),
                     setFilter(...), listFilter(...), map(...), sort(...)  @...Collections
 
-{Struct,Set<E>}  ::= { <(> <(> <E> <|> .. <)> <,> , <)*> }  @...NSet
+{Literal,Set<E>}  ::= { <(> <(> <E> <|> .. <)> <,> , <)*> }  @...NSet
 Set<E>           ::= { <Lambda1<E,Boolean>> },             ▸ set-builder
                      <Set<E>> where <Lambda1<E,Boolean>>,  ▸ filter
                      <Set<E>> && <Set<E>>,                 ▸ intersection
                      <Set<E>> || <Set<E>>,                 ▸ union
                      <Set<E>> -  <Set<E>>                  ▸ difference
-{Struct,List<E>} ::= [ <(> <(> <E> <|> .. <)> <,> , <)*> ]  @...NList
+{Literal,List<E>} ::= [ <(> <(> <E> <|> .. <)> <,> , <)*> ]  @...NList
 List<E>          ::= <List<E>> + <List<E>>,                ▸ concatenation
                      <List<E>> where <Lambda1<E,Boolean>>,
                      <Collection<F>> map <Lambda1<F,E>>,
@@ -446,7 +445,7 @@ Boolean          ::= <Set<E>> "<" <Set<E>>, ...,           ▸ subset / superset
 ### What it introduces
 
 - **`Type E, F`** — the declaration that introduces generic type parameters. `lang.nl` uses the same mechanism for parenthesisation (`Type P; P ::= (<P>)`); this is its first use to define container types. `F` is the input element type of `map`.
-- **`Collection<E>`, `Set<E>`, and `List<E>`** — parameterised container types with literal syntax. `Collection<E>` is the common supertype. The literals are also `Struct`s, which gives them structural equality. A literal may contain `..` to make it *open* (`{1,2,..}`: at least these elements).
+- **`Collection<E>`, `Set<E>`, and `List<E>`** — parameterised container types with literal syntax. `Collection<E>` is the common supertype. The literals are also `Literal`s, which gives them structural equality. A literal may contain `..` to make it *open* (`{1,2,..}`: at least these elements).
 - **Set-builder notation** — `{[e](c)}`, the comprehension form of `Set<E>`; it is a `Lambda1<E,Boolean>` in braces.
 - **Algebraic operations** — cardinality `|c|`, membership `e in c`, subset/superset `< > <= >=`, set intersection/union/difference `&& || -`, list concatenation `+`, and list indexing (`at i in l`, `first in l`, `last in l`, `e first index l`, `e last index l`, `e index l`, `e indexes l`). Each is a relation backed by the `Collections` native class and runs in both directions where meaningful.
 - **Higher-order operations** — `c where [x](p)` (filter), `c map [x](e)` (to a list), `c sort [a,b](p)` (to a list). They take [lambdas](../reference/logic/lambdas.md) declared in `logic.nl`. See [`reference/packages/collections.md`](../reference/packages/collections.md#operations) for the full table.

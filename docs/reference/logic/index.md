@@ -22,12 +22,10 @@ import nelumbo.logic
 Boolean   :: Object
 Function  :: Object
 Literal   :: Object
-Struct    :: Object
 ```
 - `Boolean` — the type of truth-valued expressions.
-- `Literal` — values that are their own canonical form: named constants such as `T1`, `Hendrik`, `true`, integers, strings, …
+- `Literal` — values that are their own canonical form, with **structural equality**: two literals are equal when their parts are. Named constants such as `T1`, `Hendrik`, `true`, integers, strings, and collection literals such as `{1,2}` and `[1,2]`. A user type declared `:: Literal` gets the same for its functors (see the example below).
 - `Function` — values produced by functional patterns (e.g., `a+b`, `fib(n)`, `r(x/y)`) that reduce by rules.
-- `Struct` — values that are constructors with **structural equality**: two `Struct` values are equal when their parts are (collection literals such as `{1,2}` and `[1,2]` are `Struct`s; a user type declared `:: Struct` gets the same). They take the `eq` route like a `Literal`.
 
 The `Literal` / `Function` split is what makes the rules in *Equality* (below) sufficient: every operand of `=` is either a literal, a function, or a variable, and the rules cover the relevant cases.
 
@@ -146,7 +144,19 @@ Both holes of `=` are [unique holes](statements.md#open-facts-and-one) (`<one Ob
 - A function value asserted as a fact is **closed**: after `fact m(Beatrix)=Juliana`, `m(Beatrix)=x` gives `[(x=Juliana)][..]` and `m(Beatrix)=Beatrix` is false. All other facts are open (unknown when not asserted), so `=` on functions is the main source of closed answers over facts.
 - Only a variable in the hole is constrained, not a term: `m(x)=Juliana` may have many answers (`m` need not be injective), and `x=y` with both unbound is not checked.
 
-`=` is what makes ordinary rule bodies work — `f=fib(n-1)+fib(n-2)` succeeds when both sides reduce to the same value — and is the surface form used in queries to bind variables. Note that a class-less `Object` functor with arguments is `Function`-typed, so `f(1)=f(1)` is undecided unless the result type is declared `:: Struct` (structural equality).
+`=` is what makes ordinary rule bodies work — `f=fib(n-1)+fib(n-2)` succeeds when both sides reduce to the same value — and is the surface form used in queries to bind variables. Note that a class-less `Object` functor with arguments is `Function`-typed, so `f(1)=f(1)` is undecided unless the result type is declared `:: Literal` (structural equality):
+
+```nelumbo
+import nelumbo.integers
+
+Box :: Literal
+Box ::= box(<Integer>)
+Box   b
+
+box(1)=box(1) ? [()][]
+box(1)=box(2) ? [][()]
+b=box(1)      ? [(b=box(1))][..]
+```
 
 ---
 
@@ -182,7 +192,7 @@ After `import nelumbo.logic`, the following are visible to the importer:
 
 | Kind           | Names                                              |
 |---|---|
-| Types          | `Boolean`, `Literal`, `Function`, `Struct`, `Lambda`, `Lambda1`…`Lambda6` |
+| Types          | `Boolean`, `Literal`, `Function`, `Lambda`, `Lambda1`…`Lambda6` |
 | Boolean values | `true`, `false`, `unknown`                          |
 | Connectives    | `!`, `&`, `\|`, `->`, `<->`                         |
 | Lambdas        | `[x,…](body)` (1–6 variables)                      |

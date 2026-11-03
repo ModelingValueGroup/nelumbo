@@ -69,11 +69,11 @@ import org.modelingvalue.nelumbo.tools.NelumboEvaluator.EvalResult;
 // Lambda4..6, so E/A/lambdas take up to 6 variables in every position) and
 // the pattern repro repetition-separator-greedy (the separator backtracking
 // was in since eeb06747; the repro only stayed red because its `:: Object`
-// functor is Function-typed since bba88fc8 - it is declared `:: Struct` now),
+// functor is Function-typed since bba88fc8 - it is declared `:: Literal` now),
 // and its sibling optional-presence-lost (OptionalPattern.args keeps a matched
-// argument-less body as present; also declared `:: Struct` in the promoted
+// argument-less body as present; also declared `:: Literal` in the promoted
 // file) and alternation-option-identity (the keep flag is passed through
-// SequencePattern.args now; `:: Struct` too) - no pattern repro is left.
+// SequencePattern.args now; `:: Literal` too) - no pattern repro is left.
 //
 // Findings WITHOUT an .nl repro (from the 2026-09-07 review; kept here so
 // they are not lost - they cannot be tested from this suite):
