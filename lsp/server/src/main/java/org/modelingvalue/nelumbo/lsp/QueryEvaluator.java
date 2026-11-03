@@ -18,6 +18,7 @@ package org.modelingvalue.nelumbo.lsp;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -73,6 +74,17 @@ public final class QueryEvaluator {
      * server is one whose pool is full, and the wait for a worker is not the evaluation's own cost.
      */
     public static Map<Query, QueryResult> evaluate(KnowledgeBase base, long deadlineMs, String content, String uri, boolean overloadBudget) {
+        return evaluate(base, deadlineMs, content, uri, overloadBudget, error -> {
+        });
+    }
+
+    /**
+     * Same, where {@code statementErrors} receives the error of a fact or rule that failed to evaluate (for example
+     * an inconsistent fact). Evaluation stops at that statement, like the CLI: the queries after it are absent from
+     * the map, so the error must be shown, or the document silently loses all its results.
+     */
+    public static Map<Query, QueryResult> evaluate(KnowledgeBase base, long deadlineMs, String content, String uri, boolean overloadBudget,
+            Consumer<ParseException> statementErrors) {
         Map<Query, QueryResult> results = new LinkedHashMap<>();
         KnowledgeBase evalKb = new KnowledgeBase(base);
         if (deadlineMs > 0 && !overloadBudget) {
@@ -113,8 +125,7 @@ public final class QueryEvaluator {
                             results.put(query, toResult(query, exc));
                         } else {
                             // a fact/rule failed to evaluate: later queries can't be trusted, stop here.
-                            System.err.println("query evaluation aborted at " + eval.getClass().getSimpleName() + ": "
-                                    + exc.getMessage());
+                            statementErrors.accept(exc);
                             break;
                         }
                     }

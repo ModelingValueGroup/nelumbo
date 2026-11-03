@@ -311,6 +311,65 @@ public class EmbeddedServerTest {
         return gate.running() == running;
     }
 
+    private static final String CONSISTENT_WINNER = """
+            import nelumbo.logic
+            Person :: Object
+            YesNo  :: Object
+            YesNo  ::= Yes, No
+            YesNo  ::= winner(<one Person>)
+            Person ::= Piet
+            fact winner(Piet)=Yes
+            winner(Piet) ?
+            """;
+
+    // An inconsistent fact stops the evaluation (the queries after it get no result), so its error must be published:
+    // it once only went to stderr, and the editor showed no diagnostic and no hint at all.
+    @Test
+    public void anInconsistentFactIsPublishedAsADiagnostic() throws InterruptedException {
+        NelumboLanguageServer server = new NelumboLanguageServer(KnowledgeBase.BASE, 0, () -> {
+        });
+        RecordingClient       client = new RecordingClient();
+        String                uri    = "inmemory://winner.nl";
+        server.connect(client);
+        try {
+            NlDocumentManager dm = server.getWorkspace().getDocumentManager();
+            dm.addDocument(uri, CONSISTENT_WINNER.replace("fact winner(Piet)=Yes\n", "fact winner(Piet)=Yes\nfact winner(Piet)=No\n"), 1);
+            Diagnostic inconsistency = awaitDiagnostic(client, uri, d -> d.getMessage().getLeft().startsWith("Inconsistent result"), 15);
+            assertNotNull(inconsistency, "expected the inconsistency as a diagnostic, got " + client.diagnostics);
+            assertEquals(7, inconsistency.getRange().getStart().getLine(), "on the second fact");
+            assertEquals(5, inconsistency.getRange().getStart().getCharacter(), "at its predicate");
+            assertEquals(5 + "winner(Piet)=No".length(), inconsistency.getRange().getEnd().getCharacter(), "underlining the predicate");
+            assertTrue(dm.queryResultCache().hints(uri).isEmpty(), "the query after the inconsistent fact is not evaluated");
+
+            dm.updateDocument(uri, CONSISTENT_WINNER);
+            long end = System.currentTimeMillis() + 15_000;
+            while (dm.queryResultCache().hints(uri).isEmpty() && System.currentTimeMillis() < end) {
+                Thread.sleep(50);
+            }
+            assertEquals(1, dm.queryResultCache().hints(uri).size(), "the query is evaluated again once the fact is removed");
+            PublishDiagnosticsParams last = client.diagnostics.get(client.diagnostics.size() - 1);
+            assertTrue(last.getDiagnostics().isEmpty(), "the inconsistency diagnostic is cleared, got " + last.getDiagnostics());
+        } finally {
+            server.getWorkspace().dispose();
+        }
+    }
+
+    private static Diagnostic awaitDiagnostic(RecordingClient client, String uri, java.util.function.Predicate<Diagnostic> test, long seconds) throws InterruptedException {
+        long end = System.currentTimeMillis() + seconds * 1000;
+        while (System.currentTimeMillis() < end) {
+            Diagnostic found = client.diagnostics.stream()
+                    .filter(p -> p.getUri().equals(uri))
+                    .flatMap(p -> p.getDiagnostics().stream())
+                    .filter(test)
+                    .findFirst().orElse(null);
+            if (found != null) {
+                return found;
+            }
+            Thread.sleep(100);
+        }
+        return null;
+    }
+
     private static boolean awaitOverloadDiagnostic(RecordingClient client, String uri, long seconds) throws InterruptedException {
         long end = System.currentTimeMillis() + seconds * 1000;
         while (System.currentTimeMillis() < end) {

@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -39,6 +40,7 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.modelingvalue.nelumbo.NelumboTimeoutException;
 import org.modelingvalue.nelumbo.logic.Query;
+import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.Token;
 
 /**
@@ -165,11 +167,13 @@ public class QueryResultCache {
         String           content        = document.content();
         List<Diagnostic> diagnostics    = NlDocument.baseDiagnostics(document.tokenizerResult(), document.parserResult());
         boolean          overloaded     = false;
+        // errors of facts/rules that failed to evaluate (filled on the evaluating thread, read after it finished)
+        List<ParseException> statementErrors = new CopyOnWriteArrayList<>();
         try {
             Map<Query, QueryResult> results = null;
             if (deadlineMs > 0) {
                 Future<Map<Query, QueryResult>> future = backstop.submit(
-                        () -> QueryEvaluator.evaluate(workspace.getBaseKnowledgeBase(), deadlineMs, content, uri, overloadBudget));
+                        () -> QueryEvaluator.evaluate(workspace.getBaseKnowledgeBase(), deadlineMs, content, uri, overloadBudget, statementErrors::add));
                 try {
                     // horizon from the workspace deadline, also under the short budget: that one only starts on a pool worker
                     results = workspaceMs > 0 ? future.get(workspaceMs + 2000, TimeUnit.MILLISECONDS) : future.get();
@@ -186,7 +190,7 @@ public class QueryResultCache {
                     return false;
                 }
             } else {
-                results = QueryEvaluator.evaluate(workspace.getBaseKnowledgeBase(), 0, content, uri);
+                results = QueryEvaluator.evaluate(workspace.getBaseKnowledgeBase(), 0, content, uri, false, statementErrors::add);
             }
             if (results == null) {
                 // no query was reached in time
@@ -231,6 +235,9 @@ public class QueryResultCache {
             System.err.println("query evaluation failed for " + uri + ": " + ex);
             hints.put(uri, new Evaluated(content, List.of()));
         }
+        for (ParseException error : statementErrors) {
+            diagnostics.add(statementDiagnostic(error));
+        }
         // republish parse diagnostics together with the query mismatches so neither clobbers the other.
         NlDocument.publishDiagnostics(workspace, uri, diagnostics);
         LanguageClient client = workspace.getClient();
@@ -242,6 +249,15 @@ public class QueryResultCache {
             }
         }
         return overloaded;
+    }
+
+    // underlines the failing statement on its first line (ParseException.length() only measures within one line)
+    private static Diagnostic statementDiagnostic(ParseException error) {
+        int      line  = Math.max(0, error.line());
+        int      start = Math.max(0, error.position());
+        Position from  = new Position(line, start);
+        Position to    = new Position(line, start + Math.max(0, error.length()));
+        return new Diagnostic(new Range(from, to), error.getShortMessage(), DiagnosticSeverity.Error, "nelumbo");
     }
 
     private static Diagnostic overloadDiagnostic(Range range, String message) {
