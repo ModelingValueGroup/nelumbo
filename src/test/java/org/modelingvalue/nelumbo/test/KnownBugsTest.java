@@ -241,4 +241,22 @@ public class KnownBugsTest extends NelumboTestBase {
     public void datetimeYear360() {
         bugResource("datetime-year-360.nl");
     }
+
+    @KnownBug("0-arity function (lst == [1,2,3]) passed as an argument crashes a native with argument type mismatch")
+    @Test
+    public void zeroArityFunctionArgumentCrash() {
+        bugResource("zero-arity-function-argument-crash.nl");
+    }
+
+    @KnownBug("function query with its result given (f(x) = [..] ? [()][]) diverges where f(x)=s ? answers in a second")
+    @Test
+    public void givenResultQueryDiverges() {
+        bugResource("given-result-query-diverges.nl");
+    }
+
+    @KnownBug("function query whose given result is a call (f(x) = g(0) ? [()][]) crashes with argument type mismatch")
+    @Test
+    public void givenResultCallCrash() {
+        bugResource("given-result-call-crash.nl");
+    }
 }

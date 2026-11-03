@@ -1,7 +1,8 @@
 import nelumbo.collections
 
-// 4x4 debug copy of sudoku-9x9.nl: naive brute-force solver over digits 1-4 with
-// 2x2 boxes. Small enough to trace by hand. See sudoku-9x9.nl for the 9x9 original.
+// 4x4 debug copy of brute9x9.nl: naive brute-force solver over digits 1-4 with
+// 2x2 boxes. Small enough to trace by hand. Puzzles: examples/sudoku-brute-4x4-easy.nl,
+// unit tests: tests/sudokuBrute4x4Test.nl.
 
 // ---- types ----------------------------------------------------------
 Grid :: Object        // placeholder so we can name the nested list type
@@ -56,31 +57,3 @@ solve(g,r,c)=s   <=>  s=g                                          if r=4,
 
 sudoku(g)        ==  solve(g,0,0)
 
-// ---- tests ----------------------------------------------------------
-at([4,1,2,3],1)       ? [(1)][..]
-putRow([1,0,3,4],1,2) ? [([1,2,3,4])][..]
-boxRows(3)            ? [({2,3})][..]
-boxCols(1)            ? [({0,1})][..]
-ok([[1,2,3,4],[0,0,0,0],[0,0,0,0],[0,0,0,0]],1,0,3) ? [()][]
-ok([[1,2,3,4],[0,0,0,0],[0,0,0,0],[0,0,0,0]],1,0,1) ? [][()]
-ok([[1,2,3,4],[0,0,0,0],[0,0,0,0],[0,0,0,0]],3,0,1) ? [][()]
-
-// one blank per row, unique solution
-sudoku([[0,2,3,4],[3,4,1,0],[2,0,4,3],[4,3,0,1]]) ? [([[1,2,3,4],[3,4,1,2],[2,1,4,3],[4,3,2,1]])][..]
-
-// first row empty plus one blank per remaining row, unique solution
-sudoku([[0,0,0,0],[0,4,1,2],[2,1,0,3],[4,3,2,0]]) ? [([[1,2,3,4],[3,4,1,2],[2,1,4,3],[4,3,2,1]])][..]
-
-// a 'real' puzzle, formatted in a more intuitive way:
-sudoku([
-    [1,0,/**/0,0],
-    [0,0,/**/1,0],
-    //-----------
-    [0,3,/**/0,0],
-    [0,0,/**/0,4]])=s ?
- [(s=[
-    [1,2,/**/4,3],
-    [3,4,/**/1,2],
-    //-----------
-    [4,3,/**/2,1],
-    [2,1,/**/3,4]])][..]

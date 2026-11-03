@@ -36,7 +36,7 @@ repositories {
 
 dependencies {
     implementation(project(":"))
-    implementation("org.ow2.asm:asm-tree:9.11")
+    implementation("org.ow2.asm:asm-tree:9.11.1")
     implementation(libs.lsp4j)
     // Include websocket launchers so Main.start(ws) can find a WebSocket launcher at runtime
     implementation(libs.lsp4j.websocket.jakarta)

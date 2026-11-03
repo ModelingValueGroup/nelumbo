@@ -2,13 +2,13 @@
 // still possible, assign/eliminate propagate naked and hidden singles, search is a
 // DFS on the cell with the fewest candidates (MRV). Options are a Digit enum, not
 // integers; puzzles go in and out as List<List<Integer>> (0 = blank).
-// CLI-only (not in ExamplesTest): java -jar nelumbo-cli-*.jar <this file>
-// (-DPARALLEL_COLLECTIONS=false is not needed: evaluation runs sequentially).
+// Puzzles: examples/sudoku-csp-4x4-easy.nl, unit tests: tests/sudokuCsp4x4Test.nl.
 //
 // A Norvig `return False` is an explicit `false` branch: a branch whose guard fails
 // is silent (unknown), not false. `/` is exact division: floor division via
 // bro/bco/fr/fc. Task 17 (grid DSL) BLOCKED on bugs/single-hole-functor-parser-npe.nl:
-// `Cell ::= ".", <Integer>` crashes the parser; its section at the end is commented out.
+// `Cell ::= ".", <Integer>` crashes the parser; its section at the end of this
+// file is commented out.
 // Spec: docs/superpowers/specs/2026-09-11-sudoku-csp-design.md,
 // plan: docs/superpowers/plans/2026-09-11-sudoku-csp.md.
 
@@ -66,7 +66,7 @@ List<List<Set<Digit>>> ::= search(<List<List<Set<Digit>>>>),
 Integer             ::= cellNum(<Set<Digit>>)
 List<Integer>       ::= numRow(<List<Set<Digit>>>)
 List<List<Integer>> ::= toNums(<List<List<Set<Digit>>>>),
-                        solve(<List<List<Integer>>>)
+                        sudoku(<List<List<Integer>>>)
 
 Integer ::= bb(<Integer>), bro(<Integer>), bco(<Integer>), fr(<Integer>), fc(<Integer>)
 Boolean ::= samebox(<Integer>,<Integer>,<Integer>,<Integer>),
@@ -205,29 +205,7 @@ tryCand(g,k,i)=s <=> false                                              if i=5,
 cellNum(sc)=v <=> E[d](d in sc & |sc|=1 & undig(d)=v)
 numRow(rw)    == [0,1,2,3] map [c](cellNum(catRow(rw,c)))
 toNums(g)     == [0,1,2,3] map [r](numRow(crow(g,r)))
-solve(p)      == toNums(search(parse(p)))
-
-dig(2)    ? [(D2)][..]
-undig(D3) ? [(3)][..]
-icell([[1,0,0,0],[0,0,1,0],[0,3,0,0],[0,0,0,4]],2,1) ? [(3)][..]
-cell([[{D1,D2},{D3},{D4},{D1}]],0,0) ? [({D1,D2})][..]
-E[g](fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]])=g & cell(g,1,2)=sc) ? [(sc={D1,D2,D3,D4})][..]
-peer(0,0,1,1) ? [()][]
-peer(0,0,2,2) ? [][()]
-peer(0,0,0,0) ? [][()]
-cell(put(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,{D2}),0,0) ? [({D2})][..]
-cell(put(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,{D2}),0,1) ? [({D1,D2,D3,D4})][..]
-// eliminate
-cell(elim(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,D1),0,0) ? [({D2,D3,D4})][..]
-cell(elim(put(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,{D2}),0,0,D1),0,0) ? [({D2})][..]
-// [][..] alone, [..][..] after the first probe above: bugs/empty-set-query-changes-later-result.nl
-//elim(put(fullGrid([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]),0,0,{D2}),0,0,D2) ? [][..]
-// oracle: P0 and the two easy 4x4-smart puzzles (propagation alone), Q2 (DFS)
-solve([[1,0,0,0],[0,0,1,0],[0,3,0,0],[0,0,0,4]]) ? [([[1,2,4,3],[3,4,1,2],[4,3,2,1],[2,1,3,4]])][..]
-solve([[0,2,3,4],[3,4,1,0],[2,0,4,3],[4,3,0,1]]) ? [([[1,2,3,4],[3,4,1,2],[2,1,4,3],[4,3,2,1]])][..]
-solve([[0,0,0,0],[0,4,1,2],[2,1,0,3],[4,3,2,0]]) ? [([[1,2,3,4],[3,4,1,2],[2,1,4,3],[4,3,2,1]])][..]
-// Q2 has two solutions; search keeps the first (D1 at (0,0))
-solve([[0,0,3,4],[3,4,1,2],[0,0,4,3],[4,3,2,1]]) ? [([[1,2,3,4],[3,4,1,2],[2,1,4,3],[4,3,2,1]])][..]
+sudoku(p)     == toNums(search(parse(p)))
 
 // ---- Grid DSL (plan Task 17): row notation -> List<Integer>, `.` = blank = 0 ----
 // BLOCKED on bugs/single-hole-functor-parser-npe.nl: the cell's lone-hole
