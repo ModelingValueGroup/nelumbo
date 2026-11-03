@@ -128,20 +128,6 @@ public class KnownBugsTest extends NelumboTestBase {
         kb.setTrace(env("TRACE_NELUMBO", false));
     }
 
-    // ==== state / race cluster ====
-    // the rest of this cluster (empty-set-branch-in-map-lambda,
-    // neighbor-query-changes-result, nondeterministic-inference) was fixed and
-    // promoted on 2026-09-25; larger-scale manifestations seen mid-session
-    // (near-identical rules corrupting each other, forwarding rules flipping
-    // results, an unused rule being load-bearing) reproduced only against
-    // intermediate sudoku-9x9-smart.nl versions - facets of the same defects
-
-    @KnownBug("call over an empty set goes unknown after an earlier query over an empty set of another type")
-    @Test
-    public void emptySetQueryChangesLaterResult() {
-        bugResource("empty-set-query-changes-later-result.nl");
-    }
-
     // ==== parser / diagnostics ====
 
     @KnownBug("// directly after operator char swallowed into operator token")
@@ -222,18 +208,6 @@ public class KnownBugsTest extends NelumboTestBase {
     @Test
     public void setBuilderEqualsAnySet() {
         bugResource("set-builder-equals-any-set.nl");
-    }
-
-    @KnownBug("set-builder without solutions yields no result instead of {}")
-    @Test
-    public void setBuilderEmptyResultMissing() {
-        bugResource("set-builder-empty-result-missing.nl");
-    }
-
-    @KnownBug("empty collection literal ({} or []) rejected as the argument of a typed hole")
-    @Test
-    public void emptyCollectionLiteralRejectedAsArgument() {
-        bugResource("empty-collection-literal-rejected-as-argument.nl");
     }
 
     @KnownBug("year counted as 360 days in period comparison")

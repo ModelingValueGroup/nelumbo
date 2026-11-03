@@ -1,8 +1,9 @@
-// Bug: a query's result depends on earlier, unrelated queries. Each fN query (aN an
-// empty set, a call as the second argument) gives [(sN={})][..] when it is the only
-// query in the file, but after `{}={}` and the queries over the other element types
-// most give [..][..]. Hash-dependent, hence 8 copies over distinct element types
-// (copies over one element type all pass or all fail together).
+// Regression test (fixed 2026-11-03; was bugs/empty-set-query-changes-later-result.nl).
+// A query's result must not depend on earlier, unrelated queries: each fN query (aN an
+// empty set, a call as the second argument) gives [(sN={})][..], also after `{}={}`
+// and the queries over the other element types. (Was: most gave [..][..].)
+// Hash-dependent, hence 8 copies over distinct element types (copies over one
+// element type all pass or all fail together).
 import nelumbo.collections
 
 T1 :: Object

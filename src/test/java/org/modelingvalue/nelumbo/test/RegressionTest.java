@@ -189,6 +189,22 @@ public class RegressionTest extends NelumboTestBase {
         testResource("speculative-guard-index-crash.nl");
     }
 
+    // a query's result does not depend on earlier, unrelated queries
+    @RepeatedTest(10)
+    public void emptySetQueryChangesLaterResult() {
+        testResource("empty-set-query-changes-later-result.nl");
+    }
+
+    @RepeatedTest(10)
+    public void setBuilderEmptyResultMissing() {
+        testResource("set-builder-empty-result-missing.nl");
+    }
+
+    @RepeatedTest(10)
+    public void emptyCollectionLiteralRejectedAsArgument() {
+        testResource("empty-collection-literal-rejected-as-argument.nl");
+    }
+
     // An exception in a built-in operation leaves the query unknown: an error
     // with the exception's message and no result; the other queries still
     // evaluate (was bugs/integers-div-zero.nl,
