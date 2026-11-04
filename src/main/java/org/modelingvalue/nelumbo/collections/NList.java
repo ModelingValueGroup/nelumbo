@@ -66,7 +66,7 @@ public final class NList extends NCollection {
     }
 
     public NList(Type elementType, List<?> list, boolean complete) {
-        super(NodeInfo.of(elementType(elementType, list).toLiteral().toList().toLiteral()), list, complete);
+        super(NodeInfo.of(elementType.toLiteral().toList().toLiteral()), list, complete);
     }
 
     @Override

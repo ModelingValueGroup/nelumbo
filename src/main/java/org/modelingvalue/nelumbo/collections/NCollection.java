@@ -71,18 +71,4 @@ public abstract class NCollection extends Node {
         return args;
     }
 
-    protected static Type elementType(Type type, Collection<?> coll) {
-        Type result = null;
-        for (Object e : coll) {
-            if (e instanceof Node n) {
-                if (result == null) {
-                    result = n.type();
-                } else {
-                    result = result.common(n.type());
-                }
-            }
-        }
-        return result != null ? result : type;
-    }
-
 }

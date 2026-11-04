@@ -19,10 +19,12 @@ package org.modelingvalue.nelumbo.collections;
 import java.io.Serial;
 import java.math.BigInteger;
 
+import org.modelingvalue.collections.Collection;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.NelumboMethod;
+import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.integers.NInteger;
 import org.modelingvalue.nelumbo.lang.Type;
@@ -182,8 +184,8 @@ public class Collections extends Predicate {
         if (a == null || b == null) {
             return unknown();
         }
-        NSet intersection = new NSet(elementType(a, b), a.collection().retainAll(b.collection()),
-                a.complete() || b.complete());
+        Set<Object> set = a.collection().retainAll(b.collection());
+        NSet intersection = new NSet(elementType(common(a, b), set), set, a.complete() || b.complete());
         if (i != null) {
             return intersection.equals(i) ? factCC() : falsehoodCC();
         }
@@ -195,7 +197,8 @@ public class Collections extends Predicate {
         if (a == null || b == null) {
             return unknown();
         }
-        NSet union = new NSet(elementType(a, b), a.collection().addAll(b.collection()), a.complete() && b.complete());
+        Set<Object> set = a.collection().addAll(b.collection());
+        NSet union = new NSet(common(a, b), set, a.complete() && b.complete());
         if (u != null) {
             return union.equals(u) ? factCC() : falsehoodCC();
         }
@@ -209,9 +212,10 @@ public class Collections extends Predicate {
         }
         NSet diff;
         if (!b.complete() && !a.collection().isEmpty()) {
-            diff = new NSet(elementType(a, b), Set.of(), false);
+            diff = new NSet(common(a, b), Set.of(), false);
         } else {
-            diff = new NSet(elementType(a, b), a.collection().removeAll(b.collection()), a.complete());
+            Set<Object> set = a.collection().removeAll(b.collection());
+            diff = new NSet(elementType(common(a, b), set), set, a.complete());
         }
         if (d != null) {
             return diff.equals(d) ? factCC() : falsehoodCC();
@@ -224,8 +228,8 @@ public class Collections extends Predicate {
         if (a == null || b == null) {
             return unknown();
         }
-        NList concat = new NList(elementType(a, b), a.collection().addAll(b.collection()),
-                a.complete() && b.complete());
+        List<Object> list = a.collection().addAll(b.collection());
+        NList concat = new NList(common(a, b), list, a.complete() && b.complete());
         if (c != null) {
             return concat.equals(c) ? factCC() : falsehoodCC();
         }
@@ -237,8 +241,9 @@ public class Collections extends Predicate {
         if (a == null || l == null) {
             return unknown();
         }
-        NSet filter = new NSet(a.isEmpty() ? l.localVars().first().type() : a.elementType(),
-                a.collection().filter(l::test).asSet(), a.complete());
+        Set<Object> set = a.collection().filter(l::test).asSet();
+        NSet filter = new NSet(a.isEmpty() ? l.localVars().first().type() : elementType(a.elementType(), set), set,
+                a.complete());
         if (hasIncompleteResult()) {
             return incompleteResult();
         }
@@ -253,8 +258,9 @@ public class Collections extends Predicate {
         if (a == null || l == null) {
             return unknown();
         }
-        NList filter = new NList(a.isEmpty() ? l.localVars().first().type() : a.elementType(),
-                a.collection().filter(l::test).asList(), a.complete());
+        List<Object> list = a.collection().filter(l::test).asList();
+        NList filter = new NList(a.isEmpty() ? l.localVars().first().type() : elementType(a.elementType(), list), list,
+                a.complete());
         if (hasIncompleteResult()) {
             return incompleteResult();
         }
@@ -269,7 +275,8 @@ public class Collections extends Predicate {
         if (a == null || l == null) {
             return unknown();
         }
-        NList map = new NList(l.expression().type(), a.collection().map(l::apply).asList(), a.complete());
+        List<Object> list = a.collection().map(l::apply).asList();
+        NList map = new NList(elementType(l.expression().type(), list), list, a.complete());
         if (hasIncompleteResult()) {
             return incompleteResult();
         }
@@ -284,8 +291,8 @@ public class Collections extends Predicate {
         if (a == null || l == null) {
             return unknown();
         }
-        NList sort = new NList(a.isEmpty() ? l.localVars().first().type() : a.elementType(),
-                a.collection().sorted((x, y) -> l.test(x, y) ? -1 : l.test(y, x) ? 1 : 0).asList(), a.complete());
+        List<Object> list = a.collection().sorted((x, y) -> l.test(x, y) ? -1 : l.test(y, x) ? 1 : 0).asList();
+        NList sort = new NList(a.isEmpty() ? l.localVars().first().type() : a.elementType(), list, a.complete());
         if (hasIncompleteResult()) {
             return incompleteResult();
         }
@@ -295,8 +302,23 @@ public class Collections extends Predicate {
         return set(2, sort).factCI();
     }
 
-    private static Type elementType(NCollection a, NCollection b) {
-        return a.isEmpty() ? b.elementType() : a.elementType();
+    private static Type common(NCollection a, NCollection b) {
+        return a.isEmpty() && !b.isEmpty() ? b.elementType()
+                : b.isEmpty() && !a.isEmpty() ? a.elementType() : a.elementType().common(b.elementType());
+    }
+
+    private static Type elementType(Type type, Collection<?> coll) {
+        Type result = null;
+        for (Object e : coll) {
+            if (e instanceof Node n) {
+                if (result == null) {
+                    result = n.type();
+                } else {
+                    result = result.common(n.type());
+                }
+            }
+        }
+        return result != null ? result : type;
     }
 
 }
