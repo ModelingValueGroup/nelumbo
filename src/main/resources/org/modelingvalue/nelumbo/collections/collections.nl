@@ -22,7 +22,8 @@ private Boolean   ::= build(<Lambda1<E,Boolean>>, <Set<E>>)                    @
                       setFilter(<Set<E>>, <Lambda1<E,Boolean>>, <Set<E>>)      @nelumbo.collections.Collections,
                       listFilter(<List<E>>, <Lambda1<E,Boolean>>, <List<E>>)   @nelumbo.collections.Collections,
                       map(<Collection<F>>, <Lambda1<F,E>>, <List<E>>)          @nelumbo.collections.Collections,
-                      sort(<Collection<E>>, <Lambda2<E,E,Boolean>>, <List<E>>) @nelumbo.collections.Collections
+                      sort(<Collection<E>>, <Lambda2<E,E,Boolean>>, <List<E>>) @nelumbo.collections.Collections,
+                      set(<List<E>>, <Integer>, <E>, <List<E>>)                @nelumbo.collections.Collections
 
 Boolean           ::= <Set<E>> "<"  <Set<E>>        #30,
                       <Set<E>> ">"  <Set<E>>        #30,
@@ -50,7 +51,8 @@ Set<Integer>      ::= <E> "indexes" <List<E>> #40
 List<E>           ::= <List<E>> + <List<E>>                       #50,
                       <List<E>> where <Lambda1<E,Boolean>>        #37,
                       <Collection<F>> map <Lambda1<F,E>>          #37,
-                      <Collection<E>> sort <Lambda2<E,E,Boolean>> #37
+                      <Collection<E>> sort <Lambda2<E,E,Boolean>> #37,
+                      set <E> at <Integer> in <List<E>>           #50       
 
 E                 ::= "first" "in"<List<E>>         #40,
                       "last" "in" <List<E>>         #40,
@@ -85,6 +87,7 @@ last in l = e       <=>  last(l,e)
 e first index l = i <=>  firstIndex(l, e, i)
 e last index l = i  <=>  lastIndex(l, e, i)
 l1 + l2 = l3        <=>  concat(l1, l2, l3)
+set e at i in l1=l2 <=>  set(l1,i,e,l2)
 
 e indexes l         ==  {[i](index(l, e, i))}
 e index l           ==  e first index l

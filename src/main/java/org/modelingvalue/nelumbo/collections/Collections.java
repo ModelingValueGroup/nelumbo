@@ -302,12 +302,28 @@ public class Collections extends Predicate {
         return set(2, sort).factCI();
     }
 
-    private static Type common(NCollection a, NCollection b) {
+    @NelumboMethod
+    protected InferResult set(NList a, NInteger i, Node e, NList b) {
+        if (a == null || i == null || e == null) {
+            return unknown();
+        }
+        List<Object> list = a.collection().replace(i, e);
+        NList result = new NList(a.elementType().common(e.type()), list, a.complete());
+        if (hasIncompleteResult()) {
+            return incompleteResult();
+        }
+        if (b != null) {
+            return result.equals(b) ? factCC() : falsehoodCC();
+        }
+        return set(2, result).factCI();
+    }
+
+    protected static Type common(NCollection a, NCollection b) {
         return a.isEmpty() && !b.isEmpty() ? b.elementType()
                 : b.isEmpty() && !a.isEmpty() ? a.elementType() : a.elementType().common(b.elementType());
     }
 
-    private static Type elementType(Type type, Collection<?> coll) {
+    protected static Type elementType(Type type, Collection<?> coll) {
         Type result = null;
         for (Object e : coll) {
             if (e instanceof Node n) {

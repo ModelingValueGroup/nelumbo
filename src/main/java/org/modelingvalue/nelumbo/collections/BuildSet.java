@@ -66,20 +66,20 @@ public final class BuildSet extends Quantifier {
             facts = facts.add(set(1, new NSet(type, Set.of(), completeFacts)));
         } else {
             for (Predicate predFact : predResult.facts()) {
-                Object val = predFact.getBinding(predicate).get(localVar);
+                Node val = (Node) predFact.getBinding(predicate).get(localVar);
                 Predicate fact = predFact.setBinding(predicate, clearLocal);
                 Set<Object> set = trueMap.get(fact);
                 trueMap = trueMap.put(fact, set != null ? set.add(val) : Set.of(val));
             }
             for (Entry<Predicate, Set<Object>> e : trueMap) {
                 facts = facts.add(setBinding(this, e.getKey().getBinding(predicate)).set(1,
-                        new NSet(type, e.getValue(), completeFacts)));
+                        new NSet(Collections.elementType(type, e.getValue()), e.getValue(), completeFacts)));
             }
             for (Predicate predFalsehood : predResult.falsehoods()) {
-                Object val = predFalsehood.getBinding(predicate).get(localVar);
+                Node val = (Node) predFalsehood.getBinding(predicate).get(localVar);
                 Predicate falshood = predFalsehood.setBinding(predicate, clearLocal);
-                falsehoods = falsehoods.add(
-                        setBinding(this, falshood.getBinding(predicate)).set(1, new NSet(type, Set.of(val), false)));
+                falsehoods = falsehoods.add(setBinding(this, falshood.getBinding(predicate)).set(1,
+                        new NSet(val.type(), Set.of(val), false)));
             }
         }
         return InferResult.of(this, facts, true, falsehoods, completeFalsehoods, predResult.cycles(),
