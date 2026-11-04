@@ -307,7 +307,7 @@ public class Collections extends Predicate {
         if (a == null || i == null || e == null) {
             return unknown();
         }
-        List<Object> list = a.collection().replace(i, e);
+        List<Object> list = a.collection().replace(i.value().intValue(), e);
         NList result = new NList(a.elementType().common(e.type()), list, a.complete());
         if (hasIncompleteResult()) {
             return incompleteResult();
@@ -315,7 +315,7 @@ public class Collections extends Predicate {
         if (b != null) {
             return result.equals(b) ? factCC() : falsehoodCC();
         }
-        return set(2, result).factCI();
+        return set(3, result).factCI();
     }
 
     protected static Type common(NCollection a, NCollection b) {
