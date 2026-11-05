@@ -23,7 +23,6 @@ import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
-import org.modelingvalue.collections.mutable.MutableMap;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.Evaluatable;
@@ -31,7 +30,6 @@ import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
-import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
@@ -101,11 +99,11 @@ public final class Query extends Node implements Evaluatable {
 
     private static Node setType(Variable variable, Node value) {
         if (!variable.type().isAssignableFrom(value.type())) {
-            Set<Variable> args = value.type().argumentVariables();
+            Set<Variable> args = value.type().typeVariables();
             if (!args.isEmpty()) {
-                MutableMap<Variable, Type> typeArgs = MutableMap.of(Map.of());
-                if (!variable.type().typeMatcher().match(value.type(), false, args, typeArgs).isEmpty()) {
-                    value = value.setTypeArgs(typeArgs.get());
+                Node node = value.coerceTo(variable.type().nonFunction().nonVariable());
+                if (node != null) {
+                    return node;
                 }
             }
         }

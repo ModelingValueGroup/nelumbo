@@ -26,7 +26,6 @@ import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Functor;
-import org.modelingvalue.nelumbo.lang.FunctorOrType;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
@@ -72,12 +71,6 @@ public final class NList extends NCollection {
     @Override
     protected NList set(NodeInfo nodeInfo, Object[] args) {
         return new NList(nodeInfo, args);
-    }
-
-    @Override
-    public Object functorOrTypeForEquals() {
-        FunctorOrType fot = functorOrType();
-        return fot instanceof Functor f ? f.resultType() : fot;
     }
 
     @Override

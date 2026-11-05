@@ -54,7 +54,7 @@ public class Collections extends Predicate {
     }
 
     @NelumboMethod
-    protected InferResult index(NList list, Object element, NInteger index) {
+    protected InferResult index(NList list, Node element, NInteger index) {
         if (list == null || !list.complete()) {
             return unknown();
         }
@@ -81,7 +81,7 @@ public class Collections extends Predicate {
     }
 
     @NelumboMethod
-    protected InferResult firstIndex(NList list, Object element, NInteger index) {
+    protected InferResult firstIndex(NList list, Node element, NInteger index) {
         if (list == null || !list.complete()) {
             return unknown();
         }
@@ -104,7 +104,7 @@ public class Collections extends Predicate {
     }
 
     @NelumboMethod
-    protected InferResult lastIndex(NList list, Object element, NInteger index) {
+    protected InferResult lastIndex(NList list, Node element, NInteger index) {
         if (list == null || !list.complete()) {
             return unknown();
         }
@@ -127,7 +127,7 @@ public class Collections extends Predicate {
     }
 
     @NelumboMethod
-    protected InferResult first(NList list, Object element) {
+    protected InferResult first(NList list, Node element) {
         if (list == null || !list.complete()) {
             return unknown();
         }
@@ -140,7 +140,7 @@ public class Collections extends Predicate {
     }
 
     @NelumboMethod
-    protected InferResult last(NList list, Object element) {
+    protected InferResult last(NList list, Node element) {
         if (list == null || !list.complete()) {
             return unknown();
         }
@@ -153,7 +153,7 @@ public class Collections extends Predicate {
     }
 
     @NelumboMethod
-    protected InferResult elementOf(NSet set, Object element) {
+    protected InferResult elementOf(NSet set, Node element) {
         if (set == null) {
             return unknown();
         }
@@ -324,7 +324,7 @@ public class Collections extends Predicate {
     protected static Type elementType(Type type, Collection<?> coll) {
         Type result = null;
         for (Object e : coll) {
-            if (e instanceof Node n) {
+            if (e instanceof Node n && !(n instanceof NCollection nc && nc.isEmpty())) {
                 if (result == null) {
                     result = n.type();
                 } else {

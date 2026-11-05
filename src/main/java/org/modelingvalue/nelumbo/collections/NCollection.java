@@ -71,4 +71,9 @@ public abstract class NCollection extends Node {
         return args;
     }
 
+    @Override
+    public final Object functorOrTypeForEquals() {
+        return type();
+    }
+
 }
