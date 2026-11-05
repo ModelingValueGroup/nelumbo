@@ -239,4 +239,10 @@ public class KnownBugsTest extends NelumboTestBase {
     public void emptyListBesideExpressionList() {
         bugResource("empty-list-beside-expression-list.nl");
     }
+
+    @KnownBug("empty list or set ([] or {}) as an element of a collection makes equality fail ([[],[2]] = ll is [][..])")
+    @Test
+    public void emptyListAndSetInListErrors() {
+        bugResource("empty-list-and-set-in-list-errors.nl");
+    }
 }

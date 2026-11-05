@@ -248,9 +248,3 @@ at 1 in ([1,2,..] map [i](i+1))        ? [..][..]
 first in ([3,1,..] sort [ib,ia](ib<ia)) ? [..][..]
 last in ([1,2,..] where [i](i>1))      ? [..][..]
 at 0 in [1,..] + [2]                   ? [..][..]
-
-// Known bug: an empty list inside a list of lists does not equal itself.
-// set [] at 0 in [[1],[2]] = [[],[2]]    ? [()][]
-// set [] at 0 in [[1],[2]] = ll          ? [(ll=[[],[2]])][..]
-// [[],[2]] = ll                          ? [(ll=[[],[2]])][..]
-// [[1],[2]] map [l]([]) = [[],[]]        ? [()][]
