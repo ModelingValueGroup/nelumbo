@@ -91,6 +91,7 @@ public final class NelumboHttpServer {
         String landing    = loadResource("/public/landing.html");
         String tour       = loadResource("/public/tour.html");
         String sandbox    = loadResource("/public/sandbox.html");
+        String libraryPage = loadResource("/public/library.html");
         String favicon    = loadResource("/public/favicon.svg");
         String theme      = loadResource("/public/theme.js");
         String status     = loadResource("/public/status.html");
@@ -98,6 +99,7 @@ public final class NelumboHttpServer {
         String llms       = loadResource("/public/llms.txt");
         String docsLogo   = loadResource(DocsSite.RESOURCE_ROOT + "nelumbo.svg");
         DocsSite docs     = DocsSite.load();
+        Library library   = Library.load(docs);
         // the sandbox's example list; the sudokus run far past the eval deadline, so they are left out
         List<String> examples = NelumboServer.exampleNames().stream().filter(n -> !n.startsWith("sudoku")).toList();
         LspWebSocket lsp  = new LspWebSocket(baseKb, timeoutMs, maxLspSessions);
@@ -125,6 +127,7 @@ public final class NelumboHttpServer {
             config.routes.get("/llms.txt", ctx -> ctx.contentType("text/plain; charset=utf-8").result(llms));
             config.routes.get("/tour.html", ctx -> ctx.html(tour));
             config.routes.get("/sandbox.html", ctx -> ctx.html(sandbox));
+            config.routes.get("/library.html", ctx -> ctx.html(libraryPage));
             // the sandbox was published as the playground; keep old links (llms.txt, bookmarks) working
             config.routes.get("/playground.html", ctx -> ctx.redirect("/sandbox.html", HttpStatus.MOVED_PERMANENTLY));
             // the docs index is /docs/ (its relative image link needs the trailing slash); <page> also matches slashes
@@ -139,6 +142,15 @@ public final class NelumboHttpServer {
                     ctx.status(HttpStatus.NOT_FOUND).result("unknown example: " + name);
                 } else {
                     ctx.contentType("text/plain; charset=utf-8").result(source);
+                }
+            });
+            config.routes.get("/library", ctx -> ctx.json(library.json()));
+            config.routes.get("/library/{name}", ctx -> {
+                Optional<Library.Module> module = library.module(ctx.pathParam("name"));
+                if (module.isEmpty()) {
+                    ctx.status(HttpStatus.NOT_FOUND).result("unknown library module: " + ctx.pathParam("name"));
+                } else {
+                    ctx.contentType("text/plain; charset=utf-8").result(module.get().source());
                 }
             });
             config.routes.post("/eval", ctx -> handleEval(ctx, false));

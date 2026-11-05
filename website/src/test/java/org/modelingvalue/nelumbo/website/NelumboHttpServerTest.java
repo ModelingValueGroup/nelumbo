@@ -160,6 +160,74 @@ class NelumboHttpServerTest {
         assertEquals(404, get("/examples/noSuchExample").statusCode());
     }
 
+    @Test
+    void libraryIsServedAtItsPath() throws Exception {
+        HttpResponse<String> response = get("/library.html");
+        assertEquals(200, response.statusCode());
+        String html = response.body();
+        assertTrue(html.contains("nelumbo-field"), "the library should mount a Nelumbo editor field");
+        assertTrue(html.contains("initNelumboFields"), "the library should initialize the editor field");
+        assertTrue(html.contains("href=\"/library.html\" aria-current=\"page\""), "the header marks the library as the current page");
+    }
+
+    /** Every page's header links the library, between the sandbox and the docs. */
+    @Test
+    void everyPageLinksTheLibraryBetweenSandboxAndDocs() throws Exception {
+        for (String page : List.of("/", "/tour.html", "/sandbox.html", "/library.html", "/docs/")) {
+            String html    = get(page).body();
+            int    sandbox = html.indexOf("<a href=\"/sandbox.html\"");
+            int    library = html.indexOf("<a href=\"/library.html\"");
+            int    docs    = html.indexOf("<a href=\"/docs/\"");
+            assertTrue(0 <= sandbox && sandbox < library && library < docs, page + " should link Sandbox, Library, Docs in that order");
+        }
+    }
+
+    /** The library sidebar lists the stdlib modules; each explanation is the opening paragraph of its reference page. */
+    @Test
+    void libraryListsTheStdlibModulesWithTheirReferenceIntro() throws Exception {
+        HttpResponse<String> list = get("/library");
+        assertEquals(200, list.statusCode());
+        assertTrue(list.headers().firstValue("Content-Type").orElse("").contains("json"), "the list is JSON");
+        JsonNode modules = mapper.readTree(list.body()).get("modules");
+        List<String> names = Stream.iterate(0, i -> i < modules.size(), i -> i + 1).map(i -> modules.get(i).get("name").asText()).toList();
+        assertEquals(List.of("lang", "logic", "integers", "rationals", "strings", "collections", "datetime"), names);
+        for (JsonNode module : modules) {
+            String intro = module.get("intro").asText();
+            assertTrue(intro.startsWith("<p>") && !intro.contains("Level:"), "the intro is the paragraph after the level banner: " + intro);
+            assertEquals(200, get(module.get("docs").asText()).statusCode(), "the reference link of " + module.get("name") + " resolves");
+        }
+        JsonNode collections = modules.get(names.indexOf("collections"));
+        assertEquals("/docs/reference/packages/collections.html", collections.get("docs").asText());
+        assertTrue(collections.get("intro").asText().contains("href=\"/docs/reference/logic/lambdas.html\""), "links in the intro point at the served docs");
+    }
+
+    @Test
+    void aLibraryModuleIsServedAsPlainNelumboSource() throws Exception {
+        HttpResponse<String> module = get("/library/integers");
+        assertEquals(200, module.statusCode());
+        assertTrue(module.headers().firstValue("Content-Type").orElse("").contains("text/plain"), "served as text, not HTML");
+        assertTrue(module.body().contains("Integer              :: Object"), "the integers module source");
+        assertEquals(404, get("/library/noSuchModule").statusCode());
+    }
+
+    /** A library module opened in the editor must not show errors on a server like production's (empty base KB). */
+    @Test
+    void everyLibraryModuleEvaluatesWithoutErrors() throws Exception {
+        NelumboHttpServer empty     = new NelumboHttpServer(KnowledgeBaseLoader.load(List.of()), List.of());
+        int               emptyPort = empty.start(0);
+        try {
+            for (JsonNode module : mapper.readTree(get("/library").body()).get("modules")) {
+                String      source  = get("/library/" + module.get("name").asText()).body();
+                HttpRequest request = HttpRequest.newBuilder(URI.create("http://localhost:" + emptyPort + "/eval"))
+                        .header("Content-Type", "text/plain").POST(BodyPublishers.ofString(source)).build();
+                JsonNode    result  = mapper.readTree(client.send(request, BodyHandlers.ofString()).body());
+                assertEquals(0, result.get("errors").size(), module.get("name") + ": " + result.get("errors"));
+            }
+        } finally {
+            empty.stop();
+        }
+    }
+
     /** The sandbox was published as /playground.html (e.g. in llms.txt); old links must keep working. */
     @Test
     void formerPlaygroundUrlRedirectsPermanentlyToTheSandbox() throws Exception {
@@ -205,7 +273,7 @@ class NelumboHttpServerTest {
         assertEquals(200, script.statusCode());
         assertTrue(script.headers().firstValue("Content-Type").orElse("").contains("javascript"), "theme.js must be served as JavaScript");
         assertTrue(script.body().contains("prefers-color-scheme"), "the theme script follows the OS preference");
-        for (String page : new String[]{"/", "/tour.html", "/sandbox.html", "/docs/"}) {
+        for (String page : new String[]{"/", "/tour.html", "/sandbox.html", "/library.html", "/docs/"}) {
             String html = get(page).body();
             assertTrue(html.contains("<script src=\"/theme.js\"></script>"), page + " must load the theme script");
             assertTrue(html.contains("class=\"theme-toggle\""), page + " must show the theme switch");
@@ -272,7 +340,7 @@ class NelumboHttpServerTest {
 
     @Test
     void pagesLinkToTheDocs() throws Exception {
-        for (String page : List.of("/", "/tour.html", "/sandbox.html")) {
+        for (String page : List.of("/", "/tour.html", "/sandbox.html", "/library.html")) {
             assertTrue(get(page).body().contains("href=\"/docs/\""), page + " should link to the docs");
         }
     }
@@ -318,7 +386,7 @@ class NelumboHttpServerTest {
 
     @Test
     void everyPageWithAVersionShowsTheStatusDotButNoStatusLink() throws Exception {
-        for (String page : List.of("/", "/tour.html", "/sandbox.html", "/docs/")) {
+        for (String page : List.of("/", "/tour.html", "/sandbox.html", "/library.html", "/docs/")) {
             String body = get(page).body();
             assertTrue(body.contains("<span class=\"status-dot\""), page + " shows the status dot");
             assertTrue(body.contains("src=\"/status-dot.js\""), page + " loads the status dot script");

@@ -1,6 +1,6 @@
 import { test, expect, Page, Locator } from '@playwright/test';
 
-const PAGES: string[] = ['/', '/tour.html', '/sandbox.html', '/docs/'];
+const PAGES: string[] = ['/', '/tour.html', '/sandbox.html', '/library.html', '/docs/'];
 
 function theme(page: Page): Promise<string | null> {
     return page.locator('html').getAttribute('data-theme');

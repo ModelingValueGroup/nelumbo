@@ -36,11 +36,13 @@ import java.util.regex.Pattern;
 import org.commonmark.Extension;
 import org.commonmark.ext.gfm.tables.TablesExtension;
 import org.commonmark.node.AbstractVisitor;
+import org.commonmark.node.BlockQuote;
 import org.commonmark.node.Code;
 import org.commonmark.node.FencedCodeBlock;
 import org.commonmark.node.Heading;
 import org.commonmark.node.Link;
 import org.commonmark.node.Node;
+import org.commonmark.node.Paragraph;
 import org.commonmark.node.Text;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.NodeRenderer;
@@ -85,6 +87,8 @@ public final class DocsSite {
 
     private final String              template;
     private final Map<String, String> htmlByUrl  = new LinkedHashMap<>();
+    // per docs-relative path: the first paragraph under the H1, rendered (see intro)
+    private final Map<String, String> introByPath = new HashMap<>();
     // standalone HTML pages in the docs root, as {url, sidebar title}
     private final List<String[]>      standalone = new ArrayList<>();
 
@@ -130,7 +134,16 @@ public final class DocsSite {
                     .nodeRendererFactory(NelumboCodeRenderer::new).build();
             String title = page.path().equals(INDEX_PAGE) ? page.title() : page.title() + " - Nelumbo docs";
             htmlByUrl.put(page.url(), fill(title, nav(pages, page.url()), renderer.render(page.document())));
+            firstParagraph(page.document()).ifPresent(p -> introByPath.put(page.path(), renderer.render(p)));
         }
+    }
+
+    /**
+     * The opening paragraph of the page at {@code path} ({@code reference/packages/integers.md}) as HTML, links
+     * rewritten as on the page itself: the first paragraph after the H1, so a level banner (a block quote) is skipped.
+     */
+    public Optional<String> intro(String path) {
+        return Optional.ofNullable(introByPath.get(path));
     }
 
     /** The rendered page at {@code urlPath} ({@code /docs/} or {@code /docs/<path>.html}), if there is one. */
@@ -248,6 +261,18 @@ public final class DocsSite {
         for (Node n = document.getFirstChild(); n != null; n = n.getNext()) {
             if (n instanceof Heading h && h.getLevel() == 1) {
                 return Optional.of(textOf(h));
+            }
+        }
+        return Optional.empty();
+    }
+
+    private static Optional<Paragraph> firstParagraph(Node document) {
+        for (Node n = document.getFirstChild(); n != null; n = n.getNext()) {
+            if (n instanceof Paragraph p) {
+                return Optional.of(p);
+            }
+            if (!(n instanceof Heading || n instanceof BlockQuote)) {
+                return Optional.empty();
             }
         }
         return Optional.empty();

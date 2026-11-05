@@ -187,7 +187,9 @@ Pages (`src/main/resources/public/`):
 - Palette from the lotus logo: accent `#c184d8`, soft `#edd4e8`, violet `#a99ae8`; no browns/golds/blues.
 - `tour.html`: 8 sections, exercises carry expected results. `NelumboHttpServerTest.everyTourEditorEvaluates` posts every tour editor to `/eval`: an exercise may only fail on its expectation, a solution not at all. Transformation heads need `{OT,Literal}`/`{AT,Literal}` variables and `.AN` patterns `#30`.
 - `sandbox.html`: one field + sidebar from `GET /examples` and `/examples/<name>` (cli examples minus `sudoku*`), grouped Examples/Exercises (`*Assignment` + "answer" link); `#<name>` opens an example. `/playground.html` 301-redirects here.
-- Below 760px the tour/sandbox sidebar is a drawer (`#nav-toggle`/`#nav-backdrop`); below 420px the GitHub link shrinks to its logo.
+- `library.html` (header link between Sandbox and Docs): the sandbox layout over the stdlib modules (`Library.MODULES`: Core lang/logic, then the packages). `GET /library` = `{modules: [{name, group, intro, docs}]}`, `GET /library/<name>` = the `.nl` source from the core jar. `intro` is the first paragraph under the H1 of the module's reference page (`DocsSite.intro`, links rewritten; the level banner is skipped), so the text lives in the docs only; a missing source or intro fails server start. Every module must evaluate without errors on an empty base KB (`everyLibraryModuleEvaluatesWithoutErrors`).
+- Header widths: with the menu button and five links the header is tight; breakpoints 600/440/380 (GitHub link hidden)/340 px keep it within the screen from 315 px up. Re-check with a width sweep after adding a header link.
+- Below 760px the tour/sandbox/library/docs sidebar is a drawer (`#nav-toggle`/`#nav-backdrop`); below 440px (landing: 420px) the GitHub link shrinks to its logo.
 
 Theme:
 - `public/theme.js` (loaded BLOCKING in `<head>`) sets `data-theme` (light/dark) and `data-theme-mode` (auto/light/dark) on `<html>`; switch cycles auto -> light -> dark; override in localStorage `nelumbo-theme`.

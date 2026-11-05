@@ -492,6 +492,13 @@ export function setFieldText(div: HTMLElement, text: string, name: string): bool
     field.key      = field.baseKey + '#' + name;
     field.original = text;
     replaceText(field.model, savedText(field.key, text));
+    // replacing the whole text leaves it all selected: start at the top of the new document instead
+    for (const editor of monaco.editor.getEditors()) {
+        if (editor.getModel() === field.model) {
+            editor.setPosition({ lineNumber: 1, column: 1 });
+            editor.revealLine(1);
+        }
+    }
     // the edit does not fire a change when the text stays the same, but the key and original did change
     saveText(field);
     return true;

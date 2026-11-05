@@ -40,6 +40,7 @@ example file in the project is unreadable.
 - [Your first program](https://nelumbo.nl/docs/getting-started/first-program.html): line-by-line walkthrough of `fibonacci.nl` - imports, patterns, guarded rules, tests
 - [Documentation overview](https://nelumbo.nl/docs/): full table of contents plus reading paths per goal
 - [Sandbox](https://nelumbo.nl/sandbox.html): a live editor; results appear inline as you type, no run button
+- [Library](https://nelumbo.nl/library.html): the standard library modules' `.nl` sources in a live editor, each with its reference intro
 - [Feature tour](https://nelumbo.nl/tour.html): eight guided sections with live demos and self-checking exercises
 
 ## Language reference by level
