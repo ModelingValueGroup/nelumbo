@@ -48,3 +48,16 @@ test('a #name link opens the library with that module loaded', async ({ page }: 
     await expect.poll(async (): Promise<string> => editorText(page)).toBe(source);
     await expect(page.locator('aside nav a[data-module="datetime"]')).toHaveClass(/\bactive\b/);
 });
+
+// The module source arrives after the editor opened (empty) on the LSP server; that open was once dropped, and the
+// page then mostly stayed uncolored. Colors come only from semantic tokens: plain text has one color.
+test('the module source is syntax colored', async ({ page }: { page: Page }): Promise<void> => {
+    await page.goto('/library.html');
+    await expect.poll(async (): Promise<number> => page.evaluate((): number => {
+        const colors: Set<string> = new Set();
+        document.querySelectorAll('.nelumbo-field .view-lines span span').forEach((s: Element): void => {
+            if ((s.textContent ?? '').trim()) { colors.add(getComputedStyle(s).color); }
+        });
+        return colors.size;
+    }), { timeout: 10_000 }).toBeGreaterThan(1);
+});

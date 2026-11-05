@@ -62,14 +62,16 @@ public class DocumentSyncService extends DocumentServiceAdapter {
         update(params.getText(), textDocument.getUri());
     }
 
+    // an empty document is a document too: an editor may open empty and get its text by a later change (the website's
+    // library page does); a dropped open makes that change, and every request after it, miss the document
     private void add(String content, String uri, int version) {
-        if (content != null && !content.isBlank()) {
+        if (content != null) {
             documentManager.addDocument(uri, content, version);
         }
     }
 
     private void update(String content, String uri) {
-        if (content != null && !content.isBlank()) {
+        if (content != null) {
             documentManager.updateDocument(uri, content);
         }
     }
