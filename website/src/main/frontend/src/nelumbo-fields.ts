@@ -360,6 +360,14 @@ function replaceText(model: monaco.editor.ITextModel, text: string): void {
     model.pushStackElement();
 }
 
+// Always LF line endings: a model whose text has none (an empty field) otherwise takes the OS default, CRLF on
+// Windows, and its text would never equal an original loaded from the server.
+function createModel(text: string, uri: monaco.Uri): monaco.editor.ITextModel {
+    const model: monaco.editor.ITextModel = monaco.editor.createModel(text, LANGUAGE_ID, uri);
+    model.setEOL(monaco.editor.EndOfLineSequence.LF);
+    return model;
+}
+
 // Nelumbo has no client-side tokenizer (coloring comes from LSP semantic tokens), so a plain
 // colorized block is not possible: the solution becomes a read-only Monaco editor on the same
 // LSP client, which also gives it inlay hints (a solved exercise shows its own checkmark).
@@ -371,7 +379,7 @@ function buildSolutionViewer(solution: HTMLElement, index: number): void {
     solution.textContent = '';
 
     const uri:   monaco.Uri               = monaco.Uri.parse('inmemory://solution-' + index + '.nl');
-    const model: monaco.editor.ITextModel = monaco.editor.createModel(text, LANGUAGE_ID, uri);
+    const model: monaco.editor.ITextModel = createModel(text, uri);
 
     const viewer: monaco.editor.IStandaloneCodeEditor = monaco.editor.create(solution, {
         model:                model,
@@ -425,7 +433,7 @@ function buildField(div: HTMLElement, index: number): void {
     addSolutionToggle(div, toolbar, index);
 
     const uri:   monaco.Uri               = monaco.Uri.parse('inmemory://field-' + index + '.nl');
-    const model: monaco.editor.ITextModel = monaco.editor.createModel(savedText(baseKey, original), LANGUAGE_ID, uri);
+    const model: monaco.editor.ITextModel = createModel(savedText(baseKey, original), uri);
     const field: Field                    = { model: model, baseKey: baseKey, key: baseKey, original: original, reset: reset };
     reset.addEventListener('click', (): void => {
         replaceText(model, field.original);

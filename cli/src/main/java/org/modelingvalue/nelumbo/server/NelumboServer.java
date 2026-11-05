@@ -288,7 +288,8 @@ public final class NelumboServer {
     /** The source of a bundled example, or null when unknown. */
     public static String exampleSource(String name) {
         try (java.io.InputStream in = NelumboServer.class.getResourceAsStream("/" + EXAMPLES_DIR + name + ".nl")) {
-            return in == null ? null : new String(in.readAllBytes(), StandardCharsets.UTF_8);
+            // always \n line endings, also from a Windows checkout: editors turn \r\n into \n, so clients compare against \n text
+            return in == null ? null : new String(in.readAllBytes(), StandardCharsets.UTF_8).replace("\r\n", "\n");
         } catch (IOException e) {
             return null;
         }

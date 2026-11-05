@@ -87,7 +87,8 @@ public final class Library {
             if (in == null) {
                 throw new IllegalStateException("library module not found on classpath: " + path);
             }
-            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+            // always \n line endings, like the examples (NelumboServer.exampleSource)
+            return new String(in.readAllBytes(), StandardCharsets.UTF_8).replace("\r\n", "\n");
         } catch (IOException e) {
             throw new UncheckedIOException("cannot read " + path, e);
         }

@@ -210,6 +210,19 @@ class NelumboHttpServerTest {
         assertEquals(404, get("/library/noSuchModule").statusCode());
     }
 
+    /**
+     * The editor turns {@code \r\n} into {@code \n}, so a source served with {@code \r\n} (a Windows checkout with
+     * core.autocrlf) never equals the editor text: examples and library modules are always served with {@code \n}.
+     */
+    @Test
+    void sourcesAreServedWithUnixLineEndings() throws Exception {
+        for (String path : List.of("/examples/fibonacci", "/examples/family", "/library/lang", "/library/integers", "/library/collections")) {
+            String body = get(path).body();
+            assertTrue(body.contains("\n"), path);
+            assertFalse(body.contains("\r"), path + " is served with Windows line endings");
+        }
+    }
+
     /** A library module opened in the editor must not show errors on a server like production's (empty base KB). */
     @Test
     void everyLibraryModuleEvaluatesWithoutErrors() throws Exception {
