@@ -233,4 +233,10 @@ public class KnownBugsTest extends NelumboTestBase {
     public void givenResultCallCrash() {
         bugResource("given-result-call-crash.nl");
     }
+
+    @KnownBug("list of lists with [] next to a list holding an expression ([[],[1+2]]) does not parse")
+    @Test
+    public void emptyListBesideExpressionList() {
+        bugResource("empty-list-beside-expression-list.nl");
+    }
 }
