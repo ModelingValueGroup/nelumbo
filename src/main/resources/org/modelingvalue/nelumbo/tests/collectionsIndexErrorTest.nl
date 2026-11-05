@@ -12,12 +12,18 @@ at 3 in [5,6,7] = 5                 ?
 at 0 in []                          ?
 i first index [1,2] = 5             ?
 i last index [1,2] = -1             ?
+set 5 at 3 in [1,2,3]               ?
+set 5 at -1 in [1,2,3]              ?
+set 5 at 0 in []                    ?
 
 at 2 in [5,6,7]                     ? [(7)][..]
 i first index [1,2] = 1             ? [(i=2)][..]
 i last index [1,2] = 0              ? [(i=1)][..]
+set 5 at 2 in [1,2,3]               ? [([1,2,5])][..]
 
 at 3 in [5,6,7] = 5 | 1 in [1]      ? [()][]
 1 in [1] | i first index [1,2] = 5  ? [()][]
 at 3 in [5,6,7] = 5 & 4 in [1]      ? [][()]
 4 in [1] & i last index [1,2] = -1  ? [][()]
+set 5 at 3 in [1,2,3] = [1] | 1 in [1] ? [()][]
+4 in [1] & set 5 at 0 in [] = [5]   ? [][()]

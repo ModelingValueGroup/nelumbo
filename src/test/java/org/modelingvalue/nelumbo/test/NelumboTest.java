@@ -99,15 +99,18 @@ public class NelumboTest extends NelumboTestBase {
                 lineOf(lines, "at 3 in [5,6,7] = 5") + ":1: IndexOutOfBoundsException in index([5,6,7],5,3)", //
                 lineOf(lines, "at 0 in []") + ":1: IndexOutOfBoundsException in index([],e,0)", //
                 lineOf(lines, "i first index [1,2] = 5") + ":1: IndexOutOfBoundsException in firstIndex([1,2],e,5)", //
-                lineOf(lines, "i last index [1,2] = -1") + ":1: IndexOutOfBoundsException in lastIndex([1,2],e,-1)");
+                lineOf(lines, "i last index [1,2] = -1") + ":1: IndexOutOfBoundsException in lastIndex([1,2],e,-1)", //
+                lineOf(lines, "set 5 at 3 in [1,2,3]") + ":1: IndexOutOfBoundsException in set([1,2,3],3,5,l2)", //
+                lineOf(lines, "set 5 at -1 in [1,2,3]") + ":1: IndexOutOfBoundsException in set([1,2,3],-1,5,l2)", //
+                lineOf(lines, "set 5 at 0 in []") + ":1: IndexOutOfBoundsException in set([],0,5,l2)");
         EvalResult result = evaluate(source, name, 60_000);
         List<String> found = result.diagnostics().stream().map(d -> d.line() + ":" + d.col() + ": " + d.message()).toList();
         assertEquals(expected.stream().sorted().toList(), found.stream().sorted().toList());
         List<String> unanswered = result.queries().stream().filter(q -> q.result() == null).map(QueryOutcome::query).sorted().toList();
-        assertEquals(List.of("at-1in[5,6,7]", "at0in[]", "at3in[5,6,7]", "at3in[5,6,7]=5", "ifirstindex[1,2]=5", "ilastindex[1,2]=-1"),
-                unanswered);
+        assertEquals(List.of("at-1in[5,6,7]", "at0in[]", "at3in[5,6,7]", "at3in[5,6,7]=5", "ifirstindex[1,2]=5", "ilastindex[1,2]=-1",
+                "set5at-1in[1,2,3]", "set5at0in[]", "set5at3in[1,2,3]"), unanswered);
         List<QueryOutcome> checked = result.queries().stream().filter(q -> q.expectationMatched() != null).toList();
-        assertEquals(7, checked.size(), "queries with an expectation: " + result.queries());
+        assertEquals(10, checked.size(), "queries with an expectation: " + result.queries());
         assertTrue(checked.stream().allMatch(QueryOutcome::expectationMatched), "mismatch: " + checked);
     }
 

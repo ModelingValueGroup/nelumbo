@@ -302,7 +302,7 @@ public class Collections extends Predicate {
 
     @NelumboMethod
     protected InferResult set(NList a, NInteger i, Node e, NList b) {
-        if (a == null || i == null || e == null) {
+        if (a == null || !a.complete() || i == null || e == null) {
             return unknown();
         }
         List<Object> list = a.collection().replace(i.value().intValue(), e);
@@ -310,10 +310,10 @@ public class Collections extends Predicate {
             return incompleteResult();
         }
         if (b != null) {
-            return sameAs(b, list, a.complete()) ? factCC() : falsehoodCC();
+            return sameAs(b, list, true) ? factCC() : falsehoodCC();
         }
         Type type = a.elementType().common(e.type());
-        return set(3, new NList(type, list, a.complete())).factCI();
+        return set(3, new NList(type, list, true)).factCI();
     }
 
     protected static Type common(NCollection a, NCollection b) {
