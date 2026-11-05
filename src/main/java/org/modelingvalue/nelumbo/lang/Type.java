@@ -233,10 +233,6 @@ public final class Type extends Node implements FunctorOrType {
         return (List<Type>) get(3);
     }
 
-    public Set<Variable> argumentVariables() {
-        return hasArguments() ? arguments().filter(t -> t.variable() != null).map(Type::variable).asSet() : Set.of();
-    }
-
     public Type original() {
         return original;
     }

@@ -795,7 +795,7 @@ public class ParseState extends AbstractState<ParseState> {
             }
             boolean isVar = node instanceof Variable;
             Type type = isVar ? node.type().toVariable() : node.type();
-            Set<Variable> args = isVar ? Set.of() : type.argumentVariables();
+            Set<Variable> args = isVar ? Set.of() : type.typeVariables();
             ParseState next = matchType(type, false, args, result.typeArgs());
             if (next != null) {
                 if (!args.isEmpty()) {
