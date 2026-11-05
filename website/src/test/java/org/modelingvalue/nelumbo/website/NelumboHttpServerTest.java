@@ -110,20 +110,20 @@ class NelumboHttpServerTest {
                 "landing page should be served as HTML");
         String html = response.body();
         assertTrue(html.contains("Nelumbo"), "landing page should introduce Nelumbo");
-        assertTrue(html.contains("href=\"/tour.html\""), "landing page should link to the tour");
+        assertTrue(html.contains("href=\"/tutorial.html\""), "landing page should link to the tutorial");
         assertTrue(html.contains("href=\"/sandbox.html\""), "landing page should link to the sandbox");
     }
 
     @Test
-    void tourIsServedAtItsPath() throws Exception {
-        HttpResponse<String> response = get("/tour.html");
+    void tutorialIsServedAtItsPath() throws Exception {
+        HttpResponse<String> response = get("/tutorial.html");
         assertEquals(200, response.statusCode());
         assertTrue(response.headers().firstValue("Content-Type").orElse("").contains("text/html"),
-                "tour should be served as HTML");
+                "tutorial should be served as HTML");
         String html = response.body();
-        assertTrue(html.contains("data-section=\"logic\""), "tour should render the sidebar navigation");
-        assertTrue(html.contains("nelumbo-field"), "tour should mount Nelumbo editor fields");
-        assertTrue(html.contains("/assets/nelumbo-fields.js"), "tour should load the frontend bundle");
+        assertTrue(html.contains("data-section=\"logic\""), "tutorial should render the sidebar navigation");
+        assertTrue(html.contains("nelumbo-field"), "tutorial should mount Nelumbo editor fields");
+        assertTrue(html.contains("/assets/nelumbo-fields.js"), "tutorial should load the frontend bundle");
     }
 
     @Test
@@ -173,7 +173,7 @@ class NelumboHttpServerTest {
     /** Every page's header links the library, between the sandbox and the docs. */
     @Test
     void everyPageLinksTheLibraryBetweenSandboxAndDocs() throws Exception {
-        for (String page : List.of("/", "/tour.html", "/sandbox.html", "/library.html", "/docs/")) {
+        for (String page : List.of("/", "/tutorial.html", "/sandbox.html", "/library.html", "/docs/")) {
             String html    = get(page).body();
             int    sandbox = html.indexOf("<a href=\"/sandbox.html\"");
             int    library = html.indexOf("<a href=\"/library.html\"");
@@ -228,6 +228,14 @@ class NelumboHttpServerTest {
         }
     }
 
+    /** The tutorial was published as /tour.html (e.g. in llms.txt); old links must keep working. */
+    @Test
+    void formerTourUrlRedirectsPermanentlyToTheTutorial() throws Exception {
+        HttpResponse<String> response = get("/tour.html");
+        assertEquals(301, response.statusCode());
+        assertEquals("/tutorial.html", response.headers().firstValue("Location").orElse(""));
+    }
+
     /** The sandbox was published as /playground.html (e.g. in llms.txt); old links must keep working. */
     @Test
     void formerPlaygroundUrlRedirectsPermanentlyToTheSandbox() throws Exception {
@@ -273,7 +281,7 @@ class NelumboHttpServerTest {
         assertEquals(200, script.statusCode());
         assertTrue(script.headers().firstValue("Content-Type").orElse("").contains("javascript"), "theme.js must be served as JavaScript");
         assertTrue(script.body().contains("prefers-color-scheme"), "the theme script follows the OS preference");
-        for (String page : new String[]{"/", "/tour.html", "/sandbox.html", "/library.html", "/docs/"}) {
+        for (String page : new String[]{"/", "/tutorial.html", "/sandbox.html", "/library.html", "/docs/"}) {
             String html = get(page).body();
             assertTrue(html.contains("<script src=\"/theme.js\"></script>"), page + " must load the theme script");
             assertTrue(html.contains("class=\"theme-toggle\""), page + " must show the theme switch");
@@ -306,25 +314,25 @@ class NelumboHttpServerTest {
     }
 
     /**
-     * The tour's editors are hand-written Nelumbo that no other test evaluates, so a language change breaks them
+     * The tutorial's editors are hand-written Nelumbo that no other test evaluates, so a language change breaks them
      * silently (78e006b5 did: {@code fact} takes a Boolean since). Every editor must evaluate on a server like
      * production's (empty base KB): an exercise field may only fail on its expectation, a solution not at all.
      */
     @Test
-    void everyTourEditorEvaluates() throws Exception {
-        NelumboHttpServer tour     = new NelumboHttpServer(KnowledgeBaseLoader.load(List.of()), List.of());
-        int               tourPort = tour.start(0);
+    void everyTutorialEditorEvaluates() throws Exception {
+        NelumboHttpServer tutorial     = new NelumboHttpServer(KnowledgeBaseLoader.load(List.of()), List.of());
+        int               tutorialPort = tutorial.start(0);
         try {
             Pattern editor  = Pattern.compile("<(div|pre) class=\"(nelumbo-field|nelumbo-solution)\"[^>]*>(.*?)</\\1>", Pattern.DOTALL);
-            Matcher matcher = editor.matcher(get("/tour.html").body());
+            Matcher matcher = editor.matcher(get("/tutorial.html").body());
             int     checked = 0;
             while (matcher.find()) {
                 String      kind     = matcher.group(2);
                 String      source   = matcher.group(3).replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", "\"").replace("&amp;", "&");
-                HttpRequest request  = HttpRequest.newBuilder(URI.create("http://localhost:" + tourPort + "/eval"))
+                HttpRequest request  = HttpRequest.newBuilder(URI.create("http://localhost:" + tutorialPort + "/eval"))
                         .header("Content-Type", "text/plain").POST(BodyPublishers.ofString(source)).build();
                 JsonNode    result   = mapper.readTree(client.send(request, BodyHandlers.ofString()).body());
-                String      where    = "tour " + kind + " #" + checked + ":\n" + source;
+                String      where    = "tutorial " + kind + " #" + checked + ":\n" + source;
                 assertTrue(0 < result.get("queries").size(), "no query evaluated in " + where);
                 for (JsonNode error : result.get("errors")) {
                     String message = error.get("line") + ":" + error.get("column") + " " + error.get("message").asText();
@@ -332,15 +340,15 @@ class NelumboHttpServerTest {
                 }
                 checked++;
             }
-            assertTrue(20 < checked, "expected the tour's editors to be checked, but only found " + checked);
+            assertTrue(20 < checked, "expected the tutorial's editors to be checked, but only found " + checked);
         } finally {
-            tour.stop();
+            tutorial.stop();
         }
     }
 
     @Test
     void pagesLinkToTheDocs() throws Exception {
-        for (String page : List.of("/", "/tour.html", "/sandbox.html", "/library.html")) {
+        for (String page : List.of("/", "/tutorial.html", "/sandbox.html", "/library.html")) {
             assertTrue(get(page).body().contains("href=\"/docs/\""), page + " should link to the docs");
         }
     }
@@ -386,7 +394,7 @@ class NelumboHttpServerTest {
 
     @Test
     void everyPageWithAVersionShowsTheStatusDotButNoStatusLink() throws Exception {
-        for (String page : List.of("/", "/tour.html", "/sandbox.html", "/library.html", "/docs/")) {
+        for (String page : List.of("/", "/tutorial.html", "/sandbox.html", "/library.html", "/docs/")) {
             String body = get(page).body();
             assertTrue(body.contains("<span class=\"status-dot\""), page + " shows the status dot");
             assertTrue(body.contains("src=\"/status-dot.js\""), page + " loads the status dot script");

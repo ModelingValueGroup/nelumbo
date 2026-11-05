@@ -79,7 +79,7 @@
   }
   /* on narrow phones the GitHub link shrinks to its logo to make room for the theme switch */
   .gh-icon { display: none; width: 16px; height: 16px; fill: currentColor; }
-  @media (max-width: 440px) {
+  @media (max-width: 450px) {
     .site-header { gap: 8px; padding: 0 10px; }
     .wordmark { letter-spacing: .04em; }
     .site-header nav a { margin-left: 7px; }
@@ -92,9 +92,10 @@
     .wordmark { font-size: 12px; letter-spacing: 0; }
     .site-header nav a[aria-label="GitHub"] { display: none; }
   }
-  @media (max-width: 340px) {
-    .site-header { gap: 6px; }
-    .site-header nav a, .theme-toggle { margin-left: 5px; }
+  @media (max-width: 350px) {
+    .site-header { gap: 5px; padding: 0 8px; }
+    .site-header nav a { margin-left: 4px; font-size: 11.5px; }
+    .theme-toggle { margin-left: 4px; }
   }
 </style>
 </head>
@@ -103,7 +104,7 @@
   <button id="nav-toggle" aria-label="Toggle navigation"><span></span><span></span><span></span></button>
   <a class="wordmark" href="/">Nelumbo</a>
   <nav>
-    <a href="/tour.html">Tour</a>
+    <a href="/tutorial.html">Tutorial</a>
     <a href="/sandbox.html" aria-current="page">Sandbox</a>
     <a href="/library.html">Library</a>
     <a href="/docs/">Docs</a>

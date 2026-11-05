@@ -34,13 +34,13 @@ A field div's text content is its initial document. Optional `data-height` overr
 npm run test:load -- --url https://nelumbo.nl --ssh <user>@server1.openwalnoot.com
 ```
 
-`load/loadtest.mts` (Node 24, no dependencies) simulates tour-page visitors in steps of
+`load/loadtest.mts` (Node 24, no dependencies) simulates tutorial-page visitors in steps of
 1, 2, 4, ... up to `--max-clients` (default 64), `--step-seconds` (default 60) per step;
 earlier clients stay connected. Each client loads the page, opens an LSP session with all
-tour documents, and keeps editing queries like the Monaco client does. Per step it prints:
+tutorial documents, and keeps editing queries like the Monaco client does. Per step it prints:
 
 - `sessions` / `rejected`: open LSP sessions, and connections refused by the session cap
-- `page p95`: tour page + bundle load time
+- `page p95`: tutorial page + bundle load time
 - `lsp p50/p95/max`: LSP request round trips
 - `result p50/p95/max`: last keystroke until the inlay hints changed (includes the
   server's 300 ms debounce)
@@ -52,7 +52,7 @@ or a result p95 above twice the 1-client one (but at least `--limit-ms`); the ru
 there and exits 1. Default target is `http://localhost:8899` (the e2e port).
 
 `--factorial N` makes the load CPU-heavy: every edit then goes to an extra document whose
-query computes `factorial(N)` (the tour documents stay open but are not edited). Locally
+query computes `factorial(N)` (the tutorial documents stay open but are not edited). Locally
 `factorial(3000)` takes ~1 s and ~2.4 cores (the inference runs on a parallel pool).
 
 ## Dependency stack (accepted technical debt)

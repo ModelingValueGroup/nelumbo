@@ -1,6 +1,6 @@
 import { test, expect, Page, Locator } from '@playwright/test';
 
-const PAGES: string[] = ['/', '/tour.html', '/sandbox.html', '/library.html', '/docs/'];
+const PAGES: string[] = ['/', '/tutorial.html', '/sandbox.html', '/library.html', '/docs/'];
 
 function theme(page: Page): Promise<string | null> {
     return page.locator('html').getAttribute('data-theme');
@@ -28,7 +28,7 @@ test('the switch cycles auto -> light -> dark -> auto and the override survives 
     await expect(page.locator('html')).toHaveAttribute('data-theme-mode', 'light');
     expect(await theme(page)).toBe('light');
     // the choice beats the OS preference, also on another page after navigation
-    await page.goto('/tour.html');
+    await page.goto('/tutorial.html');
     expect(await theme(page)).toBe('light');
 
     await page.locator('.theme-toggle').click();

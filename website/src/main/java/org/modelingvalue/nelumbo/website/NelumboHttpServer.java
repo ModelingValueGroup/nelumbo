@@ -89,7 +89,7 @@ public final class NelumboHttpServer {
     /** Starts the server on {@code port} (use 0 for an ephemeral port) and returns the actually bound port. */
     public int start(int port) {
         String landing    = loadResource("/public/landing.html");
-        String tour       = loadResource("/public/tour.html");
+        String tutorial   = loadResource("/public/tutorial.html");
         String sandbox    = loadResource("/public/sandbox.html");
         String libraryPage = loadResource("/public/library.html");
         String favicon    = loadResource("/public/favicon.svg");
@@ -125,7 +125,9 @@ public final class NelumboHttpServer {
             config.routes.get("/status.html", ctx -> ctx.html(status));
             config.routes.get("/status-dot.js", ctx -> ctx.contentType("text/javascript; charset=utf-8").result(statusDot));
             config.routes.get("/llms.txt", ctx -> ctx.contentType("text/plain; charset=utf-8").result(llms));
-            config.routes.get("/tour.html", ctx -> ctx.html(tour));
+            config.routes.get("/tutorial.html", ctx -> ctx.html(tutorial));
+            // the tutorial was published as the tour; keep old links and bookmarks working
+            config.routes.get("/tour.html", ctx -> ctx.redirect("/tutorial.html", HttpStatus.MOVED_PERMANENTLY));
             config.routes.get("/sandbox.html", ctx -> ctx.html(sandbox));
             config.routes.get("/library.html", ctx -> ctx.html(libraryPage));
             // the sandbox was published as the playground; keep old links (llms.txt, bookmarks) working

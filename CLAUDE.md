@@ -155,7 +155,7 @@ Server (`NelumboHttpServer`, Javalin 7 - needed for the `/lsp` WebSocket):
 - Depends on `lsp:server`'s plain jar (classifier "plain").
 
 Frontend (`website/src/main/frontend/`, Monaco 0.34 + monaco-languageclient 1.0.1, esbuild IIFE; `README.md` explains the old stack):
-- API: `NelumboFields.connect()` (one page-shared `/lsp` client), `mountFields(container)` (idempotent, the tour mounts per section), `initNelumboFields()` (sandbox), `setFieldText(field, text, name)`.
+- API: `NelumboFields.connect()` (one page-shared `/lsp` client), `mountFields(container)` (idempotent, the tutorial mounts per section), `initNelumboFields()` (sandbox), `setFieldText(field, text, name)`.
 - `:website:npmBundle` runs `npm run dist`; the bundle ships in the jar under `public/assets/`.
 - No Run button: inlay hints are the only evaluation feedback (`QueryResult.inlineLabel()`, max 60 chars; full result in the hover via `QueryResult.tooltip()`). Until an edit's re-evaluation finishes, `QueryResultCache` serves only the hints on unchanged lines.
 - Hint KIND picks the style (Monaco 0.34 has three buckets): none = match (checkmark emoji), Type = result (purple chip), Parameter = mismatch/error (red). Marks are emoji because hint font size cannot exceed the editor's.
@@ -163,7 +163,7 @@ Frontend (`website/src/main/frontend/`, Monaco 0.34 + monaco-languageclient 1.0.
 - `fixedOverflowWidgets: true` on all editors (else hovers are clipped). WebKit places those widgets off by the visual viewport offset: `followVisualViewport` sets `--nf-viewport-x/y`, `fields.css` translates by it (WebKit-only via `CSS.supports('-webkit-backdrop-filter', 'none')`; verified on a real iPhone). On touch, completion opens only on typing.
 - Toolbar below the editor, inside the field wrap: "Show solution" (field followed by `.nelumbo-solution`) and Reset; hidden by CSS `:has` while no button is visible.
 - Solution = read-only Monaco viewer on the same LSP client (no client tokenizer, so `colorizeElement` renders nothing); green tint via CSS; NOT in `__editors`.
-- Banners (`.nelumbo-lsp-banner`, `.nelumbo-overload-banner`) are position:fixed at the bottom: the tour's body is a flex row, an in-flow banner pushes `main` offscreen.
+- Banners (`.nelumbo-lsp-banner`, `.nelumbo-overload-banner`) are position:fixed at the bottom: the tutorial's body is a flex row, an in-flow banner pushes `main` offscreen.
 - Font stack (Google Fonts): Bricolage Grotesque, Instrument Sans, JetBrains Mono (also Monaco `fontFamily`, `remeasureFonts()` on `document.fonts.ready`).
 
 Edit persistence and reconnect:
@@ -185,11 +185,11 @@ Pages (`src/main/resources/public/`):
 - All pages: `@VERSION@` filled by `processResources`; `/favicon.svg` (explicit route); shared header with theme switch.
 - `landing.html` (`/`): live `grandparent.nl` field in a `.codecard` - must stay valid Nelumbo (e2e asserts its checkmark and that h1 contains "language"). The hero animation's end frame must equal the icon paths of `lsp/plugins/*/icons/logo.svg` (stroke 22, fill and transforms tuned to it). Messaging: logic meta-language for specifying DSLs.
 - Palette from the lotus logo: accent `#c184d8`, soft `#edd4e8`, violet `#a99ae8`; no browns/golds/blues.
-- `tour.html`: 8 sections, exercises carry expected results. `NelumboHttpServerTest.everyTourEditorEvaluates` posts every tour editor to `/eval`: an exercise may only fail on its expectation, a solution not at all. Transformation heads need `{OT,Literal}`/`{AT,Literal}` variables and `.AN` patterns `#30`.
+- `tutorial.html` (was `tour.html`, which 301-redirects here; the page moves saved edits from the old localStorage keys): 8 sections, exercises carry expected results. `NelumboHttpServerTest.everyTutorialEditorEvaluates` posts every tutorial editor to `/eval`: an exercise may only fail on its expectation, a solution not at all. Transformation heads need `{OT,Literal}`/`{AT,Literal}` variables and `.AN` patterns `#30`.
 - `sandbox.html`: one field + sidebar from `GET /examples` and `/examples/<name>` (cli examples minus `sudoku*`), grouped Examples/Exercises (`*Assignment` + "answer" link); `#<name>` opens an example. `/playground.html` 301-redirects here.
 - `library.html` (header link between Sandbox and Docs): the sandbox layout over the stdlib modules (`Library.MODULES`: Core lang/logic, then the packages). `GET /library` = `{modules: [{name, group, intro, docs}]}`, `GET /library/<name>` = the `.nl` source from the core jar. `intro` is the first paragraph under the H1 of the module's reference page (`DocsSite.intro`, links rewritten; the level banner is skipped), so the text lives in the docs only; a missing source or intro fails server start. Every module must evaluate without errors on an empty base KB (`everyLibraryModuleEvaluatesWithoutErrors`).
 - Header widths: with the menu button and five links the header is tight; breakpoints 600/440/380 (GitHub link hidden)/340 px keep it within the screen from 315 px up. Re-check with a width sweep after adding a header link.
-- Below 760px the tour/sandbox/library/docs sidebar is a drawer (`#nav-toggle`/`#nav-backdrop`); below 440px (landing: 420px) the GitHub link shrinks to its logo.
+- Below 760px the tutorial/sandbox/library/docs sidebar is a drawer (`#nav-toggle`/`#nav-backdrop`); below 440px (landing: 420px) the GitHub link shrinks to its logo.
 
 Theme:
 - `public/theme.js` (loaded BLOCKING in `<head>`) sets `data-theme` (light/dark) and `data-theme-mode` (auto/light/dark) on `<html>`; switch cycles auto -> light -> dark; override in localStorage `nelumbo-theme`.
@@ -208,7 +208,7 @@ Docs (`/docs/`):
 
 E2E (`website/src/main/frontend/e2e/`, Playwright Chromium): `npm run test:e2e:install` once, then `npm run test:e2e` (rebuilds `:website:serverJar`; server on 8899, a second one on 8898 with `-DNELUMBO_OVERLOAD_THRESHOLD=0 -DNELUMBO_OVERLOAD_BUDGET_MS=300` for `overload.spec.ts`). Test hooks: `NelumboFields.__editors`, `__monaco`, `__closeConnection()`. CI runs them after the build.
 
-Load test (not in CI): `npm run test:load -- --url https://nelumbo.nl [--ssh user@host] [--max-clients 64] [--limit-ms] [--factorial N]` (`load/loadtest.mts`, plain Node 24 with type stripping; `.mts` because package.json has no `"type": "module"`). Replays the observed Monaco client traffic of the tour (didOpen + pulls for 25 documents, one didChange per keystroke, re-pull of all hints on every `workspace/inlayHint/refresh`) with doubling client counts. Edit-to-result is measured by the edited document's hint list changing (equal queries share one result entry, so hint positions do not work). Finding: the hardware is far from a limit; the session cap was (hence the Dockerfile's 200).
+Load test (not in CI): `npm run test:load -- --url https://nelumbo.nl [--ssh user@host] [--max-clients 64] [--limit-ms] [--factorial N]` (`load/loadtest.mts`, plain Node 24 with type stripping; `.mts` because package.json has no `"type": "module"`). Replays the observed Monaco client traffic of the tutorial (didOpen + pulls for 25 documents, one didChange per keystroke, re-pull of all hints on every `workspace/inlayHint/refresh`) with doubling client counts. Edit-to-result is measured by the edited document's hint list changing (equal queries share one result entry, so hint positions do not work). Finding: the hardware is far from a limit; the session cap was (hence the Dockerfile's 200).
 
 Deployment (`.github/workflows/deploy.yml`, on push to `master` or manual):
 - Builds `:website:serverJar`, Docker image (`website/Dockerfile`, arm64), pushes to `registry.openwalnoot.com/openwalnoot/services-docker-images/nelumbo-website`, copies `website/docker-compose.yml` over plain SSH to `/data/sites/nelumbo.nl`, `docker compose pull && up -d --force-recreate`, health check.

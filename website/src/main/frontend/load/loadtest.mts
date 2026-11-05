@@ -1,5 +1,5 @@
-// Load test for the website: simulates tour-page visitors in steps of 1, 2, 4, ... clients.
-// Every client loads the page, opens an LSP session with all tour documents and keeps editing
+// Load test for the website: simulates tutorial-page visitors in steps of 1, 2, 4, ... clients.
+// Every client loads the page, opens an LSP session with all tutorial documents and keeps editing
 // queries the way the Monaco client does (one didChange per keystroke, completion + semantic
 // tokens while typing, all inlay hints re-pulled on every workspace/inlayHint/refresh).
 // Clients stay connected, so every step adds load on top of the previous one. Per step it
@@ -11,7 +11,7 @@
 //                          [--ssh USER@HOST] [--container NAME] [--factorial N]
 //
 // --ssh samples `docker stats` and the load average on the server during the run.
-// --factorial makes every edit compute factorial(N) instead of a tour query (CPU-heavy).
+// --factorial makes every edit compute factorial(N) instead of a tutorial query (CPU-heavy).
 
 import { spawn } from 'node:child_process';
 
@@ -116,9 +116,9 @@ function parseArgs(args: string[]): Options {
     return options;
 }
 
-// The tour page's editor contents, in page order, with the URIs the Monaco client gives them.
+// The tutorial page's editor contents, in page order, with the URIs the Monaco client gives them.
 async function loadDocs(url: string): Promise<Doc[]> {
-    const html:   string   = await (await fetch(url + '/tour.html')).text();
+    const html:   string   = await (await fetch(url + '/tutorial.html')).text();
     const docs:   Doc[]    = [];
     const regex:  RegExp   = /<(div|pre) class="(nelumbo-field|nelumbo-solution)"[^>]*>([\s\S]*?)<\/\1>/g;
     let   fields: number   = 0;
@@ -179,7 +179,7 @@ class Client {
     private async loadPage(): Promise<void> {
         const start: number = now();
         try {
-            const urls:      string[]   = ['/tour.html', ...ASSETS].map((path: string) => this.url + path);
+            const urls:      string[]   = ['/tutorial.html', ...ASSETS].map((path: string) => this.url + path);
             const responses: Response[] = await Promise.all(urls.map((u: string) => fetch(u)));
             for (const response of responses) {
                 await response.arrayBuffer();
@@ -500,7 +500,7 @@ function report(clients: number, s: Stats, options: Options, resultLimit: number
     return problems.length === 0;
 }
 
-// With --factorial the tour documents stay open but are no longer edited: every edit goes to an
+// With --factorial the tutorial documents stay open but are no longer edited: every edit goes to an
 // extra document whose query computes factorial(N), so each edit costs real inference CPU.
 function factorialDoc(n: number): Doc {
     const text: string = 'import nelumbo.integers\n'
@@ -513,14 +513,14 @@ function factorialDoc(n: number): Doc {
 
 async function main(): Promise<void> {
     const options:  Options  = parseArgs(process.argv.slice(2));
-    const tour:     Doc[]    = await loadDocs(options.url);
-    const docs:     Doc[]    = options.factorial === null ? tour : [...tour.map((d: Doc) => ({ ...d, query: null })), factorialDoc(options.factorial)];
+    const tutorial: Doc[]    = await loadDocs(options.url);
+    const docs:     Doc[]    = options.factorial === null ? tutorial : [...tutorial.map((d: Doc) => ({ ...d, query: null })), factorialDoc(options.factorial)];
     const monitor:  ReturnType<typeof spawn> | null = options.ssh === null ? null : startMonitor(options);
     const clients:  Client[] = [];
     let   best:     number   = 0;
     let   baseline: number   = NaN;
-    console.log('target ' + options.url + ': ' + tour.length + ' tour documents, '
-                + (options.factorial === null ? 'editing tour queries' : 'editing factorial(' + options.factorial + ')') + ', '
+    console.log('target ' + options.url + ': ' + tutorial.length + ' tutorial documents, '
+                + (options.factorial === null ? 'editing tutorial queries' : 'editing factorial(' + options.factorial + ')') + ', '
                 + options.stepSeconds + 's per step, limit ' + options.limitMs + ' ms, result limit 2x the 1-client result p95 (times in ms)');
     console.log(row(COLUMNS));
     for (const n of steps(options.maxClients)) {

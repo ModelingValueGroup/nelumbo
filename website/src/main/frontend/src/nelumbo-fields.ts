@@ -401,7 +401,7 @@ function buildField(div: HTMLElement, index: number): void {
     if (original.startsWith('\n')) {
         original = original.slice(1);
     }
-    // the position on the page, not the mount index: the tour mounts its sections in any order
+    // the position on the page, not the mount index: the tutorial mounts its sections in any order
     const baseKey: string = STORAGE_PREFIX + location.pathname + ':' + Array.from(document.querySelectorAll('.nelumbo-field')).indexOf(div);
     div.textContent = '';
     div.classList.add('nelumbo-field-wrap');
@@ -467,7 +467,7 @@ export function connect(): Promise<MonacoLanguageClient | null> {
 }
 
 // Upgrade every .nelumbo-field in `container` not already mounted into a Monaco editor. Idempotent
-// (skips fields already wrapped), so it is safe to call each time a tour section is shown. The shared
+// (skips fields already wrapped), so it is safe to call each time a tutorial section is shown. The shared
 // client (via connect()) attaches to models created after it starts, so lazy mounting keeps full LSP.
 export function mountFields(container: ParentNode): void {
     ensureServices();

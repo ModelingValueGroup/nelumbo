@@ -267,6 +267,10 @@
     .wordmark { letter-spacing: .1em; }
     header.top nav a { margin-left: 10px; font-size: 12px; letter-spacing: 0; }
   }
+  /* the header links need the compact spacing a little earlier than the cards need one column */
+  @media (max-width: 550px) {
+    header.top nav a { margin-left: 10px; font-size: 12px; letter-spacing: 0; }
+  }
   /* on the narrowest phones the GitHub link shrinks to its logo to make room for the theme switch */
   .gh-icon { display: none; width: 16px; height: 16px; fill: currentColor; }
   @media (max-width: 420px) {
@@ -276,8 +280,9 @@
     .theme-toggle { margin-left: 8px; }
   }
   /* the smallest phones: no room for the GitHub link */
-  @media (max-width: 340px) {
+  @media (max-width: 350px) {
     header.top nav a[aria-label="GitHub"] { display: none; }
+    header.top nav a, header.top .theme-toggle { margin-left: 6px; }
   }
 </style>
 </head>
@@ -286,7 +291,7 @@
 <header class="top reveal">
   <a class="wordmark" href="/">Nelumbo</a>
   <nav>
-    <a href="/tour.html">Tour</a>
+    <a href="/tutorial.html">Tutorial</a>
     <a href="/sandbox.html">Sandbox</a>
     <a href="/library.html">Library</a>
     <a href="/docs/">Docs</a>
@@ -306,7 +311,7 @@
        You define your DSL's <strong>syntax and semantics</strong> - the semantics in pure logic -
        and every construct is live on the very next line.</p>
     <div class="cta reveal d2">
-      <a class="btn bloom" href="/tour.html">Take the tour</a>
+      <a class="btn bloom" href="/tutorial.html">Start the tutorial</a>
       <a class="btn ghost" href="/sandbox.html">Open the sandbox</a>
     </div>
   </div>
@@ -378,7 +383,7 @@
       <p class="sub">This is real Nelumbo: one line declares new syntax, one rule gives it
          meaning in logic, and the query at the bottom already speaks the new language -
          the editor verifies the expected answer live.
-         Try it yourself in the <a href="/tour.html">feature tour</a>; no install needed.</p>
+         Try it yourself in the <a href="/tutorial.html">tutorial</a>; no install needed.</p>
     </div>
     <div class="codecard">
       <div class="bar"><span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span><span class="title">grandparent.nl</span></div>
@@ -403,7 +408,7 @@ g is a grandparent of Beatrix ?  [(g=Hendrik),..][..]     // ...used immediately
 <div class="close">
   <h2>Plant a language. Watch it bloom.</h2>
   <div class="cta" style="justify-content: center">
-    <a class="btn bloom" href="/tour.html">Take the tour</a>
+    <a class="btn bloom" href="/tutorial.html">Start the tutorial</a>
     <a class="btn ghost" href="https://github.com/ModelingValueGroup/nelumbo">Star on GitHub</a>
   </div>
 </div>
