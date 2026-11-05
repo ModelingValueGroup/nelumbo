@@ -185,11 +185,12 @@ public class Collections extends Predicate {
             return unknown();
         }
         Set<Object> set = a.collection().retainAll(b.collection());
-        NSet intersection = new NSet(elementType(common(a, b), set), set, a.complete() || b.complete());
+        boolean complete = a.complete() || b.complete();
         if (i != null) {
-            return intersection.equals(i) ? factCC() : falsehoodCC();
+            return sameAs(i, set, complete) ? factCC() : falsehoodCC();
         }
-        return set(2, intersection).factCI();
+        Type type = elementType(common(a, b), set);
+        return set(2, new NSet(type, set, complete)).factCI();
     }
 
     @NelumboMethod
@@ -198,11 +199,12 @@ public class Collections extends Predicate {
             return unknown();
         }
         Set<Object> set = a.collection().addAll(b.collection());
-        NSet union = new NSet(common(a, b), set, a.complete() && b.complete());
+        boolean complete = a.complete() && b.complete();
         if (u != null) {
-            return union.equals(u) ? factCC() : falsehoodCC();
+            return sameAs(u, set, complete) ? factCC() : falsehoodCC();
         }
-        return set(2, union).factCI();
+        Type type = common(a, b);
+        return set(2, new NSet(type, set, complete)).factCI();
     }
 
     @NelumboMethod
@@ -210,17 +212,14 @@ public class Collections extends Predicate {
         if (a == null || b == null) {
             return unknown();
         }
-        NSet diff;
-        if (!b.complete() && !a.collection().isEmpty()) {
-            diff = new NSet(common(a, b), Set.of(), false);
-        } else {
-            Set<Object> set = a.collection().removeAll(b.collection());
-            diff = new NSet(elementType(common(a, b), set), set, a.complete());
-        }
+        boolean open = !b.complete() && !a.collection().isEmpty();
+        Set<Object> set = open ? Set.of() : a.collection().removeAll(b.collection());
+        boolean complete = !open && a.complete();
         if (d != null) {
-            return diff.equals(d) ? factCC() : falsehoodCC();
+            return sameAs(d, set, complete) ? factCC() : falsehoodCC();
         }
-        return set(2, diff).factCI();
+        Type type = elementType(common(a, b), set);
+        return set(2, new NSet(type, set, complete)).factCI();
     }
 
     @NelumboMethod
@@ -229,11 +228,12 @@ public class Collections extends Predicate {
             return unknown();
         }
         List<Object> list = a.collection().addAll(b.collection());
-        NList concat = new NList(common(a, b), list, a.complete() && b.complete());
+        boolean complete = a.complete() && b.complete();
         if (c != null) {
-            return concat.equals(c) ? factCC() : falsehoodCC();
+            return sameAs(c, list, complete) ? factCC() : falsehoodCC();
         }
-        return set(2, concat).factCI();
+        Type type = common(a, b);
+        return set(2, new NList(type, list, complete)).factCI();
     }
 
     @NelumboMethod
@@ -242,15 +242,14 @@ public class Collections extends Predicate {
             return unknown();
         }
         Set<Object> set = a.collection().filter(l::test).asSet();
-        NSet filter = new NSet(a.isEmpty() ? l.localVars().first().type() : elementType(a.elementType(), set), set,
-                a.complete());
         if (hasIncompleteResult()) {
             return incompleteResult();
         }
         if (b != null) {
-            return filter.equals(b) ? factCC() : falsehoodCC();
+            return sameAs(b, set, a.complete()) ? factCC() : falsehoodCC();
         }
-        return set(2, filter).factCI();
+        Type type = a.isEmpty() ? l.localVars().first().type() : elementType(a.elementType(), set);
+        return set(2, new NSet(type, set, a.complete())).factCI();
     }
 
     @NelumboMethod
@@ -259,15 +258,14 @@ public class Collections extends Predicate {
             return unknown();
         }
         List<Object> list = a.collection().filter(l::test).asList();
-        NList filter = new NList(a.isEmpty() ? l.localVars().first().type() : elementType(a.elementType(), list), list,
-                a.complete());
         if (hasIncompleteResult()) {
             return incompleteResult();
         }
         if (b != null) {
-            return filter.equals(b) ? factCC() : falsehoodCC();
+            return sameAs(b, list, a.complete()) ? factCC() : falsehoodCC();
         }
-        return set(2, filter).factCI();
+        Type type = a.isEmpty() ? l.localVars().first().type() : elementType(a.elementType(), list);
+        return set(2, new NList(type, list, a.complete())).factCI();
     }
 
     @NelumboMethod
@@ -276,14 +274,14 @@ public class Collections extends Predicate {
             return unknown();
         }
         List<Object> list = a.collection().map(l::apply).asList();
-        NList map = new NList(elementType(l.expression().type(), list), list, a.complete());
         if (hasIncompleteResult()) {
             return incompleteResult();
         }
         if (b != null) {
-            return map.equals(b) ? factCC() : falsehoodCC();
+            return sameAs(b, list, a.complete()) ? factCC() : falsehoodCC();
         }
-        return set(2, map).factCI();
+        Type type = elementType(l.expression().type(), list);
+        return set(2, new NList(type, list, a.complete())).factCI();
     }
 
     @NelumboMethod
@@ -292,14 +290,14 @@ public class Collections extends Predicate {
             return unknown();
         }
         List<Object> list = a.collection().sorted((x, y) -> l.test(x, y) ? -1 : l.test(y, x) ? 1 : 0).asList();
-        NList sort = new NList(a.isEmpty() ? l.localVars().first().type() : a.elementType(), list, a.complete());
         if (hasIncompleteResult()) {
             return incompleteResult();
         }
         if (b != null) {
-            return sort.equals(b) ? factCC() : falsehoodCC();
+            return sameAs(b, list, a.complete()) ? factCC() : falsehoodCC();
         }
-        return set(2, sort).factCI();
+        Type type = a.isEmpty() ? l.localVars().first().type() : a.elementType();
+        return set(2, new NList(type, list, a.complete())).factCI();
     }
 
     @NelumboMethod
@@ -308,14 +306,14 @@ public class Collections extends Predicate {
             return unknown();
         }
         List<Object> list = a.collection().replace(i.value().intValue(), e);
-        NList result = new NList(a.elementType().common(e.type()), list, a.complete());
         if (hasIncompleteResult()) {
             return incompleteResult();
         }
         if (b != null) {
-            return result.equals(b) ? factCC() : falsehoodCC();
+            return sameAs(b, list, a.complete()) ? factCC() : falsehoodCC();
         }
-        return set(3, result).factCI();
+        Type type = a.elementType().common(e.type());
+        return set(3, new NList(type, list, a.complete())).factCI();
     }
 
     protected static Type common(NCollection a, NCollection b) {
@@ -335,6 +333,10 @@ public class Collections extends Predicate {
             }
         }
         return result != null ? result : type;
+    }
+
+    private static boolean sameAs(NCollection ncoll, Collection<Object> coll, boolean complete) {
+        return ncoll.complete() == complete && ncoll.collection().equals(coll);
     }
 
 }

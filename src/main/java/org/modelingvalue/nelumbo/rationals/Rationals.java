@@ -44,11 +44,10 @@ public final class Rationals extends Predicate {
             BigInteger sn = addend1.numerator().multiply(addend2.denominator())
                     .add(addend2.numerator().multiply(addend1.denominator()));
             BigInteger sd = addend1.denominator().multiply(addend2.denominator());
-            Rational s = Rational.of(sn, sd);
             if (sum != null) {
-                return s.equals(sum) ? factCC() : falsehoodCC();
+                return sameAs(sum, sn, sd) ? factCC() : falsehoodCC();
             }
-            return set(2, s).factCI();
+            return set(2, Rational.of(sn, sd)).factCI();
         } else if (addend1 != null && sum != null) {
             BigInteger an = sum.numerator().multiply(addend1.denominator())
                     .subtract(addend1.numerator().multiply(sum.denominator()));
@@ -71,11 +70,10 @@ public final class Rationals extends Predicate {
         if (factor1 != null && factor2 != null) {
             BigInteger pn = factor1.numerator().multiply(factor2.numerator());
             BigInteger pd = factor1.denominator().multiply(factor2.denominator());
-            Rational p = Rational.of(pn, pd);
             if (product != null) {
-                return p.equals(product) ? factCC() : falsehoodCC();
+                return sameAs(product, pn, pd) ? factCC() : falsehoodCC();
             }
-            return set(2, p).factCI();
+            return set(2, Rational.of(pn, pd)).factCI();
         } else if (factor1 != null && product != null) {
             BigInteger dn = product.numerator().multiply(factor1.denominator());
             BigInteger dd = product.denominator().multiply(factor1.numerator());
@@ -113,11 +111,10 @@ public final class Rationals extends Predicate {
         BigInteger rn = rational == null ? null : rational.numerator();
         BigInteger rd = rational == null ? null : rational.denominator();
         if (in != null && id != null) {
-            Rational ir = Rational.of(in, id);
             if (rn != null && rd != null) {
-                return ir.equals(rational) ? factCC() : falsehoodCC();
+                return sameAs(rational, in, id) ? factCC() : falsehoodCC();
             }
-            return set(2, ir).factCI();
+            return set(2, Rational.of(in, id)).factCI();
         } else if (in == null && id == null) {
             return set(0, NInteger.of(rn), NInteger.of(rd)).factCI();
         } else if (in == null && rn != null && rd != null) {
@@ -135,6 +132,12 @@ public final class Rationals extends Predicate {
             return dr[1].equals(BigInteger.ZERO) ? set(1, NInteger.of(dr[0])).factCI() : falsehoodCI();
         }
         return unknown();
+    }
+
+    private static boolean sameAs(Rational rational, BigInteger bn, BigInteger bd) {
+        BigInteger an = rational.numerator();
+        BigInteger ad = rational.denominator();
+        return an.multiply(bd).equals(bn.multiply(ad));
     }
 
 }
