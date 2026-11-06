@@ -17,7 +17,8 @@ Reading `.nl` code - the whole notation in eight lines:
   alternatives separated by commas.
 - `fib(n) == n if n<=1, fib(n-1)+fib(n-2) if n>1` is the same rule in function form:
   `L == e if g` means `L=r <=> r=e if g` with a fresh result variable `r`.
-- `fact pc(Hendrik, Juliana)` states a fact.
+- `fact pc(Hendrik, Juliana)` states a fact: a relation or a function value (`fact m(Beatrix)=Juliana`),
+  never a compound (`fact !p`, `fact p & q` are errors).
 - `!` `&` `|` `->` `<->` are the connectives, `E[x](...)` and `A[x](...)` the quantifiers,
   `=` and `!=` equality.
 - `fib(5)=f ? [(f=5)][..]` is a query with its expected result: facts on the left,
@@ -27,9 +28,15 @@ Reading `.nl` code - the whole notation in eight lines:
   variable itself, so the value is listed without a name. Not for a single literal (`5 ?`).
 - `@nelumbo.logic.And` after a functor binds it to a Java native.
 - Open world: the extent of a type is unknown, so a variable is never bound by enumerating
-  a type; `q(x)` with all arguments unbound, and `E[x](q(x))`, are unknown even over facts.
-  Unasserted facts are unknown, not false. Closed results come only from `<one T>` holes:
-  `=` is `<one Object> = <one Object>`, so a function has one, closed result.
+  a type; a predicate with two or more unbound arguments (`q(x)` with all unbound, `t(a,x,y)`),
+  and `E[x](q(x))`, are unknown even over facts. Unasserted facts are unknown, not false.
+  Closed results come only from `<one T>` holes: `=` is `<one Object> = <one Object>`, so a
+  function (a non-Boolean functor with arguments, unless its type is `:: Literal`) has one,
+  closed result.
+- Monotonic: facts and all rules of a relation are combined by bi-implication and must agree
+  (a fact and a falsehood, a binding outside a closed side, or a second function value is an
+  `Inconsistent result` error), so adding facts or rules only adds facts and falsehoods or
+  closes open sides; it never withdraws a conclusion.
 
 Read "Reading a query and test" first: without the `? [facts][falsehoods]` notation every
 example file in the project is unreadable.

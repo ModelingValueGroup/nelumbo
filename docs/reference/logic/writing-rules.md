@@ -75,13 +75,13 @@ Two separate rules, both bi-implying `fib(n) = f`.
 
 ### How results merge
 
-For a query against the LHS, the engine runs every applicable rule and **merges** the results:
+For a query against the LHS, the engine starts from the asserted facts of the relation, runs every applicable rule and **merges** each rule's result into it by bi-implication:
 
-- All facts produced by every rule go into the facts side of the combined result.
-- All falsehoods produced by every rule go into the falsehoods side.
-- A side of the combined result is closed iff *every* contributing rule produced a closed side (i.e. had no `..`).
+- All facts produced by the facts and every rule go into the facts side of the combined result.
+- All falsehoods go into the falsehoods side.
+- A side of the combined result is closed as soon as *one* contributor closed it (had no `..`): a closed side claims to be complete, so every other contributor's bindings on that side must already be in it.
 
-Because every rule is a bi-implication, all the rules are making claims about the same relation, and the combined result is a straightforward union.
+Because every rule is a bi-implication, all the rules and facts make claims about the same relation: the combined result is their union, and a contributor that breaks another's closed claim is a [contradiction](#contradictions). The merge is symmetric, so the result does not depend on the order of the rules. A rule that answers `[(x=B)][..]` (closed) and one that answers `[(x=B),..][..]` (open) combine to `[(x=B)][..]`.
 
 ### Why this is not "or"
 
@@ -115,20 +115,34 @@ for a fresh variable `r` that the rule introduces itself, so you do not declare 
 
 ## Contradictions
 
-A contradiction arises when two rules with the same LHS make incompatible closed claims about the same binding:
+A contradiction arises when the contributors to one relation (its facts and its rules) make incompatible claims about the same binding:
 
-- Rule A places binding `b` on the facts side with a closed claim
-- Rule B places binding `b` on the falsehoods side with a closed claim
+- **Fact and falsehood.** One contributor places binding `b` on the facts side, another on the falsehoods side. `b` cannot be both.
+- **Outside a closed side.** One contributor closes a side, another places a binding on that side that is not in it. The closed side claimed to be complete, so the extra binding contradicts it.
+- **A second value.** For a function or another [unique hole](statements.md#open-facts-and-one), two values, or one value with an open facts side, contradict uniqueness.
 
-Because both rules are bi-implications of `L`, both claims have to hold simultaneously — but `b` cannot be both a fact and a falsehood. The program is inconsistent under binding `b`.
+Because all contributors are bi-implications of `L`, all their claims have to hold simultaneously. The program is inconsistent under binding `b`.
 
-Inconsistency is a program defect. The engine detects it and raises an error (`InconsistencyException`).
+```nelumbo
+Person  :: Object
+Person  ::= A, B, C
+Person  x, a, b
+Boolean ::= q(<Person>,<Person>)
+
+q(a,b) <=> a=A & b=B          // q(A,x) is exactly x=B: closed
+fact q(A,C)                   // C is outside that closed side
+q(A,x) ?
+```
+
+This reports `Inconsistent results: [(x=B)][..] does not biimplicate [(x=C),..][..], for q(A,x)`.
+
+Inconsistency is a program defect. The engine detects it and raises an error (`InconsistencyException`); it never resolves it by dropping one of the claims. This is what keeps Nelumbo [monotonic](three-valued-logic.md#monotonicity).
 
 ### Why `..` matters for safety
 
 A rule that ends its relevant side with `..` is declaring that side **open** — "there may be more bindings I have not accounted for." Open claims do not fix the membership of their side; they only require that the listed bindings be present.
 
-Two rules can safely disagree on the *membership* of an open side, because neither has claimed the side is complete. Contradiction only occurs when both rules have made **closed claims that conflict**.
+Contributors can safely differ on the *membership* of a side that all of them leave open, because none has claimed the side is complete. A contradiction needs at least one **closed claim** that another contributor breaks.
 
 In practice the simplest way to avoid contradictions is to give rules **mutually exclusive guards**. The `fib` rule does this: one guard is `n >= 0 & n <= 1`, the other is `n > 1`. For any `n` at most one rule contributes, so the closed claims never collide.
 

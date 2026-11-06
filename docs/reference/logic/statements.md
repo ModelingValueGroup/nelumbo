@@ -8,7 +8,7 @@ The top-level statements that drive execution: asserting facts and asking querie
 
 ## Facts
 
-Any `Boolean` expression can be asserted with the `fact` keyword: a relation declared as a `Boolean` pattern, or the value of a function (`f(x)=v`):
+The `fact` keyword asserts a relation (an application of a `Boolean` pattern) or the value of a function (`f(x)=v`):
 
 ```nelumbo
 Boolean ::= friends(<Person>,<Person>)                     // friends.nl
@@ -23,11 +23,19 @@ fact het inkomen van Piet is 50000 euro
 fact m(Beatrix)=Juliana
 ```
 
-`fact` introduces one or more comma-separated assertions. Once asserted, they are available to the query engine as proven facts. Facts and rules are aligned: the same relation can have both facts and a defining rule (see [`friends.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/friends.nl)).
+`fact` introduces one or more comma-separated assertions. Once asserted, they are available to the query engine as proven facts. Facts and rules are aligned: the same relation can have both facts and a defining rule (see [`friends.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/friends.nl)), and they must agree (see [How results merge](writing-rules.md#how-results-merge)).
+
+A fact must be ground (no variables) and must not be a **compound** expression: `fact !p(A)`, `fact p(A) & p(B)`, `fact p(A) | p(B)`, `fact p(A) -> p(B)`, `fact p(A) <-> p(B)`, a quantifier, `fact true` and `fact false` are errors (`Fact ... cannot be asserted`). An operator derives its value from its operands and never looks up a fact about itself, so such a fact would add nothing; `fact p(A), !p(A)` would even hide a contradiction. Assert several facts with commas. A falsehood cannot be asserted: it follows from a [unique hole](#open-facts-and-one) or a rule.
+
+### Functions
+
+A functor whose result type is not `Boolean` and that has arguments is a **function**: `Female ::= m(<Person>)`, `Integer ::= fib(<Integer>)`, `Integer ::= <Integer> + <Integer>`. Its value is reached through `=`, so `m(Beatrix)=Juliana` is a relation between the application and its value, asserted as a fact or defined by a rule (`==`, see [Function rules](writing-rules.md#function-rules--)). Because `=` has [unique holes](#open-facts-and-one), a function is a relation with an implicit `one` result: `m(<Person>)` behaves as `m(<Person>, <one Female>)` would. A `Boolean` pattern with a `<one T>` hole is the explicit form of the same thing.
+
+Two kinds of functor are not functions: one without arguments (a constant such as `Piet`), and one whose result type is declared `:: Literal`, which builds a structural value (see [Equality](index.md#equality)).
 
 ### Open facts and `one`
 
-Facts are open: what is not asserted is not false, it is unknown (no closed-world assumption, no negation as failure; see [The open world](three-valued-logic.md#the-open-world)). A fact lookup also needs at least one bound argument: `friends(x, y)` with both unbound is unknown, because a variable is never bound by enumerating a type. A query over facts therefore ends its answers in `..`:
+Facts are open: what is not asserted is not false, it is unknown (no closed-world assumption, no negation as failure; see [The open world](three-valued-logic.md#the-open-world)). A lookup also needs every argument but one bound: `friends(x, y)` with both unbound is unknown, and so is `t(Piet, x, y)` for a three-argument relation, because a variable is never bound by enumerating a type. A query over facts therefore ends its answers in `..`:
 
 ```nelumbo
 friends(Piet, x) ? [(x=Jan),..][..]

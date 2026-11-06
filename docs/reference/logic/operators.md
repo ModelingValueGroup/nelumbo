@@ -19,7 +19,7 @@ fact E
 fact E1, E2, E3
 ```
 
-Asserts one or more comma-separated `Boolean` expressions as facts. See [`statements.md`](statements.md#facts).
+Asserts one or more comma-separated relations or function values (`f(x)=v`) as facts. A compound expression (`!`, `&`, `|`, `->`, `<->`, a quantifier, `true`/`false`) cannot be asserted. See [`statements.md`](statements.md#facts).
 
 ### `<=>` — rule (bi-implication)
 
@@ -161,7 +161,7 @@ The `nelumbo.lang` object hierarchy (`Object`, `Type`, `Root`, ...) is in the [g
 
 | Name | Origin | Meaning |
 |---|---|---|
-| `Boolean`, `Literal`, `Function` | `nelumbo.logic` | The logic-layer types. `Boolean` is the type of truth-valued expressions; any `Boolean` can be asserted as a fact (see [`statements.md`](statements.md#facts)). |
+| `Boolean`, `Literal`, `Function` | `nelumbo.logic` | The logic-layer types. `Boolean` is the type of truth-valued expressions; a relation (an application of a `Boolean` pattern) or a function value can be asserted as a fact, a compound such as `!p` or `p & q` cannot (see [`statements.md`](statements.md#facts)). |
 | `true`, `false`, `unknown` | `nelumbo.logic` | The three Boolean values. |
 
 ---

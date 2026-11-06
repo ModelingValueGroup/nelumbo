@@ -26,6 +26,7 @@ import org.modelingvalue.nelumbo.NelumboConstructor;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.collections.NList;
+import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
@@ -71,6 +72,12 @@ public final class Fact extends Node implements Evaluatable {
     @Override
     public void evaluate(KnowledgeBase knowledgeBase, ParseExceptionHandler handler) throws ParseException {
         Predicate predicate = predicate();
+        if (isCompound(predicate)) {
+            handler.addException(new ParseException("Fact " + predicate
+                    + " cannot be asserted: only a relation or a function value can, not !, &, |, ->, <->, a quantifier or true/false (assert several facts with commas).",
+                    predicate));
+            return;
+        }
         if (!predicate.isFullyBound()) {
             handler.addException(new ParseException("Fact " + predicate + " has variables.", predicate));
             return;
@@ -81,6 +88,16 @@ public final class Fact extends Node implements Evaluatable {
             handler.addException(new ParseException(ie.getMessage(), predicate));
             return;
         }
+    }
+
+    // A compound is never looked up as a stored fact (its operator infers from its operands), and a fact about a
+    // connective over Boolean operands (->, <->) tells nothing about those operands: asserting it would be ignored.
+    private static boolean isCompound(Predicate predicate) {
+        if (predicate instanceof CompoundPredicate || predicate instanceof NBoolean) {
+            return true;
+        }
+        Functor functor = predicate.functor();
+        return functor != null && functor.argTypes().anyMatch(t -> Type.BOOLEAN.isAssignableFrom(t.nonRepetition()));
     }
 
 }

@@ -120,7 +120,9 @@ pattern BINDING ::= [ ... ]
 // Top-level statement forms — declared here, not in the Java core
 Root ::= "fact" <Boolean#0>, ...                                      @nelumbo.logic.Fact,
          <Boolean#0> "<=>" (<Boolean#0> ("if" <Boolean#0>)?), ...      @nelumbo.logic.Rule,
-         <Boolean#0> ? (<BINDING> <BINDING>)?                          @nelumbo.logic.Query
+         <R#0> "==" (<R#0> ("if" <Boolean#0>)?), ...                   @nelumbo.logic.Rule,
+         <Boolean#0> ? (<BINDING> <BINDING>)?                          @nelumbo.logic.Query,
+         <{Function,R}#0> ? (<BINDING> <BINDING>)?                     @nelumbo.logic.Query
 
 Boolean p1, p2
 p1 -> p2  <=> !p1 | p2

@@ -45,12 +45,12 @@ Nelumbo makes an **open-world assumption**: what it has not derived is unknown, 
 
 **The extent of a type is unknown.** `Person ::= Piet, Jan, Klaas` declares three constants of type `Person`; it does not say that these are all the persons. A type has no known list of members, so Nelumbo **never binds a variable by enumerating a type**. A variable gets a value only by *navigation*: from something already bound, through
 
-- a fact or rule lookup in which at least one other argument is bound (`pc(Piet, x)`),
+- a fact or rule lookup in which every other argument is bound (`pc(Piet, x)`),
 - `=` (`x = Piet`, `x = m(Beatrix)`, `f = fib(5)`),
 - a native that computes the missing value (`3 + 4 = i`),
 - membership of a known collection (`x in {Piet, Jan}`).
 
-A predicate with **all** arguments unbound is therefore not resolved: it is unknown, even when matching facts exist. Quantifiers follow from this: `E[x](p)` and `A[x](p)` are decided only by what the body itself derives for `x`, never by trying every member of the type.
+A predicate is resolved only when **at most one** of its arguments is an unbound variable and at least one is bound. Otherwise it is unknown, even when matching facts exist: `q(x)`, `pc(x, y)`, and also `t(Piet, x, y)` for a three-argument relation. Quantifiers follow from this: `E[x](p)` and `A[x](p)` are decided only by what the body itself derives for `x`, never by trying every member of the type.
 
 ```nelumbo
 Person  :: Object
@@ -74,6 +74,53 @@ To quantify over "all known persons", make the domain explicit: a closed collect
 **Facts are open.** A relation that is not asserted is unknown, not false, so `pc(Piet, x)` answers `[(x=Jan),..][..]`.
 
 **Closed results come only from `one`.** A [unique hole](statements.md#open-facts-and-one) `<one T>` has at most one value per combination of the other arguments: once a value is asserted or derived, every other value in that hole is false. Because `=` is declared `<one Object> = <one Object>`, every function has a single result, and a function value is closed: after `fact m(Beatrix)=Juliana`, `m(Beatrix)=x` is `[(x=Juliana)][..]` and `m(Beatrix)=Beatrix` is false. Natives and collection literals can also give closed sides, because their values are computed, not looked up.
+
+---
+
+## Monotonicity
+
+The open world, closure through `one` and the consistency checks together make Nelumbo **monotonic**: adding a fact or a rule never withdraws a conclusion. It only adds information:
+
+- an unknown binding can become a fact or a falsehood,
+- an open side (`..`) can become closed, or get more bindings.
+
+It never turns a fact into a falsehood (or back), and it never reopens a closed side. Three properties guarantee this:
+
+- **No negation as failure.** What is not derived is unknown, so no conclusion rests on the *absence* of a fact that a later fact could supply. `!p` is a fact only when `p` is a proven falsehood.
+- **Closed only when unique.** A side is closed only by a unique result (a [`one` hole](statements.md#open-facts-and-one), and so every function value) or by a computed value. A closed result is the only one possible, so a later fact cannot add to it without contradicting it.
+- **Contradictions are errors.** The facts of a relation and the results of all its rules are combined by bi-implication (see [How results merge](writing-rules.md#how-results-merge)). A binding that is both a fact and a falsehood, a binding outside a closed side, or a second value for a function is reported as an inconsistency, not resolved by revising earlier conclusions.
+
+Only relations and function values can be asserted: `fact !p(A)`, `fact p(A) & p(B)` and other compound expressions are errors, because the operator derives its value from its operands and would never look at such a fact (see [Facts](statements.md#facts)). Falsehoods are therefore never asserted directly; they follow from `one` holes and rules.
+
+Statements are evaluated in order, so a file shows its knowledge growing:
+
+```nelumbo
+import nelumbo.integers
+
+Person  :: Object
+Person  ::= Piet, Jan, Klaas
+Person  x
+Integer a
+Boolean ::= friends(<Person>,<Person>)
+Integer ::= age(<Person>)
+
+friends(Piet, x)       ? [..][..]                      // nothing known yet
+age(Piet)=a            ? [..][..]
+!friends(Piet, Jan)    ? [..][..]
+
+fact friends(Piet, Jan), age(Piet)=40
+
+friends(Piet, x)       ? [(x=Jan),..][..]              // a fact, the side stays open
+age(Piet)=a            ? [(a=40)][..]                  // a function value: closed
+age(Piet)=41           ? [][()]                        // so every other value is false
+!friends(Piet, Jan)    ? [][()]
+
+fact friends(Piet, Klaas)
+
+friends(Piet, x)       ? [(x=Jan),(x=Klaas),..][..]    // more facts, nothing withdrawn
+```
+
+Adding `fact age(Piet)=41` at the end does not change Piet's age: it is reported as `Inconsistent result: [(=40),(=41)][..] has non unique bindings`.
 
 ---
 

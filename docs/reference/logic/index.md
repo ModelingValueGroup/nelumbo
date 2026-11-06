@@ -143,6 +143,7 @@ Both holes of `=` are [unique holes](statements.md#open-facts-and-one) (`<one Ob
 - `fib(5)=f` must give exactly one closed answer `[(f=5)][..]` (or none). A rule that derives two values, or one value with an open facts side, is reported as `Inconsistent result: ... has non unique bindings`.
 - A function value asserted as a fact is **closed**: after `fact m(Beatrix)=Juliana`, `m(Beatrix)=x` gives `[(x=Juliana)][..]` and `m(Beatrix)=Beatrix` is false. All other facts are open (unknown when not asserted), so `=` on functions is the main source of closed answers over facts.
 - Only a variable in the hole is constrained, not a term: `m(x)=Juliana` may have many answers (`m` need not be injective), and `x=y` with both unbound is not checked.
+- Because a closed result is the only possible one, a later fact or rule can only agree with it or contradict it (an error): this is what keeps Nelumbo [monotonic](three-valued-logic.md#monotonicity).
 
 `=` is what makes ordinary rule bodies work — `f=fib(n-1)+fib(n-2)` succeeds when both sides reduce to the same value — and is the surface form used in queries to bind variables. Note that a class-less `Object` functor with arguments is `Function`-typed, so `f(1)=f(1)` is undecided unless the result type is declared `:: Literal` (structural equality):
 
@@ -165,24 +166,28 @@ b=box(1)      ? [(b=box(1))][..]
 `nelumbo.logic` also declares the three statement forms that appear at the top level of a `.nl` file:
 
 ```nelumbo
-Root ::= "fact" <(> <Boolean#0> <,> , <)+>                                       @nelumbo.logic.Fact,
-         <Boolean#0> "<=>" <(> <Boolean#0> <(> "if" <Boolean#0> <)?> <,> , <)+>   @nelumbo.logic.Rule,
-         <Boolean#0> ? <(> <BINDING> <BINDING> <)?>                               @nelumbo.logic.Query
+Root ::= "fact" <(> <Boolean#0> <,> , <)+>                                      #0 @nelumbo.logic.Fact,
+         <Boolean#0> "<=>" <(> <Boolean#0> <(> "if" <Boolean#0> <)?> <,> , <)+> #0 @nelumbo.logic.Rule,
+         <R#0> "==" <(> <R#0> <(> "if" <Boolean#0> <)?> <,> , <)+>              #0 @nelumbo.logic.Rule,
+         <Boolean#0> ? <(> <BINDING> <BINDING> <)?>                             #0 @nelumbo.logic.Query,
+         <{Function,R}#0> ? <(> <BINDING> <BINDING> <)?>                        #0 @nelumbo.logic.Query
 ```
 
 | Form  | Shape                                                | Native             |
 |---|---|---|
 | Fact  | `fact <Boolean>`, comma-separated lists allowed      | `Fact`             |
 | Rule  | `<Boolean> <=> <Boolean> if <Boolean>`, `if` optional | `Rule`             |
+| Function rule | `<R> == <R> if <Boolean>`, `if` optional     | `Rule`             |
 | Query | `<Boolean> ?`, optionally followed by `[..][..]`      | `Query`            |
+| Function query | `<Function> ?`, optionally followed by `[..][..]` | `Query`        |
 
-The `fact` keyword is required: a bare `Boolean` at top level is rejected. The `BINDING` fragment that follows `?` is a [named pattern](../lang/index.md#named-patterns), declared here:
+The `fact` keyword is required: a bare `Boolean` at top level is rejected. A fact is a relation or a function value, not a compound such as `!p` or `p & q` (see [Facts](statements.md#facts)); `==` and the function query are described in [Function rules](writing-rules.md#function-rules--) and [Function queries](statements.md#function-queries). The `BINDING` fragment that follows `?` is a [named pattern](../lang/index.md#named-patterns), declared here:
 
 ```nelumbo
-pattern BINDING ::= [ <(> <(> ( <(> <Variable#100> = <Object#0> <,> , <)*> ) <|> .. <)> <,> , <)*> ]
+pattern BINDING ::= [ <(> <(> ( <(> <(> <Literal#100> <|> <Variable#100> = <Literal#0> <)> <,> , <)*> ) <|> .. <)> <,> , <)*> ]
 ```
 
-That is the grammar of `[(a=T1), (a=T2)]`, `[..]`, `[]`, and combinations such as `[(a=0),..]`. (It was previously a stand-alone `Binding :: Object` type; it is now a named pattern, so it adds no type — it is pure syntax for the query suffix.) See [`test-expression-semantics.md`](test-expression-semantics.md) for how a `?` test is judged to pass or fail.
+That is the grammar of `[(a=T1), (a=T2)]`, `[..]`, `[]`, combinations such as `[(a=0),..]`, and the unnamed values of a function query (`[(5)]`). (It was previously a stand-alone `Binding :: Object` type; it is now a named pattern, so it adds no type — it is pure syntax for the query suffix.) See [`test-expression-semantics.md`](test-expression-semantics.md) for how a `?` test is judged to pass or fail.
 
 ---
 

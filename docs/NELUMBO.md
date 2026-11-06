@@ -192,11 +192,10 @@ The logic is a `@NelumboMethod` whose name and parameter count match the functor
 ```text
   Boolean  ::= pc(<Person>,<Person>)   // parent-child
 
-  // Facts
-  pc(Beatrix, Willem)
-  pc(Claus, Willem)
-  pc(Willem, Amalia)
-  pc(Maxima, Amalia)
+  fact pc(Beatrix, Willem),
+       pc(Claus, Willem),
+       pc(Willem, Amalia),
+       pc(Maxima, Amalia)
 ```
 
 ### Predicates

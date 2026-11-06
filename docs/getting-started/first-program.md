@@ -104,7 +104,7 @@ This is the heart of the program. Line by line:
   fib(n) == fib(n-1)+fib(n-2) if n>1
   ```
 
-  Both rules define `fib(n)`; neither supersedes the other. The `if`-guards ensure that for any given `n` only one of the two rules contributes, so there is no overlap. (When rules *do* overlap and both produce closed results on the same side, that is a contradiction — see the note below.)
+  Both rules define `fib(n)`; neither supersedes the other. The `if`-guards ensure that for any given `n` only one of the two rules contributes, so there is no overlap. (When rules *do* overlap and disagree, that is a contradiction — see the note below.)
 - `if` attaches a **guard** to a rule. `n if n>=0 & n<=1` reads *"`fib(n)` is `n`, provided `n` is 0 or 1."* `fib(n-1)+fib(n-2) if n>1` is the recursive case.
 
 Read the whole rule in English: *"`fib(n)` is `n` for `n` in 0..1, and `fib(n-1) + fib(n-2)` for `n` greater than 1."* That is the definition of Fibonacci.
@@ -113,7 +113,7 @@ Read the whole rule in English: *"`fib(n)` is `n` for `n` in 0..1, and `fib(n-1)
 
 You can write many rules for the same left-hand side, either using the comma shorthand or as separate `==` (or `<=>`) declarations. Nelumbo **merges** the results of all applicable rules: facts from every rule go into the facts side, falsehoods from every rule go into the falsehoods side. No rule wins over another; every rule is a bi-implication and contributes equally.
 
-This merging is sound as long as the rules **agree**. When they don't — specifically, when two rules both produce **closed** (non-`..`) claims on the same side that conflict — the program has a contradiction. A common way to avoid contradictions is to keep at most one rule closed on each side and let the others end with an incompleteness marker on that side. In practice, mutually exclusive `if`-guards (like the ones in `fib`) are the cleanest pattern.
+This merging is sound as long as the rules (and the facts of the relation) **agree**. When they don't, the program has a contradiction and the engine reports an error: one rule proves a binding that another proves false, or one rule gives a **closed** (non-`..`) side and another adds a binding that is not in it. A function, such as `fib`, must also have exactly one value. Mutually exclusive `if`-guards (like the ones in `fib`) are the cleanest way to avoid contradictions. See [Contradictions](../reference/logic/writing-rules.md#contradictions).
 
 **Takeaway:** a rule is a declarative equivalence, not an assignment or a function body. Multiple rules for the same relation all bi-imply it simultaneously; the engine uses them in both directions — it can answer "what is `fib(5)`?" and, in principle, "for which `n` is `fib(n)=55`?"
 

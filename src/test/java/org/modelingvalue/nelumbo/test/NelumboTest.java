@@ -114,6 +114,28 @@ public class NelumboTest extends NelumboTestBase {
         assertTrue(checked.stream().allMatch(QueryOutcome::expectationMatched), "mismatch: " + checked);
     }
 
+    // A compound (!, &, |, ->, <->, a quantifier, true/false) is never looked up as a stored fact, so asserting one
+    // would silently add nothing (and fact p(A), !p(A) would hide a contradiction): it is an error.
+    @RepeatedTest(10)
+    public void compoundFactIsAnError() {
+        String header = """
+                import nelumbo.logic
+                Person :: Object
+                Person ::= A, B
+                Person x
+                Boolean ::= p(<Person>), r(<Person>,<Person>)
+                """;
+        for (String fact : List.of("!p(A)", "p(A) & p(B)", "p(A) | p(B)", "p(A) -> p(B)", "p(A) <-> p(B)", "E[x](p(x))", "A[x](p(x))", "true", "false")) {
+            EvalResult result = evaluate(header + "fact " + fact + "\n", "compoundFact", 10_000);
+            List<String> found = result.diagnostics().stream().map(d -> d.line() + ": " + d.message()).toList();
+            assertEquals(1, found.size(), fact + ": " + found);
+            assertTrue(found.get(0).startsWith("6: Fact ") && found.get(0).contains("cannot be asserted"), fact + ": " + found);
+        }
+        EvalResult result = evaluate(header + "fact p(A), r(A,B), A=A\np(A) ? [()][]\nr(A,x) ? [(x=B),..][..]\n", "plainFacts", 10_000);
+        assertEquals(List.of(), result.diagnostics());
+        assertTrue(result.queries().stream().allMatch(QueryOutcome::expectationMatched), "mismatch: " + result.queries());
+    }
+
     @RepeatedTest(10)
     public void datetimeTest() {
         testResource("datetimeTest.nl");
