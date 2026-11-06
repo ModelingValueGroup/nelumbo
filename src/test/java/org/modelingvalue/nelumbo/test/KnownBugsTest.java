@@ -257,4 +257,10 @@ public class KnownBugsTest extends NelumboTestBase {
     public void datetimeBareBindingValue() {
         bugResource("datetime-bare-binding-value.nl");
     }
+
+    @KnownBug("pattern starting with a repetition of holes (<(> <Person> <,> , <)+> are friends) accepts only one element")
+    @Test
+    public void leadingRepetitionPattern() {
+        bugResource("leading-repetition-pattern.nl");
+    }
 }

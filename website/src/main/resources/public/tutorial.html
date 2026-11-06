@@ -107,6 +107,8 @@
 <aside>
   <nav>
     <a data-section="logic" class="active">Propositional logic</a>
+    <a data-section="syntax">Types &amp; functors</a>
+    <a data-section="patterns">Patterns</a>
     <a data-section="facts">Facts &amp; queries</a>
     <a data-section="rules">Rules &amp; recursion</a>
     <a data-section="types">Data types</a>
@@ -143,6 +145,143 @@ false &amp; true ? [()][]
       <pre class="nelumbo-solution">import nelumbo.logic
 
 false | true ? [()][]
+</pre>
+    </div>
+  </section>
+  <section class="tutorial-section" id="syntax">
+    <h2>Types &amp; functors</h2>
+    <p>Before any logic, Nelumbo lets you define syntax: which phrases exist and how they are built.
+       <code>Person :: Object</code> declares a type and <code>Male :: Person</code> a subtype.
+       <code>Male ::= Piet, Jan</code> declares constants of a type. A <em>functor</em> declares a new
+       phrase with <code>::=</code>: <code>Person ::= father(&lt;Person&gt;)</code> says that
+       <code>father(</code>a person<code>)</code> is again a person, where each <code>&lt;T&gt;</code>
+       is a hole for an expression of type <code>T</code>. A phrase whose type extends
+       <code>Root</code> can stand on its own line as a sentence; give such a functor the precedence
+       <code>#0</code>. These sections have no queries and no meaning yet: a sentence is right when it
+       parses, and the editor underlines it in red when it does not.</p>
+    <div class="nelumbo-field" data-height="270px" data-syntax>import nelumbo.lang
+Person   :: Object
+Male     :: Person
+Female   :: Person
+Male     ::= Piet, Jan
+Female   ::= Marie
+Person   ::= father(&lt;Person&gt;)
+Sentence :: Root
+Sentence ::= &lt;Person&gt; knows &lt;Person&gt; #0
+Piet knows Marie
+father(Marie) knows Jan
+</div>
+    <div class="nelumbo-exercise">
+      <p class="challenge"><code>Marie knows Klaas</code> does not parse: Klaas is declared as an <code>Animal</code>, and <code>knows</code> takes a <code>Person</code>. Klaas is a man: fix the declarations so the sentence parses.</p>
+      <div class="nelumbo-field" data-height="250px" data-syntax="exercise">import nelumbo.lang
+Person   :: Object
+Male     :: Person
+Female   :: Person
+Animal   :: Object
+Male     ::= Piet, Jan
+Female   ::= Marie
+Animal   ::= Klaas
+Sentence :: Root
+Sentence ::= &lt;Person&gt; knows &lt;Person&gt; #0
+Marie knows Klaas
+</div>
+      <pre class="nelumbo-solution" data-syntax>import nelumbo.lang
+Person   :: Object
+Male     :: Person
+Female   :: Person
+Animal   :: Object
+Male     ::= Piet, Jan, Klaas
+Female   ::= Marie
+Sentence :: Root
+Sentence ::= &lt;Person&gt; knows &lt;Person&gt; #0
+Marie knows Klaas
+</pre>
+    </div>
+    <div class="nelumbo-exercise">
+      <p class="challenge">Declare a type <code>Thing</code> with the constants <code>flowers</code> and <code>a book</code>, and a functor, so that both sentences parse.</p>
+      <div class="nelumbo-field" data-height="190px" data-syntax="exercise">import nelumbo.lang
+Person   :: Object
+Person   ::= Piet, Marie
+Sentence :: Root
+// declare a type Thing, its constants and a sentence functor so both sentences parse
+Marie gives flowers to Piet
+Piet gives a book to Marie
+</div>
+      <pre class="nelumbo-solution" data-syntax>import nelumbo.lang
+Person   :: Object
+Person   ::= Piet, Marie
+Thing    :: Object
+Thing    ::= flowers, a book
+Sentence :: Root
+Sentence ::= &lt;Person&gt; gives &lt;Thing&gt; to &lt;Person&gt; #0
+Marie gives flowers to Piet
+Piet gives a book to Marie
+</pre>
+    </div>
+  </section>
+  <section class="tutorial-section" id="patterns">
+    <h2>Patterns</h2>
+    <p>A functor's pattern is more than words and holes. <code>&lt;(&gt; really &lt;)?&gt;</code> is
+       optional, <code>&lt;(&gt; likes &lt;|&gt; loves &lt;)&gt;</code> is a choice, and
+       <code>&lt;(&gt; &lt;Person&gt; &lt;,&gt; , &lt;)+&gt;</code> repeats a hole one or more times,
+       separated by commas (<code>&lt;)*&gt;</code> allows zero times). The token types
+       <code>&lt;NUMBER&gt;</code>, <code>&lt;STRING&gt;</code> and <code>&lt;NAME&gt;</code> accept a
+       number, a quoted string or a name. Several alternatives of one type are separated by commas, each
+       with its own precedence.</p>
+    <div class="nelumbo-field" data-height="310px" data-syntax>import nelumbo.lang
+Person   :: Object
+Person   ::= Piet, Jan, Marie, Klaas
+Sentence :: Root
+Sentence ::= &lt;Person&gt; &lt;(&gt; really &lt;)?&gt; &lt;(&gt; likes &lt;|&gt; loves &lt;)&gt; &lt;Person&gt; #0,
+             &lt;Person&gt; is &lt;NUMBER&gt; years old                            #0,
+             &lt;Person&gt; says &lt;STRING&gt;                                    #0,
+             party with &lt;(&gt; &lt;Person&gt; &lt;,&gt; , &lt;)+&gt;                        #0
+Piet likes Marie
+Piet really loves Marie
+Klaas is 42 years old
+Marie says "hello"
+party with Piet, Jan, Marie
+</div>
+    <div class="nelumbo-exercise">
+      <p class="challenge">Piet can invite any number of guests, the last one after <code>and</code>. Change the pattern so all three sentences parse.</p>
+      <div class="nelumbo-field" data-height="230px" data-syntax="exercise">import nelumbo.lang
+Person   :: Object
+Person   ::= Piet, Jan, Marie, Klaas
+Sentence :: Root
+// change the pattern so all three sentences parse
+Sentence ::= &lt;Person&gt; invites &lt;Person&gt; #0
+Piet invites Jan
+Piet invites Jan and Marie
+Piet invites Jan, Marie and Klaas
+</div>
+      <pre class="nelumbo-solution" data-syntax>import nelumbo.lang
+Person   :: Object
+Person   ::= Piet, Jan, Marie, Klaas
+Sentence :: Root
+Sentence ::= &lt;Person&gt; invites &lt;(&gt; &lt;Person&gt; &lt;,&gt; , &lt;)+&gt; &lt;(&gt; and &lt;Person&gt; &lt;)?&gt; #0
+Piet invites Jan
+Piet invites Jan and Marie
+Piet invites Jan, Marie and Klaas
+</pre>
+    </div>
+    <div class="nelumbo-exercise">
+      <p class="challenge">Change the pattern so that <code>Jan does not know Piet</code> parses as well as <code>Jan knows Piet</code>.</p>
+      <div class="nelumbo-field" data-height="210px" data-syntax="exercise">import nelumbo.lang
+Person   :: Object
+Person   ::= Piet, Jan
+Sentence :: Root
+// change the pattern so both sentences parse
+Sentence ::= &lt;Person&gt; knows &lt;Person&gt; #0
+Jan knows Piet
+Jan does not know Piet
+</div>
+      <pre class="nelumbo-solution" data-syntax>import nelumbo.lang
+Person   :: Object
+Person   ::= Piet, Jan
+Sentence :: Root
+Sentence ::= &lt;Person&gt; &lt;(&gt; knows &lt;|&gt; does not know &lt;)&gt; &lt;Person&gt; #0
+Jan knows Piet
+Jan does not know Piet
 </pre>
     </div>
   </section>

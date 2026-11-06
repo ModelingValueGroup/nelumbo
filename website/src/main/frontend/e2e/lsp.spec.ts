@@ -102,3 +102,21 @@ test('completion offers suggestions', async ({ page }: { page: Page }): Promise<
     await expect(widget).toBeVisible({ timeout: 10_000 });
     await expect(widget.locator('.monaco-list-row').first()).toBeVisible();
 });
+
+test('a syntax exercise shows a parse error that clears when the sentence parses', async ({ page }: { page: Page }): Promise<void> => {
+    await page.goto('/tutorial.html');
+    await page.locator('aside nav a[data-section="syntax"]').click();
+    await expect(page.locator('#syntax')).toHaveClass(/active/);
+    await expect.poll(async (): Promise<number> => editorIndexContaining(page, 'Marie knows Klaas'), { timeout: 20_000 })
+        .toBeGreaterThanOrEqual(0);
+    const idx: number = await editorIndexContaining(page, 'Marie knows Klaas');
+    await expect.poll(async (): Promise<number> => errorMarkerCount(page, idx), { timeout: 20_000, intervals: [500] })
+        .toBeGreaterThan(0);
+    // declaring Klaas as a Male (a Person) instead of an Animal makes the sentence parse
+    await page.evaluate((i: number): void => {
+        const model: any = (window as any).NelumboFields.__editors[i].model;
+        model.setValue(model.getValue().replace('Male     ::= Piet, Jan\n', 'Male     ::= Piet, Jan, Klaas\n').replace('Animal   ::= Klaas\n', ''));
+    }, idx);
+    await expect.poll(async (): Promise<number> => errorMarkerCount(page, idx), { timeout: 20_000, intervals: [500] })
+        .toBe(0);
+});

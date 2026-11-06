@@ -51,7 +51,7 @@ example file in the project is unreadable.
 - [Documentation overview](https://nelumbo.nl/docs/): full table of contents plus reading paths per goal
 - [Sandbox](https://nelumbo.nl/sandbox.html): a live editor; results appear inline as you type, no run button
 - [Library](https://nelumbo.nl/library.html): the standard library modules' `.nl` sources in a live editor, each with its reference intro
-- [Tutorial](https://nelumbo.nl/tutorial.html): eight guided sections with live demos and self-checking exercises
+- [Tutorial](https://nelumbo.nl/tutorial.html): ten guided sections (two on syntax only: types, functors, patterns) with live demos and self-checking exercises
 
 ## Language reference by level
 

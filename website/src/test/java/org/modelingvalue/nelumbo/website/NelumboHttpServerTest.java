@@ -330,23 +330,32 @@ class NelumboHttpServerTest {
      * The tutorial's editors are hand-written Nelumbo that no other test evaluates, so a language change breaks them
      * silently (78e006b5 did: {@code fact} takes a Boolean since). Every editor must evaluate on a server like
      * production's (empty base KB): an exercise field may only fail on its expectation, a solution not at all.
+     * Syntax-only editors ({@code data-syntax}) have no queries; a syntax exercise ({@code data-syntax="exercise"})
+     * starts with a parse error that the learner fixes, its solution parses without errors.
      */
     @Test
     void everyTutorialEditorEvaluates() throws Exception {
         NelumboHttpServer tutorial     = new NelumboHttpServer(KnowledgeBaseLoader.load(List.of()), List.of());
         int               tutorialPort = tutorial.start(0);
         try {
-            Pattern editor  = Pattern.compile("<(div|pre) class=\"(nelumbo-field|nelumbo-solution)\"[^>]*>(.*?)</\\1>", Pattern.DOTALL);
+            Pattern editor  = Pattern.compile("<(div|pre) class=\"(nelumbo-field|nelumbo-solution)\"([^>]*)>(.*?)</\\1>", Pattern.DOTALL);
             Matcher matcher = editor.matcher(get("/tutorial.html").body());
             int     checked = 0;
             while (matcher.find()) {
                 String      kind     = matcher.group(2);
-                String      source   = matcher.group(3).replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", "\"").replace("&amp;", "&");
+                boolean     syntax   = matcher.group(3).contains("data-syntax");
+                boolean     exercise = matcher.group(3).contains("data-syntax=\"exercise\"");
+                String      source   = matcher.group(4).replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", "\"").replace("&amp;", "&");
                 HttpRequest request  = HttpRequest.newBuilder(URI.create("http://localhost:" + tutorialPort + "/eval"))
                         .header("Content-Type", "text/plain").POST(BodyPublishers.ofString(source)).build();
                 JsonNode    result   = mapper.readTree(client.send(request, BodyHandlers.ofString()).body());
                 String      where    = "tutorial " + kind + " #" + checked + ":\n" + source;
-                assertTrue(0 < result.get("queries").size(), "no query evaluated in " + where);
+                assertTrue(syntax || 0 < result.get("queries").size(), "no query evaluated in " + where);
+                if (exercise) {
+                    assertTrue(0 < result.get("errors").size(), "a syntax exercise should start with a parse error in " + where);
+                    checked++;
+                    continue;
+                }
                 for (JsonNode error : result.get("errors")) {
                     String message = error.get("line") + ":" + error.get("column") + " " + error.get("message").asText();
                     assertTrue(kind.equals("nelumbo-field") && error.get("message").asText().startsWith("Expected result "), message + "\nin " + where);
