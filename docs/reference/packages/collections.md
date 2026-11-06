@@ -2,7 +2,7 @@
 
 > **Level:** optional package `nelumbo.collections`. Write `import nelumbo.collections`; it brings in `nelumbo.integers`, `nelumbo.logic` and `nelumbo.lang` transitively.
 
-Generic sets and lists, with membership, set algebra, list concatenation and indexing, and the higher-order operations `where` (filter), `map` and `sort`. The higher-order operations take [lambdas](../logic/lambdas.md), which are declared in `nelumbo.logic`, not here. This is also the only stdlib module that uses Nelumbo's generic-type parameter mechanism.
+Generic sets and lists, with membership, set algebra, list concatenation, indexing and update, and the higher-order operations `where` (filter), `map` and `sort`. The higher-order operations take [lambdas](../logic/lambdas.md), which are declared in `nelumbo.logic`, not here. This is also the only stdlib module that uses Nelumbo's generic-type parameter mechanism.
 
 **Source:** [`src/main/resources/org/modelingvalue/nelumbo/collections/collections.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/collections/collections.nl)
 
@@ -146,7 +146,8 @@ private Boolean ::= build(<Lambda1<E,Boolean>>, <Set<E>>)                    @ne
                     setFilter(<Set<E>>, <Lambda1<E,Boolean>>, <Set<E>>)      @nelumbo.collections.Collections,
                     listFilter(<List<E>>, <Lambda1<E,Boolean>>, <List<E>>)   @nelumbo.collections.Collections,
                     map(<Collection<F>>, <Lambda1<F,E>>, <List<E>>)          @nelumbo.collections.Collections,
-                    sort(<Collection<E>>, <Lambda2<E,E,Boolean>>, <List<E>>) @nelumbo.collections.Collections
+                    sort(<Collection<E>>, <Lambda2<E,E,Boolean>>, <List<E>>) @nelumbo.collections.Collections,
+                    set(<List<E>>, <Integer>, <E>, <List<E>>)                @nelumbo.collections.Collections
 ```
 
 | Operation                         | Pattern                                              | `#N` | Result      |
@@ -161,6 +162,7 @@ private Boolean ::= build(<Lambda1<E,Boolean>>, <Set<E>>)                    @ne
 | first / last index of an element  | `<E> first index <List<E>>` / `<E> last index <List<E>>` | 40 | `Integer` |
 | index of an element (= first)     | `<E> index <List<E>>`                                | 40   | `Integer`   |
 | all indexes of an element         | `<E> indexes <List<E>>`                              | 40   | `Set<Integer>` |
+| replace the element at an index   | `set <E> at <Integer> in <List<E>>`                  | 50   | `List<E>`   |
 | filter                            | `<Set<E>> where <Lambda1<E,Boolean>>` / the `List` form | 37 | `Set<E>` / `List<E>` |
 | map                               | `<Collection<F>> map <Lambda1<F,E>>`                 | 37   | `List<E>`   |
 | sort                              | `<Collection<E>> sort <Lambda2<E,E,Boolean>>`        | 37   | `List<E>`   |
@@ -296,6 +298,25 @@ first in []               ?   [][..]           ▸ an empty list has no first el
 
 An index outside the list (`at 7 in [1,2,3]`) is an error, not false: the query has no result and reports an `IndexOutOfBoundsException`. Three-valued logic absorbs the error only next to an operand that already decides: `at 7 in [1,2,3] = 1 | 1 in [1]` is true and `at 7 in [1,2,3] = 1 & 4 in [1]` is false.
 
+### List update — `set`
+
+```nelumbo
+List<E> ::= set <E> at <Integer> in <List<E>> #50
+```
+
+`set e at i in l` is the list `l` with the element at the 0-based index `i` replaced by `e`; `l` itself is unchanged (values are immutable). The list, the index and the element must be known, and the list closed; otherwise the result is unknown. It does not run backwards.
+
+```nelumbo
+set 5 at 1 in [1,2,3]                  ?   [([1,5,3])][..]
+set 5 at 1 in [1,2,3] = [1,5,3]        ?   [()][]
+set [9] at 1 in [[1],[2]]              ?   [([[1],[9]])][..]
+set 9 at 0 in set 8 at 1 in [1,2,3]    ?   [([9,8,3])][..]
+```
+
+Nested lists update by nesting `set`: replacing the cell at row `r`, column `c` of a grid `g` is `set (set d at c in (at r in g)) at r in g` (the sudoku solvers' `put`); the inner `at r in g` needs its parentheses.
+
+As with `at`, an index outside the list (`set 5 at 3 in [1,2,3]`) is an error, not false.
+
 ### Filter — `where`
 
 ```nelumbo
@@ -367,19 +388,20 @@ i in {1,2,3}                           ?   [(i=1),(i=2),(i=3)][..]
 {3,4,5} && {1,2,3} = s                 ?   [(s={3})][..]
 [1,2,3] + [4,5] = l                    ?   [(l=[1,2,3,4,5])][..]
 at i in [1,2,3] = 2                    ?   [(i=1)][..]
+set 5 at 1 in [1,2,3] = l              ?   [(l=[1,5,3])][..]
 
 {1,2} where [i](i>1) = s               ?   [(s={2})][..]
 [1,2,2,3] map [i](i+1) = l             ?   [(l=[2,3,3,4])][..]
 [3,2,2,1] sort [ib,ia](ib<ia) = l      ?   [(l=[1,2,2,3])][..]
 ```
 
-Collection values print back in their literal form on the facts side. The CSP-style sudoku solver [`sudoku/csp4x4.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/sudoku/csp4x4.nl) is a larger user of `map` over lists of lists.
+Collection values print back in their literal form on the facts side. The CSP-style sudoku solver [`sudoku/csp4x4.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/sudoku/csp4x4.nl) is a larger user of `map` and `set` over lists of lists.
 
 ---
 
 ## Status
 
-`collections` provides type declarations, literal constructors (closed and open), set-builder comprehension, the algebraic operations (cardinality, membership, subset/superset, set intersection/union/difference, list concatenation, list indexing) and the lambda-based higher-order operations `where`, `map` and `sort`. Still absent are folds/reductions (`fold`, `sum`), `tail`, and union/intersection for lists. The native classes are `NSet` and `NList` (literals), `BuildSet` (the comprehension form) and `Collections` (every other operation); the lambda value itself is `nelumbo.logic.Lambda`.
+`collections` provides type declarations, literal constructors (closed and open), set-builder comprehension, the algebraic operations (cardinality, membership, subset/superset, set intersection/union/difference, list concatenation, list indexing, list update) and the lambda-based higher-order operations `where`, `map` and `sort`. Still absent are folds/reductions (`fold`, `sum`), `tail`, and union/intersection for lists. The native classes are `NSet` and `NList` (literals), `BuildSet` (the comprehension form) and `Collections` (every other operation); the lambda value itself is `nelumbo.logic.Lambda`.
 
 ---
 
@@ -396,10 +418,10 @@ Added to what `nelumbo.integers` and `nelumbo.logic` already export:
 | Membership    | `e in c`                                                                     |
 | Set relations | `<` `>` `<=` `>=` — subset / superset                                        |
 | Set algebra   | `&&` intersection, `\|\|` union, `-` difference                              |
-| List ops      | `+` concatenation; 0-based index: `at i in l`, `first in l`, `last in l`, `e first index l`, `e last index l`, `e index l`, `e indexes l` |
+| List ops      | `+` concatenation; 0-based index: `at i in l`, `first in l`, `last in l`, `e first index l`, `e last index l`, `e index l`, `e indexes l`; update: `set e at i in l` |
 | Higher-order  | `c where [x](p)`, `c map [x](e)`, `c sort [a,b](p)`                          |
 
-(The native predicates `build`, `size`, `index`, `firstIndex`, `lastIndex`, `first`, `last`, `elementOf`, `subset`, `intersection`, `union`, `diff`, `concat`, `setFilter`, `listFilter`, `map` and `sort` are all `private`; the operator syntax above is their public surface.)
+(The native predicates `build`, `size`, `index`, `firstIndex`, `lastIndex`, `first`, `last`, `elementOf`, `subset`, `intersection`, `union`, `diff`, `concat`, `setFilter`, `listFilter`, `map`, `sort` and `set` are all `private`; the operator syntax above is their public surface.)
 
 (The `Type E, F` declaration introduces the parameter bindings inside `collections.nl`; the *mechanism* of generic-type parameters is supplied by `nelumbo.lang` and is available to importers regardless of `collections`.)
 

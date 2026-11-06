@@ -115,7 +115,7 @@ Sudoku examples (`examples/sudoku-*.nl`, NOT in `ExampleCatalog`/`ExamplesTest`)
 - Queries with expected result: `fib(5)=f ? [(f=5)][..]`
 - Function queries: `fib(5) ? [(5)][..]` = the query above (the query introduces the result variable, like `==`); not on a single literal (`5 ?`, a 0-arity functor `mkAll ?`: "unexpected type ... Literal"). A DateTime-with-time value cannot be written bare in a binding yet (`(2024-01-15T11:30)` fails to parse, BINDING's `<Literal#100>`); keep `=a ? [(a=...)]` there.
 - Operators: `&`, `|`, `E[x]`, `A[y]` (up to 6 quantified variables)
-- List index (`collections`): relation `at i in l = e` (several answers for a duplicated element); functions `first in l`, `last in l`, `e first index l`, `e last index l`, `e index l` (= first index), `e indexes l` (`Set<Integer>`). An index outside the list is an error (fail fast), not false; three-valued logic absorbs it only next to a decided operand (`true | error`, `false & error`).
+- List index (`collections`): relation `at i in l = e` (several answers for a duplicated element); functions `first in l`, `last in l`, `e first index l`, `e last index l`, `e index l` (= first index), `e indexes l` (`Set<Integer>`); update `set e at i in l` (`List<E>`, forward only). An index outside the list is an error (fail fast), not false; three-valued logic absorbs it only next to a decided operand (`true | error`, `false & error`).
 - Statements are only `fact`, `<=>`/`==`, `?`: a bare `f(i)=[1,2]` is rejected ("unexpected type Boolean, expected Root or List<Root>"); write `f(i) == [1,2]`.
 
 ## Authoring .nl files (DSL extension)
