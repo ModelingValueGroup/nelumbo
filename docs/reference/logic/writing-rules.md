@@ -109,7 +109,35 @@ for a fresh variable `r` that the rule introduces itself, so you do not declare 
 
 - Each alternative is a **value** of the left-hand side's type, not a condition.
 - `==` is for writing rules only. A query gets the same shorthand without an operator: `fib(5) ? [(5)][..]` asks for the value of `fib(5)` (see [Function queries](statements.md#function-queries)).
-- Use `<=>` when an alternative is more than a value, for example when it introduces a variable with `E[...]`, or when the left-hand side is a relation such as `even(x)`.
+- Use `<=>` when the left-hand side is a relation such as `even(x)`, or when an alternative is more than a value (see below).
+
+### Intermediate results are values too
+
+An alternative that introduces a variable with `E[...]` only to pass one result on is still a value: write it as a nested call. The two rules below define the same function; the second needs neither `<=>` nor the variables `m` and `q`:
+
+```nelumbo
+import nelumbo.integers
+
+Integer ::= dbl(<Integer>), quad(<Integer>), quad2(<Integer>)
+Integer n, m, q
+
+dbl(n)      == n + n
+quad(n)=q   <=> E[m](dbl(n)=m & q=dbl(m))   // m only passes a value on
+quad2(n)    == dbl(dbl(n))                  // the same function
+
+quad(3)  ? [(12)][..]
+quad2(3) ? [(12)][..]
+```
+
+Nesting does not change the meaning: a function argument that is itself a function is resolved through the same existential, so when the inner call has no value the outer one has none either. The CSP sudoku solver ([`sudoku/csp4x4.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/sudoku/csp4x4.nl)) writes its propagation this way, for example `assignOthers(elim(g,r,c,dig(i)),r,c,d,i+1)` and `parseAt(p,assign(g,r,c,dig(icell(p,r,c))),r,c+1)`.
+
+`<=>` stays necessary when an alternative
+
+- is `false`: a branch that must fail, such as Norvig's `return False` (an `==` alternative is a value, and a failing guard only makes a branch silent),
+- picks its value by searching, such as `E[d,g2](d in {1,2,3,4} & ok(g,r,c,d) & put(g,r,c,d)=g2 & s=solve(g2,r,c+1))` in [`sudoku/brute4x4.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/sudoku/brute4x4.nl), so the bound variable is not determined by one call,
+- uses an intermediate result more than once (nesting would repeat the call).
+
+An empty collection literal cannot be an `==` value yet: `f(i) == {}` and `f(i) == []` do not parse (a known bug, [`bugs/empty-collection-function-rule-value.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/bugs/empty-collection-function-rule-value.nl)). Write `f(i)=s <=> s={}` there.
 
 ---
 

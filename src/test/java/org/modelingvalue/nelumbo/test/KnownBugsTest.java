@@ -251,4 +251,10 @@ public class KnownBugsTest extends NelumboTestBase {
     public void emptyCollectionFunctionRuleValue() {
         bugResource("empty-collection-function-rule-value.nl");
     }
+
+    @KnownBug("date-time value with a time cannot be written bare in an expected result ([(2024-01-15T11:30)] does not parse)")
+    @Test
+    public void datetimeBareBindingValue() {
+        bugResource("datetime-bare-binding-value.nl");
+    }
 }

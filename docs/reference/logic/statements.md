@@ -88,7 +88,7 @@ E ?                // query — run the reasoner, print the result
 E ? [F][N]         // test — query and compare; pass iff result matches
 ```
 
-A bare expression without `fact` is rejected (`unexpected type Boolean, expected Root or List<Root>`).
+A bare expression without `fact` is rejected (`Node ... of unexpected type Boolean, expected List<Root> or Root`).
 
 ### Function queries
 
@@ -103,8 +103,11 @@ p(Amalia)     ? [({Willem,Maxima})][..]
 
 `E ? [(v)]` means exactly `E = r ? [(r=v)]` for a fresh variable `r`, so `fib(5) ?` is the same query as `fib(5)=f ?` without declaring `Integer f`. The result is printed the same way, without the name: `fib(5) ? [(5)][..]`.
 
-- `E` must be a function application (`fib(5)`, `1+2`, `Piet.address`), not a single literal value: `5 ?` is rejected (`unexpected type {Integer,Literal}, expected Root or List<Root>`). A functor without arguments, such as `mkAll`, counts as a literal; query it with `mkAll=l ?`.
-- Write `=` when you compare against a known value (`m(Amalia)=Maxima ? [()][]`) or when other variables are bound too (`fib(n)=f`).
+- `E` must be a function application (`fib(5)`, `1+2`, `Piet.address`), not a single literal value: `5 ?` is rejected (`Node 5 of unexpected type {Integer,Literal}, expected List<Root> or Root`). A functor without arguments, such as `mkAll`, counts as a literal; query it with `mkAll=l ?`.
+- All arguments must be known. With an unbound variable in an argument, both that variable and the result are unknown, so the query is unknown: `m(x) ?` and `at i in [5,6,7] ?` give `[..][..]` (see [the open world](three-valued-logic.md#the-open-world)). To search for an argument, give the value and use `=`: `m(a)=Maxima ? [(a=Amalia),..][..]`.
+- The falsehoods side lists no values: every other value is false, but the engine does not enumerate them, so `fib(5) ? [(5)][(6),..]` fails (found `[(5)][..]`). Check a specific wrong value with `=`: `fib(5)=6 ? [][()]`.
+- Write `=` as well when you compare against a known value (`m(Amalia)=Maxima ? [()][]`).
+- A date-time value with a time cannot be written bare in the expected result yet: `[(2024-01-15T11:30)]` does not parse (a known bug, [`bugs/datetime-bare-binding-value.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/bugs/datetime-bare-binding-value.nl)). Name it instead: `2024-01-15T10:00 + PT1H30M = a ? [(a=2024-01-15T11:30)][..]`. A plain date works (`2024-01-15 + P3D ? [(2024-01-18)][..]`).
 
 See [`test-expression-semantics.md`](test-expression-semantics.md) for the precise comparison rules.
 

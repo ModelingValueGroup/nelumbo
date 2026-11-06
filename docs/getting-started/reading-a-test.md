@@ -4,6 +4,7 @@ If you open any `.nl` file in Nelumbo and scroll to the bottom, you will see lin
 
 ```nelumbo
 fib(5)=f         ? [(f=5)][..]
+fib(5)           ? [(5)][..]
 m(Amalia)=Willem ? [][()]
 unknown          ? [..][..]
 ```
@@ -48,6 +49,16 @@ fib(5)=f ? [(f=5)][..]
 ```
 
 If the actual result matches the expected result, the test passes. If not, it fails. Tests are how Nelumbo files verify themselves — you can run any `.nl` file and it will tell you which tests passed and which failed.
+
+### Function queries
+
+Most example files ask for the value of a function directly, without a variable:
+
+```nelumbo
+fib(5) ? [(5)][..]
+```
+
+This is the same test as `fib(5)=f ? [(f=5)][..]`. The query introduces its own result variable, so you do not declare `f`, and because that variable has no name, its value is written alone: `(5)` instead of `(f=5)`. Everything below about the two sides and `..` applies unchanged. All arguments must be known: `fib(n) ?` with `n` unbound is unknown. To search for an argument, write the `=` form with the value given: `m(a)=Maxima ?` asks whose mother Maxima is, and answers `[(a=Amalia),..][..]` in `family.nl`. See [Function queries](../reference/logic/statements.md#function-queries).
 
 ---
 
@@ -100,9 +111,10 @@ Reading: neither side makes any claim of completeness, and neither side lists an
 ```nelumbo
 fib(5)=f    ? [(f=5)][..]
 m(Amalia)=a ? [(a=Maxima)][..]
+m(Amalia)   ? [(Maxima)][..]
 ```
 
-Reading: the facts side asserts that `f=5` (resp. `a=Maxima`) is a proven fact. The `..` on the falsehoods side says "I am not making any claim about what is false." This is the most common shape in the example files: *"here is the answer I care about; I am not bothering to enumerate falsehoods."*
+Reading: the facts side asserts that `f=5` (resp. `a=Maxima`, and in the function query form the value `Maxima` itself) is a proven fact. The `..` on the falsehoods side says "I am not making any claim about what is false." This is the most common shape in the example files: *"here is the answer I care about; I am not bothering to enumerate falsehoods."*
 
 ---
 
@@ -126,22 +138,22 @@ Notice the last line. `unknown & false` is **proven false**, not unknown — bec
 ### From `family.nl`
 
 ```nelumbo
-m(Amalia)=Maxima  ? [()][]
-m(Amalia)=Willem  ? [][()]
-m(Amalia)=a       ? [(a=Maxima)][..]
+m(Amalia)=Maxima ? [()][]
+m(Amalia)=Willem ? [][()]
+m(Amalia)        ? [(Maxima)][..]
 ```
 
-The first two are closed: the engine proves Maxima is Amalia's mother and proves Willem is not. The third finds one binding for the free variable `a` and declines to claim the falsehoods side is complete.
+The first two are closed: the engine proves Maxima is Amalia's mother and proves Willem is not. The third is a function query: it asks for the value of `m(Amalia)`, finds `Maxima`, and declines to claim the falsehoods side is complete.
 
 ### From `fibonacci.nl`
 
 ```nelumbo
-fib(0)=f  ? [(f=0)][..]
-fib(1)=f  ? [(f=1)][..]
-fib(5)=f  ? [(f=5)][..]
+fib(0)    ? [(0)][..]
+fib(1)    ? [(1)][..]
+fib(5)    ? [(5)][..]
 ```
 
-Each test asserts one fact and leaves the falsehoods side open. You could tighten the first to `[(f=0)][(f=1),(f=2),..]` if you wanted to assert some specific falsehoods, but in practice that is rarely useful.
+Each test asserts one value and leaves the falsehoods side open. The engine does not list the falsehoods of an unbound result (every other number is one), so `[(0)][(1),(2),..]` would fail. To check a specific falsehood, give the value: `fib(0)=1 ? [][()]`.
 
 ---
 
@@ -159,6 +171,7 @@ An **empty bracket** `[]`, by contrast, is a *closed claim of no solutions on th
 |---|---|
 | **Query** | An expression followed by `?`. Runs the engine and returns a result. |
 | **Test** | A query followed by `[expected facts][expected falsehoods]`. Passes iff the engine's result matches. |
+| **Function query** | A query on a function value (`fib(5) ?`). Its result lists the value without a name: `[(5)][..]`. |
 | **Facts** | Left bracket. Bindings proven to make the expression true. |
 | **Falsehoods** | Right bracket. Bindings proven to make the expression false. |
 | **Incompleteness marker** `..` | "This side may have more bindings than I have listed." A claim about the author's knowledge, not a value. |

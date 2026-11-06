@@ -2,7 +2,7 @@
 
 This page walks through `fibonacci.nl` one line at a time. By the end you will have seen every ingredient of a working Nelumbo program: an `import`, a syntax declaration, a variable declaration, a rule with guards, and a block of tests.
 
-Before reading on, make sure you have read [`reading-a-test.md`](reading-a-test.md). If `[(f=5)][..]` does not mean anything to you yet, start there.
+Before reading on, make sure you have read [`reading-a-test.md`](reading-a-test.md). If `[(5)][..]` does not mean anything to you yet, start there.
 
 The file we are working with is [`src/main/resources/org/modelingvalue/nelumbo/examples/fibonacci.nl`](../../src/main/resources/org/modelingvalue/nelumbo/examples/fibonacci.nl).
 
@@ -15,19 +15,19 @@ import  nelumbo.integers
 
 Integer ::= fib(<Integer>)
 
-Integer n, f
+Integer n
 
 fib(n) ==  n                 if n>=0 & n<=1,
            fib(n-1)+fib(n-2) if n>1
 
-fib(0)=f       ? [(f=0)][..]
-fib(1)=f       ? [(f=1)][..]
-fib(2)=f       ? [(f=1)][..]
-fib(3)=f       ? [(f=2)][..]
-fib(5)=f       ? [(f=5)][..]
-fib(10)=f      ? [(f=55)][..]
-fib(100)=f     ? [(f=36#22r8fozas3n8w3)][..]
-fib(1000)=f    ? [(f=36#18nrvsuayughau0blk8aylvbyaqwiaqba77rdsgscn5hzwgbgaws8i8svp4xdmoo82plxiyogd5iaj1cspez8zfeio92a76t9n1frssxklr92wyyxm8r903o1ofgncikuggcwnf)][..]
+fib(0)    ? [(0)][..]
+fib(1)    ? [(1)][..]
+fib(2)    ? [(1)][..]
+fib(3)    ? [(2)][..]
+fib(5)    ? [(5)][..]
+fib(10)   ? [(55)][..]
+fib(100)  ? [(36#22r8fozas3n8w3)][..]
+fib(1000) ? [(36#18nrvsuayughau0blk8aylvbyaqwiaqba77rdsgscn5hzwgbgaws8i8svp4xdmoo82plxiyogd5iaj1cspez8zfeio92a76t9n1frssxklr92wyyxm8r903o1ofgncikuggcwnf)][..]
 ```
 
 That is the whole thing: a working, tested, arbitrary-precision Fibonacci implementation in a logic language. The naive recursive form is fast even at `fib(1000)` because Nelumbo's reasoner memoises inferences automatically — the same code written directly in Python would be exponential and never finish, since Python has no implied memoisation. Now let us read it.
@@ -66,17 +66,17 @@ Key things to notice:
 
 ---
 
-## Line 5 — declare variables
+## Line 5 — declare a variable
 
 ```nelumbo
-Integer n, f
+Integer n
 ```
 
-This declares two variables of type `Integer`, named `n` and `f`. The rule below uses `n`; the tests use `f` for the answer they ask for.
+This declares a variable of type `Integer`, named `n`, for the rule below. The tests need no variable of their own: a query on a function value introduces one for its answer (see the tests below).
 
 Variables in Nelumbo are **logical variables**, not storage cells. They do not have a single value; they stand for "whatever value makes the rule hold." The engine finds bindings for them during query evaluation.
 
-**Takeaway:** think of `n` and `f` the way you would in algebra, not the way you would in Java.
+**Takeaway:** think of `n` the way you would in algebra, not the way you would in Java.
 
 ---
 
@@ -89,7 +89,7 @@ fib(n) ==  n                 if n>=0 & n<=1,
 
 This is the heart of the program. Line by line:
 
-- `==` defines a **function rule**: the left-hand side `fib(n)` equals the value on the right. It is shorthand for Nelumbo's general rule operator `<=>` (**logical equivalence**), which says *the statement on the left holds exactly when the statement on the right holds*. Written out with `<=>`, the same rule needs a variable for the result:
+- `==` defines a **function rule**: the left-hand side `fib(n)` equals the value on the right. It is shorthand for Nelumbo's general rule operator `<=>` (**logical equivalence**), which says *the statement on the left holds exactly when the statement on the right holds*. Written out with `<=>`, the same rule needs a variable for the result (declared as `Integer n, f`):
 
   ```nelumbo
   fib(n)=f <=> f=n                 if n>=0 & n<=1,
@@ -115,31 +115,31 @@ You can write many rules for the same left-hand side, either using the comma sho
 
 This merging is sound as long as the rules (and the facts of the relation) **agree**. When they don't, the program has a contradiction and the engine reports an error: one rule proves a binding that another proves false, or one rule gives a **closed** (non-`..`) side and another adds a binding that is not in it. A function, such as `fib`, must also have exactly one value. Mutually exclusive `if`-guards (like the ones in `fib`) are the cleanest way to avoid contradictions. See [Contradictions](../reference/logic/writing-rules.md#contradictions).
 
-**Takeaway:** a rule is a declarative equivalence, not an assignment or a function body. Multiple rules for the same relation all bi-imply it simultaneously; the engine uses them in both directions — it can answer "what is `fib(5)`?" and, in principle, "for which `n` is `fib(n)=55`?"
+**Takeaway:** a rule is a declarative equivalence, not an assignment or a function body. Multiple rules for the same relation all bi-imply it simultaneously; the engine uses them in both directions — it can answer "what is `fib(5)`?", and where the rules or facts allow navigating backwards also "for which `n` is ...?". The `fib` rules do not (they compute from `n`), so `fib(n)=55 ?` stays unknown.
 
 ---
 
-## Lines 10–18 — the tests
+## Lines 10–17 — the tests
 
 ```nelumbo
-fib(0)=f  ? [(f=0)][..]
-fib(1)=f  ? [(f=1)][..]
-fib(5)=f  ? [(f=5)][..]
-fib(10)=f ? [(f=55)][..]
+fib(0)    ? [(0)][..]
+fib(1)    ? [(1)][..]
+fib(5)    ? [(5)][..]
+fib(10)   ? [(55)][..]
 ```
 
 Each line is a **test** in the sense defined in [`reading-a-test.md`](reading-a-test.md): a query followed by an expected result.
 
-- The query `fib(5)=f ?` asks *"find bindings for `f` such that `fib(5)=f`."*
-- The expected facts side is `[(f=5)]` — the test asserts the engine will find exactly the binding `f=5`.
+- The query `fib(5) ?` is a **function query**: it asks *"what is the value of `fib(5)`?"* It introduces its own result variable, so the file declares none.
+- The expected facts side is `[(5)]` — the test asserts the engine will find exactly the value `5`. The value is written without a variable name, because the query's result variable has none.
 - The expected falsehoods side is `[..]` — the test makes no claim about falsehoods.
 
-The test passes if the engine's actual result matches. If you change `[(f=5)]` to `[(f=6)]` and re-run, the test will fail, and Nelumbo will tell you so.
+`fib(5) ? [(5)][..]` is the same test as `fib(5)=f ? [(f=5)][..]` with a declared `Integer f`. The test passes if the engine's actual result matches. If you change `[(5)]` to `[(6)]` and re-run, the test will fail, and Nelumbo will tell you so.
 
 ### The big numbers
 
 ```nelumbo
-fib(100)=f ? [(f=36#22r8fozas3n8w3)][..]
+fib(100)  ? [(36#22r8fozas3n8w3)][..]
 ```
 
 `36#22r8fozas3n8w3` is an integer literal in base 36. Nelumbo integers are arbitrary precision, and for very large values the decimal representation becomes unwieldy, so `fib(100)` is printed in base 36. You can read it as "base 36, digits `22r8fozas3n8w3`." The `fib(1000)` test uses the same notation for the same reason.
@@ -152,9 +152,9 @@ fib(100)=f ? [(f=36#22r8fozas3n8w3)][..]
 
 The fastest way to internalise what each piece does is to break one thing at a time and read the error.
 
-**Break a test.** Change `fib(5)=f ? [(f=5)][..]` to `fib(5)=f ? [(f=6)][..]` and re-run. The engine will report a test failure, showing the actual result (`(f=5)`) alongside the expected one (`(f=6)`).
+**Break a test.** Change `fib(5) ? [(5)][..]` to `fib(5) ? [(6)][..]` and re-run. The engine will report a test failure, showing the actual result (`[(5)][..]`) alongside the expected one (`[(6)][..]`).
 
-**Break a guard.** Change `if n>1` to `if n>2` on the recursive case. Now `fib(2)` has no matching guard and the engine cannot derive a fact for it. The test `fib(2)=f ? [(f=1)][..]` will fail, and you will see an "unknown" result instead of `(f=1)`.
+**Break a guard.** Change `if n>1` to `if n>2` on the recursive case. Now `fib(2)` has no matching guard and the engine cannot derive a fact for it. The test `fib(2) ? [(1)][..]` will fail, and you will see an "unknown" result (`[..][..]`) instead of `[(1)][..]`.
 
 **Remove the import.** Delete `import nelumbo.integers`. Parsing will fail at the first use of `+` or `>=`, because those operators are not part of core Nelumbo — they come from the integers module. This is a good demonstration that **the standard library is genuinely a library**: without it, you have a minimal logic language.
 

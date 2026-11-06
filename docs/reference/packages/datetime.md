@@ -125,6 +125,8 @@ PT1H + PT30M = PT1H30M                                     ? [()][]
 20:04 + PT1H = 21:04                 ? [()][]
 ```
 
+The first test names its result `a` on purpose: a date-time with a time cannot yet be written bare in an expected result, so the [function query](../logic/statements.md#function-queries) `2024-01-15T10:00:00 + PT1H30M ? [(2024-01-15T11:30)][..]` does not parse (a known bug, [`bugs/datetime-bare-binding-value.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/bugs/datetime-bare-binding-value.nl)).
+
 ---
 
 ## Comparison
