@@ -29,11 +29,8 @@ Set<Digit>             ::= catRow(<List<Set<Digit>>>,<Integer>),
 List<Set<Digit>>       ::= crow(<List<List<Set<Digit>>>>,<Integer>)
 List<List<Set<Digit>>> ::= fullGrid(<List<List<Integer>>>)
 
-Set<Digit>             ::= sel(<Integer>,<Integer>,<Set<Digit>>,<Set<Digit>>)
 List<Set<Digit>>       ::= putRow(<List<Set<Digit>>>,<Integer>,<Set<Digit>>)
-List<List<Set<Digit>>> ::= rowsBefore(<List<List<Set<Digit>>>>,<Integer>),
-                           rowsFrom(<List<List<Set<Digit>>>>,<Integer>),
-                           put(<List<List<Set<Digit>>>>,<Integer>,<Integer>,<Set<Digit>>)
+List<List<Set<Digit>>> ::= put(<List<List<Set<Digit>>>>,<Integer>,<Integer>,<Set<Digit>>)
 
 List<List<Set<Digit>>> ::= elim(<List<List<Set<Digit>>>>,<Integer>,<Integer>,<Digit>),
                            afterElim(<List<List<Set<Digit>>>>,<Integer>,<Integer>,<Digit>,<Set<Digit>>),
@@ -78,8 +75,8 @@ Set<Digit>             sc, ns, sy
 Set<Integer>           pl, pl2
 List<Integer>          il
 List<List<Integer>>    p, q
-List<Set<Digit>>       rw, rw2
-List<List<Set<Digit>>> g, g2, g3, s, pre, suf
+List<Set<Digit>>       rw
+List<List<Set<Digit>>> g, g2, g3, s
 
 dig(i)     == D1 if i=1, D2 if i=2, D3 if i=3, D4 if i=4
 undig(d)   == 1 if d=D1, 2 if d=D2, 3 if d=D3, 4 if d=D4
@@ -98,14 +95,8 @@ fullGrid(p)   == [[{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4}],
                   [{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4},{D1,D2,D3,D4}]]
 
 // functional update: put candidate set ns at (r,c), everything else unchanged
-sel(j,i,ns,sc)      == ns if j=i,  sc if j!=i
-putRow(rw,i,ns)     == [0,1,2,3] map [j](sel(j,i,ns,catRow(rw,j)))
-rowsBefore(g,r)=s   <=> s=[]                                                      if r=0,
-                        E[rw,pre](crow(g,r-1)=rw & rowsBefore(g,r-1)=pre & s=pre+[rw]) if r>0
-rowsFrom(g,r)=s     <=> s=[]                                                      if r=4,
-                        E[rw,suf](crow(g,r)=rw & rowsFrom(g,r+1)=suf & s=[rw]+suf) if r<4
-put(g,r,c,ns)=s     <=> E[pre,suf](rowsBefore(g,r)=pre & rowsFrom(g,r+1)=suf &
-                                   E[rw,rw2](crow(g,r)=rw & putRow(rw,c,ns)=rw2 & s=pre+[rw2]+suf))
+putRow(rw,i,ns)     == set ns at i in rw
+put(g,r,c,ns)       == set putRow(crow(g,r),c,ns) at r in g
 
 bb(r)   == 0 if r<2, 2 if r>=2
 // `/` is exact division (1/2 has no value): floor division = exact division of (x - remainder)

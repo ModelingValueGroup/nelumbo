@@ -12,15 +12,13 @@ Integer             ::= at(<List<Integer>>,<Integer>),
 Set<Integer>        ::= boxRows(<Integer>), boxCols(<Integer>)
 List<Integer>       ::= row(<List<List<Integer>>>,<Integer>),
                         putRow(<List<Integer>>,<Integer>,<Integer>)
-List<List<Integer>> ::= rowsBefore(<List<List<Integer>>>,<Integer>),
-                        rowsFrom(<List<List<Integer>>>,<Integer>),
-                        put(<List<List<Integer>>>,<Integer>,<Integer>,<Integer>),
+List<List<Integer>> ::= put(<List<List<Integer>>>,<Integer>,<Integer>,<Integer>),
                         solve(<List<List<Integer>>>,<Integer>,<Integer>),
                         sudoku(<List<List<Integer>>>)
 Boolean             ::= ok(<List<List<Integer>>>,<Integer>,<Integer>,<Integer>)
 
-List<List<Integer>> g, g2, s, p, q
-List<Integer>       l, rw, rw2
+List<List<Integer>> g, g2, s
+List<Integer>       l, rw
 Integer             r, c, d, x, y, i, j
 Set<Integer>        bs, cs
 
@@ -30,14 +28,8 @@ row(g,r)=rw      <=>  at r in g = rw
 cell(g,r,c)      ==  at(row(g,r),c)
 
 // ---- update (functional) -------------------------------------------
-sel(j,i,d,x)           ==  d if j=i,  x if j!=i
-putRow(l,i,d)          ==  [0,1,2,3] map [j](sel(j,i,d,at(l,j)))
-rowsBefore(g,r)=s      <=>  s=[]                                                    if r=0,
-                            E[rw,p](row(g,r-1)=rw & rowsBefore(g,r-1)=p & s=p+[rw])    if r>0
-rowsFrom(g,r)=s        <=>  s=[]                                                    if r=4,
-                            E[rw,q](row(g,r)=rw & rowsFrom(g,r+1)=q & s=[rw]+q)        if r<4
-put(g,r,c,d)=s         <=>  E[p,q](rowsBefore(g,r)=p & rowsFrom(g,r+1)=q &
-                                   E[rw,rw2](row(g,r)=rw & putRow(rw,c,d)=rw2 & s=p+[rw2]+q))
+putRow(l,i,d)          ==  set d at i in l
+put(g,r,c,d)           ==  set putRow(row(g,r),c,d) at r in g
 
 // ---- 4x4 boxes are 2 rows x 2 cols ---------------------------------
 boxRows(r)       ==  {0,1} if r<2,  {2,3} if r>=2
