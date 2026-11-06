@@ -186,28 +186,30 @@ friends(Klaas, Kees) ? [()][]
        its value directly: <code>fib(n) == e</code> is short for <code>fib(n)=f &lt;=&gt; f=e</code>.
        <code>if</code> attaches a guard to each alternative, and a rule may reference itself to recurse.
        The classic Fibonacci rule has a base case for <code>n&lt;=1</code> and a recursive step for
-       <code>n&gt;1</code>.</p>
+       <code>n&gt;1</code>. Ask for a function's value with a function query: <code>fib(7) ?</code>
+       introduces its own result variable, so the answer lists the value without a name,
+       <code>[(13)][..]</code>. It is the same as <code>fib(7)=r ?</code> with a declared
+       <code>Integer r</code>.</p>
     <div class="nelumbo-field" data-height="200px">import nelumbo.integers
 Integer ::= fib(&lt;Integer&gt;)
 Integer n
 fib(n) == n if n&lt;=1, fib(n-1)+fib(n-2) if n&gt;1
-Integer r
-fib(7)=r ?
+fib(7) ?
 </div>
     <div class="nelumbo-exercise">
       <p class="challenge">Define factorial so that factorial(5) = 120.</p>
       <div class="nelumbo-field" data-height="150px">import nelumbo.integers
 Integer ::= factorial(&lt;Integer&gt;)
-Integer n, r
+Integer n
 // fix this rule so factorial(5)=120  (hint: 1 if n&lt;=0, else n*factorial(n-1))
 factorial(n) == n
-factorial(5)=r ? [(r=120)][..]
+factorial(5) ? [(120)][..]
 </div>
       <pre class="nelumbo-solution">import nelumbo.integers
 Integer ::= factorial(&lt;Integer&gt;)
-Integer n, r
+Integer n
 factorial(n) == 1 if n&lt;=0, n*factorial(n-1) if n&gt;0
-factorial(5)=r ? [(r=120)][..]
+factorial(5) ? [(120)][..]
 </pre>
     </div>
   </section>
