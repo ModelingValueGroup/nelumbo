@@ -223,6 +223,16 @@ The `::>` transformation (Transform) takes any `<Root>` shape on the left and a 
 
 ---
 
+## Intersection types
+
+```nelumbo
+Type ::= { <(> <Type> <,> , <)+> }   @nelumbo.lang.Type
+```
+
+A type written as a brace list, `{A,B}`, is the intersection of its members: a value of `{A,B}` is both an `A` and a `B`. It is not declared with `::`; it can be written wherever a type is expected — in a variable declaration (`{E,Literal} l1` in `logic.nl`, so the equality rules apply to literals only), in a pattern hole (`<{Variable,A1}>` in the lambda patterns, which accepts only a variable), or as a functor's result type (`{Literal,Set<E>} ::= { ... }` in `collections.nl`, which makes set literals `Literal`s). See also [Type declarations](grammar.md#intersection-types--ab).
+
+---
+
 ## Generic parenthesisation
 
 ```nelumbo
@@ -246,7 +256,8 @@ After `import nelumbo.lang`, the following are visible:
 | Token types      | `SINGLEQUOTE`, `SEMICOLON`, `COMMA`, `LEFT`, `RIGHT`, `STRING`, `NUMBER`, `NAME`, `OPERATOR`, `NEWLINE`, `BEGINOFFILE`, `ENDOFFILE` |
 | Object types     | `Object`, `Type`, `PatternPart`, `Variable`, `Root`, `Functor`, `Pattern`, `Namespace`, `RootNamespace` |
 | File / scope     | `Namespace`, `RootNamespace` (`{ ... }` blocks) |
-| Pattern forms    | literal tokens, `<Variable>`, alternation `<(>...<\|>...<)>`, repetition `<(>...<)+>` / `<)*>`, optional `<(>...<)?>`, sequence `<LEFT>...<RIGHT>` / `<[>...<]>`, type holes `<T>` / `<hidden T>` / `<T#N>`, named-pattern references `<NAME>` |
+| Pattern forms    | literal tokens, `<Variable>`, alternation `<(>...<\|>...<)>`, repetition `<(>...<)+>` / `<)*>`, optional `<(>...<)?>`, sequence `<LEFT>...<RIGHT>` / `<[>...<]>`, type holes `<T>` / `<hidden T>` / `<visible T>` / `<one T>` / `<T#N>`, named-pattern references `<NAME>` |
+| Types            | intersection types `{A,B}` |
 | Named patterns   | `PATTERNS`, `QNAME` (declared with `pattern N ::= …`) |
 | Top-level forms  | `import`, `::>`, variable declaration, `::` (type), `::=` (pattern), `pattern` (named pattern) |
 | Generic          | `Type P`, parenthesisation `(P)` |

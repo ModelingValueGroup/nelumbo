@@ -10,7 +10,7 @@ None of these operators are hardcoded in the Java core. Everything below is decl
 
 ## Execution-driving forms (from `nelumbo.logic`)
 
-These are also `Root ::=` patterns, but they are declared in `logic.nl`, not `lang.nl` — they depend on `Boolean`, which `logic.nl` introduces. Without `import nelumbo.logic`, a file cannot use `fact`, `<=>`, or `?`.
+These are also `Root ::=` patterns, but they are declared in `logic.nl`, not `lang.nl` — they depend on `Boolean`, which `logic.nl` introduces. Without `import nelumbo.logic`, a file cannot use `fact`, `<=>`, `==`, or `?`.
 
 ### `fact` — ground-truth assertion
 
@@ -29,14 +29,24 @@ L <=> R
 
 Asserts that `L` holds exactly when `R` holds. Multiple rules may share the same `L`; their results merge. See [`writing-rules.md`](writing-rules.md).
 
+### `==` — function rule
+
+```nelumbo
+F == e
+F == e1 if g1, e2 if g2
+```
+
+Defines the value of a function: `F == e if g` means `F = r <=> r = e if g` for a fresh result variable `r` that the rule introduces itself. Every alternative is a value of `F`'s type, not a condition. Declared in `logic.nl` as `Root ::= <R#0> "==" ...`. See [Function rules](writing-rules.md#function-rules--).
+
 ### `?` — query / test
 
 ```nelumbo
 E ?               // query: run and print
 E ? [F][N]        // test: run and compare to expected result
+fib(5) ? [(5)][..] // function query: E is a function value
 ```
 
-See [`test-expression-semantics.md`](test-expression-semantics.md).
+`E` is a `Boolean` expression, or a function application whose value is asked for: a [function query](statements.md#function-queries) introduces its own result variable, so the expected value is written without a name. See [`test-expression-semantics.md`](test-expression-semantics.md).
 
 ---
 
@@ -133,6 +143,35 @@ A[a](a=T1 & a=T2)   ? [][()]
 
 ---
 
+## Conditional expression — `then` … `else` (`#32`)
+
+```nelumbo
+b then x else y
+```
+
+The value `x` when `b` is true, `y` when `b` is false. Declared in `logic.nl` for any result type `R` as `R ::= <Boolean#0> "then" <R#0> "else" <R#0> #32` and defined by the rule
+
+```nelumbo
+(p1 then n1 else n2) = n3  <=>  (p1 & n3=n1) | (!p1 & n3=n2)
+```
+
+so it is a function: when `b` is unknown, the result is unknown, even if `x` and `y` are equal.
+
+```nelumbo
+import nelumbo.integers
+
+Integer ::= max(<Integer>,<Integer>)
+Integer x, y
+
+max(x,y) == (x>y then x else y)    // examples/max.nl
+
+max(3,7)                ? [(7)][..]
+(1>2 then 3 else 4)     ? [(4)][..]
+(unknown then 3 else 3) ? [..][..]
+```
+
+---
+
 ## Guards — `if`
 
 ```nelumbo
@@ -177,10 +216,11 @@ Full rules are on [`precedence-and-associativity.md`](../lang/precedence-and-ass
 | `\|`    | 20 |  |
 | `&`    | 22 |  |
 | `!`    | 25 | prefix |
-| `<`, `<=`, `>`, `>=`, `!=` | 30 | comparisons |
+| `=`, `!=`, `<`, `<=`, `>`, `>=` | 30 | equality and comparisons |
+| `then` … `else` | 32 | conditional expression |
+| `\|x\|` | 35 | absolute value |
 | `+`, `-` (binary) | 40 | integer/rational |
 | `*`, `/` | 50 |  |
-| unary `-` | 80 |  |
-| `\|x\|` | 35 | absolute value |
+| unary `-` | 80 | prefix |
 
 Higher `#N` binds tighter. See the per-module reference pages for the precedence of arithmetic and string operators.

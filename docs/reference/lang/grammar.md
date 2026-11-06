@@ -64,6 +64,18 @@ Type E
 
 See [generic parenthesisation in `nelumbo.lang`](index.md#generic-parenthesisation) and the [`nelumbo.collections` types](../packages/collections.md#types) for details.
 
+### Intersection types — `{A,B}`
+
+Wherever a type is expected, `{A,B}` (two or more types between braces) is the type of values that are **both** an `A` and a `B`. It needs no declaration:
+
+```nelumbo
+{E,Literal}  l1, l2                                    // logic.nl: a literal of type E
+Lambda1<A1,R> ::= [<{Variable,A1}>](<R#0>)             // logic.nl: a hole that takes only a variable of type A1
+{Literal,Set<E>} ::= { <(> <(> <E> <|> .. <)> <,> , <)*> }  // collections.nl: set literals are Literals
+```
+
+See [Intersection types](index.md#intersection-types) in `nelumbo.lang`.
+
 ---
 
 ## Pattern declarations

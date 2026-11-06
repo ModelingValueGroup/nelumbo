@@ -161,9 +161,21 @@ b=box(1)      ? [(b=box(1))][..]
 
 ---
 
+## Conditional expression
+
+```nelumbo
+R ::= <Boolean#0> "then" <R#0> "else" <R#0> #32
+
+(p1 then n1 else n2) = n3 <=> (p1 & n3=n1) | (!p1 & n3=n2)
+```
+
+`b then x else y` is `x` when `b` is true and `y` when `b` is false, for any result type `R` (`max(x,y) == (x>y then x else y)` in [`max.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/examples/max.nl)). It is a function defined by the rule above, so an unknown `b` gives an unknown result. See [`operators.md`](operators.md#conditional-expression--then--else-32).
+
+---
+
 ## Top-level forms
 
-`nelumbo.logic` also declares the three statement forms that appear at the top level of a `.nl` file:
+`nelumbo.logic` also declares the statement forms that appear at the top level of a `.nl` file (`fact`, two rule forms and two query forms):
 
 ```nelumbo
 Root ::= "fact" <(> <Boolean#0> <,> , <)+>                                      #0 @nelumbo.logic.Fact,
@@ -203,7 +215,9 @@ After `import nelumbo.logic`, the following are visible to the importer:
 | Lambdas        | `[x,…](body)` (1–6 variables)                      |
 | Quantifiers    | `E[...]`, `A[...]`                                 |
 | Equality       | `=`, `!=`                                           |
-| Top-level forms| `fact`, `<=>`, `?`                                 |
+| Conditional    | `b then x else y`                                  |
+| Top-level forms| `fact`, `<=>`, `==` (function rule), `?` (query, test, function query) |
+| Named patterns | `BINDING` (the expected result after `?`)          |
 
 `eq` is `private` and is not visible to importers.
 

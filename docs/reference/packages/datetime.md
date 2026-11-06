@@ -43,10 +43,13 @@ They are **not** in a subtype relationship with one another, and there is no imp
 All four literals are written inside a **connected-token group** (`<[> … <]>`), which forbids whitespace between the inner tokens — `2024-01-15` must be written tightly, not `2024 - 01 - 15`. See [`built-in-tokens.md`](../lang/built-in-tokens.md) for the connected-token mechanism.
 
 ```nelumbo
-Date     ::= <[> <NUMBER> - <NUMBER> - <NUMBER> <]> #60                           @nelumbo.datetime.NDate
-Time     ::= <[> <NUMBER> : <NUMBER> <(> : <NUMBER> <(> . <NUMBER> <)?> <)?> <]> #60 @nelumbo.datetime.NTime
-DateTime ::= <[> <Date> T <Time> <]> #50                                         @nelumbo.datetime.NDateTime
-Period   ::= <[> P … <]> #60                                                     @nelumbo.datetime.NPeriod
+Date     ::= <[> <NUMBER> - <NUMBER> - <NUMBER> <]>                              @nelumbo.datetime.NDate
+Time     ::= <[> <NUMBER> : <NUMBER> <(> : <NUMBER> <(> . <NUMBER> <)?> <)?> <]>   @nelumbo.datetime.NTime
+DateTime ::= <[> <Date> T <Time> <]> #100                                        @nelumbo.datetime.NDateTime
+Period   ::= <[> P <(> <YMWD_PERIOD> <(> <TIME_PERIOD> <)?> <|> <TIME_PERIOD> <)> <]> @nelumbo.datetime.NPeriod
+
+pattern YMWD_PERIOD ::= <(> <NUMBER> <(> Y <|> M <|> W <|> D <)> <)+>
+pattern TIME_PERIOD ::= T <(> <NUMBER> <(> H <|> M <|> S <)> <)+>
 ```
 
 - **`Date`** — `YYYY-MM-DD`. Parsed into a `LocalDate`; out-of-range values (e.g. month 13) are rejected **at parse time** with a `file:line:col` error, not as a query falsehood.
@@ -74,7 +77,7 @@ Date     ::= <Date>     + <Period>   #40,   <Date>     - <Period>   #40
 Time     ::= <Time>     + <Period>   #40,   <Time>     - <Period>   #40
 Period   ::= <DateTime> - <DateTime> #40,   <Date> - <Date> #40,   <Time> - <Time> #40,
              <Period>   + <Period>   #40,   <Period>   - <Period>   #40,
-             <Period>   * <Integer>  #50
+             <Period>   * <Integer>  #50,   <Integer>  * <Period>   #50
 ```
 
 | Pattern                     | `#N` | Meaning                                  |
@@ -84,7 +87,7 @@ Period   ::= <DateTime> - <DateTime> #40,   <Date> - <Date> #40,   <Time> - <Tim
 | `<instant> - <instant>`     | 40 | the duration between two instants        |
 | `<Period> + <Period>`       | 40 | duration addition                        |
 | `<Period> - <Period>`       | 40 | duration subtraction                     |
-| `<Period> * <Integer>`      | 50 | scale a duration by an integer           |
+| `<Period> * <Integer>`, `<Integer> * <Period>` | 50 | scale a duration by an integer (either order) |
 
 (where `<instant>` is `DateTime`, `Date`, or `Time`). Underneath, five `private` natives do the work:
 
@@ -115,6 +118,7 @@ c + P1D = 2024-01-16                                       ? [(c=2024-01-15)][..
 2024-01-15 + x = 2024-01-16                                ? [(x=P1D)][..]          // solve duration
 2024-01-16T00:00:00 - 2024-01-15T00:00:00 = x              ? [(x=PT24H)][..]        // duration between
 P1D * 3 = P3D                                              ? [()][]
+2 * P1D = P2D                                              ? [()][]
 PT1H + PT30M = PT1H30M                                     ? [()][]
 ```
 
@@ -185,7 +189,7 @@ Added to what `nelumbo.integers` already exports:
 |---|---|
 | Types     | `DateTime`, `Date`, `Time`, `Period`                                             |
 | Literals  | ISO date `YYYY-MM-DD`, time `HH:MM[:SS]`, date-time `YYYY-MM-DDTHH:MM[:SS]`, period `P…` |
-| Operators | `+`, `-` on instants and periods, `-` between instants, `*` (period × integer), `<`, `<=`, `>`, `>=` on each type |
+| Operators | `+`, `-` on instants and periods, `-` between instants, `*` (period × integer, either order), `<`, `<=`, `>`, `>=` on each type |
 
 `datetime_add`, `date_add`, `time_add`, `period_add`, and `period_multiply` are `private` and are not visible to importers.
 

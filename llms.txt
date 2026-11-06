@@ -20,7 +20,7 @@ Reading `.nl` code - the whole notation in eight lines:
 - `fact pc(Hendrik, Juliana)` states a fact: a relation or a function value (`fact m(Beatrix)=Juliana`),
   never a compound (`fact !p`, `fact p & q` are errors).
 - `!` `&` `|` `->` `<->` are the connectives, `E[x](...)` and `A[x](...)` the quantifiers,
-  `=` and `!=` equality.
+  `=` and `!=` equality; `b then x else y` is a conditional value (`max(x,y) == (x>y then x else y)`).
 - `fib(5)=f ? [(f=5)][..]` is a query with its expected result: facts on the left,
   falsehoods on the right, and `..` is the incompleteness marker ("this side may hold more
   bindings than are listed") - it is not a wildcard and matches no value.
