@@ -252,6 +252,25 @@ factorial(n) == 1 if n&lt;=0, n*factorial(n-1) if n&gt;0
 factorial(5) ? [(120)][..]
 </pre>
     </div>
+    <p>Adding a rule adds knowledge just like adding a fact. It can even add only falsehoods: below,
+       <code>adult(Jan)</code> is unknown until a rule says that nobody younger than 18 is an adult.
+       After that rule <code>adult(Jan)</code> is false, while the fact <code>adult(Piet)</code> still
+       holds. The rule is silent where its guard fails, so it takes nothing away. Had Piet been 16, the
+       query <code>adult(Piet) ?</code> after the rule would report an inconsistency with the fact.</p>
+    <div class="nelumbo-field" data-height="260px">import nelumbo.integers
+Person  :: Object
+Person  ::= Piet, Jan
+Integer ::= age(&lt;Person&gt;)
+Boolean ::= adult(&lt;Person&gt;)
+Person p
+fact age(Piet)=40, age(Jan)=12
+fact adult(Piet)
+adult(Piet) ? [()][]
+adult(Jan)  ? [..][..]          // unknown: no fact, no rule
+adult(p) &lt;=&gt; false if age(p)&lt;18
+adult(Piet) ? [()][]            // unchanged
+adult(Jan)  ? [][()]            // now false: only the falsehood side grew
+</div>
   </section>
   <section class="tutorial-section" id="types">
     <h2>Data types</h2>
