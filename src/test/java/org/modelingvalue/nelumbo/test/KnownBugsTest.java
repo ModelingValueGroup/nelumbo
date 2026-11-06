@@ -245,4 +245,10 @@ public class KnownBugsTest extends NelumboTestBase {
     public void emptyListAndSetInListErrors() {
         bugResource("empty-list-and-set-in-list-errors.nl");
     }
+
+    @KnownBug("empty set or list literal as a value of a function rule (f(i) == {}) does not parse")
+    @Test
+    public void emptyCollectionFunctionRuleValue() {
+        bugResource("empty-collection-function-rule-value.nl");
+    }
 }

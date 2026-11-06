@@ -110,7 +110,7 @@ Sudoku examples (`examples/sudoku-*.nl`, NOT in `ExampleCatalog`/`ExamplesTest`)
 - Patterns: `Integer ::= fib(<Integer>)`
 - Variables: `Integer n, f`
 - Rules: `fib(n)=f <=> f=n if n<=1, f=fib(n-1)+fib(n-2) if n>1`
-- Function rules: `fib(n) == n if n<=1, fib(n-1)+fib(n-2) if n>1` = the rule above (`L == e if g` is `L=r <=> r=e if g`, fresh `r`); prefer it when every branch is a value.
+- Function rules: `fib(n) == n if n<=1, fib(n-1)+fib(n-2) if n>1` = the rule above (`L == e if g` is `L=r <=> r=e if g`, fresh `r`); prefer it when every branch is a value. Not yet for an empty literal value (`f(i) == {}` / `[]` does not parse, `bugs/empty-collection-function-rule-value.nl`): keep `f(i)=s <=> s={}` there.
 - Facts: `pc(Hendrik, Juliana)`
 - Queries with expected result: `fib(5)=f ? [(f=5)][..]`
 - Function queries: `fib(5) ? [(5)][..]` = the query above (the query introduces the result variable, like `==`); not on a single literal (`5 ?`, a 0-arity functor `mkAll ?`: "unexpected type ... Literal"). A DateTime-with-time value cannot be written bare in a binding yet (`(2024-01-15T11:30)` fails to parse, BINDING's `<Literal#100>`); keep `=a ? [(a=...)]` there.

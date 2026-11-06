@@ -28,8 +28,8 @@ Integer             r, c, d, x, y, i, j
 
 // ---- access (bounds-guarded: the engine probes rule guards speculatively,
 // ---- an unguarded out-of-range index is an error, not false) ---------
-at(l,i)=x        <=>  at i in l = x   if i>=0 & i<4
-row(g,r)=rw      <=>  at r in g = rw  if r>=0 & r<4
+at(l,i)          ==  at i in l       if i>=0 & i<4
+row(g,r)         ==  at r in g       if r>=0 & r<4
 cell(g,r,c)      ==  at(row(g,r),c)
 
 // ---- update (functional) -------------------------------------------

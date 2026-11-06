@@ -20,12 +20,12 @@ Boolean             ::= ok(<List<List<Integer>>>,<Integer>,<Integer>,<Integer>)
 
 List<List<Integer>> g, g2, s
 List<Integer>       l, rw
-Integer             r, c, d, x, y, i, j
+Integer             r, c, d, i, j
 Set<Integer>        bs, cs
 
 // ---- access ---------------------------------------------------------
-at(l,i)=x        <=>  at i in l = x
-row(g,r)=rw      <=>  at r in g = rw
+at(l,i)          ==  at i in l
+row(g,r)         ==  at r in g
 cell(g,r,c)      ==  at(row(g,r),c)
 
 // ---- update (functional) -------------------------------------------
