@@ -162,9 +162,11 @@ fact q(A,C)                   // C is outside that closed side
 q(A,x) ?
 ```
 
-This reports `Inconsistent results: [(x=B)][..] does not biimplicate [(x=C),..][..], for q(A,x)`.
+The query reports `Inconsistent results: [(x=B)][..] does not biimplicate [(x=C),..][..], for q(A,x)`.
 
 Inconsistency is a program defect. The engine detects it and raises an error (`InconsistencyException`); it never resolves it by dropping one of the claims. This is what keeps Nelumbo [monotonic](three-valued-logic.md#monotonicity).
+
+The check runs on the **outcome of an inference**: the claims are combined, and compared, only when a query (or the evaluation of another rule) asks for the relation, and the error is reported on that query. The rule and the fact above are accepted on their own; without the query nothing is reported. Only a second value in a unique hole, such as a second asserted value of a function, is rejected at the fact itself.
 
 ### Why `..` matters for safety
 

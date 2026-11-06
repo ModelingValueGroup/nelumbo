@@ -84,11 +84,13 @@ The open world, closure through `one` and the consistency checks together make N
 - an unknown binding can become a fact or a falsehood,
 - an open side (`..`) can become closed, or get more bindings.
 
-It never turns a fact into a falsehood (or back), and it never reopens a closed side. Three properties guarantee this:
+It never turns a fact into a falsehood (or back), and it never reopens a closed side. Precisely: for any query, the result after a fact or rule is added is consistent with the result before and at least as informative, **or** the inference reports an inconsistency. Three properties guarantee this:
 
-- **No negation as failure.** What is not derived is unknown, so no conclusion rests on the *absence* of a fact that a later fact could supply. `!p` is a fact only when `p` is a proven falsehood.
-- **Closed only when unique.** A side is closed only by a unique result (a [`one` hole](statements.md#open-facts-and-one), and so every function value) or by a computed value. A closed result is the only one possible, so a later fact cannot add to it without contradicting it.
-- **Contradictions are errors.** The facts of a relation and the results of all its rules are combined by bi-implication (see [How results merge](writing-rules.md#how-results-merge)). A binding that is both a fact and a falsehood, a binding outside a closed side, or a second value for a function is reported as an inconsistency, not resolved by revising earlier conclusions.
+- **No negation as failure.** What is not derived is unknown, so no conclusion rests on the *absence* of a fact that a later fact or rule could supply. `!p` is a fact only when `p` is a proven falsehood.
+- **Closed only when unique.** A side is closed only by a unique result (a [`one` hole](statements.md#open-facts-and-one), and so every function value), by a rule that closes it, or by a computed value. A closed side claims to be complete, so a later fact or rule can only agree with it or contradict it.
+- **Contradictions are errors.** The facts of a relation and the results of all its rules are combined by bi-implication (see [How results merge](writing-rules.md#how-results-merge)). A binding that is both a fact and a falsehood, a binding outside a closed side, or a second value for a function is reported as an inconsistency, never resolved by dropping one of the claims.
+
+**Consistency is checked on the outcome of an inference**, not when a fact or rule is added: a rule and a fact that contradict each other are only found out by a query (or a rule evaluation) that combines them, and the error is reported there. The one exception is a second value in a unique hole, such as a second asserted value of a function: that fact itself is rejected.
 
 Only relations and function values can be asserted: `fact !p(A)`, `fact p(A) & p(B)` and other compound expressions are errors, because the operator derives its value from its operands and would never look at such a fact (see [Facts](statements.md#facts)). Falsehoods are therefore never asserted directly; they follow from `one` holes and rules.
 
@@ -120,7 +122,24 @@ fact friends(Piet, Klaas)
 friends(Piet, x)       ? [(x=Jan),(x=Klaas),..][..]    // more facts, nothing withdrawn
 ```
 
-Adding `fact age(Piet)=41` at the end does not change Piet's age: it is reported as `Inconsistent result: [(=40),(=41)][..] has non unique bindings`.
+Adding `fact age(Piet)=41` at the end does not change Piet's age: that fact is rejected with `Inconsistent result: [(=40),(=41)][..] has non unique bindings`.
+
+A rule adds information the same way. Here it closes an open answer and adds a falsehood:
+
+```nelumbo
+Person  :: Object
+Person  ::= A, B, C
+Person  x, a, b
+Boolean ::= q(<Person>,<Person>)
+
+fact q(A,B)
+q(A,x) ? [(x=B),..][..]       // only a fact: open
+q(a,b) <=> a=A & b=B          // a rule: q(A,x) holds exactly for x=B
+q(A,x) ? [(x=B)][..]          // the same answer, now closed
+q(A,C) ? [][()]               // and a new falsehood
+```
+
+Had the fact been `fact q(A,C)`, adding the rule would not be an error by itself; the second `q(A,x) ?` would report `Inconsistent results: [(x=B)][..] does not biimplicate [(x=C),..][..], for q(A,x)`.
 
 ---
 

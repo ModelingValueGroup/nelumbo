@@ -37,7 +37,9 @@ Reading `.nl` code - the whole notation in eight lines:
 - Monotonic: facts and all rules of a relation are combined by bi-implication and must agree
   (a fact and a falsehood, a binding outside a closed side, or a second function value is an
   `Inconsistent result` error), so adding facts or rules only adds facts and falsehoods or
-  closes open sides; it never withdraws a conclusion.
+  closes open sides; it never withdraws a conclusion. The check runs on inference results: a
+  query after the addition is consistent with and at least as informative as before, or it
+  reports the inconsistency (a second asserted function value is rejected at the fact).
 
 Read "Reading a query and test" first: without the `? [facts][falsehoods]` notation every
 example file in the project is unreadable.

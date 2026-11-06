@@ -179,6 +179,46 @@ fact friends(Klaas, Kees)
 friends(Klaas, Kees) ? [()][]
 </pre>
     </div>
+    <p>A function value can be asserted too. A function has exactly one value, so its fact is
+       <em>closed</em>: after <code>fact age(Piet)=40</code> the answer is <code>[(a=40)]</code>
+       without <code>..</code>, and every other age is false. Statements run top to bottom, and each fact
+       or rule only adds knowledge: unknown answers become true or false, open answers grow or close, and
+       nothing already proven is withdrawn. Nelumbo is <em>monotonic</em>. Consistency is checked on the
+       answers: a later answer agrees with an earlier one and knows at least as much, or the query reports
+       an inconsistency. A second age for Piet is even rejected as soon as it is asserted.
+       Only relations and function values can be asserted: <code>fact !friends(Piet, Klaas)</code>
+       is an error.</p>
+    <div class="nelumbo-field" data-height="200px">import nelumbo.integers
+Person :: Object
+Person ::= Piet, Jan
+Integer ::= age(&lt;Person&gt;)
+Integer a
+age(Piet)=a ?
+fact age(Piet)=40
+age(Piet)=a ?
+age(Piet)=41 ?
+</div>
+    <div class="nelumbo-exercise">
+      <p class="challenge">Give Jan an age so that both queries below hold.</p>
+      <div class="nelumbo-field" data-height="170px">import nelumbo.integers
+Person :: Object
+Person ::= Piet, Jan
+Integer ::= age(&lt;Person&gt;)
+Integer a
+// add a fact here
+age(Jan)=a  ? [(a=35)][..]
+age(Jan)=40 ? [][()]
+</div>
+      <pre class="nelumbo-solution">import nelumbo.integers
+Person :: Object
+Person ::= Piet, Jan
+Integer ::= age(&lt;Person&gt;)
+Integer a
+fact age(Jan)=35
+age(Jan)=a  ? [(a=35)][..]
+age(Jan)=40 ? [][()]
+</pre>
+    </div>
   </section>
   <section class="tutorial-section" id="rules">
     <h2>Rules &amp; recursion</h2>
