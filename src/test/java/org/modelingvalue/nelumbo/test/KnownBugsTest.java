@@ -263,4 +263,28 @@ public class KnownBugsTest extends NelumboTestBase {
     public void leadingRepetitionPattern() {
         bugResource("leading-repetition-pattern.nl");
     }
+
+    @KnownBug("constant starting with a type parameter's name (Tom with Type T) in a <T> hole parses as a variable declaration (T om)")
+    @Test
+    public void typeVariableNamePrefixSplit() {
+        bugResource("type-variable-name-prefix-split.nl");
+    }
+
+    @KnownBug("functor without holes (Thing ::= n) in a transformation body makes the closing } of that body fail to parse")
+    @Test
+    public void holelessFunctorInTransformation() {
+        bugResource("holeless-functor-in-transformation.nl");
+    }
+
+    @KnownBug("functor whose first hole has a user-declared Literal type (Boolean ::= near(<Pos>)) is reported as a non deterministic pattern merge with itself")
+    @Test
+    public void literalTypeHolePatternMerge() {
+        bugResource("literal-type-hole-pattern-merge.nl");
+    }
+
+    @KnownBug("rule head variable of a narrower type (Female f) yields bindings of the wrong type for an open query (Who is a sister of Piet lists a Male)")
+    @Test
+    public void typedHeadVariableOpenQuery() {
+        bugResource("typed-head-variable-open-query.nl");
+    }
 }

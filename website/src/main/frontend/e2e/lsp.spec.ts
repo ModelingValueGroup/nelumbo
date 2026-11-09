@@ -29,7 +29,7 @@ async function awaitLspConnected(page: Page): Promise<void> {
 }
 
 test('an unsolved exercise shows a diagnostic that clears when solved', async ({ page }: { page: Page }): Promise<void> => {
-    await page.goto('/tutorial.html');
+    await page.goto('/tutorial.html#logic');
     const idx: number = await editorIndexContaining(page, 'false & true');
     expect(idx).toBeGreaterThanOrEqual(0);
     await expect.poll(async (): Promise<number> => errorMarkerCount(page, idx), { timeout: 20_000, intervals: [500] })
@@ -42,7 +42,7 @@ test('an unsolved exercise shows a diagnostic that clears when solved', async ({
 });
 
 test('go-to-definition moves the selection to the declaration', async ({ page }: { page: Page }): Promise<void> => {
-    await page.goto('/tutorial.html');
+    await page.goto('/tutorial.html#logic');
     await page.locator('aside nav a[data-section="rules"]').click();
     await expect(page.locator('#rules')).toHaveClass(/active/);
     await awaitLspConnected(page);
@@ -62,7 +62,7 @@ test('go-to-definition moves the selection to the declaration', async ({ page }:
 });
 
 test('hover shows information for a known symbol', async ({ page }: { page: Page }): Promise<void> => {
-    await page.goto('/tutorial.html');
+    await page.goto('/tutorial.html#logic');
     await page.locator('aside nav a[data-section="rules"]').click();
     await expect(page.locator('#rules .monaco-editor').first()).toBeVisible();
     await awaitLspConnected(page);
@@ -81,7 +81,7 @@ test('hover shows information for a known symbol', async ({ page }: { page: Page
 });
 
 test('completion offers suggestions', async ({ page }: { page: Page }): Promise<void> => {
-    await page.goto('/tutorial.html');
+    await page.goto('/tutorial.html#logic');
     await page.locator('aside nav a[data-section="rules"]').click();
     await expect(page.locator('#rules .monaco-editor').first()).toBeVisible();
     await awaitLspConnected(page);
@@ -104,7 +104,7 @@ test('completion offers suggestions', async ({ page }: { page: Page }): Promise<
 });
 
 test('a syntax exercise shows a parse error that clears when the sentence parses', async ({ page }: { page: Page }): Promise<void> => {
-    await page.goto('/tutorial.html');
+    await page.goto('/tutorial.html#logic');
     await page.locator('aside nav a[data-section="syntax"]').click();
     await expect(page.locator('#syntax')).toHaveClass(/active/);
     await expect.poll(async (): Promise<number> => editorIndexContaining(page, 'Marie knows Klaas'), { timeout: 20_000 })

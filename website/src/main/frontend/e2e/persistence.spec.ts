@@ -28,7 +28,7 @@ async function exampleSource(page: Page, name: string): Promise<string> {
 }
 
 test('an edited tutorial field survives a reload', async ({ page }: { page: Page }): Promise<void> => {
-    await page.goto('/tutorial.html');
+    await page.goto('/tutorial.html#logic');
     await waitForEditors(page);
     const original: string = await editorText(page, 0);
     await typeAtEnd(page, 0, '\n// mine\n');
@@ -38,7 +38,7 @@ test('an edited tutorial field survives a reload', async ({ page }: { page: Page
 });
 
 test('edits saved when the tutorial was /tour.html come along', async ({ page }: { page: Page }): Promise<void> => {
-    await page.goto('/tutorial.html');
+    await page.goto('/tutorial.html#logic');
     await waitForEditors(page);
     const original: string = await editorText(page, 0);
     await typeAtEnd(page, 0, '\n// mine\n');
@@ -49,7 +49,7 @@ test('edits saved when the tutorial was /tour.html come along', async ({ page }:
             localStorage.removeItem(k);
         });
     });
-    await page.goto('/tour.html');
+    await page.goto('/tour.html#logic');
     await expect(page).toHaveURL(/\/tutorial\.html(#\w+)?$/);
     await waitForEditors(page);
     expect(await editorText(page, 0)).toBe(original + '\n// mine\n');
@@ -57,7 +57,7 @@ test('edits saved when the tutorial was /tour.html come along', async ({ page }:
 });
 
 test('Reset shows only for an edited field and brings back the original', async ({ page }: { page: Page }): Promise<void> => {
-    await page.goto('/tutorial.html');
+    await page.goto('/tutorial.html#logic');
     await waitForEditors(page);
     const wrap:     Locator = page.locator('#logic .nelumbo-field-wrap').first();
     const reset:    Locator = wrap.getByRole('button', { name: 'Reset' });
@@ -79,7 +79,7 @@ test('Reset shows only for an edited field and brings back the original', async 
 });
 
 test('a saved edit of an older version of the field is not restored', async ({ page }: { page: Page }): Promise<void> => {
-    await page.goto('/tutorial.html');
+    await page.goto('/tutorial.html#logic');
     await waitForEditors(page);
     const original: string = await editorText(page, 0);
     await typeAtEnd(page, 0, '\n// mine\n');
@@ -112,7 +112,7 @@ test('the sandbox keeps the edits per example, also across a reload', async ({ p
 });
 
 test('a lost LSP connection comes back at the next user activity', async ({ page }: { page: Page }): Promise<void> => {
-    await page.goto('/tutorial.html');
+    await page.goto('/tutorial.html#logic');
     const hint: Locator = page.locator('#logic .nelumbo-field-wrap').first().getByText('[()][]').first();
     await expect(hint).toBeVisible({ timeout: 20_000 });
     await page.evaluate((): void => (window as any).NelumboFields.__closeConnection());
