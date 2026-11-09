@@ -159,10 +159,10 @@
        <code>Person :: Object</code> declares a type and <code>Male :: Person</code> a subtype.
        <code>Male ::= Piet, Jan</code> declares constants of a type. A <em>functor</em> declares a new
        phrase with <code>::=</code>: <code>Person ::= father(&lt;Person&gt;)</code> says that
-       <code>father(</code>a person<code>)</code> is again a person, where each <code>&lt;T&gt;</code>
+       <code>father(</code>a person<code>)</code> is itself a person, where each <code>&lt;T&gt;</code>
        is a hole for an expression of type <code>T</code>. A phrase whose type extends
        <code>Root</code> can stand on its own line as a sentence; give such a functor the precedence
-       <code>#0</code>. These sections have no queries and no meaning yet: a sentence is right when it
+       <code>#0</code>. These sections have no queries and no meaning yet: a sentence is correct when it
        parses, and the editor underlines it in red when it does not.</p>
     <div class="nelumbo-field" data-height="270px" data-syntax>import nelumbo.lang
 Person   :: Object
@@ -229,7 +229,7 @@ Piet gives a book to Marie
     <p>A functor's pattern is more than words and holes. <code>&lt;(&gt; really &lt;)?&gt;</code> is
        optional, <code>&lt;(&gt; likes &lt;|&gt; loves &lt;)&gt;</code> is a choice, and
        <code>&lt;(&gt; &lt;Person&gt; &lt;,&gt; , &lt;)+&gt;</code> repeats a hole one or more times,
-       separated by commas (<code>&lt;)*&gt;</code> allows zero times). The token types
+       separated by commas (<code>&lt;)*&gt;</code> also allows none). The token types
        <code>&lt;NUMBER&gt;</code>, <code>&lt;STRING&gt;</code> and <code>&lt;NAME&gt;</code> accept a
        number, a quoted string or a name. Several alternatives of one type are separated by commas, each
        with its own precedence.</p>
@@ -248,7 +248,7 @@ Marie says "hello"
 party with Piet, Jan, Marie
 </div>
     <div class="nelumbo-exercise">
-      <p class="challenge">Piet can invite any number of guests, the last one after <code>and</code>. Change the pattern so all three sentences parse.</p>
+      <p class="challenge">Piet can invite any number of guests, with <code>and</code> before the last one. Change the pattern so all three sentences parse.</p>
       <div class="nelumbo-field" data-height="230px" data-syntax="exercise">import nelumbo.lang
 Person   :: Object
 Person   ::= Piet, Jan, Marie, Klaas
@@ -293,8 +293,8 @@ Jan does not know Piet
   <section class="tutorial-section" id="precedence">
     <h2>Precedence</h2>
     <p>An <em>operator</em> is a functor whose pattern starts with a hole, like <code>&lt;Expr&gt; plus &lt;Expr&gt;</code>.
-       When a sentence holds several operators, their precedence <code>#N</code> decides how they group: the
-       higher binds tighter. With <code>plus</code> at <code>#40</code> and <code>times</code> at <code>#50</code>,
+       When a sentence contains several operators, their precedence <code>#N</code> decides how they group: the
+       higher one binds tighter. With <code>plus</code> at <code>#40</code> and <code>times</code> at <code>#50</code>,
        <code>one plus two times three</code> is <code>one plus (two times three)</code>; operators of equal
        precedence group from the left. An operator without a precedence does not parse at all. A hole can
        carry a precedence too: <code>&lt;Expr#45&gt;</code> takes only operators above 45, so <code>times</code>
@@ -369,7 +369,7 @@ twice one plus two
     <p>Parentheses override precedence: <code>(one plus two) times three</code>. You never declare them:
        <code>nelumbo.lang</code> ends with <code>Type P</code> and <code>P ::= (&lt;P&gt;) @nelumbo.lang.Parenthesized</code>,
        one generic functor (see the next section) that gives every type its parentheses. The <code>@</code> binds
-       a functor to a Java class; <code>Parenthesized</code> hands back the expression inside, so <code>(one)</code>
+       a functor to a Java class; <code>Parenthesized</code> returns the expression inside, so <code>(one)</code>
        is just <code>one</code>, not a new phrase. A parenthesized expression is complete in itself, so it fits a
        hole of any precedence: <code>twice (one plus two)</code> parses where <code>twice one plus two</code> did not.</p>
     <div class="nelumbo-field" data-height="376px" data-syntax>import nelumbo.lang
@@ -390,7 +390,7 @@ twice ((one))
 (father(Marie)) knows (Piet)
 </div>
     <div class="nelumbo-exercise">
-      <p class="challenge">Add square brackets as a second way to group expressions, so the last sentence parses. Bind them to <code>@nelumbo.lang.Parenthesized</code> too, so <code>[one]</code> is just <code>one</code>.</p>
+      <p class="challenge">Add square brackets as a second way to group expressions so that the last sentence parses. Bind them to <code>@nelumbo.lang.Parenthesized</code> too, so that <code>[one]</code> is just <code>one</code>.</p>
       <div class="nelumbo-field" data-height="244px" data-syntax="exercise">import nelumbo.lang
 Expr     :: Object
 Expr     ::= one, two, three
@@ -420,11 +420,11 @@ compute [one plus two] times three
     <p><code>Type E</code> declares a type parameter. With it, <code>Team&lt;E&gt; :: Object</code> declares a
        generic type and <code>Team&lt;E&gt; ::= team of &lt;(&gt; &lt;E&gt; &lt;,&gt; , &lt;)+&gt;</code> a functor for it:
        <code>team of Piet, Jan</code> is a <code>Team&lt;Person&gt;</code> and <code>team of Rex, Tom</code> a
-       <code>Team&lt;Animal&gt;</code>. A hole names the team it takes: <code>&lt;Team&lt;Person&gt;&gt;</code>
+       <code>Team&lt;Animal&gt;</code>. A hole names the kind of team it takes: <code>&lt;Team&lt;Person&gt;&gt;</code>
        rejects a team of animals, <code>&lt;Team&lt;E&gt;&gt;</code> takes a team of anything. Write a generic type
        without spaces: <code>Team&lt;E&gt;</code>, not <code>Team &lt; E &gt;</code>. The parentheses of the
-       previous section are declared this way, and so are <code>List&lt;E&gt;</code> and <code>Set&lt;E&gt;</code>
-       of the collections.</p>
+       previous section are declared this way, and so are the collection types <code>List&lt;E&gt;</code> and
+       <code>Set&lt;E&gt;</code>.</p>
     <div class="nelumbo-field" data-height="310px" data-syntax>import nelumbo.lang
 Person   :: Object
 Person   ::= Piet, Jan, Marie
@@ -440,7 +440,7 @@ team of Piet, Jan plays against team of Marie
 team of Rex chases team of Tom, Bello
 </div>
     <div class="nelumbo-exercise">
-      <p class="challenge">A team can only hold persons, so the last sentence does not parse. Make <code>Team</code> generic, so animals can form teams too.</p>
+      <p class="challenge">A team can only hold people, so the last sentence does not parse. Make <code>Team</code> generic so that animals can form teams too.</p>
       <div class="nelumbo-field" data-height="288px" data-syntax="exercise">import nelumbo.lang
 Person   :: Object
 Person   ::= Piet, Jan, Marie
@@ -474,8 +474,8 @@ team of Rex plays against team of Tom, Bello
     <p>Whitespace between tokens does not matter: the pattern <code>&lt;NUMBER&gt; : &lt;NUMBER&gt;</code> accepts
        <code>9:30</code> and <code>9 : 30</code> alike. Between <code>&lt;[&gt;</code> and <code>&lt;]&gt;</code> the
        tokens must touch: <code>&lt;[&gt; &lt;NUMBER&gt; : &lt;NUMBER&gt; &lt;]&gt;</code> accepts only <code>9:30</code>.
-       Use it for a literal written as several tokens, such as a time, a date or a decimal number, so it cannot
-       be taken for an expression with an operator. <code>&lt;[&gt;</code> and <code>&lt;]&gt;</code> themselves do not
+       Use it for a literal written as several tokens, such as a time, a date or a decimal number, so that it cannot
+       be mistaken for an expression with an operator. <code>&lt;[&gt;</code> and <code>&lt;]&gt;</code> themselves do not
        appear in the sentence. The standard library writes <code>3.14</code>, <code>2025-01-01</code> and
        <code>16#FF</code> this way, and <code>nelumbo.lang</code> the head of a generic type like
        <code>Team&lt;E&gt;</code>.</p>
@@ -491,7 +491,7 @@ Marie arrives at 14:05
 // Piet arrives at 9 : 30   does not parse
 </div>
     <div class="nelumbo-exercise">
-      <p class="challenge">Declare a type <code>Date</code> for dates like <code>1990-05-17</code>, written without spaces, so both sentences parse.</p>
+      <p class="challenge">Declare a type <code>Date</code> for dates like <code>1990-05-17</code>, written without spaces, so that both sentences parse.</p>
       <div class="nelumbo-field" data-height="266px" data-syntax="exercise">import nelumbo.lang
 Person   :: Object
 Person   ::= Piet, Marie
@@ -521,9 +521,9 @@ Marie was born on 1990-05-17
   </section>
   <section class="tutorial-section" id="named-patterns">
     <h2>Named patterns</h2>
-    <p>A piece of pattern that recurs can get a name: <code>pattern GUESTS ::= ...</code> declares it, and
-       <code>&lt;GUESTS&gt;</code> stands for its body wherever it is written, after the declaration. A named
-       pattern is pure abbreviation: unlike a functor, it declares no type and builds no value. Here
+    <p>A recurring piece of a pattern can be given a name: <code>pattern GUESTS ::= ...</code> declares it, and
+       <code>&lt;GUESTS&gt;</code> stands for its body wherever it is used after the declaration. A named
+       pattern is just an abbreviation: unlike a functor, it declares no type and builds no value. Here
        <code>GUESTS</code> is the guest list of the Patterns exercise, now shared by two sentences.
        <code>nelumbo.lang</code> uses named patterns itself, for instance
        <code>pattern QNAME ::= &lt;[&gt; &lt;(&gt; &lt;NAME&gt; &lt;,&gt; . &lt;)+&gt; &lt;]&gt;</code> for the dotted
@@ -565,10 +565,10 @@ Klaas works from 8:00 to 17:30
   <section class="tutorial-section" id="scoping">
     <h2>Scoping</h2>
     <p>A <code>{ }</code> block is a scope. A functor declared <code>private</code> in a block exists only
-       inside that block, nested blocks included. Without <code>private</code>, a declaration in a block is
+       inside that block, including nested blocks. Without <code>private</code>, a declaration in a block is
        visible after the block too: the block alone hides nothing. Below, <code>Max</code> is private to the
        block and <code>Piet</code> is not. <code>private</code> is also how two functors with the same pattern
-       are kept apart: declared side by side, the parser cannot tell which one a phrase means and reports a
+       are kept apart: if they are declared side by side, the parser cannot tell which one a phrase means and reports a
        <em>non deterministic pattern merge</em>.</p>
     <div class="nelumbo-field" data-height="332px" data-syntax>import nelumbo.lang
 Person   :: Object
@@ -586,7 +586,7 @@ Piet reads
 // Max reads   does not parse here: Max is private to the block
 </div>
     <div class="nelumbo-exercise">
-      <p class="challenge">Both functors are written <code>friend(&lt;Person&gt;)</code>, one for a person and one for a dog, so they clash. Restrict each one to the sentence that uses it, so both sentences parse.</p>
+      <p class="challenge">Both functors are written <code>friend(&lt;Person&gt;)</code>, one for a person and one for a dog, so they clash. Restrict each one to the sentence that uses it so that both sentences parse.</p>
       <div class="nelumbo-field" data-height="288px" data-syntax="exercise">import nelumbo.lang
 Person   :: Object
 Dog      :: Object
@@ -718,9 +718,9 @@ friends(Klaas, Kees) ? [()][]
        <em>closed</em>: after <code>fact age(Piet)=40</code> the answer is <code>[(a=40)]</code>
        without <code>..</code>, and every other age is false. Statements run top to bottom, and each fact
        or rule only adds knowledge: unknown answers become true or false, open answers grow or close, and
-       nothing already proven is withdrawn. Nelumbo is <em>monotonic</em>. Consistency is checked on the
-       answers: a later answer agrees with an earlier one and knows at least as much, or the query reports
-       an inconsistency. A second age for Piet is even rejected as soon as it is asserted.
+       nothing already proven is withdrawn. Nelumbo is <em>monotonic</em>. Nelumbo checks this on the
+       answers: a later answer must agree with an earlier one and know at least as much, otherwise the query
+       reports an inconsistency. A second age for Piet is rejected the moment it is asserted.
        Only relations and function values can be asserted: <code>fact !friends(Piet, Klaas)</code>
        is an error.</p>
     <div class="nelumbo-field" data-height="200px">import nelumbo.integers
@@ -758,11 +758,11 @@ age(Jan)=40 ? [][()]
   <section class="tutorial-section" id="unique">
     <h2>Unique values</h2>
     <p>Facts are open, but a hole can be declared <em>unique</em> with <code>one</code>:
-       <code>&lt;Person&gt; lives in &lt;one City&gt;</code> says that a person lives in one city. A fact then
+       <code>&lt;Person&gt; lives in &lt;one City&gt;</code> says that a person lives in exactly one city. A fact then
        closes the hole for that person: <code>Piet lives in c ?</code> answers Amsterdam without
        <code>..</code>, and every other city is false. Nothing is asserted for Jan, so his city stays
        unknown, and the other direction stays open: more people may live in Amsterdam. <code>likes</code>
-       has no <code>one</code>, so Piet may like more cities and Utrecht is unknown. A second city for Piet
+       has no <code>one</code>, so Piet may like other cities too and Utrecht is unknown. A second city for Piet
        would be rejected as an inconsistency. This is also why a function value is closed: both sides of
        <code>=</code> are unique holes.</p>
     <div class="nelumbo-field" data-height="398px">import nelumbo.logic
@@ -784,13 +784,13 @@ Piet likes c ?
 Piet likes Utrecht ?
 </div>
     <div class="nelumbo-exercise">
-      <p class="challenge">Everybody is born in one city. Change the pattern so the expected results hold.</p>
+      <p class="challenge">Everybody was born in exactly one city. Change the pattern so that the expected results hold.</p>
       <div class="nelumbo-field" data-height="266px">import nelumbo.logic
 Person  :: Object
 Person  ::= Piet, Jan
 City    :: Object
 City    ::= Amsterdam, Utrecht
-// everybody is born in one city: change the pattern so the expected results hold
+// everybody was born in exactly one city: change the pattern so the expected results hold
 Boolean ::= &lt;Person&gt; was born in &lt;City&gt; #30
 City   c
 fact Jan was born in Utrecht
@@ -972,7 +972,7 @@ Who is a friend of Piet  ? [(Who=Jan),(Who=Kees),(Who=Klaas),(Who=Piet),..][..]
   </section>
   <section class="tutorial-section" id="types">
     <h2>Data types</h2>
-    <p>Nelumbo ships built-in types - integers, rationals, strings, collections, datetime - each
+    <p>Nelumbo ships with built-in types - integers, rationals, strings, collections, datetime - each
        importable, with its own operators and functions. Declare a variable of a type, then let a query
        compute and bind it. Operators like <code>+</code> and functions like <code>len</code> come from
        the imported module.</p>
@@ -991,7 +991,7 @@ s={1,2,3} ?
 |{1,2,3}|=i ?
 </div>
     <div class="nelumbo-exercise">
-      <p class="challenge">Fix the concatenation so <code>a = "lotus"</code> and its length check
+      <p class="challenge">Fix the concatenation so that <code>a = "lotus"</code> and the length check
          (<code>len(a) = 5</code>) passes.</p>
       <div class="nelumbo-field" data-height="150px">import nelumbo.strings
 String  a
@@ -1008,12 +1008,12 @@ Integer d
   </section>
   <section class="tutorial-section" id="equality">
     <h2>Equality</h2>
-    <p>What <code>=</code> means depends on what a phrase is. A functor with arguments on an
-       <code>Object</code> type is a <em>function</em>: <code>double(2)</code> stands for the value a rule or
+    <p>What <code>=</code> means depends on what a phrase is. A functor with arguments, declared for an
+       <code>Object</code> type, is a <em>function</em>: <code>double(2)</code> stands for the value a rule or
        fact gives it, so <code>double(2)=4</code> is true and <code>double(2)=5</code> is false. Without
        such a rule or fact the value is unknown, so even <code>point(1,2)=point(1,2)</code> is unknown. A
        type declared <code>:: Literal</code> builds values instead: <code>pos(1,2)</code> is the value
-       itself, equal to another one exactly when it is built the same way, and it can be the answer of a
+       itself, equal to another one exactly when it is built the same way, and it can be the answer to a
        query (<code>q=pos(1,2)</code>). Constants such as <code>Piet</code> are literals too.</p>
     <div class="nelumbo-field" data-height="354px">import nelumbo.integers
 Integer ::= double(&lt;Integer&gt;)
@@ -1114,13 +1114,13 @@ f(Beatrix,who) ? [(who=Bernhard),..][..]
     <p><code>E[c](...)</code> (there exists) and <code>A[c](...)</code> (for all) never try every member of
        a type: <code>c</code> only gets values by <em>navigation</em>, from something already known, here
        from Juliana to her children. Without navigation a quantifier gives no answer, even though four
-       persons are declared. That is a design choice: <code>Person ::= Juliana, ...</code> names some
-       persons, not all of them. If <code>A[c](age(c)&gt;10)</code> were decided by trying the declared
-       persons, declaring one more could turn true into false, and Nelumbo never withdraws an answer. So
+       people are declared. That is a design choice: <code>Person ::= Juliana, ...</code> names some
+       people, not all of them. If <code>A[c](age(c)&gt;10)</code> were decided by trying the declared
+       people, declaring one more could turn true into false, and Nelumbo never withdraws an answer. So
        navigate: through a fact or rule (<code>pc(Juliana,c)</code>), through <code>=</code>, or through a
        known collection (<code>c in children(Juliana)</code>). Over a closed set such as Juliana's children,
        <code>A</code> can be true and <code>E</code> false; over open facts more children may exist, so only
-       a found example decides. Put the membership in parentheses before <code>-&gt;</code>.</p>
+       finding an example decides. Put the membership in parentheses before <code>-&gt;</code>.</p>
     <div class="nelumbo-field" data-height="376px">import nelumbo.collections
 Person      :: Object
 Person      ::= Juliana, Beatrix, Irene, Margriet
@@ -1222,7 +1222,7 @@ Who knows Piet ? [(Who=Jan),(Who=Klaas),(Who=Piet),..][..]
     <p>A transformation rule <code>::&gt;</code> rewrites one construct into several. The
        <code>attr</code> declaration below expands - at declaration time - into a getter function
        <code>o.name</code> and a <code>:=</code> setter that itself transforms into a
-       <code>fact</code> on that function. Declaring <code>attr Person name String</code> then
+       <code>fact</code> about that function. Declaring <code>attr Person name String</code> then
        behaves as if both were written by hand.</p>
     <div class="nelumbo-field" data-height="300px">import nelumbo.strings
 Root ::= attr &lt;Type&gt; &lt;NAME&gt; &lt;Type&gt; #100
@@ -1361,7 +1361,7 @@ is Tom a dog ?
 who chases Hoot ?
 </div>
     <div class="nelumbo-exercise">
-      <p class="challenge">Dumbo is an elephant and scares Rex, but <code>elephant</code> and <code>scares</code> are not in the dictionary yet. Add them, so all sentences and questions parse.</p>
+      <p class="challenge">Dumbo is an elephant and scares Rex, but <code>elephant</code> and <code>scares</code> are not in the dictionary yet. Add them so that all sentences and questions parse.</p>
       <div class="nelumbo-field" data-height="1004px" data-syntax="exercise">import nelumbo.logic
 Article :: Object
 Article ::= a, an
@@ -1467,7 +1467,7 @@ who scares Rex ?
   </section>
   <section class="tutorial-section" id="family-tree">
     <h2>Family tree</h2>
-    <p>A project puts the sections together. Only the end of the file is given: facts and questions, each
+    <p>A project brings the previous sections together. Only the end of the file is given: facts and questions, each
        with the answer it should get. You design and write everything above it. Here you build a small
        English language about the Dutch royal family. Some answers are closed: Beatrix has exactly two
        parents. Others are open: Amalia's mother is not given, so she may have more grandparents than the
@@ -1476,11 +1476,11 @@ who scares Rex ?
       <summary>Hints</summary>
       <ol>
         <li>Declare <code>Person</code> with the subtypes <code>Male</code> and <code>Female</code>, and the nine
-            persons as constants of those.</li>
+            people as constants of those.</li>
         <li>Declare the sentences as <code>Boolean</code> phrases with precedence <code>#30</code>. A person has
             one mother: <code>&lt;one Person&gt; is the mother of &lt;Person&gt;</code> makes
             <code>Irene is the mother of Beatrix</code> false. The same goes for the father.</li>
-        <li>Declare the variables, <code>Who</code> included.</li>
+        <li>Declare the variables, including <code>Who</code>.</li>
         <li>A parent is the mother or the father. A grandparent is a parent of a parent
             (<code>E[p](...)</code>), a grandchild the other way around.</li>
         <li>An ancestor is a parent, or a parent of an ancestor: a cyclic rule.</li>
@@ -1491,10 +1491,10 @@ who scares Rex ?
       </ol>
     </details>
     <div class="nelumbo-exercise">
-      <p class="challenge">Write the language above the given part, so that the facts parse and every question gets the expected answer.</p>
+      <p class="challenge">Write the language above the given part so that the facts parse and every question gets the expected answer.</p>
       <div class="nelumbo-field" data-height="1000px" data-syntax="exercise">import nelumbo.logic
 
-// build your language here: types, persons, sentences, variables and rules
+// build your language here: types, people, sentences, variables and rules
 
 
 
@@ -1581,7 +1581,7 @@ Who is an aunt of Alexander    ? [(Who=Irene),(Who=Margriet),..][..]
             one age and one membership: <code>&lt;Person&gt; is &lt;one Integer&gt; years old</code>. Without
             <code>one</code>, <code>Henk is a junior</code> cannot be false.</li>
         <li>Define junior, adult and senior with <code>E[n](p is n years old &amp; ...)</code>. Mind the
-            boundaries: 18 is an adult, 65 a senior.</li>
+            boundaries: at 18 you are an adult, at 65 a senior.</li>
         <li>Declare the fees as functions with a precedence, <code>Integer ::= the fee of &lt;Person&gt; #60</code>:
             without one, <code>the fee of p == ...</code> takes the rest of the line into its hole.</li>
         <li>Write two function rules with <code>==</code> and <code>if</code>: a base fee per age group, and the
@@ -1589,7 +1589,7 @@ Who is an aunt of Alexander    ? [(Who=Irene),(Who=Margriet),..][..]
       </ol>
     </details>
     <div class="nelumbo-exercise">
-      <p class="challenge">Write the language above the given part, so that the facts parse and every question gets the expected answer.</p>
+      <p class="challenge">Write the language above the given part so that the facts parse and every question gets the expected answer.</p>
       <div class="nelumbo-field" data-height="1000px" data-syntax="exercise">import nelumbo.integers
 
 // build your language here: types, members, sentences, variables and rules
@@ -1597,8 +1597,8 @@ Who is an aunt of Alexander    ? [(Who=Irene),(Who=Margriet),..][..]
 
 
 // ---- given: the club's rules, its members, and the answers they should get ----
-// Juniors (younger than 18) pay 50 euro, adults 120 euro, seniors (65 or older) 84 euro.
-// Weekday members pay 20 euro less. Volunteers pay nothing.
+// Juniors (younger than 18) pay 50 euros, adults 120 euros, seniors (65 or older) 84 euros.
+// Weekday members pay 20 euros less. Volunteers pay nothing.
 fact Anna is 30 years old, Lisa is 16 years old, Henk is 70 years old, Kees is 12 years old,
      Marie is 45 years old, Sven is 18 years old, Eva is 65 years old
 fact Anna has a regular membership, Lisa has a weekday membership, Henk has a weekday membership,
@@ -1644,8 +1644,8 @@ the fee of p == the base fee of p      if p has a regular membership,
                 0                      if p has a volunteer membership
 
 // ---- given: the club's rules, its members, and the answers they should get ----
-// Juniors (younger than 18) pay 50 euro, adults 120 euro, seniors (65 or older) 84 euro.
-// Weekday members pay 20 euro less. Volunteers pay nothing.
+// Juniors (younger than 18) pay 50 euros, adults 120 euros, seniors (65 or older) 84 euros.
+// Weekday members pay 20 euros less. Volunteers pay nothing.
 fact Anna is 30 years old, Lisa is 16 years old, Henk is 70 years old, Kees is 12 years old,
      Marie is 45 years old, Sven is 18 years old, Eva is 65 years old
 fact Anna has a regular membership, Lisa has a weekday membership, Henk has a weekday membership,
@@ -1684,7 +1684,7 @@ the fee of Bram               ? [(0)][..]
         <li>Declare the sentences as <code>Boolean</code> phrases with precedence <code>#30</code>: the fact
             sentence, <code>&lt;City&gt; is next to &lt;City&gt;</code>, <code>I can travel from &lt;City&gt; to
             &lt;City&gt;</code>, and the same with <code>in at most &lt;Integer&gt; steps</code>.</li>
-        <li>Declare the variables, <code>Which</code> included.</li>
+        <li>Declare the variables, including <code>Which</code>.</li>
         <li>A train runs both ways: two cities are next to each other when there is a train between them, in
             either order.</li>
         <li>You can travel from <code>a</code> to <code>b</code> when <code>b</code> is next to <code>a</code>,
@@ -1696,7 +1696,7 @@ the fee of Bram               ? [(0)][..]
       </ol>
     </details>
     <div class="nelumbo-exercise">
-      <p class="challenge">Write the language above the given part, so that the facts parse and every question gets the expected answer.</p>
+      <p class="challenge">Write the language above the given part so that the facts parse and every question gets the expected answer.</p>
       <div class="nelumbo-field" data-height="1000px" data-syntax="exercise">import nelumbo.integers
 
 // build your language here: cities, sentences, variables and rules
@@ -1756,10 +1756,10 @@ I can travel from Utrecht to Delft in at most 0 steps  ? [][()]
   </section>
   <section class="tutorial-section" id="room-booking">
     <h2>Room booking</h2>
-    <p>Today's bookings of a few meeting rooms are given with times like <code>9:30</code>. Answer whether a
+    <p>Today's bookings for a few meeting rooms are given with times like <code>9:30</code>. Answer whether a
        room is free, at a time or between two times, and whether a room's bookings clash. "Free" is the hard
-       part. In an open world you can prove that a room is taken: you find the booking. Proving it free needs
-       <em>every</em> booking of the room, so each room's bookings are given as one complete set. Yellow has
+       part. In an open world you can prove that a room is taken: you find the booking. Proving that it is free requires
+       <em>every</em> booking for the room, so each room's bookings are given as one complete set. Yellow has
        no set, so whether it is free stays unknown.</p>
     <details class="project-hints">
       <summary>Hints</summary>
@@ -1770,20 +1770,20 @@ I can travel from Utrecht to Delft in at most 0 steps  ? [][()]
             in minutes, <code>h*60+m</code>.</li>
         <li>A booking is a value, not a fact: declare <code>Slot :: Literal</code> with the pattern
             <code>&lt;TIME&gt; to &lt;TIME&gt;</code> (precedence <code>#35</code>), and
-            <code>the bookings of &lt;Room&gt;</code> as a function that gives a <code>Set&lt;Slot&gt;</code>
+            <code>the bookings of &lt;Room&gt;</code> as a function that returns a <code>Set&lt;Slot&gt;</code>
             (precedence <code>#60</code>).</li>
         <li>Because each set is complete, <code>A[b]((b in the bookings of r) -&gt; ...)</code> can be true.</li>
         <li>For relations about a slot, put the Integer first: <code>&lt;Integer&gt; falls in &lt;Slot&gt;</code>,
             and let the rule head take the slot apart: <code>n falls in h1:m1 to h2:m2 &lt;=&gt; ...</code>. A phrase
             that starts with a <code>Slot</code> hole runs into a known engine bug.</li>
-        <li>A room is free between two times when it is free at the first, and no booking starts from the first
-            up to the second.</li>
-        <li>Bookings clash when one starts inside another. A booking does not clash with itself
+        <li>A room is free between two times when it is free at the first, and no booking starts at or after the first
+            and before the second.</li>
+        <li>Bookings clash when one starts during another. A booking does not clash with itself
             (<code>!=</code>).</li>
       </ol>
     </details>
     <div class="nelumbo-exercise">
-      <p class="challenge">Write the language above the given part, so that the facts parse and every question gets the expected answer.</p>
+      <p class="challenge">Write the language above the given part so that the facts parse and every question gets the expected answer.</p>
       <div class="nelumbo-field" data-height="1000px" data-syntax="exercise">import nelumbo.collections
 
 // build your language here: times, slots, rooms, sentences, variables and rules
@@ -1849,12 +1849,12 @@ Blue has clashing bookings           ? [][()]
   </section>
   <section class="tutorial-section" id="access-policy">
     <h2>Access policy</h2>
-    <p>A policy language for who may do what. A dictionary gives every role with its article, and the policy
+    <p>A policy language for who may do what. A dictionary lists every role with its article, and the policy
        is written as plain statements: <code>every manager may approve invoices</code>, <code>no intern may
        approve invoices</code>. Transformations turn every statement into a fact or a rule. Allow rules fill the
        facts side of an answer, deny rules the falsehood side. Where no policy applies, the answer is unknown,
        not denied: nothing says whether Eva, an auditor, may approve invoices. When you are done, add
-       <code>Ann is a manager</code>: she would then be allowed and denied at once, and Nelumbo reports the
+       <code>Ann is a manager</code>: she is then both allowed and denied, and Nelumbo reports the
        inconsistency instead of picking one.</p>
     <details class="project-hints">
       <summary>Hints</summary>
@@ -1865,7 +1865,7 @@ Blue has clashing bookings           ? [][()]
             phrase with precedence <code>#30</code>. The other lines are statements: <code>Root</code> phrases
             with precedence <code>#0</code>, and <code>role &lt;Article&gt; &lt;Role&gt;</code> with
             <code>#100</code>.</li>
-        <li>Keep the roles of a person in a relation of your own, for example a private
+        <li>Store a person's roles in a relation of your own, for example a private
             <code>&lt;Person&gt; has role &lt;Role&gt;</code>.</li>
         <li>A dictionary entry such as <code>role an intern</code> is transformed, as in Controlled English: it
             declares the sentences with that article, <code>&lt;Person&gt; is an intern</code> and
@@ -1879,7 +1879,7 @@ Blue has clashing bookings           ? [][()]
       </ol>
     </details>
     <div class="nelumbo-exercise">
-      <p class="challenge">Write the language above the given part, so that the dictionary, the policy and the staff parse and every question gets the expected answer.</p>
+      <p class="challenge">Write the language above the given part so that the dictionary, the policy and the staff parse and every question gets the expected answer.</p>
       <div class="nelumbo-field" data-height="1000px" data-syntax="exercise">import nelumbo.logic
 
 // build your language here: types, the dictionary, statements, questions and transformations
