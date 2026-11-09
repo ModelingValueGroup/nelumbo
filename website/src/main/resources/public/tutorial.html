@@ -62,7 +62,7 @@
   .pager .dir { color: var(--muted); font-size: 12px; }
   .pager .title { color: var(--accent); font-weight: 600; }
   h2 { font: 700 20px/1.3 "Bricolage Grotesque", "Instrument Sans", sans-serif; margin-top: 8px; }
-  p { color: var(--prose); }
+  p, .tutorial-section ul { color: var(--prose); }
   code { background: var(--code-bg); border: 1px solid var(--code-border); border-radius: 4px; padding: 0 4px; color: var(--code-text); -webkit-box-decoration-break: clone; box-decoration-break: clone; font: 13px "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; font-variant-ligatures: none; }
   #nav-toggle, #nav-backdrop { display: none; }
   @media (max-width: 760px) {
@@ -658,21 +658,41 @@ Rex barks
   </section>
   <section class="tutorial-section" id="logic">
     <h2>Propositional logic</h2>
-    <p>Nelumbo is three-valued: a query is <code>true</code>, <code>false</code>, or
-       <code>unknown</code>. The result notation <code>[facts][falsehoods]</code> shows the two
-       sides; <code>[()][]</code> means "true", <code>[][()]</code> means "false", and
-       <code>[..][..]</code> means "unknown". Edit the document; the results update inline as you type.</p>
-    <div class="nelumbo-field" data-height="200px">import nelumbo.logic
+    <p>This is the first section with <em>queries</em>. A query is an expression followed by
+       <code>?</code>: it asks Nelumbo whether the expression holds. <code>import nelumbo.logic</code>
+       provides the values <code>true</code>, <code>false</code> and <code>unknown</code>, and the
+       operators <code>&amp;</code> (and), <code>|</code> (or) and <code>!</code> (not).</p>
+    <p>There is no Run button: Nelumbo evaluates every query as you type and shows its result at the end
+       of the line, in a purple label. A long result is cut short; hover over it to see all of it.</p>
+    <p>A result has two sides, <code>[facts][falsehoods]</code>: on the left the answers for which the
+       query is true, on the right those for which it is false. An answer is written between parentheses.
+       These queries have no variables, so an answer is just <code>()</code>. <code>..</code> means that a
+       side may contain more than it shows. In the results below:</p>
+    <ul>
+      <li><code>[()][]</code> means "true",</li>
+      <li><code>[][()]</code> means "false",</li>
+      <li><code>[..][..]</code> means "unknown": nothing is known on either side.</li>
+    </ul>
+    <p>Nelumbo is three-valued: a query is true, false or unknown. <code>unknown &amp; true</code> stays
+       unknown, but <code>unknown | true</code> is true, whatever the unknown part turns out to be. Try
+       changing the queries below.</p>
+    <div class="nelumbo-field" data-height="240px">import nelumbo.logic
 
 true &amp; true ?
+true &amp; false ?
 true | false ?
 !false ?
 unknown &amp; true ?
+unknown | true ?
 </div>
+    <p>After the <code>?</code> you may write the result you expect, in the same notation as the label:
+       <code>true &amp; false ? [][()]</code> expects false. The editor then checks it instead of showing the
+       result: a green check mark at the end of the line when the result matches; otherwise the expected
+       result is underlined in red and the actual result follows a red cross. Without an expected result
+       you just get the purple label. The exercises use this to show when you are done.</p>
     <div class="nelumbo-exercise">
       <p class="challenge">Make the query below come out <strong>true</strong> by changing only the
-         operator (the expected-result annotation <code>[()][]</code> means the editor will underline
-         a mismatch until it is true).</p>
+         operator.</p>
       <div class="nelumbo-field" data-height="90px">import nelumbo.logic
 
 false &amp; true ? [()][]
