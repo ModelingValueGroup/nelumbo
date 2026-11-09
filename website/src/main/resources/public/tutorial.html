@@ -917,7 +917,7 @@ invites(Piet,q) ? [(q=Jan),(q=Klaas),..][(q=Bob),(q=Kees),..]
   <section class="tutorial-section" id="cycles">
     <h2>Cyclic rules</h2>
     <p>A rule may depend on itself in a cycle. The recursion of <code>fib</code> ends because
-       <code>n</code> gets smaller; here nothing gets smaller: a friend of a friend of me is a friend of me,
+       <code>n</code> gets smaller; here nothing gets smaller: a friend of a friend of mine is a friend of mine,
        so to find my friends, Nelumbo needs my friends. It solves such a cycle by iteration. It starts with
        the facts (Jan is a friend of Piet), applies the rule and finds Klaas, a friend of Jan, applies it
        again and finds Kees, and stops when a round adds nothing new. That end point is the
@@ -930,7 +930,7 @@ Person  :: Object
 Person  ::= Piet, Jan, Klaas, Kees, Bob
 Boolean ::= &lt;Person&gt; is a friend of &lt;Person&gt; #30
 Person  me, f, ff, Who
-// a friend of a friend of me is a friend of me
+// a friend of a friend of mine is a friend of mine
 ff is a friend of me &lt;=&gt; E[f](ff is a friend of f &amp; f is a friend of me)
 fact Jan is a friend of Piet
 fact Klaas is a friend of Jan
@@ -1582,8 +1582,8 @@ Who is an aunt of Alexander    ? [(Who=Irene),(Who=Margriet),..][..]
             <code>one</code>, <code>Henk is a junior</code> cannot be false.</li>
         <li>Define junior, adult and senior with <code>E[n](p is n years old &amp; ...)</code>. Mind the
             boundaries: at 18 you are an adult, at 65 a senior.</li>
-        <li>Declare the fees as functions with a precedence, <code>Integer ::= the fee of &lt;Person&gt; #60</code>:
-            without one, <code>the fee of p == ...</code> takes the rest of the line into its hole.</li>
+        <li>Declare the fees as functions, <code>Integer ::= &lt;Person&gt;'s fee #60</code>. The pattern starts
+            with a hole, so it is an operator and needs a precedence.</li>
         <li>Write two function rules with <code>==</code> and <code>if</code>: a base fee per age group, and the
             fee per membership, which uses the base fee.</li>
       </ol>
@@ -1611,15 +1611,15 @@ Sven is an adult              ? [()][]
 Eva is a senior               ? [()][]
 Anna is 31 years old          ? [][()]
 Anna has a weekday membership ? [][()]
-the fee of Anna               ? [(120)][..]
-the fee of Lisa               ? [(30)][..]
-the fee of Henk               ? [(64)][..]
-the fee of Kees               ? [(50)][..]
-the fee of Marie              ? [(0)][..]
-the fee of Sven               ? [(120)][..]
-the fee of Eva                ? [(84)][..]
-the fee of Piet               ? [..][..]
-the fee of Bram               ? [(0)][..]
+Anna's fee                    ? [(120)][..]
+Lisa's fee                    ? [(30)][..]
+Henk's fee                    ? [(64)][..]
+Kees's fee                    ? [(50)][..]
+Marie's fee                   ? [(0)][..]
+Sven's fee                    ? [(120)][..]
+Eva's fee                     ? [(84)][..]
+Piet's fee                    ? [..][..]
+Bram's fee                    ? [(0)][..]
 </div>
       <pre class="nelumbo-solution">import nelumbo.integers
 Person     :: Object
@@ -1631,17 +1631,17 @@ Boolean    ::= &lt;Person&gt; is &lt;one Integer&gt; years old        #30,
                &lt;Person&gt; is a junior                       #30,
                &lt;Person&gt; is an adult                       #30,
                &lt;Person&gt; is a senior                       #30
-Integer    ::= the base fee of &lt;Person&gt; #60,
-               the fee of &lt;Person&gt;      #60
+Integer    ::= &lt;Person&gt;'s base fee #60,
+               &lt;Person&gt;'s fee      #60
 Person     p
 Integer    n
 p is a junior &lt;=&gt; E[n](p is n years old &amp; n&lt;18)
 p is an adult &lt;=&gt; E[n](p is n years old &amp; n&gt;=18 &amp; n&lt;65)
 p is a senior &lt;=&gt; E[n](p is n years old &amp; n&gt;=65)
-the base fee of p == 50 if p is a junior, 120 if p is an adult, 84 if p is a senior
-the fee of p == the base fee of p      if p has a regular membership,
-                the base fee of p - 20 if p has a weekday membership,
-                0                      if p has a volunteer membership
+p's base fee == 50 if p is a junior, 120 if p is an adult, 84 if p is a senior
+p's fee == p's base fee      if p has a regular membership,
+           p's base fee - 20 if p has a weekday membership,
+           0                 if p has a volunteer membership
 
 // ---- given: the club's rules, its members, and the answers they should get ----
 // Juniors (younger than 18) pay 50 euros, adults 120 euros, seniors (65 or older) 84 euros.
@@ -1658,15 +1658,15 @@ Sven is an adult              ? [()][]
 Eva is a senior               ? [()][]
 Anna is 31 years old          ? [][()]
 Anna has a weekday membership ? [][()]
-the fee of Anna               ? [(120)][..]
-the fee of Lisa               ? [(30)][..]
-the fee of Henk               ? [(64)][..]
-the fee of Kees               ? [(50)][..]
-the fee of Marie              ? [(0)][..]
-the fee of Sven               ? [(120)][..]
-the fee of Eva                ? [(84)][..]
-the fee of Piet               ? [..][..]
-the fee of Bram               ? [(0)][..]
+Anna's fee                    ? [(120)][..]
+Lisa's fee                    ? [(30)][..]
+Henk's fee                    ? [(64)][..]
+Kees's fee                    ? [(50)][..]
+Marie's fee                   ? [(0)][..]
+Sven's fee                    ? [(120)][..]
+Eva's fee                     ? [(84)][..]
+Piet's fee                    ? [..][..]
+Bram's fee                    ? [(0)][..]
 </pre>
     </div>
   </section>
@@ -1682,14 +1682,14 @@ the fee of Bram               ? [(0)][..]
       <ol>
         <li>Declare <code>City</code> with the nine cities.</li>
         <li>Declare the sentences as <code>Boolean</code> phrases with precedence <code>#30</code>: the fact
-            sentence, <code>&lt;City&gt; is next to &lt;City&gt;</code>, <code>I can travel from &lt;City&gt; to
+            sentence, <code>&lt;City&gt; is connected to &lt;City&gt;</code>, <code>I can travel from &lt;City&gt; to
             &lt;City&gt;</code>, and the same with <code>in at most &lt;Integer&gt; steps</code>.</li>
         <li>Declare the variables, including <code>Which</code>.</li>
-        <li>A train runs both ways: two cities are next to each other when there is a train between them, in
+        <li>A train runs both ways: two cities are connected when there is a train between them, in
             either order.</li>
-        <li>You can travel from <code>a</code> to <code>b</code> when <code>b</code> is next to <code>a</code>,
-            or when a city <code>c</code> next to <code>a</code> can reach <code>b</code>: a cyclic rule.</li>
-        <li>In at most <code>n</code> steps: <code>n</code> is more than 0, and a city next to <code>a</code> is
+        <li>You can travel from <code>a</code> to <code>b</code> when <code>a</code> is connected to <code>b</code>,
+            or when a city <code>c</code> connected to <code>a</code> can reach <code>b</code>: a cyclic rule.</li>
+        <li>In at most <code>n</code> steps: <code>n</code> is more than 0, and a city connected to <code>a</code> is
             <code>b</code> or reaches <code>b</code> in at most <code>n-1</code> steps. Write
             <code>n&gt;0 &amp; ...</code>, not <code>... if n&gt;0</code>: a guard that fails makes a rule silent,
             so 0 steps would be unknown instead of false.</li>
@@ -1709,10 +1709,10 @@ fact there is a train between Utrecht and Amsterdam, there is a train between Am
      there is a train between Delft and Rotterdam,   there is a train between Rotterdam and Gouda,
      there is a train between Gouda and Utrecht,     there is a train between Zwolle and Groningen
 
-Utrecht is next to Amsterdam                           ? [()][]
-Amsterdam is next to Utrecht                           ? [()][]
-Which is next to Utrecht                               ? [(Which=Amsterdam),(Which=Gouda),..][..]
-Utrecht is next to Leiden                              ? [..][..]
+Utrecht is connected to Amsterdam                      ? [()][]
+Amsterdam is connected to Utrecht                      ? [()][]
+Which is connected to Utrecht                          ? [(Which=Amsterdam),(Which=Gouda),..][..]
+Utrecht is connected to Leiden                         ? [..][..]
 I can travel from Utrecht to Leiden                    ? [()][]
 I can travel from Utrecht to Groningen                 ? [..][..]
 I can travel from Utrecht to Which                     ? [(Which=Amsterdam),(Which=Delft),(Which=Gouda),(Which=Haarlem),(Which=Leiden),(Which=Rotterdam),(Which=Utrecht),..][..]
@@ -1725,14 +1725,14 @@ I can travel from Utrecht to Delft in at most 0 steps  ? [][()]
 City    :: Object
 City    ::= Utrecht, Amsterdam, Haarlem, Leiden, Delft, Rotterdam, Gouda, Zwolle, Groningen
 Boolean ::= there is a train between &lt;City&gt; and &lt;City&gt;                #30,
-            &lt;City&gt; is next to &lt;City&gt;                                  #30,
+            &lt;City&gt; is connected to &lt;City&gt;                             #30,
             I can travel from &lt;City&gt; to &lt;City&gt;                        #30,
             I can travel from &lt;City&gt; to &lt;City&gt; in at most &lt;Integer&gt; steps #30
 City    a, b, c, Which
 Integer n
-a is next to b &lt;=&gt; there is a train between a and b | there is a train between b and a
-I can travel from a to b &lt;=&gt; a is next to b | E[c](a is next to c &amp; I can travel from c to b)
-I can travel from a to b in at most n steps &lt;=&gt; n&gt;0 &amp; E[c](a is next to c &amp; (c=b | I can travel from c to b in at most n-1 steps))
+a is connected to b &lt;=&gt; there is a train between a and b | there is a train between b and a
+I can travel from a to b &lt;=&gt; a is connected to b | E[c](a is connected to c &amp; I can travel from c to b)
+I can travel from a to b in at most n steps &lt;=&gt; n&gt;0 &amp; E[c](a is connected to c &amp; (c=b | I can travel from c to b in at most n-1 steps))
 
 // ---- given: the timetable and the answers it should give ----
 fact there is a train between Utrecht and Amsterdam, there is a train between Amsterdam and Haarlem,
@@ -1740,10 +1740,10 @@ fact there is a train between Utrecht and Amsterdam, there is a train between Am
      there is a train between Delft and Rotterdam,   there is a train between Rotterdam and Gouda,
      there is a train between Gouda and Utrecht,     there is a train between Zwolle and Groningen
 
-Utrecht is next to Amsterdam                           ? [()][]
-Amsterdam is next to Utrecht                           ? [()][]
-Which is next to Utrecht                               ? [(Which=Amsterdam),(Which=Gouda),..][..]
-Utrecht is next to Leiden                              ? [..][..]
+Utrecht is connected to Amsterdam                      ? [()][]
+Amsterdam is connected to Utrecht                      ? [()][]
+Which is connected to Utrecht                          ? [(Which=Amsterdam),(Which=Gouda),..][..]
+Utrecht is connected to Leiden                         ? [..][..]
 I can travel from Utrecht to Leiden                    ? [()][]
 I can travel from Utrecht to Groningen                 ? [..][..]
 I can travel from Utrecht to Which                     ? [(Which=Amsterdam),(Which=Delft),(Which=Gouda),(Which=Haarlem),(Which=Leiden),(Which=Rotterdam),(Which=Utrecht),..][..]
@@ -1770,9 +1770,9 @@ I can travel from Utrecht to Delft in at most 0 steps  ? [][()]
             in minutes, <code>h*60+m</code>.</li>
         <li>A booking is a value, not a fact: declare <code>Slot :: Literal</code> with the pattern
             <code>&lt;TIME&gt; to &lt;TIME&gt;</code> (precedence <code>#35</code>), and
-            <code>the bookings of &lt;Room&gt;</code> as a function that returns a <code>Set&lt;Slot&gt;</code>
+            <code>the bookings for &lt;Room&gt;</code> as a function that returns a <code>Set&lt;Slot&gt;</code>
             (precedence <code>#60</code>).</li>
-        <li>Because each set is complete, <code>A[b]((b in the bookings of r) -&gt; ...)</code> can be true.</li>
+        <li>Because each set is complete, <code>A[b]((b in the bookings for r) -&gt; ...)</code> can be true.</li>
         <li>For relations about a slot, put the Integer first: <code>&lt;Integer&gt; falls in &lt;Slot&gt;</code>,
             and let the rule head take the slot apart: <code>n falls in h1:m1 to h2:m2 &lt;=&gt; ...</code>. A phrase
             that starts with a <code>Slot</code> hole runs into a known engine bug.</li>
@@ -1791,9 +1791,9 @@ I can travel from Utrecht to Delft in at most 0 steps  ? [][()]
 
 
 // ---- given: today's bookings, complete per room, and the answers they should give ----
-fact the bookings of Blue  = {9:30 to 11:00, 13:00 to 14:30}
-fact the bookings of Red   = {9:00 to 10:30, 10:00 to 11:00}
-fact the bookings of Green = {}
+fact the bookings for Blue  = {9:30 to 11:00, 13:00 to 14:30}
+fact the bookings for Red   = {9:00 to 10:30, 10:00 to 11:00}
+fact the bookings for Green = {}
 
 Blue is free at 10:00                ? [][()]
 Blue is free at 12:00                ? [()][]
@@ -1812,7 +1812,7 @@ Slot      :: Literal
 Slot      ::= &lt;TIME&gt; to &lt;TIME&gt; #35
 Room      :: Object
 Room      ::= Blue, Red, Green, Yellow
-Set&lt;Slot&gt; ::= the bookings of &lt;Room&gt; #60
+Set&lt;Slot&gt; ::= the bookings for &lt;Room&gt; #60
 Boolean   ::= &lt;Integer&gt; falls in &lt;Slot&gt;                 #30,
               &lt;Integer&gt; is the start of &lt;Slot&gt;          #30,
               &lt;Room&gt; is free at &lt;TIME&gt;                  #30,
@@ -1823,16 +1823,16 @@ Slot      b, c
 Room      r
 n falls in h1:m1 to h2:m2         &lt;=&gt; h1*60+m1 &lt;= n &amp; n &lt; h2*60+m2
 n is the start of h1:m1 to h2:m2  &lt;=&gt; n = h1*60+m1
-r is free at h1:m1                &lt;=&gt; A[b]((b in the bookings of r) -&gt; !(h1*60+m1 falls in b))
+r is free at h1:m1                &lt;=&gt; A[b]((b in the bookings for r) -&gt; !(h1*60+m1 falls in b))
 r is free between h1:m1 and h2:m2 &lt;=&gt; r is free at h1:m1 &amp;
-                                      A[b]((b in the bookings of r) -&gt; !E[n](n is the start of b &amp; h1*60+m1 &lt;= n &amp; n &lt; h2*60+m2))
-r has clashing bookings           &lt;=&gt; E[b,c](b in the bookings of r &amp; c in the bookings of r &amp; b != c &amp;
+                                      A[b]((b in the bookings for r) -&gt; !E[n](n is the start of b &amp; h1*60+m1 &lt;= n &amp; n &lt; h2*60+m2))
+r has clashing bookings           &lt;=&gt; E[b,c](b in the bookings for r &amp; c in the bookings for r &amp; b != c &amp;
                                              E[n](n is the start of c &amp; n falls in b))
 
 // ---- given: today's bookings, complete per room, and the answers they should give ----
-fact the bookings of Blue  = {9:30 to 11:00, 13:00 to 14:30}
-fact the bookings of Red   = {9:00 to 10:30, 10:00 to 11:00}
-fact the bookings of Green = {}
+fact the bookings for Blue  = {9:30 to 11:00, 13:00 to 14:30}
+fact the bookings for Red   = {9:00 to 10:30, 10:00 to 11:00}
+fact the bookings for Green = {}
 
 Blue is free at 10:00                ? [][()]
 Blue is free at 12:00                ? [()][]
