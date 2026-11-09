@@ -126,6 +126,7 @@
     <a data-section="dsl">Custom DSL</a>
     <div class="group">Transformations</div>
     <a data-section="transform">Transformations</a>
+    <a data-section="cnl">Controlled English</a>
     <div class="sep"></div>
     <span class="version">@VERSION@ <span class="status-dot" data-status-link aria-hidden="true"></span></span>
   </nav>
@@ -1005,6 +1006,177 @@ Piet.name := "Piet"
 Piet.address := "Kalverstraat"
 String a
 Piet.address=a ? [(a="Kalverstraat")][..]
+</pre>
+    </div>
+  </section>
+  <section class="tutorial-section" id="cnl">
+    <h2>Controlled English</h2>
+    <p>A transformation can turn a dictionary into a language. A <em>controlled natural language</em> is a
+       fixed set of sentence shapes, filled with words from a dictionary, where each word's entry decides
+       how the word may be used. Here <code>noun a dog</code> and <code>noun an owl</code> record every noun
+       with its own article, and the transformation gives each entry its own sentences:
+       <code>Rex is a dog</code> and <code>is Hoot an owl ?</code>. So <code>Hoot is a owl</code> does not
+       parse: after <code>a</code> only <code>dog</code> and <code>cat</code> fit. <code>verb chases</code>
+       adds <code>Rex chases Tom</code> and <code>who chases Hoot ?</code>. A sentence becomes a fact and a
+       question becomes a query. Nothing says that Tom is not a dog, so <code>is Tom a dog ?</code> is
+       unknown. The Dutch example <a href="/sandbox.html#deHet">deHet</a> does the same with the articles
+       <code>de</code> and <code>het</code>.</p>
+    <div class="nelumbo-field" data-height="1084px">import nelumbo.logic
+Article :: Object
+Article ::= a, an
+Root    ::= noun &lt;Article&gt; &lt;NAME&gt; #100,
+            verb &lt;NAME&gt;           #100
+Thing   :: Object
+{
+    Article ar
+    NAME    n, v
+    noun ar n ::&gt; {
+        Root            ::= &lt;{Thing,Literal}&gt; is &lt;ar&gt; n #0
+        Root            ::= is &lt;Thing&gt; &lt;ar&gt; n ?         #0
+        private Boolean ::= n(&lt;Thing&gt;)
+        Thing x
+        is x ar n ? ::&gt; {
+            n(x) ?
+        }
+        {Thing,Literal} t
+        t is ar n ::&gt; {
+            fact n(t)
+        }
+    }
+    verb v ::&gt; {
+        Root            ::= &lt;{Thing,Literal}&gt; v &lt;{Thing,Literal}&gt; #0
+        Root            ::= who v &lt;Thing&gt; ?                       #0
+        private Boolean ::= v(&lt;Thing&gt;,&lt;Thing&gt;)
+        Thing x, y
+        who v y ? ::&gt; {
+            v(x,y) ?
+        }
+        {Thing,Literal} s, o
+        s v o ::&gt; {
+            fact v(s,o)
+        }
+    }
+}
+
+noun a dog
+noun an owl
+noun a cat
+verb chases
+
+Thing ::= Rex, Hoot, Tom
+Rex is a dog
+Hoot is an owl
+Tom is a cat
+Rex chases Tom
+Tom chases Hoot
+
+is Rex a dog ?
+is Hoot an owl ?
+is Tom a dog ?
+who chases Hoot ?
+</div>
+    <div class="nelumbo-exercise">
+      <p class="challenge">Dumbo is an elephant and scares Rex, but <code>elephant</code> and <code>scares</code> are not in the dictionary yet. Add them, so all sentences and questions parse.</p>
+      <div class="nelumbo-field" data-height="1004px" data-syntax="exercise">import nelumbo.logic
+Article :: Object
+Article ::= a, an
+Root    ::= noun &lt;Article&gt; &lt;NAME&gt; #100,
+            verb &lt;NAME&gt;           #100
+Thing   :: Object
+{
+    Article ar
+    NAME    n, v
+    noun ar n ::&gt; {
+        Root            ::= &lt;{Thing,Literal}&gt; is &lt;ar&gt; n #0
+        Root            ::= is &lt;Thing&gt; &lt;ar&gt; n ?         #0
+        private Boolean ::= n(&lt;Thing&gt;)
+        Thing x
+        is x ar n ? ::&gt; {
+            n(x) ?
+        }
+        {Thing,Literal} t
+        t is ar n ::&gt; {
+            fact n(t)
+        }
+    }
+    verb v ::&gt; {
+        Root            ::= &lt;{Thing,Literal}&gt; v &lt;{Thing,Literal}&gt; #0
+        Root            ::= who v &lt;Thing&gt; ?                       #0
+        private Boolean ::= v(&lt;Thing&gt;,&lt;Thing&gt;)
+        Thing x, y
+        who v y ? ::&gt; {
+            v(x,y) ?
+        }
+        {Thing,Literal} s, o
+        s v o ::&gt; {
+            fact v(s,o)
+        }
+    }
+}
+
+noun a dog
+noun an owl
+// add the missing words to the dictionary
+
+Thing ::= Rex, Hoot, Dumbo
+Rex is a dog
+Hoot is an owl
+Dumbo is an elephant
+Dumbo scares Rex
+
+is Dumbo an elephant ?
+who scares Rex ?
+</div>
+      <pre class="nelumbo-solution">import nelumbo.logic
+Article :: Object
+Article ::= a, an
+Root    ::= noun &lt;Article&gt; &lt;NAME&gt; #100,
+            verb &lt;NAME&gt;           #100
+Thing   :: Object
+{
+    Article ar
+    NAME    n, v
+    noun ar n ::&gt; {
+        Root            ::= &lt;{Thing,Literal}&gt; is &lt;ar&gt; n #0
+        Root            ::= is &lt;Thing&gt; &lt;ar&gt; n ?         #0
+        private Boolean ::= n(&lt;Thing&gt;)
+        Thing x
+        is x ar n ? ::&gt; {
+            n(x) ?
+        }
+        {Thing,Literal} t
+        t is ar n ::&gt; {
+            fact n(t)
+        }
+    }
+    verb v ::&gt; {
+        Root            ::= &lt;{Thing,Literal}&gt; v &lt;{Thing,Literal}&gt; #0
+        Root            ::= who v &lt;Thing&gt; ?                       #0
+        private Boolean ::= v(&lt;Thing&gt;,&lt;Thing&gt;)
+        Thing x, y
+        who v y ? ::&gt; {
+            v(x,y) ?
+        }
+        {Thing,Literal} s, o
+        s v o ::&gt; {
+            fact v(s,o)
+        }
+    }
+}
+
+noun a dog
+noun an owl
+noun an elephant
+verb scares
+
+Thing ::= Rex, Hoot, Dumbo
+Rex is a dog
+Hoot is an owl
+Dumbo is an elephant
+Dumbo scares Rex
+
+is Dumbo an elephant ?
+who scares Rex ?
 </pre>
     </div>
   </section>

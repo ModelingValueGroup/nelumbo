@@ -269,4 +269,10 @@ public class KnownBugsTest extends NelumboTestBase {
     public void typeVariableNamePrefixSplit() {
         bugResource("type-variable-name-prefix-split.nl");
     }
+
+    @KnownBug("functor without holes (Thing ::= n) in a transformation body makes the closing } of that body fail to parse")
+    @Test
+    public void holelessFunctorInTransformation() {
+        bugResource("holeless-functor-in-transformation.nl");
+    }
 }
