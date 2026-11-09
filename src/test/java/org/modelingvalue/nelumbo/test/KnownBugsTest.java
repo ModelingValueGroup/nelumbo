@@ -275,4 +275,10 @@ public class KnownBugsTest extends NelumboTestBase {
     public void holelessFunctorInTransformation() {
         bugResource("holeless-functor-in-transformation.nl");
     }
+
+    @KnownBug("functor with a hole of a user-declared Literal type (Boolean ::= near(<Pos>)) is reported as a non deterministic pattern merge with itself")
+    @Test
+    public void literalTypeHolePatternMerge() {
+        bugResource("literal-type-hole-pattern-merge.nl");
+    }
 }

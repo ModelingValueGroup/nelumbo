@@ -126,9 +126,11 @@
     <div class="group">Semantics</div>
     <a data-section="logic">Propositional logic</a>
     <a data-section="facts">Facts &amp; queries</a>
+    <a data-section="unique">Unique values</a>
     <a data-section="rules">Rules &amp; recursion</a>
     <a data-section="cycles">Cyclic rules</a>
     <a data-section="types">Data types</a>
+    <a data-section="equality">Equality</a>
     <a data-section="relations">Relational KB</a>
     <a data-section="dsl">Custom DSL</a>
     <div class="group">Transformations</div>
@@ -741,6 +743,61 @@ age(Jan)=40 ? [][()]
 </pre>
     </div>
   </section>
+  <section class="tutorial-section" id="unique">
+    <h2>Unique values</h2>
+    <p>Facts are open, but a hole can be declared <em>unique</em> with <code>one</code>:
+       <code>&lt;Person&gt; lives in &lt;one City&gt;</code> says that a person lives in one city. A fact then
+       closes the hole for that person: <code>Piet lives in c ?</code> answers Amsterdam without
+       <code>..</code>, and every other city is false. Nothing is asserted for Jan, so his city stays
+       unknown, and the other direction stays open: more people may live in Amsterdam. <code>likes</code>
+       has no <code>one</code>, so Piet may like more cities and Utrecht is unknown. A second city for Piet
+       would be rejected as an inconsistency. This is also why a function value is closed: both sides of
+       <code>=</code> are unique holes.</p>
+    <div class="nelumbo-field" data-height="398px">import nelumbo.logic
+Person  :: Object
+Person  ::= Piet, Jan
+City    :: Object
+City    ::= Amsterdam, Utrecht
+Boolean ::= &lt;Person&gt; lives in &lt;one City&gt; #30,
+            &lt;Person&gt; likes &lt;City&gt;        #30
+City   c
+Person p
+fact Piet lives in Amsterdam
+fact Piet likes Amsterdam
+Piet lives in c ?
+Piet lives in Utrecht ?
+Jan lives in c ?
+p lives in Amsterdam ?
+Piet likes c ?
+Piet likes Utrecht ?
+</div>
+    <div class="nelumbo-exercise">
+      <p class="challenge">Everybody is born in one city. Change the pattern so the expected results hold.</p>
+      <div class="nelumbo-field" data-height="266px">import nelumbo.logic
+Person  :: Object
+Person  ::= Piet, Jan
+City    :: Object
+City    ::= Amsterdam, Utrecht
+// everybody is born in one city: change the pattern so the expected results hold
+Boolean ::= &lt;Person&gt; was born in &lt;City&gt; #30
+City   c
+fact Jan was born in Utrecht
+Jan was born in c         ? [(c=Utrecht)][..]
+Jan was born in Amsterdam ? [][()]
+</div>
+      <pre class="nelumbo-solution">import nelumbo.logic
+Person  :: Object
+Person  ::= Piet, Jan
+City    :: Object
+City    ::= Amsterdam, Utrecht
+Boolean ::= &lt;Person&gt; was born in &lt;one City&gt; #30
+City   c
+fact Jan was born in Utrecht
+Jan was born in c         ? [(c=Utrecht)][..]
+Jan was born in Amsterdam ? [][()]
+</pre>
+    </div>
+  </section>
   <section class="tutorial-section" id="rules">
     <h2>Rules &amp; recursion</h2>
     <p>A rule <code>&lt;=&gt;</code> defines how a functor is derived. For a function, <code>==</code> gives
@@ -882,6 +939,48 @@ Integer d
 String  a
 Integer d
 "lo"+"tus"=a &amp; len(a)=d ? [(a="lotus",d=5)][..]
+</pre>
+    </div>
+  </section>
+  <section class="tutorial-section" id="equality">
+    <h2>Equality</h2>
+    <p>What <code>=</code> means depends on what a phrase is. A functor with arguments on an
+       <code>Object</code> type is a <em>function</em>: <code>double(2)</code> stands for the value a rule or
+       fact gives it, so <code>double(2)=4</code> is true and <code>double(2)=5</code> is false. Without
+       such a rule or fact the value is unknown, so even <code>point(1,2)=point(1,2)</code> is unknown. A
+       type declared <code>:: Literal</code> builds values instead: <code>pos(1,2)</code> is the value
+       itself, equal to another one exactly when it is built the same way, and it can be the answer of a
+       query (<code>q=pos(1,2)</code>). Constants such as <code>Piet</code> are literals too.</p>
+    <div class="nelumbo-field" data-height="354px">import nelumbo.integers
+Integer ::= double(&lt;Integer&gt;)
+Integer n
+double(n) == n*2
+double(2)=4 ?
+double(2)=5 ?
+Point   :: Object
+Point   ::= point(&lt;Integer&gt;,&lt;Integer&gt;)
+point(1,2)=point(1,2) ?
+Pos     :: Literal
+Pos     ::= pos(&lt;Integer&gt;,&lt;Integer&gt;)
+Pos     q
+pos(1,2)=pos(1,2) ?
+pos(1,2)=pos(2,1) ?
+q=pos(1,2) ?
+</div>
+    <div class="nelumbo-exercise">
+      <p class="challenge">A card is its number, nothing more. Change the declaration of <code>Card</code> so that cards are compared by how they are built.</p>
+      <div class="nelumbo-field" data-height="156px">import nelumbo.integers
+// change the declaration of Card so the expected results hold
+Card    :: Object
+Card    ::= card(&lt;Integer&gt;)
+card(7)=card(7) ? [()][]
+card(7)=card(8) ? [][()]
+</div>
+      <pre class="nelumbo-solution">import nelumbo.integers
+Card    :: Literal
+Card    ::= card(&lt;Integer&gt;)
+card(7)=card(7) ? [()][]
+card(7)=card(8) ? [][()]
 </pre>
     </div>
   </section>
