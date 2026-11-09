@@ -263,4 +263,10 @@ public class KnownBugsTest extends NelumboTestBase {
     public void leadingRepetitionPattern() {
         bugResource("leading-repetition-pattern.nl");
     }
+
+    @KnownBug("constant starting with a type parameter's name (Tom with Type T) in a <T> hole parses as a variable declaration (T om)")
+    @Test
+    public void typeVariableNamePrefixSplit() {
+        bugResource("type-variable-name-prefix-split.nl");
+    }
 }

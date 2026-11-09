@@ -109,6 +109,11 @@
     <a data-section="logic" class="active">Propositional logic</a>
     <a data-section="syntax">Types &amp; functors</a>
     <a data-section="patterns">Patterns</a>
+    <a data-section="precedence">Precedence</a>
+    <a data-section="parentheses">Parentheses</a>
+    <a data-section="generics">Generics</a>
+    <a data-section="connected">Connected tokens</a>
+    <a data-section="named-patterns">Named patterns</a>
     <a data-section="facts">Facts &amp; queries</a>
     <a data-section="rules">Rules &amp; recursion</a>
     <a data-section="types">Data types</a>
@@ -282,6 +287,278 @@ Sentence :: Root
 Sentence ::= &lt;Person&gt; &lt;(&gt; knows &lt;|&gt; does not know &lt;)&gt; &lt;Person&gt; #0
 Jan knows Piet
 Jan does not know Piet
+</pre>
+    </div>
+  </section>
+  <section class="tutorial-section" id="precedence">
+    <h2>Precedence</h2>
+    <p>An <em>operator</em> is a functor whose pattern starts with a hole, like <code>&lt;Expr&gt; plus &lt;Expr&gt;</code>.
+       When a sentence holds several operators, their precedence <code>#N</code> decides how they group: the
+       higher binds tighter. With <code>plus</code> at <code>#40</code> and <code>times</code> at <code>#50</code>,
+       <code>one plus two times three</code> is <code>one plus (two times three)</code>; operators of equal
+       precedence group from the left. An operator without a precedence does not parse at all. A hole can
+       carry a precedence too: <code>&lt;Expr#45&gt;</code> takes only operators above 45, so <code>times</code>
+       but not <code>plus</code>. A hole without one takes the precedence of its functor; that is why the
+       <code>#0</code> of a sentence lets every operator in. The standard operators range from <code>#16</code>
+       (<code>&lt;-&gt;</code>) to <code>#80</code> (unary <code>-</code>).</p>
+    <div class="nelumbo-field" data-height="310px" data-syntax>import nelumbo.lang
+Expr     :: Object
+Expr     ::= one, two, three
+Expr     ::= &lt;Expr&gt; plus &lt;Expr&gt;  #40,
+             &lt;Expr&gt; times &lt;Expr&gt; #50
+Sentence :: Root
+Sentence ::= compute &lt;Expr&gt;  #0,
+             twice &lt;Expr#45&gt; #0
+// one plus (two times three)
+compute one plus two times three
+// (one times two) plus three
+compute one times two plus three
+twice two times three
+</div>
+    <div class="nelumbo-exercise">
+      <p class="challenge"><code>minus</code> has no precedence, so the last sentence does not parse. Give it the precedence of <code>plus</code>.</p>
+      <div class="nelumbo-field" data-height="244px" data-syntax="exercise">import nelumbo.lang
+Expr     :: Object
+Expr     ::= one, two, three
+// give minus a precedence, the same as plus
+Expr     ::= &lt;Expr&gt; plus &lt;Expr&gt;  #40,
+             &lt;Expr&gt; minus &lt;Expr&gt;,
+             &lt;Expr&gt; times &lt;Expr&gt; #50
+Sentence :: Root
+Sentence ::= compute &lt;Expr&gt; #0
+compute three minus one times two
+</div>
+      <pre class="nelumbo-solution" data-syntax>import nelumbo.lang
+Expr     :: Object
+Expr     ::= one, two, three
+Expr     ::= &lt;Expr&gt; plus &lt;Expr&gt;  #40,
+             &lt;Expr&gt; minus &lt;Expr&gt; #40,
+             &lt;Expr&gt; times &lt;Expr&gt; #50
+Sentence :: Root
+Sentence ::= compute &lt;Expr&gt; #0
+compute three minus one times two
+</pre>
+    </div>
+    <div class="nelumbo-exercise">
+      <p class="challenge"><code>twice one plus two</code> does not parse: the hole <code>&lt;Expr#45&gt;</code> rejects <code>plus</code>. Change only the precedence of the hole so both sentences parse.</p>
+      <div class="nelumbo-field" data-height="244px" data-syntax="exercise">import nelumbo.lang
+Expr     :: Object
+Expr     ::= one, two, three
+Expr     ::= &lt;Expr&gt; plus &lt;Expr&gt;  #40,
+             &lt;Expr&gt; times &lt;Expr&gt; #50
+Sentence :: Root
+// change only the precedence of the hole so both sentences parse
+Sentence ::= twice &lt;Expr#45&gt; #0
+twice two times three
+twice one plus two
+</div>
+      <pre class="nelumbo-solution" data-syntax>import nelumbo.lang
+Expr     :: Object
+Expr     ::= one, two, three
+Expr     ::= &lt;Expr&gt; plus &lt;Expr&gt;  #40,
+             &lt;Expr&gt; times &lt;Expr&gt; #50
+Sentence :: Root
+Sentence ::= twice &lt;Expr#35&gt; #0
+twice two times three
+twice one plus two
+</pre>
+    </div>
+  </section>
+  <section class="tutorial-section" id="parentheses">
+    <h2>Parentheses</h2>
+    <p>Parentheses override precedence: <code>(one plus two) times three</code>. You never declare them:
+       <code>nelumbo.lang</code> ends with <code>Type P</code> and <code>P ::= (&lt;P&gt;) @nelumbo.lang.Parenthesized</code>,
+       one generic functor (see the next section) that gives every type its parentheses. The <code>@</code> binds
+       a functor to a Java class; <code>Parenthesized</code> hands back the expression inside, so <code>(one)</code>
+       is just <code>one</code>, not a new phrase. A parenthesized expression is complete in itself, so it fits a
+       hole of any precedence: <code>twice (one plus two)</code> parses where <code>twice one plus two</code> did not.</p>
+    <div class="nelumbo-field" data-height="376px" data-syntax>import nelumbo.lang
+Expr     :: Object
+Expr     ::= one, two, three
+Expr     ::= &lt;Expr&gt; plus &lt;Expr&gt;  #40,
+             &lt;Expr&gt; times &lt;Expr&gt; #50
+Person   :: Object
+Person   ::= Piet, Marie
+Person   ::= father(&lt;Person&gt;)
+Sentence :: Root
+Sentence ::= compute &lt;Expr&gt;       #0,
+             twice &lt;Expr#45&gt;      #0,
+             &lt;Person&gt; knows &lt;Person&gt; #0
+compute (one plus two) times three
+twice (one plus two)
+twice ((one))
+(father(Marie)) knows (Piet)
+</div>
+    <div class="nelumbo-exercise">
+      <p class="challenge">Add square brackets as a second way to group expressions, so the last sentence parses. Bind them to <code>@nelumbo.lang.Parenthesized</code> too, so <code>[one]</code> is just <code>one</code>.</p>
+      <div class="nelumbo-field" data-height="244px" data-syntax="exercise">import nelumbo.lang
+Expr     :: Object
+Expr     ::= one, two, three
+Expr     ::= &lt;Expr&gt; plus &lt;Expr&gt;  #40,
+             &lt;Expr&gt; times &lt;Expr&gt; #50
+// add square brackets as a second way to group expressions
+Sentence :: Root
+Sentence ::= compute &lt;Expr&gt; #0
+compute (one plus two) times three
+compute [one plus two] times three
+</div>
+      <pre class="nelumbo-solution" data-syntax>import nelumbo.lang
+Expr     :: Object
+Expr     ::= one, two, three
+Expr     ::= &lt;Expr&gt; plus &lt;Expr&gt;  #40,
+             &lt;Expr&gt; times &lt;Expr&gt; #50
+Expr     ::= [&lt;Expr&gt;] @nelumbo.lang.Parenthesized
+Sentence :: Root
+Sentence ::= compute &lt;Expr&gt; #0
+compute (one plus two) times three
+compute [one plus two] times three
+</pre>
+    </div>
+  </section>
+  <section class="tutorial-section" id="generics">
+    <h2>Generics</h2>
+    <p><code>Type E</code> declares a type parameter. With it, <code>Team&lt;E&gt; :: Object</code> declares a
+       generic type and <code>Team&lt;E&gt; ::= team of &lt;(&gt; &lt;E&gt; &lt;,&gt; , &lt;)+&gt;</code> a functor for it:
+       <code>team of Piet, Jan</code> is a <code>Team&lt;Person&gt;</code> and <code>team of Rex, Tom</code> a
+       <code>Team&lt;Animal&gt;</code>. A hole names the team it takes: <code>&lt;Team&lt;Person&gt;&gt;</code>
+       rejects a team of animals, <code>&lt;Team&lt;E&gt;&gt;</code> takes a team of anything. Write a generic type
+       without spaces: <code>Team&lt;E&gt;</code>, not <code>Team &lt; E &gt;</code>. The parentheses of the
+       previous section are declared this way, and so are <code>List&lt;E&gt;</code> and <code>Set&lt;E&gt;</code>
+       of the collections.</p>
+    <div class="nelumbo-field" data-height="310px" data-syntax>import nelumbo.lang
+Person   :: Object
+Person   ::= Piet, Jan, Marie
+Animal   :: Object
+Animal   ::= Rex, Tom, Bello
+Type E
+Team&lt;E&gt;  :: Object
+Team&lt;E&gt;  ::= team of &lt;(&gt; &lt;E&gt; &lt;,&gt; , &lt;)+&gt;
+Sentence :: Root
+Sentence ::= &lt;Team&lt;Person&gt;&gt; plays against &lt;Team&lt;Person&gt;&gt; #0,
+             &lt;Team&lt;Animal&gt;&gt; chases &lt;Team&lt;Animal&gt;&gt;        #0
+team of Piet, Jan plays against team of Marie
+team of Rex chases team of Tom, Bello
+</div>
+    <div class="nelumbo-exercise">
+      <p class="challenge">A team can only hold persons, so the last sentence does not parse. Make <code>Team</code> generic, so animals can form teams too.</p>
+      <div class="nelumbo-field" data-height="288px" data-syntax="exercise">import nelumbo.lang
+Person   :: Object
+Person   ::= Piet, Jan, Marie
+Animal   :: Object
+Animal   ::= Rex, Tom, Bello
+// make Team generic, so that animals can form teams too
+Team     :: Object
+Team     ::= team of &lt;(&gt; &lt;Person&gt; &lt;,&gt; , &lt;)+&gt;
+Sentence :: Root
+Sentence ::= &lt;Team&gt; plays against &lt;Team&gt; #0
+team of Piet, Jan plays against team of Marie
+team of Rex plays against team of Tom, Bello
+</div>
+      <pre class="nelumbo-solution" data-syntax>import nelumbo.lang
+Person   :: Object
+Person   ::= Piet, Jan, Marie
+Animal   :: Object
+Animal   ::= Rex, Tom, Bello
+Type E
+Team&lt;E&gt;  :: Object
+Team&lt;E&gt;  ::= team of &lt;(&gt; &lt;E&gt; &lt;,&gt; , &lt;)+&gt;
+Sentence :: Root
+Sentence ::= &lt;Team&lt;E&gt;&gt; plays against &lt;Team&lt;E&gt;&gt; #0
+team of Piet, Jan plays against team of Marie
+team of Rex plays against team of Tom, Bello
+</pre>
+    </div>
+  </section>
+  <section class="tutorial-section" id="connected">
+    <h2>Connected tokens</h2>
+    <p>Whitespace between tokens does not matter: the pattern <code>&lt;NUMBER&gt; : &lt;NUMBER&gt;</code> accepts
+       <code>9:30</code> and <code>9 : 30</code> alike. Between <code>&lt;[&gt;</code> and <code>&lt;]&gt;</code> the
+       tokens must touch: <code>&lt;[&gt; &lt;NUMBER&gt; : &lt;NUMBER&gt; &lt;]&gt;</code> accepts only <code>9:30</code>.
+       Use it for a literal written as several tokens, such as a time, a date or a decimal number, so it cannot
+       be taken for an expression with an operator. <code>&lt;[&gt;</code> and <code>&lt;]&gt;</code> themselves do not
+       appear in the sentence. The standard library writes <code>3.14</code>, <code>2025-01-01</code> and
+       <code>16#FF</code> this way, and <code>nelumbo.lang</code> the head of a generic type like
+       <code>Team&lt;E&gt;</code>.</p>
+    <div class="nelumbo-field" data-height="244px" data-syntax>import nelumbo.lang
+Person   :: Object
+Person   ::= Piet, Marie
+Time     :: Object
+Time     ::= &lt;[&gt; &lt;NUMBER&gt; : &lt;NUMBER&gt; &lt;]&gt;
+Sentence :: Root
+Sentence ::= &lt;Person&gt; arrives at &lt;Time&gt; #0
+Piet arrives at 9:30
+Marie arrives at 14:05
+// Piet arrives at 9 : 30   does not parse
+</div>
+    <div class="nelumbo-exercise">
+      <p class="challenge">Declare a type <code>Date</code> for dates like <code>1990-05-17</code>, written without spaces, so both sentences parse.</p>
+      <div class="nelumbo-field" data-height="266px" data-syntax="exercise">import nelumbo.lang
+Person   :: Object
+Person   ::= Piet, Marie
+Time     :: Object
+Time     ::= &lt;[&gt; &lt;NUMBER&gt; : &lt;NUMBER&gt; &lt;]&gt;
+// declare the type Date, with connected tokens like Time
+Sentence :: Root
+Sentence ::= &lt;Person&gt; arrives at &lt;Time&gt;   #0,
+             &lt;Person&gt; was born on &lt;Date&gt; #0
+Piet arrives at 9:30
+Marie was born on 1990-05-17
+</div>
+      <pre class="nelumbo-solution" data-syntax>import nelumbo.lang
+Person   :: Object
+Person   ::= Piet, Marie
+Time     :: Object
+Time     ::= &lt;[&gt; &lt;NUMBER&gt; : &lt;NUMBER&gt; &lt;]&gt;
+Date     :: Object
+Date     ::= &lt;[&gt; &lt;NUMBER&gt; - &lt;NUMBER&gt; - &lt;NUMBER&gt; &lt;]&gt;
+Sentence :: Root
+Sentence ::= &lt;Person&gt; arrives at &lt;Time&gt;   #0,
+             &lt;Person&gt; was born on &lt;Date&gt; #0
+Piet arrives at 9:30
+Marie was born on 1990-05-17
+</pre>
+    </div>
+  </section>
+  <section class="tutorial-section" id="named-patterns">
+    <h2>Named patterns</h2>
+    <p>A piece of pattern that recurs can get a name: <code>pattern GUESTS ::= ...</code> declares it, and
+       <code>&lt;GUESTS&gt;</code> stands for its body wherever it is written, after the declaration. A named
+       pattern is pure abbreviation: unlike a functor, it declares no type and builds no value. Here
+       <code>GUESTS</code> is the guest list of the Patterns exercise, now shared by two sentences.
+       <code>nelumbo.lang</code> uses named patterns itself, for instance
+       <code>pattern QNAME ::= &lt;[&gt; &lt;(&gt; &lt;NAME&gt; &lt;,&gt; . &lt;)+&gt; &lt;]&gt;</code> for the dotted
+       name after <code>import</code>.</p>
+    <div class="nelumbo-field" data-height="222px" data-syntax>import nelumbo.lang
+Person   :: Object
+Person   ::= Piet, Jan, Marie, Klaas
+pattern GUESTS ::= &lt;(&gt; &lt;Person&gt; &lt;,&gt; , &lt;)+&gt; &lt;(&gt; and &lt;Person&gt; &lt;)?&gt;
+Sentence :: Root
+Sentence ::= &lt;Person&gt; invites &lt;GUESTS&gt; #0,
+             party with &lt;GUESTS&gt;       #0
+Piet invites Jan, Marie and Klaas
+party with Jan and Marie
+</div>
+    <div class="nelumbo-exercise">
+      <p class="challenge">Both sentences use <code>&lt;TIME&gt;</code>, which is not declared yet. Declare it as a named pattern for a time like <code>9:30</code>, above the functor that uses it.</p>
+      <div class="nelumbo-field" data-height="222px" data-syntax="exercise">import nelumbo.lang
+Person   :: Object
+Person   ::= Piet, Marie, Klaas
+// declare the named pattern TIME, for a time like 9:30
+Sentence :: Root
+Sentence ::= &lt;Person&gt; arrives at &lt;TIME&gt;          #0,
+             &lt;Person&gt; works from &lt;TIME&gt; to &lt;TIME&gt; #0
+Marie arrives at 9:30
+Klaas works from 8:00 to 17:30
+</div>
+      <pre class="nelumbo-solution" data-syntax>import nelumbo.lang
+Person   :: Object
+Person   ::= Piet, Marie, Klaas
+pattern TIME ::= &lt;[&gt; &lt;NUMBER&gt; : &lt;NUMBER&gt; &lt;]&gt;
+Sentence :: Root
+Sentence ::= &lt;Person&gt; arrives at &lt;TIME&gt;          #0,
+             &lt;Person&gt; works from &lt;TIME&gt; to &lt;TIME&gt; #0
+Marie arrives at 9:30
+Klaas works from 8:00 to 17:30
 </pre>
     </div>
   </section>
