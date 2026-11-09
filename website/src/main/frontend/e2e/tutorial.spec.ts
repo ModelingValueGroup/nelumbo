@@ -1,6 +1,6 @@
 import { test, expect, Page, Locator } from '@playwright/test';
 
-const SECTIONS: string[] = ['syntax', 'patterns', 'precedence', 'parentheses', 'generics', 'connected', 'named-patterns', 'scoping', 'logic', 'facts', 'unique', 'rules', 'combining', 'cycles', 'types', 'equality', 'relations', 'quantifiers', 'dsl', 'transform', 'cnl'];
+const SECTIONS: string[] = ['syntax', 'patterns', 'precedence', 'parentheses', 'generics', 'connected', 'named-patterns', 'scoping', 'logic', 'facts', 'unique', 'rules', 'combining', 'cycles', 'types', 'equality', 'relations', 'quantifiers', 'dsl', 'transform', 'cnl', 'family-tree', 'club-fees', 'train-network', 'room-booking', 'access-policy'];
 
 async function showSection(page: Page, id: string): Promise<Locator> {
     await page.locator('aside nav a[data-section="' + id + '"]').click();
@@ -14,7 +14,7 @@ test('tutorial loads with the first syntax section active and the full sidebar',
     for (const id of SECTIONS) {
         await expect(page.locator('aside nav a[data-section="' + id + '"]')).toBeVisible();
     }
-    await expect(page.locator('aside nav .group')).toHaveText(['Syntax', 'Semantics', 'Transformations']);
+    await expect(page.locator('aside nav .group')).toHaveText(['Syntax', 'Semantics', 'Transformations', 'Projects']);
     await expect(page.locator('#syntax')).toHaveClass(/active/);
 });
 

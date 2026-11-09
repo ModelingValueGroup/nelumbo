@@ -49,6 +49,10 @@
   main { flex: 1; overflow: auto; }
   .tutorial-section { display: none; max-width: 860px; margin: 0 auto; padding: 24px 24px 80px; }
   .tutorial-section.active { display: block; }
+  .project-hints { margin: 0 0 20px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); }
+  .project-hints summary { cursor: pointer; color: var(--accent); font-weight: 600; }
+  .project-hints ol { margin: 10px 0 0; padding-left: 22px; color: var(--prose); }
+  .project-hints li { margin: 4px 0; }
   .pager { display: flex; gap: 12px; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); }
   .pager a { flex: 0 1 50%; display: flex; flex-direction: column; gap: 2px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); text-decoration: none; }
   .pager a:hover { border-color: var(--accent); }
@@ -57,7 +61,7 @@
   .pager .title { color: var(--accent); font-weight: 600; }
   h2 { font: 700 20px/1.3 "Bricolage Grotesque", "Instrument Sans", sans-serif; margin-top: 8px; }
   p { color: var(--prose); }
-  code { background: var(--panel); border-radius: 4px; padding: 1px 5px; font: 13px "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; }
+  code { background: var(--panel); border-radius: 4px; padding: 1px 5px; font: 13px "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; font-variant-ligatures: none; }
   #nav-toggle, #nav-backdrop { display: none; }
   @media (max-width: 760px) {
     #nav-toggle { display: flex; flex: 0 0 auto; width: 36px; height: 36px; flex-direction: column; justify-content: center; align-items: center; gap: 4px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; padding: 0; }
@@ -138,6 +142,12 @@
     <div class="group">Transformations</div>
     <a data-section="transform">Transformations</a>
     <a data-section="cnl">Controlled English</a>
+    <div class="group">Projects</div>
+    <a data-section="family-tree">Family tree</a>
+    <a data-section="club-fees">Club fees</a>
+    <a data-section="train-network">Train network</a>
+    <a data-section="room-booking">Room booking</a>
+    <a data-section="access-policy">Access policy</a>
     <div class="sep"></div>
     <span class="version">@VERSION@ <span class="status-dot" data-status-link aria-hidden="true"></span></span>
   </nav>
@@ -1452,6 +1462,527 @@ Dumbo scares Rex
 
 is Dumbo an elephant ?
 who scares Rex ?
+</pre>
+    </div>
+  </section>
+  <section class="tutorial-section" id="family-tree">
+    <h2>Family tree</h2>
+    <p>A project puts the sections together. Only the end of the file is given: facts and questions, each
+       with the answer it should get. You design and write everything above it. Here you build a small
+       English language about the Dutch royal family. Some answers are closed: Beatrix has exactly two
+       parents. Others are open: Amalia's mother is not given, so she may have more grandparents than the
+       two that are known.</p>
+    <details class="project-hints">
+      <summary>Hints</summary>
+      <ol>
+        <li>Declare <code>Person</code> with the subtypes <code>Male</code> and <code>Female</code>, and the nine
+            persons as constants of those.</li>
+        <li>Declare the sentences as <code>Boolean</code> phrases with precedence <code>#30</code>. A person has
+            one mother: <code>&lt;one Person&gt; is the mother of &lt;Person&gt;</code> makes
+            <code>Irene is the mother of Beatrix</code> false. The same goes for the father.</li>
+        <li>Declare the variables, <code>Who</code> included.</li>
+        <li>A parent is the mother or the father. A grandparent is a parent of a parent
+            (<code>E[p](...)</code>), a grandchild the other way around.</li>
+        <li>An ancestor is a parent, or a parent of an ancestor: a cyclic rule.</li>
+        <li>Sisters and brothers share a parent and are not the same person (<code>!=</code>). To tell them
+            apart, add <code>&lt;Person&gt; is female</code> with two rules: true for a <code>Female</code>
+            variable, false for a <code>Male</code> one.</li>
+        <li>An aunt is a sister of a parent.</li>
+      </ol>
+    </details>
+    <div class="nelumbo-exercise">
+      <p class="challenge">Write the language above the given part, so that the facts parse and every question gets the expected answer.</p>
+      <div class="nelumbo-field" data-height="1000px" data-syntax="exercise">import nelumbo.logic
+
+// build your language here: types, persons, sentences, variables and rules
+
+
+
+// ---- given: make these facts parse and these questions give the expected answers ----
+fact Juliana   is the mother of Beatrix, Juliana  is the mother of Irene, Juliana  is the mother of Margriet
+fact Bernhard  is the father of Beatrix, Bernhard is the father of Irene, Bernhard is the father of Margriet
+fact Beatrix   is the mother of Alexander, Beatrix is the mother of Friso
+fact Claus     is the father of Alexander, Claus   is the father of Friso
+fact Alexander is the father of Amalia
+
+Who is the mother of Beatrix   ? [(Who=Juliana)][..]
+Irene is the mother of Beatrix ? [][()]
+Who is a parent of Beatrix     ? [(Who=Bernhard),(Who=Juliana)][..]
+Who is a grandparent of Amalia ? [(Who=Beatrix),(Who=Claus),..][..]
+Who is a grandchild of Juliana ? [(Who=Alexander),(Who=Friso),..][..]
+Who is an ancestor of Amalia   ? [(Who=Alexander),(Who=Beatrix),(Who=Bernhard),(Who=Claus),(Who=Juliana),..][..]
+Who is a sister of Beatrix     ? [(Who=Irene),(Who=Margriet),..][(Who=Beatrix),..]
+Who is a brother of Alexander  ? [(Who=Friso),..][(Who=Alexander),..]
+Friso is a sister of Alexander ? [][()]
+Who is an aunt of Alexander    ? [(Who=Irene),(Who=Margriet),..][..]
+</div>
+      <pre class="nelumbo-solution">import nelumbo.logic
+Person  :: Object
+Male    :: Person
+Female  :: Person
+Male    ::= Bernhard, Claus, Alexander, Friso
+Female  ::= Juliana, Beatrix, Irene, Margriet, Amalia
+Boolean ::= &lt;one Person&gt; is the mother of &lt;Person&gt; #30,
+            &lt;one Person&gt; is the father of &lt;Person&gt; #30,
+            &lt;Person&gt; is female                     #30,
+            &lt;Person&gt; is a parent of &lt;Person&gt;       #30,
+            &lt;Person&gt; is a grandparent of &lt;Person&gt;  #30,
+            &lt;Person&gt; is a grandchild of &lt;Person&gt;   #30,
+            &lt;Person&gt; is an ancestor of &lt;Person&gt;    #30,
+            &lt;Person&gt; is a sister of &lt;Person&gt;       #30,
+            &lt;Person&gt; is a brother of &lt;Person&gt;      #30,
+            &lt;Person&gt; is an aunt of &lt;Person&gt;        #30
+Person  p, c, g, a, s, x, Who
+Female  f
+Male    m
+f is female             &lt;=&gt; true
+m is female             &lt;=&gt; false
+p is a parent of c      &lt;=&gt; p is the mother of c | p is the father of c
+g is a grandparent of c &lt;=&gt; E[p](g is a parent of p &amp; p is a parent of c)
+c is a grandchild of g  &lt;=&gt; g is a grandparent of c
+a is an ancestor of c   &lt;=&gt; a is a parent of c | E[p](a is a parent of p &amp; p is an ancestor of c)
+s is a sister of x      &lt;=&gt; s is female &amp; s != x &amp; E[p](p is a parent of x &amp; p is a parent of s)
+s is a brother of x     &lt;=&gt; !(s is female) &amp; s != x &amp; E[p](p is a parent of x &amp; p is a parent of s)
+s is an aunt of c       &lt;=&gt; E[p](p is a parent of c &amp; s is a sister of p)
+
+// ---- given: make these facts parse and these questions give the expected answers ----
+fact Juliana   is the mother of Beatrix, Juliana  is the mother of Irene, Juliana  is the mother of Margriet
+fact Bernhard  is the father of Beatrix, Bernhard is the father of Irene, Bernhard is the father of Margriet
+fact Beatrix   is the mother of Alexander, Beatrix is the mother of Friso
+fact Claus     is the father of Alexander, Claus   is the father of Friso
+fact Alexander is the father of Amalia
+
+Who is the mother of Beatrix   ? [(Who=Juliana)][..]
+Irene is the mother of Beatrix ? [][()]
+Who is a parent of Beatrix     ? [(Who=Bernhard),(Who=Juliana)][..]
+Who is a grandparent of Amalia ? [(Who=Beatrix),(Who=Claus),..][..]
+Who is a grandchild of Juliana ? [(Who=Alexander),(Who=Friso),..][..]
+Who is an ancestor of Amalia   ? [(Who=Alexander),(Who=Beatrix),(Who=Bernhard),(Who=Claus),(Who=Juliana),..][..]
+Who is a sister of Beatrix     ? [(Who=Irene),(Who=Margriet),..][(Who=Beatrix),..]
+Who is a brother of Alexander  ? [(Who=Friso),..][(Who=Alexander),..]
+Friso is a sister of Alexander ? [][()]
+Who is an aunt of Alexander    ? [(Who=Irene),(Who=Margriet),..][..]
+</pre>
+    </div>
+  </section>
+  <section class="tutorial-section" id="club-fees">
+    <h2>Club fees</h2>
+    <p>The rules of a sports club are given in English, as comments, with its members and the fee each one
+       should pay. Turn them into a small language that computes every fee. Some answers come from what is
+       <em>not</em> possible: Henk is not a junior because he has exactly one age, and it is 70. And a rule
+       only needs what it uses: Piet's age is unknown, so his fee is too, but Bram is a volunteer, and a
+       volunteer pays nothing at any age.</p>
+    <details class="project-hints">
+      <summary>Hints</summary>
+      <ol>
+        <li>Declare <code>Person</code> with the nine members, and a type <code>Membership</code> with the
+            constants <code>regular</code>, <code>weekday</code> and <code>volunteer</code>.</li>
+        <li>Declare the sentences as <code>Boolean</code> phrases with precedence <code>#30</code>. A person has
+            one age and one membership: <code>&lt;Person&gt; is &lt;one Integer&gt; years old</code>. Without
+            <code>one</code>, <code>Henk is a junior</code> cannot be false.</li>
+        <li>Define junior, adult and senior with <code>E[n](p is n years old &amp; ...)</code>. Mind the
+            boundaries: 18 is an adult, 65 a senior.</li>
+        <li>Declare the fees as functions with a precedence, <code>Integer ::= the fee of &lt;Person&gt; #60</code>:
+            without one, <code>the fee of p == ...</code> takes the rest of the line into its hole.</li>
+        <li>Write two function rules with <code>==</code> and <code>if</code>: a base fee per age group, and the
+            fee per membership, which uses the base fee.</li>
+      </ol>
+    </details>
+    <div class="nelumbo-exercise">
+      <p class="challenge">Write the language above the given part, so that the facts parse and every question gets the expected answer.</p>
+      <div class="nelumbo-field" data-height="1000px" data-syntax="exercise">import nelumbo.integers
+
+// build your language here: types, members, sentences, variables and rules
+
+
+
+// ---- given: the club's rules, its members, and the answers they should get ----
+// Juniors (younger than 18) pay 50 euro, adults 120 euro, seniors (65 or older) 84 euro.
+// Weekday members pay 20 euro less. Volunteers pay nothing.
+fact Anna is 30 years old, Lisa is 16 years old, Henk is 70 years old, Kees is 12 years old,
+     Marie is 45 years old, Sven is 18 years old, Eva is 65 years old
+fact Anna has a regular membership, Lisa has a weekday membership, Henk has a weekday membership,
+     Kees has a regular membership, Marie has a volunteer membership, Sven has a regular membership,
+     Eva has a regular membership, Piet has a weekday membership, Bram has a volunteer membership
+
+Lisa is a junior              ? [()][]
+Henk is a junior              ? [][()]
+Sven is an adult              ? [()][]
+Eva is a senior               ? [()][]
+Anna is 31 years old          ? [][()]
+Anna has a weekday membership ? [][()]
+the fee of Anna               ? [(120)][..]
+the fee of Lisa               ? [(30)][..]
+the fee of Henk               ? [(64)][..]
+the fee of Kees               ? [(50)][..]
+the fee of Marie              ? [(0)][..]
+the fee of Sven               ? [(120)][..]
+the fee of Eva                ? [(84)][..]
+the fee of Piet               ? [..][..]
+the fee of Bram               ? [(0)][..]
+</div>
+      <pre class="nelumbo-solution">import nelumbo.integers
+Person     :: Object
+Person     ::= Anna, Lisa, Henk, Kees, Marie, Sven, Eva, Piet, Bram
+Membership :: Object
+Membership ::= regular, weekday, volunteer
+Boolean    ::= &lt;Person&gt; is &lt;one Integer&gt; years old        #30,
+               &lt;Person&gt; has a &lt;one Membership&gt; membership #30,
+               &lt;Person&gt; is a junior                       #30,
+               &lt;Person&gt; is an adult                       #30,
+               &lt;Person&gt; is a senior                       #30
+Integer    ::= the base fee of &lt;Person&gt; #60,
+               the fee of &lt;Person&gt;      #60
+Person     p
+Integer    n
+p is a junior &lt;=&gt; E[n](p is n years old &amp; n&lt;18)
+p is an adult &lt;=&gt; E[n](p is n years old &amp; n&gt;=18 &amp; n&lt;65)
+p is a senior &lt;=&gt; E[n](p is n years old &amp; n&gt;=65)
+the base fee of p == 50 if p is a junior, 120 if p is an adult, 84 if p is a senior
+the fee of p == the base fee of p      if p has a regular membership,
+                the base fee of p - 20 if p has a weekday membership,
+                0                      if p has a volunteer membership
+
+// ---- given: the club's rules, its members, and the answers they should get ----
+// Juniors (younger than 18) pay 50 euro, adults 120 euro, seniors (65 or older) 84 euro.
+// Weekday members pay 20 euro less. Volunteers pay nothing.
+fact Anna is 30 years old, Lisa is 16 years old, Henk is 70 years old, Kees is 12 years old,
+     Marie is 45 years old, Sven is 18 years old, Eva is 65 years old
+fact Anna has a regular membership, Lisa has a weekday membership, Henk has a weekday membership,
+     Kees has a regular membership, Marie has a volunteer membership, Sven has a regular membership,
+     Eva has a regular membership, Piet has a weekday membership, Bram has a volunteer membership
+
+Lisa is a junior              ? [()][]
+Henk is a junior              ? [][()]
+Sven is an adult              ? [()][]
+Eva is a senior               ? [()][]
+Anna is 31 years old          ? [][()]
+Anna has a weekday membership ? [][()]
+the fee of Anna               ? [(120)][..]
+the fee of Lisa               ? [(30)][..]
+the fee of Henk               ? [(64)][..]
+the fee of Kees               ? [(50)][..]
+the fee of Marie              ? [(0)][..]
+the fee of Sven               ? [(120)][..]
+the fee of Eva                ? [(84)][..]
+the fee of Piet               ? [..][..]
+the fee of Bram               ? [(0)][..]
+</pre>
+    </div>
+  </section>
+  <section class="tutorial-section" id="train-network">
+    <h2>Train network</h2>
+    <p>The timetable of a small rail network says which cities have a train between them. Turn it into a
+       language that answers travel questions. A train runs both ways, a journey can go round the ring of
+       cities, and "in at most 3 steps" counts down, so it ends. Groningen cannot be reached from Utrecht
+       with these trains, but that is unknown, not false: the timetable may not list every train. Only "in at
+       most 0 steps" is false: no journey takes zero steps.</p>
+    <details class="project-hints">
+      <summary>Hints</summary>
+      <ol>
+        <li>Declare <code>City</code> with the nine cities.</li>
+        <li>Declare the sentences as <code>Boolean</code> phrases with precedence <code>#30</code>: the fact
+            sentence, <code>&lt;City&gt; is next to &lt;City&gt;</code>, <code>I can travel from &lt;City&gt; to
+            &lt;City&gt;</code>, and the same with <code>in at most &lt;Integer&gt; steps</code>.</li>
+        <li>Declare the variables, <code>Which</code> included.</li>
+        <li>A train runs both ways: two cities are next to each other when there is a train between them, in
+            either order.</li>
+        <li>You can travel from <code>a</code> to <code>b</code> when <code>b</code> is next to <code>a</code>,
+            or when a city <code>c</code> next to <code>a</code> can reach <code>b</code>: a cyclic rule.</li>
+        <li>In at most <code>n</code> steps: <code>n</code> is more than 0, and a city next to <code>a</code> is
+            <code>b</code> or reaches <code>b</code> in at most <code>n-1</code> steps. Write
+            <code>n&gt;0 &amp; ...</code>, not <code>... if n&gt;0</code>: a guard that fails makes a rule silent,
+            so 0 steps would be unknown instead of false.</li>
+      </ol>
+    </details>
+    <div class="nelumbo-exercise">
+      <p class="challenge">Write the language above the given part, so that the facts parse and every question gets the expected answer.</p>
+      <div class="nelumbo-field" data-height="1000px" data-syntax="exercise">import nelumbo.integers
+
+// build your language here: cities, sentences, variables and rules
+
+
+
+// ---- given: the timetable and the answers it should give ----
+fact there is a train between Utrecht and Amsterdam, there is a train between Amsterdam and Haarlem,
+     there is a train between Haarlem and Leiden,    there is a train between Leiden and Delft,
+     there is a train between Delft and Rotterdam,   there is a train between Rotterdam and Gouda,
+     there is a train between Gouda and Utrecht,     there is a train between Zwolle and Groningen
+
+Utrecht is next to Amsterdam                           ? [()][]
+Amsterdam is next to Utrecht                           ? [()][]
+Which is next to Utrecht                               ? [(Which=Amsterdam),(Which=Gouda),..][..]
+Utrecht is next to Leiden                              ? [..][..]
+I can travel from Utrecht to Leiden                    ? [()][]
+I can travel from Utrecht to Groningen                 ? [..][..]
+I can travel from Utrecht to Which                     ? [(Which=Amsterdam),(Which=Delft),(Which=Gouda),(Which=Haarlem),(Which=Leiden),(Which=Rotterdam),(Which=Utrecht),..][..]
+I can travel from Utrecht to Leiden in at most 3 steps ? [()][]
+I can travel from Utrecht to Leiden in at most 2 steps ? [..][..]
+I can travel from Utrecht to Delft in at most 3 steps  ? [()][]
+I can travel from Utrecht to Delft in at most 0 steps  ? [][()]
+</div>
+      <pre class="nelumbo-solution">import nelumbo.integers
+City    :: Object
+City    ::= Utrecht, Amsterdam, Haarlem, Leiden, Delft, Rotterdam, Gouda, Zwolle, Groningen
+Boolean ::= there is a train between &lt;City&gt; and &lt;City&gt;                #30,
+            &lt;City&gt; is next to &lt;City&gt;                                  #30,
+            I can travel from &lt;City&gt; to &lt;City&gt;                        #30,
+            I can travel from &lt;City&gt; to &lt;City&gt; in at most &lt;Integer&gt; steps #30
+City    a, b, c, Which
+Integer n
+a is next to b &lt;=&gt; there is a train between a and b | there is a train between b and a
+I can travel from a to b &lt;=&gt; a is next to b | E[c](a is next to c &amp; I can travel from c to b)
+I can travel from a to b in at most n steps &lt;=&gt; n&gt;0 &amp; E[c](a is next to c &amp; (c=b | I can travel from c to b in at most n-1 steps))
+
+// ---- given: the timetable and the answers it should give ----
+fact there is a train between Utrecht and Amsterdam, there is a train between Amsterdam and Haarlem,
+     there is a train between Haarlem and Leiden,    there is a train between Leiden and Delft,
+     there is a train between Delft and Rotterdam,   there is a train between Rotterdam and Gouda,
+     there is a train between Gouda and Utrecht,     there is a train between Zwolle and Groningen
+
+Utrecht is next to Amsterdam                           ? [()][]
+Amsterdam is next to Utrecht                           ? [()][]
+Which is next to Utrecht                               ? [(Which=Amsterdam),(Which=Gouda),..][..]
+Utrecht is next to Leiden                              ? [..][..]
+I can travel from Utrecht to Leiden                    ? [()][]
+I can travel from Utrecht to Groningen                 ? [..][..]
+I can travel from Utrecht to Which                     ? [(Which=Amsterdam),(Which=Delft),(Which=Gouda),(Which=Haarlem),(Which=Leiden),(Which=Rotterdam),(Which=Utrecht),..][..]
+I can travel from Utrecht to Leiden in at most 3 steps ? [()][]
+I can travel from Utrecht to Leiden in at most 2 steps ? [..][..]
+I can travel from Utrecht to Delft in at most 3 steps  ? [()][]
+I can travel from Utrecht to Delft in at most 0 steps  ? [][()]
+</pre>
+    </div>
+  </section>
+  <section class="tutorial-section" id="room-booking">
+    <h2>Room booking</h2>
+    <p>Today's bookings of a few meeting rooms are given with times like <code>9:30</code>. Answer whether a
+       room is free, at a time or between two times, and whether a room's bookings clash. "Free" is the hard
+       part. In an open world you can prove that a room is taken: you find the booking. Proving it free needs
+       <em>every</em> booking of the room, so each room's bookings are given as one complete set. Yellow has
+       no set, so whether it is free stays unknown.</p>
+    <details class="project-hints">
+      <summary>Hints</summary>
+      <ol>
+        <li>A time is a named pattern of connected tokens, so <code>9:30</code> parses and <code>9 : 30</code>
+            does not: <code>pattern TIME ::= &lt;[&gt; &lt;Integer#100&gt; : &lt;Integer#100&gt; &lt;]&gt;</code>.
+            In a phrase, <code>&lt;TIME&gt;</code> gives two Integer arguments, hours and minutes; compare times
+            in minutes, <code>h*60+m</code>.</li>
+        <li>A booking is a value, not a fact: declare <code>Slot :: Literal</code> with the pattern
+            <code>&lt;TIME&gt; to &lt;TIME&gt;</code> (precedence <code>#35</code>), and
+            <code>the bookings of &lt;Room&gt;</code> as a function that gives a <code>Set&lt;Slot&gt;</code>
+            (precedence <code>#60</code>).</li>
+        <li>Because each set is complete, <code>A[b]((b in the bookings of r) -&gt; ...)</code> can be true.</li>
+        <li>For relations about a slot, put the Integer first: <code>&lt;Integer&gt; falls in &lt;Slot&gt;</code>,
+            and let the rule head take the slot apart: <code>n falls in h1:m1 to h2:m2 &lt;=&gt; ...</code>. A phrase
+            that starts with a <code>Slot</code> hole runs into a known engine bug.</li>
+        <li>A room is free between two times when it is free at the first, and no booking starts from the first
+            up to the second.</li>
+        <li>Bookings clash when one starts inside another. A booking does not clash with itself
+            (<code>!=</code>).</li>
+      </ol>
+    </details>
+    <div class="nelumbo-exercise">
+      <p class="challenge">Write the language above the given part, so that the facts parse and every question gets the expected answer.</p>
+      <div class="nelumbo-field" data-height="1000px" data-syntax="exercise">import nelumbo.collections
+
+// build your language here: times, slots, rooms, sentences, variables and rules
+
+
+
+// ---- given: today's bookings, complete per room, and the answers they should give ----
+fact the bookings of Blue  = {9:30 to 11:00, 13:00 to 14:30}
+fact the bookings of Red   = {9:00 to 10:30, 10:00 to 11:00}
+fact the bookings of Green = {}
+
+Blue is free at 10:00                ? [][()]
+Blue is free at 12:00                ? [()][]
+Blue is free at 11:00                ? [()][]
+Blue is free between 11:00 and 13:00 ? [()][]
+Blue is free between 10:30 and 12:00 ? [][()]
+Blue is free between 12:00 and 15:00 ? [][()]
+Green is free at 10:00               ? [()][]
+Yellow is free at 10:00              ? [..][..]
+Red has clashing bookings            ? [()][]
+Blue has clashing bookings           ? [][()]
+</div>
+      <pre class="nelumbo-solution">import nelumbo.collections
+pattern TIME ::= &lt;[&gt; &lt;Integer#100&gt; : &lt;Integer#100&gt; &lt;]&gt;
+Slot      :: Literal
+Slot      ::= &lt;TIME&gt; to &lt;TIME&gt; #35
+Room      :: Object
+Room      ::= Blue, Red, Green, Yellow
+Set&lt;Slot&gt; ::= the bookings of &lt;Room&gt; #60
+Boolean   ::= &lt;Integer&gt; falls in &lt;Slot&gt;                 #30,
+              &lt;Integer&gt; is the start of &lt;Slot&gt;          #30,
+              &lt;Room&gt; is free at &lt;TIME&gt;                  #30,
+              &lt;Room&gt; is free between &lt;TIME&gt; and &lt;TIME&gt;  #30,
+              &lt;Room&gt; has clashing bookings              #30
+Integer   h1, m1, h2, m2, n
+Slot      b, c
+Room      r
+n falls in h1:m1 to h2:m2         &lt;=&gt; h1*60+m1 &lt;= n &amp; n &lt; h2*60+m2
+n is the start of h1:m1 to h2:m2  &lt;=&gt; n = h1*60+m1
+r is free at h1:m1                &lt;=&gt; A[b]((b in the bookings of r) -&gt; !(h1*60+m1 falls in b))
+r is free between h1:m1 and h2:m2 &lt;=&gt; r is free at h1:m1 &amp;
+                                      A[b]((b in the bookings of r) -&gt; !E[n](n is the start of b &amp; h1*60+m1 &lt;= n &amp; n &lt; h2*60+m2))
+r has clashing bookings           &lt;=&gt; E[b,c](b in the bookings of r &amp; c in the bookings of r &amp; b != c &amp;
+                                             E[n](n is the start of c &amp; n falls in b))
+
+// ---- given: today's bookings, complete per room, and the answers they should give ----
+fact the bookings of Blue  = {9:30 to 11:00, 13:00 to 14:30}
+fact the bookings of Red   = {9:00 to 10:30, 10:00 to 11:00}
+fact the bookings of Green = {}
+
+Blue is free at 10:00                ? [][()]
+Blue is free at 12:00                ? [()][]
+Blue is free at 11:00                ? [()][]
+Blue is free between 11:00 and 13:00 ? [()][]
+Blue is free between 10:30 and 12:00 ? [][()]
+Blue is free between 12:00 and 15:00 ? [][()]
+Green is free at 10:00               ? [()][]
+Yellow is free at 10:00              ? [..][..]
+Red has clashing bookings            ? [()][]
+Blue has clashing bookings           ? [][()]
+</pre>
+    </div>
+  </section>
+  <section class="tutorial-section" id="access-policy">
+    <h2>Access policy</h2>
+    <p>A policy language for who may do what. A dictionary gives every role with its article, and the policy
+       is written as plain statements: <code>every manager may approve invoices</code>, <code>no intern may
+       approve invoices</code>. Transformations turn every statement into a fact or a rule. Allow rules fill the
+       facts side of an answer, deny rules the falsehood side. Where no policy applies, the answer is unknown,
+       not denied: nothing says whether Eva, an auditor, may approve invoices. When you are done, add
+       <code>Ann is a manager</code>: she would then be allowed and denied at once, and Nelumbo reports the
+       inconsistency instead of picking one.</p>
+    <details class="project-hints">
+      <summary>Hints</summary>
+      <ol>
+        <li>Declare the types <code>Person</code>, <code>Role</code>, <code>Action</code> and <code>Item</code> with
+            their constants, and an <code>Article</code> type with <code>a</code> and <code>an</code>.</li>
+        <li>Only <code>&lt;Person&gt; may &lt;Action&gt; &lt;Item&gt;</code> is a question: a <code>Boolean</code>
+            phrase with precedence <code>#30</code>. The other lines are statements: <code>Root</code> phrases
+            with precedence <code>#0</code>, and <code>role &lt;Article&gt; &lt;Role&gt;</code> with
+            <code>#100</code>.</li>
+        <li>Keep the roles of a person in a relation of your own, for example a private
+            <code>&lt;Person&gt; has role &lt;Role&gt;</code>.</li>
+        <li>A dictionary entry such as <code>role an intern</code> is transformed, as in Controlled English: it
+            declares the sentences with that article, <code>&lt;Person&gt; is an intern</code> and
+            <code>every &lt;Role&gt; is an intern</code>, and transformations for them. The first adds a fact,
+            the second a rule: whoever has the one role has the other.</li>
+        <li>A policy statement is transformed into a rule: <code>every r may x i</code> into
+            <code>q may x i &lt;=&gt; true if q has role r</code>, <code>no r may x i</code> into the same with
+            <code>false</code>.</li>
+        <li>In a transformation, use variables such as <code>{Role,Literal} r</code> in the heads, and give
+            every functor declared in a transformation body at least one hole (a known engine bug).</li>
+      </ol>
+    </details>
+    <div class="nelumbo-exercise">
+      <p class="challenge">Write the language above the given part, so that the dictionary, the policy and the staff parse and every question gets the expected answer.</p>
+      <div class="nelumbo-field" data-height="1000px" data-syntax="exercise">import nelumbo.logic
+
+// build your language here: types, the dictionary, statements, questions and transformations
+
+
+
+// ---- given: the dictionary, the policy, the staff, and the answers they should give ----
+role a manager
+role an intern
+role an employee
+role an auditor
+
+every manager is an employee
+every intern is an employee
+every employee may read contracts
+every manager may approve invoices
+no intern may approve invoices
+no intern may sign contracts
+every auditor may read invoices
+
+Jan is a manager
+Ann is an intern
+Eva is an auditor
+
+Jan may approve invoices ? [()][]
+Ann may approve invoices ? [][()]
+Eva may approve invoices ? [..][..]
+Ann may read contracts   ? [()][]
+Eva may read contracts   ? [..][..]
+Ann may sign contracts   ? [][()]
+Jan may sign contracts   ? [..][..]
+Who may approve invoices ? [(Who=Jan),..][(Who=Ann),..]
+Who may read contracts   ? [(Who=Ann),(Who=Jan),..][..]
+</div>
+      <pre class="nelumbo-solution">import nelumbo.logic
+Person  :: Object
+Person  ::= Jan, Ann, Eva, Bob
+Article :: Object
+Article ::= a, an
+Role    :: Object
+Role    ::= manager, intern, employee, auditor
+Action  :: Object
+Action  ::= approve, read, sign
+Item    :: Object
+Item    ::= invoices, contracts
+Boolean ::= &lt;Person&gt; may &lt;Action&gt; &lt;Item&gt; #30
+private Boolean ::= &lt;Person&gt; has role &lt;Role&gt; #30
+Root    ::= role &lt;Article&gt; &lt;Role&gt;             #100,
+            every &lt;Role&gt; may &lt;Action&gt; &lt;Item&gt;  #0,
+            no &lt;Role&gt; may &lt;Action&gt; &lt;Item&gt;     #0
+{
+    Article          ar
+    {Role,Literal}   r, s
+    {Action,Literal} x
+    {Item,Literal}   i
+    {Person,Literal} p
+    Person           q
+    role ar r ::&gt; {
+        Root ::= &lt;{Person,Literal}&gt; is &lt;ar&gt; &lt;r&gt;     #0
+        Root ::= every &lt;{Role,Literal}&gt; is &lt;ar&gt; &lt;r&gt; #0
+        p is ar r ::&gt; {
+            fact p has role r
+        }
+        every s is ar r ::&gt; {
+            q has role r &lt;=&gt; true if q has role s
+        }
+    }
+    every r may x i ::&gt; {
+        q may x i &lt;=&gt; true if q has role r
+    }
+    no r may x i ::&gt; {
+        q may x i &lt;=&gt; false if q has role r
+    }
+}
+Person Who
+
+// ---- given: the dictionary, the policy, the staff, and the answers they should give ----
+role a manager
+role an intern
+role an employee
+role an auditor
+
+every manager is an employee
+every intern is an employee
+every employee may read contracts
+every manager may approve invoices
+no intern may approve invoices
+no intern may sign contracts
+every auditor may read invoices
+
+Jan is a manager
+Ann is an intern
+Eva is an auditor
+
+Jan may approve invoices ? [()][]
+Ann may approve invoices ? [][()]
+Eva may approve invoices ? [..][..]
+Ann may read contracts   ? [()][]
+Eva may read contracts   ? [..][..]
+Ann may sign contracts   ? [][()]
+Jan may sign contracts   ? [..][..]
+Who may approve invoices ? [(Who=Jan),..][(Who=Ann),..]
+Who may read contracts   ? [(Who=Ann),(Who=Jan),..][..]
 </pre>
     </div>
   </section>

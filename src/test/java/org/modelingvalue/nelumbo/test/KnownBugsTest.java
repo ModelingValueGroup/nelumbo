@@ -276,9 +276,15 @@ public class KnownBugsTest extends NelumboTestBase {
         bugResource("holeless-functor-in-transformation.nl");
     }
 
-    @KnownBug("functor with a hole of a user-declared Literal type (Boolean ::= near(<Pos>)) is reported as a non deterministic pattern merge with itself")
+    @KnownBug("functor whose first hole has a user-declared Literal type (Boolean ::= near(<Pos>)) is reported as a non deterministic pattern merge with itself")
     @Test
     public void literalTypeHolePatternMerge() {
         bugResource("literal-type-hole-pattern-merge.nl");
+    }
+
+    @KnownBug("rule head variable of a narrower type (Female f) yields bindings of the wrong type for an open query (Who is a sister of Piet lists a Male)")
+    @Test
+    public void typedHeadVariableOpenQuery() {
+        bugResource("typed-head-variable-open-query.nl");
     }
 }
