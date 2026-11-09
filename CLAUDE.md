@@ -197,6 +197,7 @@ Pages (`src/main/resources/public/`):
 Theme:
 - `public/theme.js` (loaded BLOCKING in `<head>`) sets `data-theme` (light/dark) and `data-theme-mode` (auto/light/dark) on `<html>`; switch cycles auto -> light -> dark; override in localStorage `nelumbo-theme`.
 - Colours only as CSS variables (`:root` dark, `[data-theme="light"]` override); landing has its own set, `fields.css` the `--nf-*` set. No hardcoded colours.
+- Inline code (tutorial `code`, docs `article code`): purple chip from `--code-bg`/`--code-border`/`--code-text` (dark text 5.4:1, light 6.3:1), `box-decoration-break: clone` for wrapped snippets; the old `--panel` chip was invisible (1.1:1 against the page). The tutorial rule also styles the `code` spans in Monaco hovers. Docs `article pre code` resets border and colour.
 - Monaco themes `nelumbo-dark`/`nelumbo-light`, switched by a MutationObserver. Token colours: `TOKEN_STYLES` in `nelumbo-fields.ts` = `NelumboEditor.DEFAULT_TOKEN_COLORS` (light verbatim, dark lightened); keep in sync with the Eclipse `NelumboSemanticDamagerRepairer` and the `--nl-*` variables in `docs.html` (e2e `highlighting.spec.ts`). META_OPERATOR is only the `<`/`>` of pattern holes; `::=` is an OPERATOR.
 
 Docs (`/docs/`):
