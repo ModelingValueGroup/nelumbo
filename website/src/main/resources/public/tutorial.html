@@ -567,10 +567,10 @@ Klaas works from 8:00 to 17:30
   <section class="tutorial-section" id="scoping">
     <h2>Scoping</h2>
     <p>A <code>{ }</code> block is a scope. A functor declared <code>private</code> in a block exists only
-       inside that block, including nested blocks. Without <code>private</code>, a declaration in a block is
-       visible after the block too: the block alone hides nothing. Below, <code>Max</code> is private to the
+       inside that block, including nested blocks. Without <code>private</code>, a declaration in a block
+       stays visible after the block: the block alone hides nothing. Below, <code>Max</code> is private to the
        block and <code>Piet</code> is not. <code>private</code> is also how two functors with the same pattern
-       are kept apart: if they are declared side by side, the parser cannot tell which one a phrase means and reports a
+       are kept apart: if they are declared side by side, the parser cannot tell them apart and reports a
        <em>non deterministic pattern merge</em>.</p>
     <div class="nelumbo-field" data-height="332px" data-syntax>import nelumbo.lang
 Person   :: Object
