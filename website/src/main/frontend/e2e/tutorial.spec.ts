@@ -62,6 +62,22 @@ test('Show solution toggles the solution block', async ({ page }: { page: Page }
     await expect(solution).toBeHidden();
 });
 
+test('Next and Previous walk the sections in sidebar order', async ({ page }: { page: Page }): Promise<void> => {
+    await page.goto('/tutorial.html');
+    await expect(page.locator('#' + SECTIONS[0] + ' .pager a.prev')).toHaveCount(0);
+    for (let i = 1; i < SECTIONS.length; i++) {
+        await page.locator('#' + SECTIONS[i - 1] + ' .pager a.next').click();
+        await expect(page.locator('#' + SECTIONS[i])).toHaveClass(/active/);
+        await expect(page.locator('aside nav a[data-section="' + SECTIONS[i] + '"]')).toHaveClass(/active/);
+        await expect(page).toHaveURL(new RegExp('#' + SECTIONS[i] + '$'));
+    }
+    await expect(page.locator('#' + SECTIONS[SECTIONS.length - 1] + ' .pager a.next')).toHaveCount(0);
+    for (let i = SECTIONS.length - 1; i > 0; i--) {
+        await page.locator('#' + SECTIONS[i] + ' .pager a.prev').click();
+        await expect(page.locator('#' + SECTIONS[i - 1])).toHaveClass(/active/);
+    }
+});
+
 test('the Sandbox link navigates to /sandbox.html', async ({ page }: { page: Page }): Promise<void> => {
     await page.goto('/tutorial.html#logic');
     await page.locator('.site-header nav a[href="/sandbox.html"]').click();

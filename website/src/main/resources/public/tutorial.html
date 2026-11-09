@@ -49,6 +49,12 @@
   main { flex: 1; overflow: auto; }
   .tutorial-section { display: none; max-width: 860px; margin: 0 auto; padding: 24px 24px 80px; }
   .tutorial-section.active { display: block; }
+  .pager { display: flex; gap: 12px; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .pager a { flex: 0 1 50%; display: flex; flex-direction: column; gap: 2px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); text-decoration: none; }
+  .pager a:hover { border-color: var(--accent); }
+  .pager a.next { margin-left: auto; text-align: right; }
+  .pager .dir { color: var(--muted); font-size: 12px; }
+  .pager .title { color: var(--accent); font-weight: 600; }
   h2 { font: 700 20px/1.3 "Bricolage Grotesque", "Instrument Sans", sans-serif; margin-top: 8px; }
   p { color: var(--prose); }
   code { background: var(--panel); border-radius: 4px; padding: 1px 5px; font: 13px "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace; }
@@ -1260,9 +1266,11 @@ who scares Rex ?
     function closeNav() { document.body.classList.remove('nav-open'); }
     toggle.addEventListener('click', function () { document.body.classList.toggle('nav-open'); });
     backdrop.addEventListener('click', closeNav);
+    var main = document.querySelector('main');
     function show(id) {
       var found = document.getElementById(id);
       if (!found) { return; }
+      if (!found.classList.contains('active')) { main.scrollTop = 0; }
       sections.forEach(function (s) { s.classList.toggle('active', s.id === id); });
       links.forEach(function (a) { a.classList.toggle('active', a.getAttribute('data-section') === id); });
       NelumboFields.mountFields(found);
@@ -1270,6 +1278,33 @@ who scares Rex ?
     }
     links.forEach(function (a) {
       a.addEventListener('click', function (e) { e.preventDefault(); show(a.getAttribute('data-section')); closeNav(); });
+    });
+    // Previous / Next at the bottom of every section, in the order of the sidebar
+    var order = Array.prototype.map.call(links, function (a) { return { id: a.getAttribute('data-section'), title: a.textContent }; });
+    function pagerLink(item, className, label) {
+      var a = document.createElement('a');
+      a.className = className;
+      a.href = '#' + item.id;
+      var dir = document.createElement('span');
+      dir.className = 'dir';
+      dir.textContent = label;
+      var title = document.createElement('span');
+      title.className = 'title';
+      title.textContent = item.title;
+      a.appendChild(dir);
+      a.appendChild(title);
+      a.addEventListener('click', function (e) { e.preventDefault(); show(item.id); });
+      return a;
+    }
+    order.forEach(function (item, i) {
+      var section = document.getElementById(item.id);
+      if (!section) { return; }
+      var pager = document.createElement('nav');
+      pager.className = 'pager';
+      pager.setAttribute('aria-label', 'Previous and next section');
+      if (i > 0) { pager.appendChild(pagerLink(order[i - 1], 'prev', '← Previous')); }
+      if (i < order.length - 1) { pager.appendChild(pagerLink(order[i + 1], 'next', 'Next →')); }
+      section.appendChild(pager);
     });
     NelumboFields.connect();
     var initial = (location.hash || '').replace('#', '');
