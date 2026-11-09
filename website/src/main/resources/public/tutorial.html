@@ -740,9 +740,11 @@ friends(Klaas, Kees) ? [()][]
        <em>closed</em>: after <code>fact age(Piet)=40</code> the answer is <code>[(a=40)]</code>
        without <code>..</code>, and every other age is false. Statements run top to bottom, and each fact
        or rule only adds knowledge: unknown answers become true or false, open answers grow or close, and
-       nothing already proven is withdrawn. Nelumbo is <em>monotonic</em>, and it checks this: when the
-       same query is asked again further down, its answer must keep everything the earlier answer showed
-       and may only add to it. If not, the query reports an inconsistency. A second age for Piet is rejected the moment it is asserted.
+       nothing already proven is withdrawn. Nelumbo is <em>monotonic</em>, and it checks this. A fact can
+       never be taken back further down: after <code>fact age(Piet)=40</code>, a later
+       <code>fact age(Piet)=22</code> is an inconsistency, and nothing after it is evaluated. In the same
+       way, when a query is asked again further down, its answer must keep everything the earlier answer
+       showed and may only add to it. If not, the query reports an inconsistency.
        Only relations and function values can be asserted: <code>fact !friends(Piet, Klaas)</code>
        is an error.</p>
     <div class="nelumbo-field" data-height="200px">import nelumbo.integers
