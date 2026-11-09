@@ -132,6 +132,7 @@
     <a data-section="types">Data types</a>
     <a data-section="equality">Equality</a>
     <a data-section="relations">Relational KB</a>
+    <a data-section="quantifiers">Quantifiers</a>
     <a data-section="dsl">Custom DSL</a>
     <div class="group">Transformations</div>
     <a data-section="transform">Transformations</a>
@@ -1042,6 +1043,65 @@ fact pc(Juliana, Beatrix),
      pc(Bernhard, Beatrix)
 Person who
 f(Beatrix,who) ? [(who=Bernhard),..][..]
+</pre>
+    </div>
+  </section>
+  <section class="tutorial-section" id="quantifiers">
+    <h2>Quantifiers</h2>
+    <p><code>E[c](...)</code> (there exists) and <code>A[c](...)</code> (for all) never try every member of
+       a type: <code>c</code> only gets values by <em>navigation</em>, from something already known, here
+       from Juliana to her children. Without navigation a quantifier gives no answer, even though four
+       persons are declared. That is a design choice: <code>Person ::= Juliana, ...</code> names some
+       persons, not all of them. If <code>A[c](age(c)&gt;10)</code> were decided by trying the declared
+       persons, declaring one more could turn true into false, and Nelumbo never withdraws an answer. So
+       navigate: through a fact or rule (<code>pc(Juliana,c)</code>), through <code>=</code>, or through a
+       known collection (<code>c in children(Juliana)</code>). Over a closed set such as Juliana's children,
+       <code>A</code> can be true and <code>E</code> false; over open facts more children may exist, so only
+       a found example decides. Put the membership in parentheses before <code>-&gt;</code>.</p>
+    <div class="nelumbo-field" data-height="376px">import nelumbo.collections
+Person      :: Object
+Person      ::= Juliana, Beatrix, Irene, Margriet
+Integer     ::= age(&lt;Person&gt;)
+Set&lt;Person&gt; ::= children(&lt;Person&gt;)
+Person      c
+fact age(Beatrix)=20, age(Irene)=15, age(Margriet)=30
+fact children(Juliana)={Beatrix, Irene, Margriet}
+// no navigation: c gets no values
+E[c](age(c)&gt;18) ?
+A[c](age(c)&gt;10) ?
+// navigate from Juliana to her children
+E[c](c in children(Juliana) &amp; age(c)&gt;18) ?
+E[c](c in children(Juliana) &amp; age(c)&gt;40) ?
+A[c]((c in children(Juliana)) -&gt; age(c)&gt;10) ?
+A[c]((c in children(Juliana)) -&gt; age(c)&gt;18) ?
+</div>
+    <div class="nelumbo-exercise">
+      <p class="challenge">Both questions are about Juliana&#39;s children, but the quantifiers do not navigate there, so they give no answer. Make them navigate so the expected results hold.</p>
+      <div class="nelumbo-field" data-height="288px">import nelumbo.collections
+Person      :: Object
+Person      ::= Juliana, Beatrix, Irene, Margriet
+Integer     ::= age(&lt;Person&gt;)
+Set&lt;Person&gt; ::= children(&lt;Person&gt;)
+Person      c
+fact age(Beatrix)=20, age(Irene)=15, age(Margriet)=30
+fact children(Juliana)={Beatrix, Irene, Margriet}
+// is every child of Juliana older than 12?
+A[c](age(c)&gt;12) ? [()][]
+// does Juliana have a child younger than 18?
+E[c](age(c)&lt;18) ? [()][]
+</div>
+      <pre class="nelumbo-solution">import nelumbo.collections
+Person      :: Object
+Person      ::= Juliana, Beatrix, Irene, Margriet
+Integer     ::= age(&lt;Person&gt;)
+Set&lt;Person&gt; ::= children(&lt;Person&gt;)
+Person      c
+fact age(Beatrix)=20, age(Irene)=15, age(Margriet)=30
+fact children(Juliana)={Beatrix, Irene, Margriet}
+// is every child of Juliana older than 12?
+A[c]((c in children(Juliana)) -&gt; age(c)&gt;12) ? [()][]
+// does Juliana have a child younger than 18?
+E[c](c in children(Juliana) &amp; age(c)&lt;18) ? [()][]
 </pre>
     </div>
   </section>
