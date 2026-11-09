@@ -121,6 +121,7 @@
     <a data-section="logic">Propositional logic</a>
     <a data-section="facts">Facts &amp; queries</a>
     <a data-section="rules">Rules &amp; recursion</a>
+    <a data-section="cycles">Cyclic rules</a>
     <a data-section="types">Data types</a>
     <a data-section="relations">Relational KB</a>
     <a data-section="dsl">Custom DSL</a>
@@ -785,6 +786,62 @@ adult(p) &lt;=&gt; false if age(p)&lt;18
 adult(Piet) ? [()][]            // unchanged
 adult(Jan)  ? [][()]            // now false: only the falsehood side grew
 </div>
+  </section>
+  <section class="tutorial-section" id="cycles">
+    <h2>Cyclic rules</h2>
+    <p>A rule may depend on itself in a cycle. The recursion of <code>fib</code> ends because
+       <code>n</code> gets smaller; here nothing gets smaller: a friend of a friend of me is a friend of me,
+       so to find my friends, Nelumbo needs my friends. It solves such a cycle by iteration. It starts with
+       the facts (Jan is a friend of Piet), applies the rule and finds Klaas, a friend of Jan, applies it
+       again and finds Kees, and stops when a round adds nothing new. That end point is the
+       <em>fixpoint</em>, and its friends are the answer. The rule need not mention the facts: the facts and
+       rules of one relation are combined. What the fixpoint does not reach stays unknown, not false: no fact
+       mentions Bob, but the facts are open, so <code>Bob is a friend of Piet ?</code> is
+       <code>[..][..]</code>.</p>
+    <div class="nelumbo-field" data-height="310px">import nelumbo.logic
+Person  :: Object
+Person  ::= Piet, Jan, Klaas, Kees, Bob
+Boolean ::= &lt;Person&gt; is a friend of &lt;Person&gt; #30
+Person  me, f, ff, Who
+// a friend of a friend of me is a friend of me
+ff is a friend of me &lt;=&gt; E[f](ff is a friend of f &amp; f is a friend of me)
+fact Jan is a friend of Piet
+fact Klaas is a friend of Jan
+fact Kees is a friend of Klaas
+Who is a friend of Piet ?
+Kees is a friend of Piet ?
+Bob is a friend of Piet ?
+</div>
+    <div class="nelumbo-exercise">
+      <p class="challenge">Friendship goes both ways: if Jan is a friend of Piet, Piet is a friend of Jan. Extend the rule so the expected results hold. Through Jan, Piet then turns out to be a friend of himself.</p>
+      <div class="nelumbo-field" data-height="310px">import nelumbo.logic
+Person  :: Object
+Person  ::= Piet, Jan, Klaas, Kees
+Boolean ::= &lt;Person&gt; is a friend of &lt;Person&gt; #30
+Person  me, f, ff, Who
+// friendship goes both ways: extend the rule
+ff is a friend of me &lt;=&gt; E[f](ff is a friend of f &amp; f is a friend of me)
+fact Jan is a friend of Piet
+fact Klaas is a friend of Jan
+fact Kees is a friend of Klaas
+Piet is a friend of Kees ? [()][]
+Piet is a friend of Piet ? [()][]
+Who is a friend of Piet  ? [(Who=Jan),(Who=Kees),(Who=Klaas),(Who=Piet),..][..]
+</div>
+      <pre class="nelumbo-solution">import nelumbo.logic
+Person  :: Object
+Person  ::= Piet, Jan, Klaas, Kees
+Boolean ::= &lt;Person&gt; is a friend of &lt;Person&gt; #30
+Person  me, f, ff, Who
+ff is a friend of me &lt;=&gt; me is a friend of ff | E[f](ff is a friend of f &amp; f is a friend of me)
+fact Jan is a friend of Piet
+fact Klaas is a friend of Jan
+fact Kees is a friend of Klaas
+Piet is a friend of Kees ? [()][]
+Piet is a friend of Piet ? [()][]
+Who is a friend of Piet  ? [(Who=Jan),(Who=Kees),(Who=Klaas),(Who=Piet),..][..]
+</pre>
+    </div>
   </section>
   <section class="tutorial-section" id="types">
     <h2>Data types</h2>
