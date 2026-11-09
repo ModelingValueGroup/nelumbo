@@ -184,8 +184,8 @@ function ensureServices(): void {
         colors:  {
             'editorInlayHint.foreground':          '#46c98b',
             'editorInlayHint.background':          '#00000000',
-            'editorInlayHint.typeForeground':      '#edd4e8',
-            'editorInlayHint.typeBackground':      '#c184d840',
+            'editorInlayHint.typeForeground':      '#ffffff',
+            'editorInlayHint.typeBackground':      '#9246b0',
             'editorInlayHint.parameterForeground': '#f1707b',
             'editorInlayHint.parameterBackground': '#f1707b2b',
         },

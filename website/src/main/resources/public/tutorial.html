@@ -674,7 +674,7 @@ Rex barks
       <li><code>[..][..]</code> means "unknown": nothing is known on either side.</li>
     </ul>
     <p>Nelumbo is three-valued: a query is true, false or unknown. <code>unknown &amp; true</code> stays
-       unknown, but <code>unknown | true</code> is true, whatever the unknown part turns out to be. Try
+       <code>unknown</code>, but <code>unknown | true</code> is <code>true</code>, whatever the unknown part turns out to be. Try
        changing the queries below.</p>
     <div class="nelumbo-field" data-height="240px">import nelumbo.logic
 
@@ -740,9 +740,9 @@ friends(Klaas, Kees) ? [()][]
        <em>closed</em>: after <code>fact age(Piet)=40</code> the answer is <code>[(a=40)]</code>
        without <code>..</code>, and every other age is false. Statements run top to bottom, and each fact
        or rule only adds knowledge: unknown answers become true or false, open answers grow or close, and
-       nothing already proven is withdrawn. Nelumbo is <em>monotonic</em>. Nelumbo checks this on the
-       answers: a later answer must agree with an earlier one and know at least as much, otherwise the query
-       reports an inconsistency. A second age for Piet is rejected the moment it is asserted.
+       nothing already proven is withdrawn. Nelumbo is <em>monotonic</em>, and it checks this: when the
+       same query is asked again further down, its answer must keep everything the earlier answer showed
+       and may only add to it. If not, the query reports an inconsistency. A second age for Piet is rejected the moment it is asserted.
        Only relations and function values can be asserted: <code>fact !friends(Piet, Klaas)</code>
        is an error.</p>
     <div class="nelumbo-field" data-height="200px">import nelumbo.integers
