@@ -16,8 +16,13 @@
 
 package org.modelingvalue.nelumbo.lsp;
 
-import java.util.LinkedHashMap;
+import java.util.AbstractMap;
+import java.util.AbstractSet;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import org.eclipse.lsp4j.Position;
@@ -85,7 +90,7 @@ public final class QueryEvaluator {
      */
     public static Map<Query, QueryResult> evaluate(KnowledgeBase base, long deadlineMs, String content, String uri, boolean overloadBudget,
             Consumer<ParseException> statementErrors) {
-        Map<Query, QueryResult> results = new LinkedHashMap<>();
+        Map<Query, QueryResult> results = new QueryResults();
         KnowledgeBase evalKb = new KnowledgeBase(base);
         if (deadlineMs > 0 && !overloadBudget) {
             evalKb.setDeadlineNanos(System.nanoTime() + deadlineMs * 1_000_000L);
@@ -138,6 +143,37 @@ public final class QueryEvaluator {
             // partial results already in the map; return them as-is
         }
         return results;
+    }
+
+    /**
+     * The result of every query in document order, one entry per query in the source. A query equals another with
+     * the same text ({@code Node} equality is structural), so a plain map gave two equal queries one entry: the
+     * second's result shown on the first, nothing on the second, although a rule between them can change the answer.
+     * Each query is put once.
+     */
+    private static final class QueryResults extends AbstractMap<Query, QueryResult> {
+        private final List<Map.Entry<Query, QueryResult>> entries = new ArrayList<>();
+
+        @Override
+        public QueryResult put(Query query, QueryResult result) {
+            entries.add(new SimpleImmutableEntry<>(query, result));
+            return null;
+        }
+
+        @Override
+        public Set<Map.Entry<Query, QueryResult>> entrySet() {
+            return new AbstractSet<>() {
+                @Override
+                public Iterator<Map.Entry<Query, QueryResult>> iterator() {
+                    return entries.iterator();
+                }
+
+                @Override
+                public int size() {
+                    return entries.size();
+                }
+            };
+        }
     }
 
     private static QueryResult toResult(Query query, ParseException exc) {

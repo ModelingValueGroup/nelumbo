@@ -128,6 +128,7 @@
     <a data-section="facts">Facts &amp; queries</a>
     <a data-section="unique">Unique values</a>
     <a data-section="rules">Rules &amp; recursion</a>
+    <a data-section="combining">Combining rules</a>
     <a data-section="cycles">Cyclic rules</a>
     <a data-section="types">Data types</a>
     <a data-section="equality">Equality</a>
@@ -850,6 +851,58 @@ adult(p) &lt;=&gt; false if age(p)&lt;18
 adult(Piet) ? [()][]            // unchanged
 adult(Jan)  ? [][()]            // now false: only the falsehood side grew
 </div>
+  </section>
+  <section class="tutorial-section" id="combining">
+    <h2>Combining rules</h2>
+    <p>Several rules can define one relation; their answers are combined side by side. The first rule says
+       that Piet eats what he likes. All its answers are on the facts side:
+       <code>[(f=Apple),(f=Pear),..][..]</code>. Its falsehood side is empty but open (<code>..</code>):
+       nothing is known to be false yet. The second rule only adds falsehoods: Piet does not eat what he is
+       allergic to. It is silent where its guard fails, so it leaves the facts side alone and fills the open
+       falsehood side: <code>[(f=Apple),(f=Pear),..][(f=Fish),(f=Nut),..]</code>. Bread is on neither side,
+       so it stays unknown. The rules must agree: had Piet also liked nuts, the query would report an
+       inconsistency.</p>
+    <div class="nelumbo-field" data-height="354px">import nelumbo.logic
+Person  :: Object
+Person  ::= Piet
+Food    :: Object
+Food    ::= Apple, Pear, Nut, Fish, Bread
+Boolean ::= likes(&lt;Person&gt;,&lt;Food&gt;), allergic(&lt;Person&gt;,&lt;Food&gt;), eats(&lt;Person&gt;,&lt;Food&gt;)
+Person  p
+Food    f
+fact likes(Piet, Apple), likes(Piet, Pear)
+fact allergic(Piet, Nut), allergic(Piet, Fish)
+eats(p,f) &lt;=&gt; likes(p,f)
+eats(Piet,f) ?
+eats(p,f) &lt;=&gt; false if allergic(p,f)
+eats(Piet,f) ?
+eats(Piet,Bread) ?
+</div>
+    <div class="nelumbo-exercise">
+      <p class="challenge">Piet invites his friends, but nothing says whom he does not invite. Add a second rule so that nobody invites someone they quarrel with, and the falsehood side fills up.</p>
+      <div class="nelumbo-field" data-height="244px">import nelumbo.logic
+Person  :: Object
+Person  ::= Piet, Jan, Klaas, Kees, Bob
+Boolean ::= friends(&lt;Person&gt;,&lt;Person&gt;), quarrels(&lt;Person&gt;,&lt;Person&gt;), invites(&lt;Person&gt;,&lt;Person&gt;)
+Person  p, q
+fact friends(Piet, Jan), friends(Piet, Klaas)
+fact quarrels(Piet, Kees), quarrels(Piet, Bob)
+invites(p,q) &lt;=&gt; friends(p,q)
+// add a rule: nobody invites someone they quarrel with
+invites(Piet,q) ? [(q=Jan),(q=Klaas),..][(q=Bob),(q=Kees),..]
+</div>
+      <pre class="nelumbo-solution">import nelumbo.logic
+Person  :: Object
+Person  ::= Piet, Jan, Klaas, Kees, Bob
+Boolean ::= friends(&lt;Person&gt;,&lt;Person&gt;), quarrels(&lt;Person&gt;,&lt;Person&gt;), invites(&lt;Person&gt;,&lt;Person&gt;)
+Person  p, q
+fact friends(Piet, Jan), friends(Piet, Klaas)
+fact quarrels(Piet, Kees), quarrels(Piet, Bob)
+invites(p,q) &lt;=&gt; friends(p,q)
+invites(p,q) &lt;=&gt; false if quarrels(p,q)
+invites(Piet,q) ? [(q=Jan),(q=Klaas),..][(q=Bob),(q=Kees),..]
+</pre>
+    </div>
   </section>
   <section class="tutorial-section" id="cycles">
     <h2>Cyclic rules</h2>

@@ -129,6 +129,42 @@ public class QueryExecutionFlowTest {
      * to underline). If the evaluator only ran one query, or reported the wrong
      * outcome, the inline text and underline users see would be wrong.
      */
+    private static final String EQUAL_QUERIES_AROUND_A_RULE = """
+            import nelumbo.logic
+            Person  :: Object
+            Person  ::= Piet
+            Food    :: Object
+            Food    ::= Apple, Nut
+            Boolean ::= likes(<Person>,<Food>), allergic(<Person>,<Food>), eats(<Person>,<Food>)
+            Person  p
+            Food    f
+            fact likes(Piet, Apple)
+            fact allergic(Piet, Nut)
+            eats(p,f) <=> likes(p,f)
+            eats(Piet,f) ?
+            eats(p,f) <=> false if allergic(p,f)
+            eats(Piet,f) ?
+            """;
+
+    /**
+     * Two queries with the same text are equal nodes, but a rule between them changes the answer: each must keep
+     * its own result, at its own position. A map keyed by query once merged them into one entry, so the editor
+     * showed the second result on the first query and nothing on the second.
+     */
+    @Test
+    void equalQueriesKeepTheirOwnResults() {
+        Map<Query, QueryResult> results = QueryEvaluator.evaluate(EQUAL_QUERIES_AROUND_A_RULE, "test");
+
+        assertEquals(2, results.size(), "both equal queries must get a result");
+        var entries = results.entrySet().iterator();
+        var first   = entries.next();
+        var second  = entries.next();
+        assertEquals(11, first.getKey().firstToken().line(), "results come in document order");
+        assertEquals(13, second.getKey().firstToken().line(), "results come in document order");
+        assertEquals("[(f=Apple),..][..]", first.getValue().inferred(), "before the second rule: no falsehoods yet");
+        assertEquals("[(f=Apple),..][(f=Nut),..]", second.getValue().inferred(), "after the second rule: Nut is false");
+    }
+
     @Test
     void evaluatesEveryQueryAndReportsOutcomePerQuery() {
         Map<Query, QueryResult> results = QueryEvaluator.evaluate(TWO_QUERIES, "test");
