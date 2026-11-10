@@ -12,11 +12,15 @@ A logic meta-language for specifying DSLs
 
 ## Today
 
-* **Introduction**: what Nelumbo is, and the ideas you need for the exercises
-* **Hands-on**: the tutorial on nelumbo.nl, at your own pace
-* **Wrap-up**: what surprised you, questions
+We follow the tutorial **together, in its order**: four rounds,
+each with a short explanation, exercises and a **checkpoint**.
 
-Nothing to install: a browser is all you need.
+| Round                      | Tutorial sections                     |
+|----------------------------|---------------------------------------|
+| 1. Syntax                  | Types & functors to Scoping           |
+| 2. Facts and rules         | Propositional logic to Cyclic rules   |
+| 3. Data and languages      | Data types to Controlled English      |
+| 4. Projects                | Family tree, Club fees, ...           |
 
 ---
 
@@ -68,7 +72,37 @@ Bob is a friend of Piet ?    // [..][..]   unknown, not false
 
 ---
 
-## Syntax: types and functors
+## The tutorial and its editor
+
+**nelumbo.nl/tutorial.html**: 31 sections in the sidebar, each with an example and exercises.
+Nothing to install: a browser is all you need.
+
+* Edit the code: results appear at the end of each line
+* Hover over a result, a name or an error for details
+* Red underline: a parse error or a wrong result; a green check mark: done
+* **Show solution** when you are stuck, **Reset** to start over
+* Your edits are saved in your browser: come back later and continue
+
+---
+
+## How we work
+
+* Everybody follows the **same order**: the order of the tutorial
+* Work in **pairs**: one types, both think; switch every section
+* At a **checkpoint** everybody stops, finished or not, and we compare
+* **Behind?** Use **Show solution** to catch up: the next round starts together
+* **Ahead?** Help a neighbour, or vary the exercise: try to break the logic
+* Note what surprised you: we collect it at every checkpoint
+
+---
+
+# Round 1: Syntax
+
+Define the phrases of your own language
+
+---
+
+## Types and functors
 
 ```text
 import nelumbo.lang
@@ -84,15 +118,15 @@ Piet knows Marie
 father(Marie) knows Jan
 ```
 
-| Operator | Meaning                         |
-|----------|---------------------------------|
-| `::`     | type, subtype                   |
-| `::=`    | functor (pattern) or constants  |
+| Operator | Meaning                          |
+|----------|----------------------------------|
+| `::`     | type, subtype                    |
+| `::=`    | functor (pattern) or constants   |
 | `#N`     | precedence: higher binds tighter |
 
 ---
 
-## Syntax: patterns
+## Patterns
 
 ```text
 Sentence ::= <Person> <(> really <)?> <(> likes <|> loves <)> <Person> #0,
@@ -112,6 +146,40 @@ party with Piet, Jan, Marie
 
 ---
 
+## Go: round 1
+
+In this order, in the **Syntax** group:
+
+1. Types & functors
+2. Patterns
+3. Precedence
+4. Parentheses
+5. Generics
+6. Connected tokens
+7. Named patterns
+8. Scoping
+
+There are no queries yet: an exercise is done when every sentence parses.
+
+---
+
+## Checkpoint 1: Syntax
+
+* Which sentence was hardest to make parse? What was the error message?
+* Where did you need a precedence `#N`, and how did you pick the number?
+* When would you use `private` in a language of your own?
+* What surprised you?
+
+**Take away**: a language is types plus phrases; precedence decides how phrases group.
+
+---
+
+# Round 2: Facts and rules
+
+Give the phrases a meaning
+
+---
+
 ## Queries and results
 
 ```text
@@ -123,11 +191,11 @@ unknown | true ?     // [()][]
 
 A result is `[facts][falsehoods]`: the answers for which the query is true, and those for which it is false.
 
-| Result          | Means                                      |
-|-----------------|--------------------------------------------|
-| `[()][]`        | true                                       |
-| `[][()]`        | false                                      |
-| `[..][..]`      | unknown                                    |
+| Result          | Means                                        |
+|-----------------|----------------------------------------------|
+| `[()][]`        | true                                         |
+| `[][()]`        | false                                        |
+| `[..][..]`      | unknown                                      |
 | `[(X=Jan),..]`  | X=Jan is an answer; there may be more (`..`) |
 
 ---
@@ -194,17 +262,57 @@ eats(Piet,f) ?      // [(f=Apple),(f=Pear),..][(f=Fish),(f=Nut),..]
 eats(Piet,Bread) ?  // [..][..]
 ```
 
-* Facts and rules of one relation are combined
-* A rule can add only falsehoods
+* Facts and rules of one relation are combined; a rule can add only falsehoods
 * They must agree: a conflict is reported as an inconsistency
+* A **cyclic** rule is solved by iteration until nothing new is found: the *fixpoint*
 
 ---
 
-## Cycles and quantifiers
+## Go: round 2
 
-* A **cyclic** rule is solved by iteration until nothing new is found: the *fixpoint*
+In this order, in the **Semantics** group:
+
+1. Propositional logic
+2. Facts & queries
+3. Unique values
+4. Rules & recursion
+5. Combining rules
+6. Cyclic rules
+
+From here on an exercise is done when every query shows a green check mark.
+
+---
+
+## Checkpoint 2: Facts and rules
+
+* Which result surprised you? Was it unknown where you expected false?
+* When does an answer have no `..`? What closed it?
+* Did you run into an inconsistency? What caused it?
+* How did the fixpoint of the cyclic rule find its answers?
+
+**Take away**: unknown is not false; facts and rules only add knowledge, never take it back.
+
+---
+
+# Round 3: Data and languages
+
+Functions, literals, quantifiers and transformations
+
+---
+
+## Functions and literals
+
+* Built-in types come from modules: `import nelumbo.integers`, `strings`, `collections`, ...
+* A functor of an `Object` type is a **function**: `double(2)` stands for the value a rule or fact gives it
+* Without a rule or fact that value is unknown: even `point(1,2)=point(1,2)` is unknown
+* A type declared `:: Literal` builds **values**: `pos(1,2)` is equal to another one exactly when it is built the same way
+
+---
+
+## Quantifiers navigate
+
 * `E[x](...)` there exists, `A[x](...)` for all
-* Quantifiers **navigate**: they never try every declared member of a type
+* A quantifier never tries every declared member of a type: its variable gets values from a known relation
 
 ```text
 E[c](age(c)>18) ?                               // [..][..]
@@ -235,41 +343,47 @@ who chases Hoot ?
 
 ---
 
-## The tutorial
+## Go: round 3
 
-**nelumbo.nl/tutorial.html**: 31 sections, each with an example and exercises.
+In this order:
 
-| Group           | Sections | You learn                                                    |
-|-----------------|----------|--------------------------------------------------------------|
-| Syntax          | 8        | types, functors, patterns, precedence, generics, scoping      |
-| Semantics       | 11       | logic, facts, rules, cycles, data types, quantifiers, DSLs    |
-| Transformations | 2        | rewriting statements, controlled English                     |
-| Projects        | 10       | a whole language from given facts and questions              |
-
----
-
-## The editor
-
-* Edit the code: results appear at the end of each line
-* Hover over a result, a name or an error for details
-* Red underline: a parse error or a wrong result
-* **Show solution** when you are stuck, **Reset** to start over
-* Your edits are saved in your browser: come back later and continue
+1. Data types
+2. Equality
+3. Relational KB
+4. Quantifiers
+5. Custom DSL
+6. Transformations
+7. Controlled English
 
 ---
 
-## Suggested route
+## Checkpoint 3: Data and languages
 
-1. **Syntax**: Types & functors, Patterns, Precedence
-2. **Semantics**: from Propositional logic to Cyclic rules
-3. Then choose:
-   * more depth: Quantifiers, Custom DSL, Transformations
-   * a **project**: Family tree, Club fees and Train network first; the later ones are harder
+* Why does a quantifier not try every declared person? What would go wrong?
+* When is `=` decided, and when does it stay unknown?
+* Which words did you add to the controlled English? What would you add next?
+* What surprised you?
 
-Projects give only facts and questions with expected answers; you write the language above them.
-Hints are folded away under each project.
+**Take away**: navigate from what is known; a transformation turns your sentences into facts and queries.
 
-Working in pairs works well.
+---
+
+# Round 4: Projects
+
+A whole language from given facts and questions
+
+---
+
+## Go: round 4
+
+* Only the end of the file is given: facts and questions with expected answers
+* You write the language above it: types, phrases, variables and rules
+* Hints are folded away under each project
+* In this order, as far as you get:
+  1. Family tree
+  2. Club fees
+  3. Train network
+  4. Number toolkit, Set algebra, List statistics, Vectors, Expression interpreter, Room booking, Access policy
 
 ---
 
@@ -281,6 +395,15 @@ Working in pairs works well.
 * A quantifier gives no answer? Let it navigate from a known relation
 * Everything unknown at once? Check the types of your variables
 * Still stuck: **Show solution**, or ask us
+
+---
+
+## Final round: show and compare
+
+* Show your **Family tree**: how did you define ancestor, sister, aunt? Several solutions are right
+* How far did you get? Which project was hardest, and why?
+* Which knowledge from your own work would you write in Nelumbo? What is missing for it?
+* What should change in the tutorial?
 
 ---
 
@@ -317,14 +440,6 @@ On the list:
 * Help write scientific publications
 * GitHub: https://github.com/ModelingValueGroup/nelumbo
 * Email: wim.bast@gmail.com
-
----
-
-# Let's start
-
-<img src="nelumbo.svg" alt="Nelumbo" width="50" height="50" />
-
-**nelumbo.nl/tutorial.html**
 
 ---
 
