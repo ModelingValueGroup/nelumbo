@@ -151,6 +151,8 @@
     <a data-section="number-toolkit">Number toolkit</a>
     <a data-section="set-algebra">Set algebra</a>
     <a data-section="list-statistics">List statistics</a>
+    <a data-section="vectors">Vectors</a>
+    <a data-section="interpreter">Expression interpreter</a>
     <a data-section="room-booking">Room booking</a>
     <a data-section="access-policy">Access policy</a>
     <div class="sep"></div>
@@ -2030,6 +2032,157 @@ max ([3,9,4] where [i](i&lt;5)) ? [(4)][..]
 </pre>
     </div>
   </section>
+  <section class="tutorial-section" id="vectors">
+    <h2>Vectors</h2>
+    <p>Not every value is a number or a name. Here a vector such as <code>vec(1,2)</code> is a value of its own:
+       two vectors are equal exactly when their parts are, and a vector can be an answer. Its operators are
+       functions that compute a new vector: <code>vec(1,2) + vec(3,4)</code> is <code>vec(4,6)</code>. That takes
+       two kinds of declarations: the constructor <code>vec</code> is a literal, the operators are not. A vector
+       with a computed part is computed first, so <code>vec(1+1, 2)</code> equals <code>vec(2, 2)</code>.</p>
+    <details class="project-hints">
+      <summary>Hints</summary>
+      <ol>
+        <li>Declare <code>Vec :: Object</code>, and only the constructor as a literal:
+            <code>{Literal,Vec} ::= vec(&lt;Integer&gt;, &lt;Integer&gt;)</code>, the way the library declares its
+            set and list literals. With <code>Vec :: Literal</code>, every functor that returns a <code>Vec</code>
+            would be a constructor, so <code>+</code> could not compute anything.</li>
+        <li>Declare the operators with the precedences of their integer counterparts:
+            <code>Vec ::= &lt;Vec&gt; + &lt;Vec&gt; #40</code>, the same for <code>-</code>, and
+            <code>&lt;Integer&gt; * &lt;Vec&gt; #50</code>. The dot product is
+            <code>Integer ::= &lt;Vec&gt; . &lt;Vec&gt; #50</code>, and
+            <code>&lt;Vec&gt; is perpendicular to &lt;Vec&gt;</code> is a <code>Boolean</code> phrase with
+            <code>#30</code>. The types of the operands tell <code>2 * vec(1,2)</code> apart from
+            <code>2 * 3</code>.</li>
+        <li>Write a function rule per operator, with a head that takes the vectors apart:
+            <code>vec(a,b) + vec(c,d) == vec(a+c, b+d)</code>.</li>
+        <li>Two vectors are perpendicular when their dot product is 0.</li>
+      </ol>
+    </details>
+    <div class="nelumbo-exercise">
+      <p class="challenge">Write the language above the given part so that every question gets the expected answer.</p>
+      <div class="nelumbo-field" data-height="700px" data-syntax="exercise">import nelumbo.integers
+
+// build your language here: the vector type, operators, variables and rules
+
+
+
+// ---- given: the questions and the answers they should get ----
+vec(1,2) + vec(3,4)                     ? [(vec(4,6))][..]
+vec(1,2) - vec(3,4)                     ? [(vec(-2,-2))][..]
+2 * vec(1,2)                            ? [(vec(2,4))][..]
+vec(1,2) + 2 * vec(1,1)                 ? [(vec(3,4))][..]
+vec(1,2) . vec(3,4)                     ? [(11)][..]
+vec(1+1, 2) = vec(2, 2)                 ? [()][]
+vec(1,2) + vec(3,4) = vec(4,6)          ? [()][]
+vec(1,2) = vec(2,1)                     ? [][()]
+vec(2,1) is perpendicular to vec(-1,2)  ? [()][]
+vec(2,1) is perpendicular to vec(1,2)   ? [][()]</div>
+      <pre class="nelumbo-solution">import nelumbo.integers
+Vec           :: Object
+{Literal,Vec} ::= vec(&lt;Integer&gt;, &lt;Integer&gt;)
+Vec           ::= &lt;Vec&gt; + &lt;Vec&gt;      #40,
+                  &lt;Vec&gt; - &lt;Vec&gt;      #40,
+                  &lt;Integer&gt; * &lt;Vec&gt;  #50
+Integer       ::= &lt;Vec&gt; . &lt;Vec&gt;      #50
+Boolean       ::= &lt;Vec&gt; is perpendicular to &lt;Vec&gt; #30
+Vec     u, v
+Integer a, b, c, d, k
+vec(a,b) + vec(c,d) == vec(a+c, b+d)
+vec(a,b) - vec(c,d) == vec(a-c, b-d)
+k * vec(a,b)        == vec(k*a, k*b)
+vec(a,b) . vec(c,d) == a*c + b*d
+u is perpendicular to v &lt;=&gt; u . v = 0
+
+// ---- given: the questions and the answers they should get ----
+vec(1,2) + vec(3,4)                     ? [(vec(4,6))][..]
+vec(1,2) - vec(3,4)                     ? [(vec(-2,-2))][..]
+2 * vec(1,2)                            ? [(vec(2,4))][..]
+vec(1,2) + 2 * vec(1,1)                 ? [(vec(3,4))][..]
+vec(1,2) . vec(3,4)                     ? [(11)][..]
+vec(1+1, 2) = vec(2, 2)                 ? [()][]
+vec(1,2) + vec(3,4) = vec(4,6)          ? [()][]
+vec(1,2) = vec(2,1)                     ? [][()]
+vec(2,1) is perpendicular to vec(-1,2)  ? [()][]
+vec(2,1) is perpendicular to vec(1,2)   ? [][()]
+</pre>
+    </div>
+  </section>
+  <section class="tutorial-section" id="interpreter">
+    <h2>Expression interpreter</h2>
+    <p>A language inside your language: arithmetic expressions with variables, and a function <code>eval</code>
+       that computes their value. An expression is a value, a tree of parts: <code>x + #2</code> equals
+       <code>x + #2</code> but not <code>#2 + x</code>, although both evaluate to 5. <code>eval</code> is a
+       function over those trees, with one rule per kind of expression. The variables get their values from
+       facts, and a variable without a value gives an unknown result, not an error.</p>
+    <details class="project-hints">
+      <summary>Hints</summary>
+      <ol>
+        <li>Declare <code>Expr :: Object</code>, and <code>Var :: Expr</code> with the constants <code>x</code>,
+            <code>y</code> and <code>z</code>.</li>
+        <li>Declare the other expressions as literals so that an expression is a value:
+            <code>{Literal,Expr} ::= # &lt;Integer&gt; #90, &lt;Expr&gt; + &lt;Expr&gt; #40,
+            &lt;Expr&gt; * &lt;Expr&gt; #50</code>. The types of the operands tell <code>x + #2</code> apart from
+            <code>3 + 2</code>.</li>
+        <li>Declare <code>eval &lt;Expr&gt;</code> as an <code>Integer</code> function with <code>#80</code>, and
+            <code>&lt;Var&gt; := &lt;one Integer&gt;</code> as a <code>Boolean</code> phrase with <code>#20</code>:
+            a variable has one value.</li>
+        <li>Write one rule per kind of expression, with a head that takes it apart:
+            <code>eval (e + f) == eval e + eval f</code>. A variable's value comes from its fact:
+            <code>eval v = i &lt;=&gt; v := i</code>.</li>
+        <li>Do not declare <code>Expr :: Literal</code>: a functor whose holes all have literal types is a
+            constructor, so <code>eval</code> would become one too.</li>
+      </ol>
+    </details>
+    <div class="nelumbo-exercise">
+      <p class="challenge">Write the language above the given part so that the facts parse and every question gets the expected answer.</p>
+      <div class="nelumbo-field" data-height="700px" data-syntax="exercise">import nelumbo.integers
+
+// build your language here: expressions, eval, variables and rules
+
+
+
+// ---- given: the variables, and the questions with the answers they should get ----
+fact x := 3, y := 4
+
+eval #5               ? [(5)][..]
+eval x                ? [(3)][..]
+eval (x + #2)         ? [(5)][..]
+eval (x + y * #2)     ? [(11)][..]
+eval ((x + y) * #2)   ? [(14)][..]
+eval (z + #1)         ? [..][..]
+x + #2 = x + #2       ? [()][]
+x + #2 = #2 + x       ? [][()]</div>
+      <pre class="nelumbo-solution">import nelumbo.integers
+Expr           :: Object
+Var            :: Expr
+Var            ::= x, y, z
+{Literal,Expr} ::= # &lt;Integer&gt;      #90,
+                   &lt;Expr&gt; + &lt;Expr&gt;  #40,
+                   &lt;Expr&gt; * &lt;Expr&gt;  #50
+Integer        ::= eval &lt;Expr&gt;      #80
+Boolean        ::= &lt;Var&gt; := &lt;one Integer&gt; #20
+Expr    e, f
+Var     v
+Integer i
+eval #i      == i
+eval v = i   &lt;=&gt; v := i
+eval (e + f) == eval e + eval f
+eval (e * f) == eval e * eval f
+
+// ---- given: the variables, and the questions with the answers they should get ----
+fact x := 3, y := 4
+
+eval #5               ? [(5)][..]
+eval x                ? [(3)][..]
+eval (x + #2)         ? [(5)][..]
+eval (x + y * #2)     ? [(11)][..]
+eval ((x + y) * #2)   ? [(14)][..]
+eval (z + #1)         ? [..][..]
+x + #2 = x + #2       ? [()][]
+x + #2 = #2 + x       ? [][()]
+</pre>
+    </div>
+  </section>
   <section class="tutorial-section" id="room-booking">
     <h2>Room booking</h2>
     <p>Today's bookings for a few meeting rooms are given with times like <code>9:30</code>. Answer whether a
@@ -2049,9 +2202,8 @@ max ([3,9,4] where [i](i&lt;5)) ? [(4)][..]
             <code>the bookings for &lt;Room&gt;</code> as a function that returns a <code>Set&lt;Slot&gt;</code>
             (precedence <code>#60</code>).</li>
         <li>Because each set is complete, <code>A[b]((b in the bookings for r) -&gt; ...)</code> can be true.</li>
-        <li>For relations about a slot, put the Integer first: <code>&lt;Integer&gt; falls in &lt;Slot&gt;</code>,
-            and let the rule head take the slot apart: <code>n falls in h1:m1 to h2:m2 &lt;=&gt; ...</code>. A phrase
-            that starts with a <code>Slot</code> hole runs into a known engine bug.</li>
+        <li>For relations about a slot, such as <code>&lt;Integer&gt; falls in &lt;Slot&gt;</code>, let the rule
+            head take the slot apart: <code>n falls in h1:m1 to h2:m2 &lt;=&gt; ...</code>.</li>
         <li>A room is free between two times when it is free at the first, and no booking starts at or after the first
             and before the second.</li>
         <li>Bookings clash when one starts during another. A booking does not clash with itself

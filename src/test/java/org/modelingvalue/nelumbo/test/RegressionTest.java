@@ -51,6 +51,16 @@ public class RegressionTest extends NelumboTestBase {
     }
 
     @RepeatedTest(10)
+    public void literalTypeHolePatternMerge() {
+        testResource("literal-type-hole-pattern-merge.nl");
+    }
+
+    @RepeatedTest(10)
+    public void literalConstructorInRuleHead() {
+        testResource("literal-constructor-in-rule-head.nl");
+    }
+
+    @RepeatedTest(10)
     public void repetitionCountLost() {
         testResource("repetition-count-lost.nl");
     }

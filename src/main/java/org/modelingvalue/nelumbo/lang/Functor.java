@@ -443,15 +443,15 @@ public class Functor extends Node implements FunctorOrType {
         args = args.replaceAll(a -> a.nonRepetition());
         if (!Type.ROOT.isAssignableFrom(type) && !Type.NAMESPACE.isAssignableFrom(type)
                 && !Type.PATTERN.isAssignableFrom(type) && !Type.TYPE.isAssignableFrom(type)) {
-            if (Type.LAMBDA.isAssignableFrom(type) || args.noneMatch(t -> Type.OBJECT.isAssignableFrom(t))) {
+            if (Type.LAMBDA.isAssignableFrom(type)
+                    || args.noneMatch(t -> Type.OBJECT.isAssignableFrom(t) && !Type.LITERAL.isAssignableFrom(t))) {
                 type = type.toLiteral();
             } else if (clazz != Parenthesized.class) {
                 if (!Type.BOOLEAN.isAssignableFrom(type)) {
                     function = true;
                 }
-                if (args.noneMatch(t -> Type.OBJECT.equals(t) || Type.BOOLEAN.isAssignableFrom(t)
-                        || Type.VARIABLE.isAssignableFrom(t) || Type.LITERAL.isAssignableFrom(t)
-                        || Type.FUNCTION.isAssignableFrom(t))) {
+                if (args.noneMatch(t -> Type.OBJECT.equals(t) || Type.BOOLEAN.equals(t) || Type.VARIABLE.equals(t)
+                        || Type.LITERAL.equals(t) || Type.FUNCTION.equals(t))) {
                     toLiteral = true;
                 }
             }

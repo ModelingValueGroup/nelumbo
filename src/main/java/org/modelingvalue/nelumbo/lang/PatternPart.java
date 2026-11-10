@@ -51,7 +51,10 @@ public final class PatternPart extends Node {
             String name = name();
             List<AstElement> pttrn = getVal(1);
             Pattern pattern = Pattern.pattern(pttrn);
-            Node self = setArgs(name, pattern);
+            List<Type> args = pattern.argTypes(List.of());
+            args = args.replaceAll(a -> a.nonRepetition());
+            boolean literal = args.noneMatch(t -> Type.OBJECT.isAssignableFrom(t) && !Type.LITERAL.isAssignableFrom(t));
+            Node self = setArgs(name, pattern, literal);
             Functor functor = Functor.of(List.of(self), t(name), Type.PATTERN_PART, Type.NAMESPACE, PatternPart.class,
                     null, false, false);
             functor.init(knowledgeBase, ctx, transforming);
@@ -66,6 +69,10 @@ public final class PatternPart extends Node {
 
     public Pattern pattern() {
         return (Pattern) get(1);
+    }
+
+    public boolean isLiteral() {
+        return (Boolean) get(2);
     }
 
 }

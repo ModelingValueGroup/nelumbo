@@ -64,7 +64,7 @@ is_fixed() {
     local expect
     if expects_error "$file"; then
         expect=$(expected_error "$file")
-        # the CLI prints one line per query: every one must be that error
+        # the quiet CLI prints only errors: every line must be that error
         # (any error: a file:line:col: diagnostic)
         if [ -n "$expect" ]; then
             [ -n "$out" ] && ! echo "$out" | grep -qvF "$expect"
@@ -93,7 +93,13 @@ run_repro() {
     elif command -v gtimeout >/dev/null 2>&1; then
         limit=(gtimeout $((SLOW_SECONDS + 5)))
     fi
-    out=$(${limit[@]+"${limit[@]}"} java -ea -DPARALLEL_COLLECTIONS=false -jar "$jar" "$file" 2>&1)
+    # an expected-error repro runs quiet: only its error lines are printed, not the results
+    # of queries that have one besides the error (a mismatch: literal-binding-expectation-unchecked.nl)
+    local quiet=()
+    if expects_error "$file"; then
+        quiet=(-q)
+    fi
+    out=$(${limit[@]+"${limit[@]}"} java -ea -DPARALLEL_COLLECTIONS=false -jar "$jar" ${quiet[@]+"${quiet[@]}"} "$file" 2>&1)
     local code=$?
     local elapsed=$(( $(date +%s) - start ))
     local name

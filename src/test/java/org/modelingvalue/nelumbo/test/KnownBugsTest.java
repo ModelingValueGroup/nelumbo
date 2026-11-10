@@ -24,6 +24,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboConstants;
+import org.modelingvalue.nelumbo.tools.NelumboEvaluator;
 import org.modelingvalue.nelumbo.tools.NelumboEvaluator.EvalResult;
 
 // The known-bug (xfail) suite. Every method runs a red-by-design .nl repro
@@ -276,12 +277,6 @@ public class KnownBugsTest extends NelumboTestBase {
         bugResource("holeless-functor-in-transformation.nl");
     }
 
-    @KnownBug("functor whose first hole has a user-declared Literal type (Boolean ::= near(<Pos>)) is reported as a non deterministic pattern merge with itself")
-    @Test
-    public void literalTypeHolePatternMerge() {
-        bugResource("literal-type-hole-pattern-merge.nl");
-    }
-
     @KnownBug("rule head variable of a narrower type (Female f) yields bindings of the wrong type for an open query (Who is a sister of Piet lists a Male)")
     @Test
     public void typedHeadVariableOpenQuery() {
@@ -292,6 +287,21 @@ public class KnownBugsTest extends NelumboTestBase {
     @Test
     public void relationGuardOnTwoHeadVariablesHangs() {
         bugResource("relation-guard-on-two-head-variables-hangs.nl");
+    }
+
+    // an expected-error repro: each query's expected binding is wrong, so each must report
+    // "Expected result" (counted from the source: a parse error leaves no query outcomes)
+    @KnownBug("expected result binding a variable of a user Literal type is not checked (here = p ? [(p=there)][..] passes) or, depending on the JVM, does not parse")
+    @Test
+    public void literalBindingExpectationUnchecked() throws IOException {
+        String name = "literal-binding-expectation-unchecked.nl";
+        String source = new String(
+                KnownBugsTest.class.getResourceAsStream(NelumboConstants.NELUMBO_BUGS + name).readAllBytes());
+        long queries = source.lines().filter(l -> !l.startsWith("//") && l.contains(" ? [")).count();
+        EvalResult result = evaluate(source, name, 60_000);
+        List<String> mismatches = result.diagnostics().stream().map(NelumboEvaluator.Diagnostic::message)
+                .filter(m -> m.startsWith("Expected result")).toList();
+        assertEquals(queries, mismatches.size(), "diagnostics: " + result.diagnostics());
     }
 
     @KnownBug("intersection of an open and a closed set is closed although an element may be in the open set ({1,..} && {2} is {} instead of {..})")
