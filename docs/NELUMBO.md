@@ -18,9 +18,9 @@ each with a short explanation, exercises and a **checkpoint**.
 | Round                      | Tutorial sections                     |
 |----------------------------|---------------------------------------|
 | 1. Syntax                  | Types & functors to Scoping           |
-| 2. Facts and rules         | Propositional logic to Cyclic rules   |
-| 3. Data and languages      | Data types to Controlled English      |
-| 4. Projects                | Family tree, Club fees, ...           |
+| 2. Semantics               | Propositional logic to Cyclic rules   |
+| 3. Next-level languages    | Data types to Controlled English      |
+| 4. Bigger projects         | Family tree, Club fees, ...           |
 
 ---
 
@@ -42,7 +42,9 @@ Made for knowledge that has to be exact, such as complex tax laws and clinical k
 ## Design choices
 
 * **Declarative**: no order of execution, no over-specification
-* **Three-valued**: true, false *and* unknown: reasoning over incomplete facts
+* **Three-valued**: true, false *and* unknown
+  * reasoning over incomplete facts *and* incomplete falsehoods
+  * support for logical not (`!`), no negation as failure
 * **Monotonic**: new knowledge never takes back an answer; contradictions are reported
 * **Strongly typed**, with generics
 * **Navigation only**: a variable gets values from known relations, never by trying everything
@@ -51,6 +53,25 @@ Made for knowledge that has to be exact, such as complex tax laws and clinical k
 ---
 
 ## A first taste
+
+```nelumbo
+import  nelumbo.integers
+
+Integer ::= F<Integer>#70                         // syntax
+
+Integer n
+
+Fn ==  n             if n>=0 & n<=1,              // semantics
+       F(n-1)+F(n-2) if n>1
+
+F0   ? [(0)][..]                                  // tests
+F10  ? [(55)][..]
+F100 ? [(36#22r8fozas3n8w3)][..]                  // 354224848179261915075
+```
+
+---
+
+## A second taste
 
 ```nelumbo
 import nelumbo.logic
@@ -82,16 +103,17 @@ Nothing to install: a browser is all you need.
 * Red underline: a parse error or a wrong result; a green check mark: done
 * **Show solution** when you are stuck, **Reset** to start over
 * Your edits are saved in your browser: come back later and continue
+* Look at the library and the documentation for help
 
 ---
 
 ## How we work
 
 * Everybody follows the **same order**: the order of the tutorial
-* Work in **pairs**: one types, both think; switch every section
+* Work in **pairs**: e.g. one types, both think; switch roles
 * At a **checkpoint** everybody stops, finished or not, and we compare
 * **Behind?** Use **Show solution** to catch up: the next round starts together
-* **Ahead?** Help a neighbour, or vary the exercise: try to break the logic
+* **Ahead?** Help a neighbour, or vary the exercise: fool around
 * Note what surprised you: we collect it at every checkpoint
 
 ---
@@ -181,9 +203,9 @@ There are no queries yet: an exercise is done when every sentence parses.
 
 ---
 
-# Round 2: Facts and rules
+# Round 2: Semantics
 
-Give the phrases a meaning
+Give the phrases a meaning by facts and rules
 
 ---
 
@@ -273,35 +295,6 @@ fib(7) ?                // [(13)][..]
 
 ---
 
-## Combining rules: both sides
-
-<!-- nelumbo-context
-Person  :: Object
-Person  ::= Piet
-Food    :: Object
-Food    ::= Apple, Pear, Nut, Fish, Bread
-Boolean ::= likes(<Person>,<Food>), allergic(<Person>,<Food>), eats(<Person>,<Food>)
-Person  p
-Food    f
-fact likes(Piet, Apple), likes(Piet, Pear)
-fact allergic(Piet, Nut), allergic(Piet, Fish)
--->
-
-```nelumbo
-eats(p,f) <=> likes(p,f)
-eats(Piet,f) ?      // [(f=Apple),(f=Pear),..][..]
-
-eats(p,f) <=> false if allergic(p,f)
-eats(Piet,f) ?      // [(f=Apple),(f=Pear),..][(f=Fish),(f=Nut),..]
-eats(Piet,Bread) ?  // [..][..]
-```
-
-* Facts and rules of one relation are combined; a rule can add only falsehoods
-* They must agree: a conflict is reported as an inconsistency
-* A **cyclic** rule is solved by iteration until nothing new is found: the *fixpoint*
-
----
-
 ## Go: round 2
 
 In this order, in the **Semantics** group:
@@ -317,7 +310,7 @@ From here on an exercise is done when every query shows a green check mark.
 
 ---
 
-## Checkpoint 2: Facts and rules
+## Checkpoint 2: Semantics
 
 * Which result surprised you? Was it unknown where you expected false?
 * When does an answer have no `..`? What closed it?
@@ -328,7 +321,7 @@ From here on an exercise is done when every query shows a green check mark.
 
 ---
 
-# Round 3: Data and languages
+# Round 3: Next-level languages
 
 Functions, literals, quantifiers and transformations
 
@@ -366,7 +359,7 @@ A[c]((c in children(Juliana)) -> age(c)>18) ?   // [][()]
 
 ---
 
-## Your own language
+## Transformations
 
 A transformation `::>` turns one statement into others, for example a dictionary into sentences:
 
@@ -441,18 +434,18 @@ In this order:
 
 ---
 
-## Checkpoint 3: Data and languages
+## Checkpoint 3: Next-level languages
 
 * Why does a quantifier not try every declared person? What would go wrong?
 * When is `=` decided, and when does it stay unknown?
 * Which words did you add to the controlled English? What would you add next?
 * What surprised you?
 
-**Take away**: navigate from what is known; a transformation turns your sentences into facts and queries.
+**Take away**: navigate from what is known; a transformation turns your simple sentences into complete syntax and semantics.
 
 ---
 
-# Round 4: Projects
+# Round 4: Bigger projects
 
 A whole language from given facts and questions
 
@@ -463,11 +456,9 @@ A whole language from given facts and questions
 * Only the end of the file is given: facts and questions with expected answers
 * You write the language above it: types, phrases, variables and rules
 * Hints are folded away under each project
-* In this order, as far as you get:
-  1. Family tree
-  2. Club fees
-  3. Train network
-  4. Number toolkit, Set algebra, List statistics, Vectors, Expression interpreter, Room booking, Access policy
+* In this order, as far as you get: 1a, 2a, 1b, 2b, ...
+  1. Family tree, Club fees, Train network, Room booking, Access policy
+  2. Number toolkit, Set algebra, List statistics, Vectors, Expression interpreter
 
 ---
 
@@ -510,8 +501,8 @@ Recently added: generics, lists and sets, transformations, the editor on the web
 On the list:
 
 * Reactive update execution semantics
-* Deprecation and migration support
 * Removal of functors, private import and external DSLs
+* Deprecation and migration support
 * Full Unicode in names, operators and patterns
 
 ---
