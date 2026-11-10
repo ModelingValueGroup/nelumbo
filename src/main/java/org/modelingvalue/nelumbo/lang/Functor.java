@@ -449,8 +449,9 @@ public class Functor extends Node implements FunctorOrType {
                 if (!Type.BOOLEAN.isAssignableFrom(type)) {
                     function = true;
                 }
-                if (args.noneMatch(t -> Type.OBJECT.equals(t) || Type.BOOLEAN.equals(t) || Type.VARIABLE.equals(t)
-                        || Type.LITERAL.equals(t))) {
+                if (args.noneMatch(t -> Type.OBJECT.equals(t) || Type.BOOLEAN.isAssignableFrom(t)
+                        || Type.VARIABLE.isAssignableFrom(t) || Type.LITERAL.isAssignableFrom(t)
+                        || Type.FUNCTION.isAssignableFrom(t))) {
                     toLiteral = true;
                 }
             }
