@@ -141,8 +141,16 @@ jobs:
                     ENDSSH
 
             -   name: Health check
+                # the server needs several seconds to start: one try after a fixed 5 s sleep failed now and then
                 run : |
                     SERVER="${{ secrets.OW_USER }}@${{ secrets.OW_HOST }}"
-                    sleep 5
-                    ssh -i ~/.ssh/deploy_key "$SERVER" \
-                        "docker run --rm --network web curlimages/curl -fsS http://nelumbo:8080/health"
+                    for TRY in $(seq 1 24); do
+                        sleep 5
+                        if ssh -i ~/.ssh/deploy_key "$SERVER" \
+                            "docker run --rm --network web curlimages/curl -fsS http://nelumbo:8080/health"; then
+                            exit 0
+                        fi
+                        echo "health check $TRY/24 failed, retrying in 5 s"
+                    done
+                    echo "::error::nelumbo did not become healthy within 2 minutes"
+                    exit 1
