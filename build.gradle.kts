@@ -89,8 +89,11 @@ publishing {
 }
 
 tasks.register<Exec>("build-slides") {
+    // the deck with its ```nelumbo blocks colored by the website's NelumboHighlighter (highlight.js knows no Nelumbo)
+    dependsOn(":website:slideDeck")
     val docsDir = file("${project.projectDir}/docs").absolutePath
     val projectRoot = project.projectDir.absolutePath
+    val coloredDir = layout.buildDirectory.dir("slides").get().asFile.absolutePath
 
     val dockerCandidateFile = file("/opt/local/bin/docker")
     executable = if (dockerCandidateFile.exists() && dockerCandidateFile.canExecute()) dockerCandidateFile.absolutePath else "docker"
@@ -99,6 +102,7 @@ tasks.register<Exec>("build-slides") {
         "--rm",
         "-v", "$docsDir:/work",         // Mount docs at /work (build output goes to /work/site)
         "-v", "$projectRoot:/project",  // Mount project root so ../src/... is reachable from /work
+        "-v", "$coloredDir:/colored:ro", // the colored deck (mkslides.yml and the assets stay in /work)
         "-v", "${gradle.gradleUserHomeDir}/caches/pip:/root/.cache/pip",
         "-w", "/work",
         "python:3.12-alpine",
@@ -106,7 +110,7 @@ tasks.register<Exec>("build-slides") {
         """
         ln -s /project/src ../src 2>/dev/null || true; \
         pip install -q --disable-pip-version-check --root-user-action=ignore mkslides 2>&1 | grep -v 'Created wheel' || true; \
-        mkslides build NELUMBO.md
+        mkslides build /colored/NELUMBO.md
         cp nelumbo.svg nelumbo.css site/
         """
     )

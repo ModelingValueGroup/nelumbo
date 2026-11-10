@@ -136,6 +136,18 @@ sourceSets.main {
     output.dir(mapOf("builtBy" to listOf(copyFrontend, copyDocs, copyLlms)), layout.buildDirectory.dir("generated-resources"))
 }
 
+// docs/NELUMBO.md (the slide deck) with its ```nelumbo blocks colored by NelumboHighlighter, for the root
+// build-slides task. Only the classes and dependencies on the classpath: the full output would pull in npmBundle.
+tasks.register<JavaExec>("slideDeck") {
+    val deck = rootProject.layout.projectDirectory.file("docs/NELUMBO.md")
+    val colored = rootProject.layout.buildDirectory.file("slides/NELUMBO.md")
+    inputs.file(deck)
+    outputs.file(colored)
+    classpath = sourceSets.main.get().output.classesDirs + configurations.runtimeClasspath.get()
+    mainClass.set("org.modelingvalue.nelumbo.website.SlideDeck")
+    args(deck.asFile.absolutePath, colored.get().asFile.absolutePath)
+}
+
 tasks.register<ShadowJar>("serverJar") {
     archiveBaseName.set(archiveName)
     // Produce a single shaded jar without the default "-all" classifier

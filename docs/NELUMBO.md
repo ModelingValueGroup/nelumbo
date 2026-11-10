@@ -52,7 +52,7 @@ Made for knowledge that has to be exact, such as complex tax laws and clinical k
 
 ## A first taste
 
-```text
+```nelumbo
 import nelumbo.logic
 Person  :: Object                                       // syntax
 Person  ::= Piet, Jan, Klaas, Kees, Bob
@@ -104,10 +104,11 @@ Define the phrases of your own language
 
 ## Types and functors
 
-```text
+```nelumbo
 import nelumbo.lang
 Person   :: Object                  // a type
-Male     :: Person                  // a subtype
+Male     :: Person                  // subtypes
+Female   :: Person
 Male     ::= Piet, Jan              // constants
 Female   ::= Marie
 Person   ::= father(<Person>)       // a functor: <Person> is a hole
@@ -128,7 +129,13 @@ father(Marie) knows Jan
 
 ## Patterns
 
-```text
+<!-- nelumbo-context
+Person   :: Object
+Person   ::= Piet, Jan, Marie, Klaas
+Sentence :: Root
+-->
+
+```nelumbo
 Sentence ::= <Person> <(> really <)?> <(> likes <|> loves <)> <Person> #0,
              <Person> is <NUMBER> years old                            #0,
              <Person> says <STRING>                                    #0,
@@ -182,7 +189,7 @@ Give the phrases a meaning
 
 ## Queries and results
 
-```text
+```nelumbo
 import nelumbo.logic
 true & false ?       // [][()]
 unknown & true ?     // [..][..]
@@ -202,7 +209,15 @@ A result is `[facts][falsehoods]`: the answers for which the query is true, and 
 
 ## Expected results are tests
 
-```text
+<!-- nelumbo-context
+Person  :: Object
+Person  ::= Piet, Jan, Klaas
+Boolean ::= friends(<Person>,<Person>)
+Person  X
+fact friends(Piet, Jan), friends(Jan, Klaas)
+-->
+
+```nelumbo
 friends(Piet, X) ? [(X=Jan),..][..]
 ```
 
@@ -218,7 +233,14 @@ The exercises use expected results to show when you are done.
 
 ## Facts: open and closed
 
-```text
+<!-- nelumbo-context
+Person  :: Object
+Person  ::= Piet, Jan, Klaas
+Person  X
+Integer a
+-->
+
+```nelumbo
 Boolean ::= friends(<Person>,<Person>)
 fact friends(Piet, Jan), friends(Jan, Klaas)
 friends(Piet, X) ?      // [(X=Jan),..][..]   open: more friends may exist
@@ -237,7 +259,7 @@ age(Piet)=41 ?          // [][()]
 
 ## Rules
 
-```text
+```nelumbo
 Integer ::= fib(<Integer>)
 Integer n
 fib(n) == n if n<=1, fib(n-1)+fib(n-2) if n>1
@@ -253,7 +275,19 @@ fib(7) ?                // [(13)][..]
 
 ## Combining rules: both sides
 
-```text
+<!-- nelumbo-context
+Person  :: Object
+Person  ::= Piet
+Food    :: Object
+Food    ::= Apple, Pear, Nut, Fish, Bread
+Boolean ::= likes(<Person>,<Food>), allergic(<Person>,<Food>), eats(<Person>,<Food>)
+Person  p
+Food    f
+fact likes(Piet, Apple), likes(Piet, Pear)
+fact allergic(Piet, Nut), allergic(Piet, Fish)
+-->
+
+```nelumbo
 eats(p,f) <=> likes(p,f)
 eats(Piet,f) ?      // [(f=Apple),(f=Pear),..][..]
 
@@ -314,7 +348,17 @@ Functions, literals, quantifiers and transformations
 * `E[x](...)` there exists, `A[x](...)` for all
 * A quantifier never tries every declared member of a type: its variable gets values from a known relation
 
-```text
+<!-- nelumbo-context
+Person      :: Object
+Person      ::= Juliana, Beatrix, Irene, Margriet
+Integer     ::= age(<Person>)
+Set<Person> ::= children(<Person>)
+Person      c
+fact age(Beatrix)=20, age(Irene)=15, age(Margriet)=30
+fact children(Juliana)={Beatrix, Irene, Margriet}
+-->
+
+```nelumbo
 E[c](age(c)>18) ?                               // [..][..]
 E[c](c in children(Juliana) & age(c)>18) ?      // [()][]
 A[c]((c in children(Juliana)) -> age(c)>18) ?   // [][()]
@@ -326,7 +370,47 @@ A[c]((c in children(Juliana)) -> age(c)>18) ?   // [][()]
 
 A transformation `::>` turns one statement into others, for example a dictionary into sentences:
 
-```text
+<!-- nelumbo-context
+Article :: Object
+Article ::= a, an
+Root    ::= noun <Article> <NAME> #100,
+            verb <NAME>           #100
+Thing   :: Object
+{
+    Article ar
+    NAME    n, v
+    noun ar n ::> {
+        Root            ::= <{Thing,Literal}> is <ar> n #0
+        Root            ::= is <Thing> <ar> n ?         #0
+        private Boolean ::= n(<Thing>)
+        Thing x
+        is x ar n ? ::> {
+            n(x) ?
+        }
+        {Thing,Literal} t
+        t is ar n ::> {
+            fact n(t)
+        }
+    }
+    verb v ::> {
+        Root            ::= <{Thing,Literal}> v <{Thing,Literal}> #0
+        Root            ::= who v <Thing> ?                       #0
+        private Boolean ::= v(<Thing>,<Thing>)
+        Thing x, y
+        who v y ? ::> {
+            v(x,y) ?
+        }
+        {Thing,Literal} s, o
+        s v o ::> {
+            fact v(s,o)
+        }
+    }
+}
+
+Thing ::= Rex, Hoot, Tom
+-->
+
+```nelumbo
 noun a dog
 noun an owl
 verb chases
@@ -447,13 +531,18 @@ On the list:
 
 ---
 
+<!-- .slide: class="dense" -->
+
 ## Backup: native semantics
 
 The integer operators are rules over a native relation:
 
-```text
-private Boolean ::= add(<Integer>,<Integer>,<Integer>)
-                    @nelumbo.integers.Integers
+<!-- nelumbo-context
+Integer a, b, c
+-->
+
+```nelumbo
+private Boolean ::= add(<Integer>,<Integer>,<Integer>) @nelumbo.integers.Integers
 a+b=c <=> add(a,b,c)
 a-b=c <=> add(c,b,a)
 ```
@@ -466,7 +555,7 @@ a-b=c <=> add(c,b,a)
 
 A `@NelumboMethod` whose name and parameter count match the functor; an unbound argument is `null`:
 
-```text
+```java
 @NelumboMethod
 protected InferResult add(NInteger addend1, NInteger addend2, NInteger sum) {
     if (nrOfUnbound() > 1) {

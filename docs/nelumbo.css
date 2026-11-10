@@ -29,7 +29,29 @@ html:root {
   --r-link-color-hover: var(--nl-accent-soft);
   --r-selection-background-color: #edd4e8;
   --r-selection-color: var(--nl-text);
+
+  /* Nelumbo token colors: the light theme of the editors and the docs (--nl-* in website/.../public/docs.html) */
+  --nl-keyword: #0000ff;
+  --nl-name: #0000ff;
+  --nl-type: #880088;
+  --nl-variable: #339900;
+  --nl-string: #006633;
+  --nl-number: #000077;
+  --nl-operator: #333333;
+  --nl-meta: #00cccc;
+  --nl-comment: #a0a0a0;
 }
+
+/* ```nelumbo blocks, colored at build time by the website's NelumboHighlighter (see SlideDeck) */
+.nl-keyword { color: var(--nl-keyword); font-weight: 700; }
+.nl-name { color: var(--nl-name); }
+.nl-type { color: var(--nl-type); }
+.nl-variable { color: var(--nl-variable); }
+.nl-string { color: var(--nl-string); }
+.nl-number { color: var(--nl-number); }
+.nl-operator { color: var(--nl-operator); font-weight: 700; }
+.nl-meta { color: var(--nl-meta); }
+.nl-comment { color: var(--nl-comment); }
 
 .reveal-viewport {
   background: var(--nl-bg);

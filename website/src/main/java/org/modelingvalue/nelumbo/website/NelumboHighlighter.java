@@ -31,7 +31,7 @@ import org.modelingvalue.nelumbo.tools.NelumboEvaluator;
  */
 final class NelumboHighlighter {
 
-    private static final String IMPORTS = """
+    static final String IMPORTS = """
             import nelumbo.logic
             import nelumbo.integers
             import nelumbo.strings
@@ -39,6 +39,22 @@ final class NelumboHighlighter {
             import nelumbo.rationals
             import nelumbo.datetime
             """;
+
+    /**
+     * A markdown comment {@code <!-- nelumbo-context ... -->} right before a {@code ```nelumbo} block holds the
+     * declarations that fragment needs; it is parsed with the block but never shown.
+     */
+    static final String CONTEXT_START = "<!-- nelumbo-context";
+    static final String CONTEXT_END   = "-->";
+
+    /** The context in an html comment, or "" when the comment is not a nelumbo context. */
+    static String context(String comment) {
+        String c = comment.replace("\r\n", "\n").strip();
+        if (!c.startsWith(CONTEXT_START) || !c.endsWith(CONTEXT_END)) {
+            return "";
+        }
+        return c.substring(CONTEXT_START.length(), c.length() - CONTEXT_END.length()).strip();
+    }
 
     /** Bounds each snippet's parse, so one pathological block cannot stall the server's startup. */
     private static final long DEADLINE_MS = 5_000;
@@ -64,23 +80,36 @@ final class NelumboHighlighter {
      * the engine cannot handle the snippet (it then never takes the docs down with it).
      */
     String highlight(String code) {
+        return highlight("", code);
+    }
+
+    /**
+     * {@code code} highlighted as if {@code context} came before it: the context (declarations a fragment needs) is
+     * parsed but not shown, so a fragment gets the colors it has in its whole file.
+     */
+    String highlight(String context, String code) {
         try {
-            return colored(code);
+            return colored(context, code);
         } catch (RuntimeException | StackOverflowError e) {
             System.err.println("docs: cannot highlight a nelumbo block, showing it plain: " + e);
             return escape(code);
         }
     }
 
-    private String colored(String code) {
+    private String colored(String context, String code) {
+        String source = context.isEmpty() ? code : context + "\n" + code;
+        int start = source.length() - code.length();
         // a throwaway child per snippet, so declarations in one block never color another
         KnowledgeBase kb = new KnowledgeBase(base);
         kb.setDeadlineNanos(System.nanoTime() + DEADLINE_MS * 1_000_000L);
         return kb.get(() -> {
-            TokenizerResult tokens = new Tokenizer(code, "<docs>").tokenize();
+            TokenizerResult tokens = new Tokenizer(source, "<docs>").tokenize();
             new Parser(tokens).parseNonThrowing();
             StringBuilder sb = new StringBuilder();
             for (Token token : tokens.listAll()) {
+                if (token.index() < start) {
+                    continue;
+                }
                 String text = escape(token.text());
                 String css = cssClass(token.colorType());
                 sb.append(css == null || text.isEmpty() ? text : "<span class=\"" + css + "\">" + text + "</span>");

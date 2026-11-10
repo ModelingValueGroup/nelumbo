@@ -40,6 +40,7 @@ import org.commonmark.node.BlockQuote;
 import org.commonmark.node.Code;
 import org.commonmark.node.FencedCodeBlock;
 import org.commonmark.node.Heading;
+import org.commonmark.node.HtmlBlock;
 import org.commonmark.node.Link;
 import org.commonmark.node.Node;
 import org.commonmark.node.Paragraph;
@@ -354,7 +355,9 @@ public final class DocsSite {
             FencedCodeBlock block = (FencedCodeBlock) node;
             String info = block.getInfo() == null ? "" : block.getInfo().strip();
             String language = info.isEmpty() ? null : info.split("\\s+")[0];
-            String html = "nelumbo".equals(language) ? NelumboHighlighter.shared().highlight(block.getLiteral()) : null;
+            // a <!-- nelumbo-context ... --> comment right before the block: declarations parsed but not shown
+            String declarations = block.getPrevious() instanceof HtmlBlock comment ? NelumboHighlighter.context(comment.getLiteral()) : "";
+            String html = "nelumbo".equals(language) ? NelumboHighlighter.shared().highlight(declarations, block.getLiteral()) : null;
             // the same markup commonmark's own renderer produces, so unhighlighted blocks look as before
             Map<String, String> attributes = new LinkedHashMap<>();
             if (language != null) {
