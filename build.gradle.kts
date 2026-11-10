@@ -137,6 +137,35 @@ tasks.matching { it.name == "mvgtagger" }.configureEach {
     allprojects.forEach { p -> dependsOn(p.tasks.withType<Test>()) }
 }
 
+// never publish a build with failing tests either: such a version gets no tag, so the next
+// build takes the same version again and its publish fails with 409 Conflict
+allprojects {
+    tasks.withType<PublishToMavenRepository>().configureEach {
+        rootProject.allprojects.forEach { p -> dependsOn(p.tasks.withType<Test>()) }
+    }
+}
+
+// maven central refuses releases while the organization is over its monthly publishing limit
+// ("Publishing blocked: ..."): accepted for now, such a version is only on the github package
+// repo; every other maven central failure still fails the build
+gradle.taskGraph.whenReady {
+    allTasks.filter { it.name == "mvgcentralpublisher" }.forEach { central ->
+        val upload = central.actions.toList()
+        central.actions = upload.map { action ->
+            Action<Task> {
+                try {
+                    action.execute(this)
+                } catch (e: Exception) {
+                    if (e.message?.contains("Publishing blocked") != true) {
+                        throw e
+                    }
+                    logger.warn("::warning::not published on maven central: ${e.message}")
+                }
+            }
+        }
+    }
+}
+
 // one aggregated HTML report over every test task in every project; runs
 // automatically after './gradlew test' (the per-task report lines are then
 // suppressed in favor of the single ALL-tests line). Gradle's own index.html

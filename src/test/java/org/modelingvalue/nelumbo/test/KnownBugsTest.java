@@ -277,6 +277,12 @@ public class KnownBugsTest extends NelumboTestBase {
         bugResource("holeless-functor-in-transformation.nl");
     }
 
+    @KnownBug("intersection hole of a :: Literal type and Literal (<{Point,Literal}> with Point :: Literal) rejects a Point (p(1,2) of unexpected type Point)")
+    @Test
+    public void literalTypeInIntersectionHole() {
+        bugResource("literal-type-in-intersection-hole.nl");
+    }
+
     @KnownBug("rule head variable of a narrower type (Female f) yields bindings of the wrong type for an open query (Who is a sister of Piet lists a Male)")
     @Test
     public void typedHeadVariableOpenQuery() {

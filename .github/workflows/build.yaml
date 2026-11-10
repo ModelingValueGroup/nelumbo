@@ -21,6 +21,14 @@ on:
         branches: [ '**' ]
     workflow_dispatch:
 
+# master builds run one at a time: each takes the patch successor of the highest version tag,
+# and that tag is only pushed at the end of the previous build (overlapping builds took the same
+# version: 409 Conflict on the package repo). GitHub keeps one pending run: a newer push replaces
+# (cancels) it. Other branches get a group per run, so they never wait.
+concurrency:
+    group             : "${{ github.ref == 'refs/heads/master' && 'build-master' || format('build-{0}', github.run_id) }}"
+    cancel-in-progress: false
+
 jobs:
     build:
         runs-on: ubuntu-latest

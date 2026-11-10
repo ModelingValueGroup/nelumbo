@@ -34,8 +34,9 @@ jobs:
                 env:
                     GH_TOKEN: ${{ github.token }}
                 run: |
-                    # Find the build workflow run for this commit
-                    RUN_ID=$(gh run list --workflow=build.yaml --commit "$GITHUB_SHA" --limit=1 --json databaseId --jq '.[0].databaseId')
+                    # Find the master build workflow run for this commit (develop builds the same commit
+                    # when it catches up with master; that run must not be picked)
+                    RUN_ID=$(gh run list --workflow=build.yaml --branch master --commit "$GITHUB_SHA" --limit=1 --json databaseId --jq '.[0].databaseId')
                     if [ -z "$RUN_ID" ]; then
                         echo "::error::No build workflow run found for commit $GITHUB_SHA"
                         exit 1

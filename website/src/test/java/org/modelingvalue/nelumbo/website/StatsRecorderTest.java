@@ -74,7 +74,7 @@ class StatsRecorderTest {
                                        @Override
                                        synchronized void add(MinuteStats row) {
                                            if (failing[0]) {
-                                               throw new IllegalStateException("disk on fire");
+                                               throw new IllegalStateException("simulated failure (expected in this test)");
                                            }
                                            kept.add(row);
                                        }
