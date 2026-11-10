@@ -509,10 +509,10 @@ Recently added: generics, lists and sets, transformations, the editor on the web
 
 On the list:
 
-* Full Unicode in names, operators and patterns
-* A better word for "falsehood"
 * Reactive update execution semantics
 * Deprecation and migration support
+* Removal of functors, private import and external DSLs
+* Full Unicode in names, operators and patterns
 
 ---
 
