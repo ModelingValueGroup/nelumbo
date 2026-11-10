@@ -39,7 +39,7 @@ dependencies {
     implementation(project(":cli"))
     implementation(project(":lsp:server"))
     implementation(libs.lsp4j)
-    implementation("io.javalin:javalin:7.2.3")
+    implementation("io.javalin:javalin:7.2.4")
     implementation(libs.jackson.databind)
     // markdown -> html for the /docs pages (module-unique dependency, so not in the version catalog)
     implementation("org.commonmark:commonmark:0.31.0")
