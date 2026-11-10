@@ -235,6 +235,7 @@ Deployment (`.github/workflows/deploy.yml`, on push to `master` or manual):
 
 - Coloring comes ONLY from LSP semantic tokens. LSP4IJ's lazy path (`HighlightVisitor`, for languages with a `ParserDefinition`) colors nothing for nelumbo's flat PSI, so `NelumboLanguageServerFactory.createClientFeatures()` overrides `LSPSemanticTokensFeature.shouldVisitPsiElement` -> false (direct path).
 - Keep the LSP4IJ pin (0.21.0) at the current marketplace version: the sandbox IDE auto-updates it anyway.
+- Searchable options are off through the extension (`intellijPlatform { buildSearchableOptions = false }`), not `buildSearchableOptions.enabled = false`: since IntelliJ Platform Gradle Plugin 2.20.0 `prepareJarSearchableOptions` then still runs and fails on the missing output dir.
 - Debugging: server stderr only in the LSP4IJ console (not `idea.log`); `NlTextDocumentService` prints `~~~ <request>` per request; `"Debugging":true` in `~/nelumbo/settings.json` dumps tokens; the sandbox runs `~/nelumbo/server.jar`, extracted fresh on every start.
 
 ## Known-Bug Repros (xfail suite)

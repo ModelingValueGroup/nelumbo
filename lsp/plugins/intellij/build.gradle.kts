@@ -48,6 +48,10 @@ java {
 intellijPlatform {
     // keep the IDE sandbox (runIde/test scratch data) inside the build dir instead of <root>/.intellijPlatform
     sandboxContainer = layout.buildDirectory.dir("idea-sandbox")
+    // no searchable options: building them starts a full IDE instance. The extension switch, not
+    // buildSearchableOptions.enabled = false: since plugin 2.20.0 prepareJarSearchableOptions then
+    // still runs and fails on the missing buildSearchableOptions output
+    buildSearchableOptions = false
 }
 
 // the IntelliJ Platform Gradle Plugin unconditionally (re)creates <root>/.intellijPlatform; remove it
@@ -78,11 +82,6 @@ tasks {
         sinceBuild.set("232")
         untilBuild.set("262.*")
         version = project.version.toString()
-    }
-
-    // Disable building searchable options to avoid starting a full IDE instance during build
-    named("buildSearchableOptions") {
-        enabled = false
     }
 
     // Disable bytecode instrumentation: we don't use IntelliJ form designer (.form) files or
