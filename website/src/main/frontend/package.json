@@ -13,7 +13,7 @@
   "dependencies": {
     "monaco-editor": "~0.34.1",
     "monaco-languageclient": "~1.0.1",
-    "tslib": "^2.6.0",
+    "tslib": "^2.9.1",
     "uplot": "1.6.32",
     "vscode-ws-jsonrpc": "~2.0.2"
   },
