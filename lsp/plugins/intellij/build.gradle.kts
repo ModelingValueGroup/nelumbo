@@ -16,7 +16,7 @@
 
 plugins {
     java
-    id("org.jetbrains.intellij.platform") version "2.20.0"
+    id("org.jetbrains.intellij.platform") version "2.20.1"
 }
 
 repositories {
