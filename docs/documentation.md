@@ -6,7 +6,7 @@ Nelumbo is a declarative logic programming language that you extend from inside 
 
 > **Status:** Nelumbo is at an early stage of development. Some features are still evolving; where that matters, individual pages note it.
 
-This folder contains the user documentation. For the project overview, build instructions, and release notes, see the [repository README](../README.md). For the presentation-deck version of this material, see [`NELUMBO.md`](NELUMBO.md).
+This folder contains the user documentation. For the project overview, build instructions, and release notes, see the [repository README](../README.md). For the slides that introduce a hands-on workshop with the tutorial, see [`NELUMBO.md`](NELUMBO.md).
 
 ---
 
