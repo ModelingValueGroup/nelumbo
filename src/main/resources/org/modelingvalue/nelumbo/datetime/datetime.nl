@@ -5,8 +5,8 @@ Date                :: Object
 Time                :: Object
 Period              :: Object
 
-DateTime            ::= <[> <Date> T <Time> <]> #100 @nelumbo.datetime.NDateTime,
-                        <DateTime> + <Period>   #40,
+{Literal,DateTime}  ::= <[> <Date> T <Time> <]> #100 @nelumbo.datetime.NDateTime
+DateTime            ::= <DateTime> + <Period>   #40,
                         <DateTime> - <Period>   #40
 
 Date                ::= <[> <NUMBER> - <NUMBER> - <NUMBER> <]> @nelumbo.datetime.NDate,

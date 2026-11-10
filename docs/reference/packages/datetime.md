@@ -43,14 +43,16 @@ They are **not** in a subtype relationship with one another, and there is no imp
 All four literals are written inside a **connected-token group** (`<[> … <]>`), which forbids whitespace between the inner tokens — `2024-01-15` must be written tightly, not `2024 - 01 - 15`. See [`built-in-tokens.md`](../lang/built-in-tokens.md) for the connected-token mechanism.
 
 ```nelumbo
-Date     ::= <[> <NUMBER> - <NUMBER> - <NUMBER> <]>                              @nelumbo.datetime.NDate
-Time     ::= <[> <NUMBER> : <NUMBER> <(> : <NUMBER> <(> . <NUMBER> <)?> <)?> <]>   @nelumbo.datetime.NTime
-DateTime ::= <[> <Date> T <Time> <]> #100                                        @nelumbo.datetime.NDateTime
-Period   ::= <[> P <(> <YMWD_PERIOD> <(> <TIME_PERIOD> <)?> <|> <TIME_PERIOD> <)> <]> @nelumbo.datetime.NPeriod
+Date               ::= <[> <NUMBER> - <NUMBER> - <NUMBER> <]>                              @nelumbo.datetime.NDate
+Time               ::= <[> <NUMBER> : <NUMBER> <(> : <NUMBER> <(> . <NUMBER> <)?> <)?> <]>   @nelumbo.datetime.NTime
+{Literal,DateTime} ::= <[> <Date> T <Time> <]> #100                                        @nelumbo.datetime.NDateTime
+Period             ::= <[> P <(> <YMWD_PERIOD> <(> <TIME_PERIOD> <)?> <|> <TIME_PERIOD> <)> <]> @nelumbo.datetime.NPeriod
 
 pattern YMWD_PERIOD ::= <(> <NUMBER> <(> Y <|> M <|> W <|> D <)> <)+>
 pattern TIME_PERIOD ::= T <(> <NUMBER> <(> H <|> M <|> S <)> <)+>
 ```
+
+The types are `:: Object`: the operators below are functions that compute a value, while a literal is a value with structural equality. The `Date`, `Time` and `Period` literals are built from tokens only, so they are constructors without further declaration. The `DateTime` literal has `Date` and `Time` holes, so it is declared `{Literal,DateTime}`, as the set and list literals of [`nelumbo.collections`](collections.md#literals) are: it is a value when its `Date` and `Time` parts are.
 
 - **`Date`** — `YYYY-MM-DD`. Parsed into a `LocalDate`; out-of-range values (e.g. month 13) are rejected **at parse time** with a `file:line:col` error, not as a query falsehood.
 - **`Time`** — `HH:MM`, optionally `:SS` and a `.fff` sub-second fraction. Backed by `LocalTime`. A `:00` seconds field — and a zero fraction — is dropped on display (`20:04:00.00` prints as `20:04`, `20:04:00.30` as `20:04:00.300`).

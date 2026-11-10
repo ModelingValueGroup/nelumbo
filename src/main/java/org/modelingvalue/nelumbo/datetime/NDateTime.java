@@ -39,22 +39,13 @@ public final class NDateTime extends Node {
     @NelumboFunctorField
     private static Functor FUNCTOR;
 
-    private static Functor FUNCTOR_LITERAL;
-
-    private static Functor literalFunctor() {
-        if (FUNCTOR_LITERAL == null) {
-            FUNCTOR_LITERAL = FUNCTOR.setResultType(FUNCTOR.resultType().toLiteral());
-        }
-        return FUNCTOR_LITERAL;
-    }
-
     @NelumboConstructor
     public NDateTime(NodeInfo nodeInfo, Object... args) {
         super(nodeInfo, args);
     }
 
     public static NDateTime of(Object value) {
-        return new NDateTime(NodeInfo.of(literalFunctor()), value);
+        return new NDateTime(NodeInfo.of(FUNCTOR), value);
     }
 
     @Override
@@ -69,7 +60,7 @@ public final class NDateTime extends Node {
             LocalDate date = getVal(0, 0);
             LocalTime time = getVal(1, 0);
 
-            return setArgs(LocalDateTime.of(date, time)).setFunctorOrType(literalFunctor());
+            return setArgs(LocalDateTime.of(date, time));
         }
 
         return this;
