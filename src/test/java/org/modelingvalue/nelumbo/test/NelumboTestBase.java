@@ -98,16 +98,28 @@ public class NelumboTestBase {
         resource(resource, NelumboConstants.NELUMBO_TESTS);
     }
 
-    // known-bug repros: preemptive timeout instead of @Timeout so a diverging
-    // repro aborts (KnownBugExtension turns the failure into ABORTED) instead
-    // of failing the build; the hung thread leaks until the test JVM exits
+    // known-bug repros: a diverging repro must abort (KnownBugExtension turns the
+    // failure into ABORTED), not fail the build or hang it. The engine's own
+    // deadline stops it, pool work included (NelumboTimeoutException). JUnit's
+    // preemptive timeout only interrupts its thread, which the engine ignores:
+    // alone it left the evaluation running and eating memory until the JVM
+    // exited. It stays as a backstop for a hang outside inference.
+    private static final long BUG_DEADLINE_SECONDS = 50;
+
     public void bugResource(String resource) {
-        org.junit.jupiter.api.Assertions.assertTimeoutPreemptively(java.time.Duration.ofSeconds(60),
-                () -> resource(resource, NelumboConstants.NELUMBO_BUGS));
+        org.junit.jupiter.api.Assertions.assertTimeoutPreemptively(java.time.Duration.ofSeconds(BUG_DEADLINE_SECONDS + 10),
+                () -> resource(resource, NelumboConstants.NELUMBO_BUGS, BUG_DEADLINE_SECONDS));
     }
 
     public void resource(String resource, String base) {
+        resource(resource, base, 0);
+    }
+
+    private void resource(String resource, String base, long deadlineSeconds) {
         run(() -> {
+            if (deadlineSeconds > 0) {
+                KnowledgeBase.current().setDeadlineNanos(System.nanoTime() + deadlineSeconds * 1_000_000_000L);
+            }
             try {
                 U.printResults(Parser.parse(NelumboTestBase.class, base + resource));
             } catch (ParseException e) {
