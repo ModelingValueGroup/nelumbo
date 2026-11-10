@@ -148,6 +148,9 @@
     <a data-section="family-tree">Family tree</a>
     <a data-section="club-fees">Club fees</a>
     <a data-section="train-network">Train network</a>
+    <a data-section="number-toolkit">Number toolkit</a>
+    <a data-section="set-algebra">Set algebra</a>
+    <a data-section="list-statistics">List statistics</a>
     <a data-section="room-booking">Room booking</a>
     <a data-section="access-policy">Access policy</a>
     <div class="sep"></div>
@@ -1775,6 +1778,255 @@ I can travel from Utrecht to Leiden in at most 3 steps ? [()][]
 I can travel from Utrecht to Leiden in at most 2 steps ? [..][..]
 I can travel from Utrecht to Delft in at most 3 steps  ? [()][]
 I can travel from Utrecht to Delft in at most 0 steps  ? [][()]
+</pre>
+    </div>
+  </section>
+  <section class="tutorial-section" id="number-toolkit">
+    <h2>Number toolkit</h2>
+    <p>The projects so far read like English, but a Nelumbo language can just as well use mathematical
+       notation. Here you extend the integers with operators: factorial, power, remainder, greatest common
+       divisor, divisibility and primality. Precedence decides how a question groups: <code>2 * 3!</code> is 12
+       and <code>2 + 10 mod 4</code> is 4, because <code>!</code> binds tighter than <code>*</code>, and
+       <code>mod</code> as tightly as <code>*</code>. Power groups to the right, as in mathematics:
+       <code>2^3^2</code> is <code>2^(3^2)</code>, so 512, not 64.</p>
+    <details class="project-hints">
+      <summary>Hints</summary>
+      <ol>
+        <li>Declare the operators on <code>Integer</code>: the postfix <code>&lt;Integer&gt; !</code> with
+            <code>#70</code>, <code>&lt;Integer&gt; mod &lt;Integer&gt;</code> with <code>#50</code> like
+            <code>*</code>, and <code>gcd(&lt;Integer&gt;, &lt;Integer&gt;)</code>, which needs no precedence
+            because it does not start with a hole.</li>
+        <li>An operator groups to the left by default, so <code>2^3^2</code> would be <code>(2^3)^2</code>. Hole
+            precedences make it group to the right: <code>&lt;Integer#61&gt; ^ &lt;Integer#59&gt; #60</code>. The
+            left operand cannot be a power itself, the right one can.</li>
+        <li>Write each function as a recursive function rule with <code>==</code> and <code>if</code>:
+            <code>n!</code> is 1 for 0 and <code>n*(n-1)!</code> above it, and power works the same way.
+            <code>a mod b</code> subtracts <code>b</code> until the rest is smaller than <code>b</code>, and
+            <code>gcd</code> is Euclid's algorithm: <code>gcd(a,b)</code> is <code>gcd(b, a mod b)</code> until
+            <code>b</code> is 0.</li>
+        <li><code>d divides n</code> is a <code>Boolean</code> operator with <code>#30</code>: the remainder is
+            0.</li>
+        <li>A number above 1 is prime when no number from <code>n-1</code> down to 2 divides it. Write a relation
+            <code>no divisor of &lt;Integer&gt; up to &lt;Integer&gt;</code> that counts down to 1. It needs an
+            explicit <code>false</code> branch for a divisor: a guard that fails makes its branch silent, not
+            false. Count down to the constant 1: a recursive relation whose guards compare two of its variables
+            (<code>d&lt;n</code>) runs into a known engine bug.</li>
+      </ol>
+    </details>
+    <div class="nelumbo-exercise">
+      <p class="challenge">Write the language above the given part so that every question gets the expected answer.</p>
+      <div class="nelumbo-field" data-height="800px" data-syntax="exercise">import nelumbo.integers
+
+// build your language here: operators, variables and rules
+
+
+
+// ---- given: the questions and the answers they should get ----
+5!             ? [(120)][..]
+0!             ? [(1)][..]
+2 * 3!         ? [(12)][..]
+2^10           ? [(1024)][..]
+2^3^2          ? [(512)][..]
+2^3 * 2        ? [(16)][..]
+17 mod 5       ? [(2)][..]
+2 + 10 mod 4   ? [(4)][..]
+(2 + 10) mod 4 ? [(0)][..]
+gcd(12, 18)    ? [(6)][..]
+gcd(17, 5)     ? [(1)][..]
+3 divides 12   ? [()][]
+5 divides 12   ? [][()]
+prime 2        ? [()][]
+prime 97       ? [()][]
+prime 91       ? [][()]
+prime 1        ? [][()]</div>
+      <pre class="nelumbo-solution">import nelumbo.integers
+Integer ::= &lt;Integer&gt; !                 #70,
+            &lt;Integer#61&gt; ^ &lt;Integer#59&gt; #60,
+            &lt;Integer&gt; mod &lt;Integer&gt;     #50,
+            gcd(&lt;Integer&gt;, &lt;Integer&gt;)
+Boolean ::= &lt;Integer&gt; divides &lt;Integer&gt;          #30,
+            prime &lt;Integer&gt;                      #30,
+            no divisor of &lt;Integer&gt; up to &lt;Integer&gt; #30
+Integer n, k, a, b, d
+n!       == 1 if n=0, n*(n-1)! if n&gt;0
+a^k      == 1 if k=0, a*a^(k-1) if k&gt;0
+a mod b  == a if a&lt;b, (a-b) mod b if a&gt;=b
+gcd(a,b) == a if b=0, gcd(b, a mod b) if b&gt;0
+d divides n             &lt;=&gt; n mod d = 0
+no divisor of n up to d &lt;=&gt; true  if d&lt;=1,
+                            false if d&gt;1 &amp; d divides n,
+                            no divisor of n up to d-1 if d&gt;1 &amp; !(d divides n)
+prime n                 &lt;=&gt; n&gt;1 &amp; no divisor of n up to n-1
+
+// ---- given: the questions and the answers they should get ----
+5!             ? [(120)][..]
+0!             ? [(1)][..]
+2 * 3!         ? [(12)][..]
+2^10           ? [(1024)][..]
+2^3^2          ? [(512)][..]
+2^3 * 2        ? [(16)][..]
+17 mod 5       ? [(2)][..]
+2 + 10 mod 4   ? [(4)][..]
+(2 + 10) mod 4 ? [(0)][..]
+gcd(12, 18)    ? [(6)][..]
+gcd(17, 5)     ? [(1)][..]
+3 divides 12   ? [()][]
+5 divides 12   ? [][()]
+prime 2        ? [()][]
+prime 97       ? [()][]
+prime 91       ? [][()]
+prime 1        ? [][()]
+</pre>
+    </div>
+  </section>
+  <section class="tutorial-section" id="set-algebra">
+    <h2>Set algebra</h2>
+    <p>The sets of <code>nelumbo.collections</code> come with intersection <code>&amp;&amp;</code>, union
+       <code>||</code> and difference <code>-</code>. Build new set operators on top of them: the symmetric
+       difference <code>xor</code> (the elements in exactly one of the two sets), <code>disjoint</code>,
+       multiplying every element by a number, and the sum set <code>s + t</code>: every sum of an element of
+       <code>s</code> and an element of <code>t</code>. One symbol can mean different things on different types:
+       <code>+</code> adds integers but builds the sum set of two sets, and the types of the operands decide
+       which. An open set stays open: <code>{1,2,..} xor {2}</code> contains 1, and perhaps more.</p>
+    <details class="project-hints">
+      <summary>Hints</summary>
+      <ol>
+        <li>Declare the operators on <code>Set&lt;Integer&gt;</code>, each with a precedence: <code>xor</code>
+            with <code>#60</code> like <code>&amp;&amp;</code> and <code>||</code>, <code>*</code> with
+            <code>#50</code> and <code>+</code> with <code>#40</code>, as on integers. So
+            <code>{1,2} + {10} * 2</code> is <code>{1,2} + {20}</code>.</li>
+        <li>Declare the variables: two sets and a few integers.</li>
+        <li><code>s xor t</code> is a function rule over the built-in operators: what is in <code>s</code> but not
+            in <code>t</code>, together with what is in <code>t</code> but not in <code>s</code>.</li>
+        <li>The set-builder <code>{[n](...)}</code> collects every <code>n</code> for which the condition holds.
+            <code>s * k</code> is the set of every <code>n</code> that is <code>i*k</code> for an element
+            <code>i</code> of <code>s</code>: <code>{[n](E[i](i in s &amp; n = i*k))}</code>. The sum set works
+            the same way with two elements.</li>
+        <li>Two sets are disjoint when their intersection is the empty set <code>{}</code>.</li>
+      </ol>
+    </details>
+    <div class="nelumbo-exercise">
+      <p class="challenge">Write the language above the given part so that every question gets the expected answer.</p>
+      <div class="nelumbo-field" data-height="700px" data-syntax="exercise">import nelumbo.collections
+
+// build your language here: operators, variables and rules
+
+
+
+// ---- given: the questions and the answers they should get ----
+{1,2,3} xor {2,3,4}   ? [({1,4})][..]
+{1,2} xor {2,1}       ? [({})][..]
+{1,2} disjoint {3,4}  ? [()][]
+{1,2} disjoint {2,3}  ? [][()]
+{1,2,3} * 10          ? [({10,20,30})][..]
+{1,2} + {10,20}       ? [({11,12,21,22})][..]
+|{1,2,3} + {1,2,3}|   ? [(5)][..]
+{1,2} + {10} * 2      ? [({21,22})][..]
+{1,2} + {0} = {1,2}   ? [()][]
+{1,2,..} xor {2}      ? [({1,..})][..]</div>
+      <pre class="nelumbo-solution">import nelumbo.collections
+Set&lt;Integer&gt; ::= &lt;Set&lt;Integer&gt;&gt; xor &lt;Set&lt;Integer&gt;&gt; #60,
+                 &lt;Set&lt;Integer&gt;&gt; + &lt;Set&lt;Integer&gt;&gt;   #40,
+                 &lt;Set&lt;Integer&gt;&gt; * &lt;Integer&gt;        #50
+Boolean      ::= &lt;Set&lt;Integer&gt;&gt; disjoint &lt;Set&lt;Integer&gt;&gt; #30
+Set&lt;Integer&gt; s, t
+Integer      i, j, k, n
+s xor t      == (s - t) || (t - s)
+s * k        == {[n](E[i](i in s &amp; n = i*k))}
+s + t        == {[n](E[i,j](i in s &amp; j in t &amp; n = i+j))}
+s disjoint t &lt;=&gt; s &amp;&amp; t = {}
+
+// ---- given: the questions and the answers they should get ----
+{1,2,3} xor {2,3,4}   ? [({1,4})][..]
+{1,2} xor {2,1}       ? [({})][..]
+{1,2} disjoint {3,4}  ? [()][]
+{1,2} disjoint {2,3}  ? [][()]
+{1,2,3} * 10          ? [({10,20,30})][..]
+{1,2} + {10,20}       ? [({11,12,21,22})][..]
+|{1,2,3} + {1,2,3}|   ? [(5)][..]
+{1,2} + {10} * 2      ? [({21,22})][..]
+{1,2} + {0} = {1,2}   ? [()][]
+{1,2,..} xor {2}      ? [({1,..})][..]
+</pre>
+    </div>
+  </section>
+  <section class="tutorial-section" id="list-statistics">
+    <h2>List statistics</h2>
+    <p>Lists of numbers, the way a programmer handles them: the sum, maximum, mean and median of a list, and
+       the dot product of two lists. You build them from list indexing and recursion, and the questions
+       combine them with the library's <code>map</code>, <code>where</code> and <code>sort</code>, which take
+       a lambda such as <code>[i](i*i)</code>. Division is exact, so <code>mean [1,2]</code> has no value: 3/2
+       is not an integer, and the facts side stays empty.</p>
+    <details class="project-hints">
+      <summary>Hints</summary>
+      <ol>
+        <li>Declare the functions on <code>Integer</code> with <code>#45</code>:
+            <code>sum &lt;List&lt;Integer&gt;&gt;</code>, and the same for <code>max</code>, <code>mean</code>
+            and <code>median</code>. The dot product is an operator,
+            <code>&lt;List&lt;Integer&gt;&gt; dot &lt;List&lt;Integer&gt;&gt;</code> with <code>#50</code>.</li>
+        <li>Declare <code>Integer i, j</code>: the given questions use <code>i</code> in their lambdas.</li>
+        <li>Recurse over an index with a helper such as
+            <code>sum &lt;List&lt;Integer&gt;&gt; from &lt;Integer&gt;</code>: 0 past the end
+            (<code>i &gt;= |l|</code>), otherwise the element <code>at i in l</code> plus the sum from the next
+            index. Write <code>from (i+1)</code>: the helper binds tighter than <code>+</code>, so
+            <code>sum l from i+1</code> is <code>(sum l from i)+1</code>.</li>
+        <li>At the last index (<code>|l|-1</code>) the maximum is the element itself, before that the larger of
+            the element and the maximum of the rest: <code>(x &gt; y then x else y)</code>.</li>
+        <li>The mean is the sum divided by the length. The median of a list of odd length is the middle element
+            of the sorted list: <code>l sort [i,j](i&lt;j)</code>, at index <code>(|l|-1)/2</code>.</li>
+        <li>The dot product multiplies the elements at the same index and adds up the products: one more helper
+            that recurses over an index.</li>
+      </ol>
+    </details>
+    <div class="nelumbo-exercise">
+      <p class="challenge">Write the language above the given part so that every question gets the expected answer.</p>
+      <div class="nelumbo-field" data-height="800px" data-syntax="exercise">import nelumbo.collections
+
+// build your language here: functions, variables and rules
+
+
+
+// ---- given: the questions and the answers they should get ----
+sum [3,4,5]                  ? [(12)][..]
+sum []                       ? [(0)][..]
+max [3,9,4]                  ? [(9)][..]
+mean [2,4,9]                 ? [(5)][..]
+mean [1,2]                   ? [][..]
+median [7,1,5]               ? [(5)][..]
+[1,2,3] dot [4,5,6]          ? [(32)][..]
+sum ([1,2,3] map [i](i*i))   ? [(14)][..]
+max ([3,9,4] where [i](i&lt;5)) ? [(4)][..]</div>
+      <pre class="nelumbo-solution">import nelumbo.collections
+Integer ::= sum &lt;List&lt;Integer&gt;&gt;                     #45,
+            sum &lt;List&lt;Integer&gt;&gt; from &lt;Integer&gt;      #45,
+            max &lt;List&lt;Integer&gt;&gt;                     #45,
+            max &lt;List&lt;Integer&gt;&gt; from &lt;Integer&gt;      #45,
+            mean &lt;List&lt;Integer&gt;&gt;                    #45,
+            median &lt;List&lt;Integer&gt;&gt;                  #45,
+            &lt;List&lt;Integer&gt;&gt; dot &lt;List&lt;Integer&gt;&gt;     #50,
+            products of &lt;List&lt;Integer&gt;&gt; and &lt;List&lt;Integer&gt;&gt; from &lt;Integer&gt; #45
+List&lt;Integer&gt; l, m
+Integer       i, j
+sum l from i == 0 if i &gt;= |l|, (at i in l) + sum l from (i+1) if i &lt; |l|
+sum l        == sum l from 0
+max l from i == at i in l if i = |l|-1,
+                (at i in l &gt; max l from (i+1) then at i in l else max l from (i+1)) if i &lt; |l|-1
+max l        == max l from 0
+mean l       == (sum l) / (|l|)
+median l     == at ((|l|-1)/2) in (l sort [i,j](i&lt;j))
+products of l and m from i == 0 if i &gt;= |l|, (at i in l) * (at i in m) + products of l and m from (i+1) if i &lt; |l|
+l dot m      == products of l and m from 0
+
+// ---- given: the questions and the answers they should get ----
+sum [3,4,5]                  ? [(12)][..]
+sum []                       ? [(0)][..]
+max [3,9,4]                  ? [(9)][..]
+mean [2,4,9]                 ? [(5)][..]
+mean [1,2]                   ? [][..]
+median [7,1,5]               ? [(5)][..]
+[1,2,3] dot [4,5,6]          ? [(32)][..]
+sum ([1,2,3] map [i](i*i))   ? [(14)][..]
+max ([3,9,4] where [i](i&lt;5)) ? [(4)][..]
 </pre>
     </div>
   </section>

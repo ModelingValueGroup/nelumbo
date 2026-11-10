@@ -1,6 +1,6 @@
 import { test, expect, Page, Locator } from '@playwright/test';
 
-const SECTIONS: string[] = ['syntax', 'patterns', 'precedence', 'parentheses', 'generics', 'connected', 'named-patterns', 'scoping', 'logic', 'facts', 'unique', 'rules', 'combining', 'cycles', 'types', 'equality', 'relations', 'quantifiers', 'dsl', 'transform', 'cnl', 'family-tree', 'club-fees', 'train-network', 'room-booking', 'access-policy'];
+const SECTIONS: string[] = ['syntax', 'patterns', 'precedence', 'parentheses', 'generics', 'connected', 'named-patterns', 'scoping', 'logic', 'facts', 'unique', 'rules', 'combining', 'cycles', 'types', 'equality', 'relations', 'quantifiers', 'dsl', 'transform', 'cnl', 'family-tree', 'club-fees', 'train-network', 'number-toolkit', 'set-algebra', 'list-statistics', 'room-booking', 'access-policy'];
 
 async function showSection(page: Page, id: string): Promise<Locator> {
     await page.locator('aside nav a[data-section="' + id + '"]').click();

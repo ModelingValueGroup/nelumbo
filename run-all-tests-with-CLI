@@ -85,7 +85,15 @@ run_repro() {
     # nondeterministic-inference.nl), so a lucky run can flip a result
     local start
     start=$(date +%s)
-    out=$(java -ea -DPARALLEL_COLLECTIONS=false -jar "$jar" "$file" 2>&1)
+    # a repro that never ends (relation-guard-on-two-head-variables-hangs.nl) is stopped just
+    # past the slow limit, which fails it anyway; GNU timeout, or gtimeout on macOS, if present
+    local limit=()
+    if command -v timeout >/dev/null 2>&1; then
+        limit=(timeout $((SLOW_SECONDS + 5)))
+    elif command -v gtimeout >/dev/null 2>&1; then
+        limit=(gtimeout $((SLOW_SECONDS + 5)))
+    fi
+    out=$(${limit[@]+"${limit[@]}"} java -ea -DPARALLEL_COLLECTIONS=false -jar "$jar" "$file" 2>&1)
     local code=$?
     local elapsed=$(( $(date +%s) - start ))
     local name

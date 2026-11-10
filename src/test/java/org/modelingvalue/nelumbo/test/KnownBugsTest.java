@@ -228,7 +228,7 @@ public class KnownBugsTest extends NelumboTestBase {
         bugResource("given-result-query-diverges.nl");
     }
 
-    @KnownBug("function query whose given result is a call (f(x) = g(0) ? [()][]) crashes with argument type mismatch")
+    @KnownBug("function query whose given result is a call (g(1) = h(1), |l| = |m|) crashes with argument type mismatch: the call reaches a native unevaluated")
     @Test
     public void givenResultCallCrash() {
         bugResource("given-result-call-crash.nl");
@@ -286,5 +286,17 @@ public class KnownBugsTest extends NelumboTestBase {
     @Test
     public void typedHeadVariableOpenQuery() {
         bugResource("typed-head-variable-open-query.nl");
+    }
+
+    @KnownBug("recursive relation whose if-guards compare two head variables (ok(n,d) <=> true if d>=n, ok(n,d+1) if d<n) does not terminate")
+    @Test
+    public void relationGuardOnTwoHeadVariablesHangs() {
+        bugResource("relation-guard-on-two-head-variables-hangs.nl");
+    }
+
+    @KnownBug("intersection of an open and a closed set is closed although an element may be in the open set ({1,..} && {2} is {} instead of {..})")
+    @Test
+    public void openSetIntersectionClosed() {
+        bugResource("open-set-intersection-closed.nl");
     }
 }
