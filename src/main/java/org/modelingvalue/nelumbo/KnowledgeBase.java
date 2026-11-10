@@ -572,23 +572,25 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     }
 
     private void cleanup() {
-        QualifiedSet<Predicate, Inference>[] mem = memoization.get();
-        while (mem[2].size() > maxLogicMemoiz) {
-            for (int i = 0; i < mem[2].size(); i++) {
-                if (stopped) {
-                    return;
-                }
-                Inference m = mem[2].get(i);
-                if (!m.keep()) {
-                    mem = memoization.updateAndGet(array -> {
-                        array = array.clone();
-                        array[2] = array[2].removeKey(m.premise());
-                        return array;
-                    });
-                    i--;
+        CURRENT.run(this, () -> {
+            QualifiedSet<Predicate, Inference>[] mem = memoization.get();
+            while (mem[2].size() > maxLogicMemoiz) {
+                for (int i = 0; i < mem[2].size(); i++) {
+                    if (stopped) {
+                        return;
+                    }
+                    Inference m = mem[2].get(i);
+                    if (!m.keep()) {
+                        mem = memoization.updateAndGet(array -> {
+                            array = array.clone();
+                            array[2] = array[2].removeKey(m.premise());
+                            return array;
+                        });
+                        i--;
+                    }
                 }
             }
-        }
+        });
     }
 
     public Rule addRule(Rule rule) {
