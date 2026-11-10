@@ -89,7 +89,7 @@ public final class NelumboHttpServer {
     /** Starts the server on {@code port} (use 0 for an ephemeral port) and returns the actually bound port. */
     public int start(int port) {
         String landing    = loadResource("/public/landing.html");
-        String tutorial   = loadResource("/public/tutorial.html");
+        String tutorial   = TutorialPage.render(loadResource("/public/tutorial.html"));
         String sandbox    = loadResource("/public/sandbox.html");
         String libraryPage = loadResource("/public/library.html");
         String favicon    = loadResource("/public/favicon.svg");

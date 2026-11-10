@@ -171,64 +171,16 @@
        <code>Root</code> can stand on its own line as a sentence; give such a functor the precedence
        <code>#0</code>. These sections have no queries and no meaning yet: a sentence is correct when it
        parses, and the editor underlines it in red when it does not.</p>
-    <div class="nelumbo-field" data-height="270px" data-syntax>import nelumbo.lang
-Person   :: Object
-Male     :: Person
-Female   :: Person
-Male     ::= Piet, Jan
-Female   ::= Marie
-Person   ::= father(&lt;Person&gt;)
-Sentence :: Root
-Sentence ::= &lt;Person&gt; knows &lt;Person&gt; #0
-Piet knows Marie
-father(Marie) knows Jan
-</div>
+    <div class="nelumbo-field" data-height="270px" data-syntax data-src="syntax/1-example.nl"></div>
     <div class="nelumbo-exercise">
       <p class="challenge"><code>Marie knows Klaas</code> does not parse: Klaas is declared as an <code>Animal</code>, and <code>knows</code> takes a <code>Person</code>. Klaas is a man: fix the declarations so the sentence parses.</p>
-      <div class="nelumbo-field" data-height="250px" data-syntax="exercise">import nelumbo.lang
-Person   :: Object
-Male     :: Person
-Female   :: Person
-Animal   :: Object
-Male     ::= Piet, Jan
-Female   ::= Marie
-Animal   ::= Klaas
-Sentence :: Root
-Sentence ::= &lt;Person&gt; knows &lt;Person&gt; #0
-Marie knows Klaas
-</div>
-      <pre class="nelumbo-solution" data-syntax>import nelumbo.lang
-Person   :: Object
-Male     :: Person
-Female   :: Person
-Animal   :: Object
-Male     ::= Piet, Jan, Klaas
-Female   ::= Marie
-Sentence :: Root
-Sentence ::= &lt;Person&gt; knows &lt;Person&gt; #0
-Marie knows Klaas
-</pre>
+      <div class="nelumbo-field" data-height="250px" data-syntax="exercise" data-src="syntax/2-exercise.nl"></div>
+      <pre class="nelumbo-solution" data-syntax data-src="syntax/2-solution.nl"></pre>
     </div>
     <div class="nelumbo-exercise">
       <p class="challenge">Declare a type <code>Thing</code> with the constants <code>flowers</code> and <code>a book</code>, and a functor, so that both sentences parse.</p>
-      <div class="nelumbo-field" data-height="190px" data-syntax="exercise">import nelumbo.lang
-Person   :: Object
-Person   ::= Piet, Marie
-Sentence :: Root
-// declare a type Thing, its constants and a sentence functor so both sentences parse
-Marie gives flowers to Piet
-Piet gives a book to Marie
-</div>
-      <pre class="nelumbo-solution" data-syntax>import nelumbo.lang
-Person   :: Object
-Person   ::= Piet, Marie
-Thing    :: Object
-Thing    ::= flowers, a book
-Sentence :: Root
-Sentence ::= &lt;Person&gt; gives &lt;Thing&gt; to &lt;Person&gt; #0
-Marie gives flowers to Piet
-Piet gives a book to Marie
-</pre>
+      <div class="nelumbo-field" data-height="190px" data-syntax="exercise" data-src="syntax/3-exercise.nl"></div>
+      <pre class="nelumbo-solution" data-syntax data-src="syntax/3-solution.nl"></pre>
     </div>
   </section>
   <section class="tutorial-section" id="patterns">
@@ -240,61 +192,16 @@ Piet gives a book to Marie
        <code>&lt;NUMBER&gt;</code>, <code>&lt;STRING&gt;</code> and <code>&lt;NAME&gt;</code> accept a
        number, a quoted string or a name. Several alternatives of one type are separated by commas, each
        with its own precedence.</p>
-    <div class="nelumbo-field" data-height="310px" data-syntax>import nelumbo.lang
-Person   :: Object
-Person   ::= Piet, Jan, Marie, Klaas
-Sentence :: Root
-Sentence ::= &lt;Person&gt; &lt;(&gt; really &lt;)?&gt; &lt;(&gt; likes &lt;|&gt; loves &lt;)&gt; &lt;Person&gt; #0,
-             &lt;Person&gt; is &lt;NUMBER&gt; years old                            #0,
-             &lt;Person&gt; says &lt;STRING&gt;                                    #0,
-             party with &lt;(&gt; &lt;Person&gt; &lt;,&gt; , &lt;)+&gt;                        #0
-Piet likes Marie
-Piet really loves Marie
-Klaas is 42 years old
-Marie says "hello"
-party with Piet, Jan, Marie
-</div>
+    <div class="nelumbo-field" data-height="310px" data-syntax data-src="patterns/1-example.nl"></div>
     <div class="nelumbo-exercise">
       <p class="challenge">Piet can invite any number of guests, with <code>and</code> before the last one. Change the pattern so all three sentences parse.</p>
-      <div class="nelumbo-field" data-height="230px" data-syntax="exercise">import nelumbo.lang
-Person   :: Object
-Person   ::= Piet, Jan, Marie, Klaas
-Sentence :: Root
-// change the pattern so all three sentences parse
-Sentence ::= &lt;Person&gt; invites &lt;Person&gt; #0
-Piet invites Jan
-Piet invites Jan and Marie
-Piet invites Jan, Marie and Klaas
-</div>
-      <pre class="nelumbo-solution" data-syntax>import nelumbo.lang
-Person   :: Object
-Person   ::= Piet, Jan, Marie, Klaas
-Sentence :: Root
-Sentence ::= &lt;Person&gt; invites &lt;(&gt; &lt;Person&gt; &lt;,&gt; , &lt;)+&gt; &lt;(&gt; and &lt;Person&gt; &lt;)?&gt; #0
-Piet invites Jan
-Piet invites Jan and Marie
-Piet invites Jan, Marie and Klaas
-</pre>
+      <div class="nelumbo-field" data-height="230px" data-syntax="exercise" data-src="patterns/2-exercise.nl"></div>
+      <pre class="nelumbo-solution" data-syntax data-src="patterns/2-solution.nl"></pre>
     </div>
     <div class="nelumbo-exercise">
       <p class="challenge">Change the pattern so that <code>Jan does not know Piet</code> parses as well as <code>Jan knows Piet</code>.</p>
-      <div class="nelumbo-field" data-height="210px" data-syntax="exercise">import nelumbo.lang
-Person   :: Object
-Person   ::= Piet, Jan
-Sentence :: Root
-// change the pattern so both sentences parse
-Sentence ::= &lt;Person&gt; knows &lt;Person&gt; #0
-Jan knows Piet
-Jan does not know Piet
-</div>
-      <pre class="nelumbo-solution" data-syntax>import nelumbo.lang
-Person   :: Object
-Person   ::= Piet, Jan
-Sentence :: Root
-Sentence ::= &lt;Person&gt; &lt;(&gt; knows &lt;|&gt; does not know &lt;)&gt; &lt;Person&gt; #0
-Jan knows Piet
-Jan does not know Piet
-</pre>
+      <div class="nelumbo-field" data-height="210px" data-syntax="exercise" data-src="patterns/3-exercise.nl"></div>
+      <pre class="nelumbo-solution" data-syntax data-src="patterns/3-solution.nl"></pre>
     </div>
   </section>
   <section class="tutorial-section" id="precedence">
@@ -308,67 +215,16 @@ Jan does not know Piet
        but not <code>plus</code>. A hole without one takes the precedence of its functor; that is why the
        <code>#0</code> of a sentence lets every operator in. The standard operators range from <code>#16</code>
        (<code>&lt;-&gt;</code>) to <code>#80</code> (unary <code>-</code>).</p>
-    <div class="nelumbo-field" data-height="310px" data-syntax>import nelumbo.lang
-Expr     :: Object
-Expr     ::= one, two, three
-Expr     ::= &lt;Expr&gt; plus &lt;Expr&gt;  #40,
-             &lt;Expr&gt; times &lt;Expr&gt; #50
-Sentence :: Root
-Sentence ::= compute &lt;Expr&gt;  #0,
-             twice &lt;Expr#45&gt; #0
-// one plus (two times three)
-compute one plus two times three
-// (one times two) plus three
-compute one times two plus three
-twice two times three
-</div>
+    <div class="nelumbo-field" data-height="310px" data-syntax data-src="precedence/1-example.nl"></div>
     <div class="nelumbo-exercise">
       <p class="challenge"><code>minus</code> has no precedence, so the last sentence does not parse. Give it the precedence of <code>plus</code>.</p>
-      <div class="nelumbo-field" data-height="244px" data-syntax="exercise">import nelumbo.lang
-Expr     :: Object
-Expr     ::= one, two, three
-// give minus a precedence, the same as plus
-Expr     ::= &lt;Expr&gt; plus &lt;Expr&gt;  #40,
-             &lt;Expr&gt; minus &lt;Expr&gt;,
-             &lt;Expr&gt; times &lt;Expr&gt; #50
-Sentence :: Root
-Sentence ::= compute &lt;Expr&gt; #0
-compute three minus one times two
-</div>
-      <pre class="nelumbo-solution" data-syntax>import nelumbo.lang
-Expr     :: Object
-Expr     ::= one, two, three
-Expr     ::= &lt;Expr&gt; plus &lt;Expr&gt;  #40,
-             &lt;Expr&gt; minus &lt;Expr&gt; #40,
-             &lt;Expr&gt; times &lt;Expr&gt; #50
-Sentence :: Root
-Sentence ::= compute &lt;Expr&gt; #0
-compute three minus one times two
-</pre>
+      <div class="nelumbo-field" data-height="244px" data-syntax="exercise" data-src="precedence/2-exercise.nl"></div>
+      <pre class="nelumbo-solution" data-syntax data-src="precedence/2-solution.nl"></pre>
     </div>
     <div class="nelumbo-exercise">
       <p class="challenge"><code>twice one plus two</code> does not parse: the hole <code>&lt;Expr#45&gt;</code> rejects <code>plus</code>. Change only the precedence of the hole so both sentences parse.</p>
-      <div class="nelumbo-field" data-height="244px" data-syntax="exercise">import nelumbo.lang
-Expr     :: Object
-Expr     ::= one, two, three
-Expr     ::= &lt;Expr&gt; plus &lt;Expr&gt;  #40,
-             &lt;Expr&gt; times &lt;Expr&gt; #50
-Sentence :: Root
-// change only the precedence of the hole so both sentences parse
-Sentence ::= twice &lt;Expr#45&gt; #0
-twice two times three
-twice one plus two
-</div>
-      <pre class="nelumbo-solution" data-syntax>import nelumbo.lang
-Expr     :: Object
-Expr     ::= one, two, three
-Expr     ::= &lt;Expr&gt; plus &lt;Expr&gt;  #40,
-             &lt;Expr&gt; times &lt;Expr&gt; #50
-Sentence :: Root
-Sentence ::= twice &lt;Expr#35&gt; #0
-twice two times three
-twice one plus two
-</pre>
+      <div class="nelumbo-field" data-height="244px" data-syntax="exercise" data-src="precedence/3-exercise.nl"></div>
+      <pre class="nelumbo-solution" data-syntax data-src="precedence/3-solution.nl"></pre>
     </div>
   </section>
   <section class="tutorial-section" id="parentheses">
@@ -379,47 +235,11 @@ twice one plus two
        a functor to a Java class; <code>Parenthesized</code> returns the expression inside, so <code>(one)</code>
        is just <code>one</code>, not a new phrase. A parenthesized expression is complete in itself, so it fits a
        hole of any precedence: <code>twice (one plus two)</code> parses where <code>twice one plus two</code> did not.</p>
-    <div class="nelumbo-field" data-height="376px" data-syntax>import nelumbo.lang
-Expr     :: Object
-Expr     ::= one, two, three
-Expr     ::= &lt;Expr&gt; plus &lt;Expr&gt;  #40,
-             &lt;Expr&gt; times &lt;Expr&gt; #50
-Person   :: Object
-Person   ::= Piet, Marie
-Person   ::= father(&lt;Person&gt;)
-Sentence :: Root
-Sentence ::= compute &lt;Expr&gt;       #0,
-             twice &lt;Expr#45&gt;      #0,
-             &lt;Person&gt; knows &lt;Person&gt; #0
-compute (one plus two) times three
-twice (one plus two)
-twice ((one))
-(father(Marie)) knows (Piet)
-</div>
+    <div class="nelumbo-field" data-height="376px" data-syntax data-src="parentheses/1-example.nl"></div>
     <div class="nelumbo-exercise">
       <p class="challenge">Add square brackets as a second way to group expressions so that the last sentence parses. Bind them to <code>@nelumbo.lang.Parenthesized</code> too, so that <code>[one]</code> is just <code>one</code>.</p>
-      <div class="nelumbo-field" data-height="244px" data-syntax="exercise">import nelumbo.lang
-Expr     :: Object
-Expr     ::= one, two, three
-Expr     ::= &lt;Expr&gt; plus &lt;Expr&gt;  #40,
-             &lt;Expr&gt; times &lt;Expr&gt; #50
-// add square brackets as a second way to group expressions
-Sentence :: Root
-Sentence ::= compute &lt;Expr&gt; #0
-compute (one plus two) times three
-compute [one plus two] times three
-</div>
-      <pre class="nelumbo-solution" data-syntax>import nelumbo.lang
-Expr     :: Object
-Expr     ::= one, two, three
-Expr     ::= &lt;Expr&gt; plus &lt;Expr&gt;  #40,
-             &lt;Expr&gt; times &lt;Expr&gt; #50
-Expr     ::= [&lt;Expr&gt;] @nelumbo.lang.Parenthesized
-Sentence :: Root
-Sentence ::= compute &lt;Expr&gt; #0
-compute (one plus two) times three
-compute [one plus two] times three
-</pre>
+      <div class="nelumbo-field" data-height="244px" data-syntax="exercise" data-src="parentheses/2-exercise.nl"></div>
+      <pre class="nelumbo-solution" data-syntax data-src="parentheses/2-solution.nl"></pre>
     </div>
   </section>
   <section class="tutorial-section" id="generics">
@@ -432,48 +252,11 @@ compute [one plus two] times three
        without spaces: <code>Team&lt;E&gt;</code>, not <code>Team &lt; E &gt;</code>. The parentheses of the
        previous section are declared this way, and so are the collection types <code>List&lt;E&gt;</code> and
        <code>Set&lt;E&gt;</code>.</p>
-    <div class="nelumbo-field" data-height="310px" data-syntax>import nelumbo.lang
-Person   :: Object
-Person   ::= Piet, Jan, Marie
-Animal   :: Object
-Animal   ::= Rex, Tom, Bello
-Type E
-Team&lt;E&gt;  :: Object
-Team&lt;E&gt;  ::= team of &lt;(&gt; &lt;E&gt; &lt;,&gt; , &lt;)+&gt;
-Sentence :: Root
-Sentence ::= &lt;Team&lt;Person&gt;&gt; plays against &lt;Team&lt;Person&gt;&gt; #0,
-             &lt;Team&lt;Animal&gt;&gt; chases &lt;Team&lt;Animal&gt;&gt;        #0
-team of Piet, Jan plays against team of Marie
-team of Rex chases team of Tom, Bello
-</div>
+    <div class="nelumbo-field" data-height="310px" data-syntax data-src="generics/1-example.nl"></div>
     <div class="nelumbo-exercise">
       <p class="challenge">A team can only hold people, so the last sentence does not parse. Make <code>Team</code> generic so that animals can form teams too.</p>
-      <div class="nelumbo-field" data-height="288px" data-syntax="exercise">import nelumbo.lang
-Person   :: Object
-Person   ::= Piet, Jan, Marie
-Animal   :: Object
-Animal   ::= Rex, Tom, Bello
-// make Team generic, so that animals can form teams too
-Team     :: Object
-Team     ::= team of &lt;(&gt; &lt;Person&gt; &lt;,&gt; , &lt;)+&gt;
-Sentence :: Root
-Sentence ::= &lt;Team&gt; plays against &lt;Team&gt; #0
-team of Piet, Jan plays against team of Marie
-team of Rex plays against team of Tom, Bello
-</div>
-      <pre class="nelumbo-solution" data-syntax>import nelumbo.lang
-Person   :: Object
-Person   ::= Piet, Jan, Marie
-Animal   :: Object
-Animal   ::= Rex, Tom, Bello
-Type E
-Team&lt;E&gt;  :: Object
-Team&lt;E&gt;  ::= team of &lt;(&gt; &lt;E&gt; &lt;,&gt; , &lt;)+&gt;
-Sentence :: Root
-Sentence ::= &lt;Team&lt;E&gt;&gt; plays against &lt;Team&lt;E&gt;&gt; #0
-team of Piet, Jan plays against team of Marie
-team of Rex plays against team of Tom, Bello
-</pre>
+      <div class="nelumbo-field" data-height="288px" data-syntax="exercise" data-src="generics/2-exercise.nl"></div>
+      <pre class="nelumbo-solution" data-syntax data-src="generics/2-solution.nl"></pre>
     </div>
   </section>
   <section class="tutorial-section" id="connected">
@@ -486,44 +269,11 @@ team of Rex plays against team of Tom, Bello
        appear in the sentence. The standard library writes <code>3.14</code>, <code>2025-01-01</code> and
        <code>16#FF</code> this way, and <code>nelumbo.lang</code> the head of a generic type like
        <code>Team&lt;E&gt;</code>.</p>
-    <div class="nelumbo-field" data-height="244px" data-syntax>import nelumbo.lang
-Person   :: Object
-Person   ::= Piet, Marie
-Time     :: Object
-Time     ::= &lt;[&gt; &lt;NUMBER&gt; : &lt;NUMBER&gt; &lt;]&gt;
-Sentence :: Root
-Sentence ::= &lt;Person&gt; arrives at &lt;Time&gt; #0
-Piet arrives at 9:30
-Marie arrives at 14:05
-// Piet arrives at 9 : 30   does not parse
-</div>
+    <div class="nelumbo-field" data-height="244px" data-syntax data-src="connected/1-example.nl"></div>
     <div class="nelumbo-exercise">
       <p class="challenge">Declare a type <code>Date</code> for dates like <code>1990-05-17</code>, written without spaces, so that both sentences parse.</p>
-      <div class="nelumbo-field" data-height="266px" data-syntax="exercise">import nelumbo.lang
-Person   :: Object
-Person   ::= Piet, Marie
-Time     :: Object
-Time     ::= &lt;[&gt; &lt;NUMBER&gt; : &lt;NUMBER&gt; &lt;]&gt;
-// declare the type Date, with connected tokens like Time
-Sentence :: Root
-Sentence ::= &lt;Person&gt; arrives at &lt;Time&gt;   #0,
-             &lt;Person&gt; was born on &lt;Date&gt; #0
-Piet arrives at 9:30
-Marie was born on 1990-05-17
-</div>
-      <pre class="nelumbo-solution" data-syntax>import nelumbo.lang
-Person   :: Object
-Person   ::= Piet, Marie
-Time     :: Object
-Time     ::= &lt;[&gt; &lt;NUMBER&gt; : &lt;NUMBER&gt; &lt;]&gt;
-Date     :: Object
-Date     ::= &lt;[&gt; &lt;NUMBER&gt; - &lt;NUMBER&gt; - &lt;NUMBER&gt; &lt;]&gt;
-Sentence :: Root
-Sentence ::= &lt;Person&gt; arrives at &lt;Time&gt;   #0,
-             &lt;Person&gt; was born on &lt;Date&gt; #0
-Piet arrives at 9:30
-Marie was born on 1990-05-17
-</pre>
+      <div class="nelumbo-field" data-height="266px" data-syntax="exercise" data-src="connected/2-exercise.nl"></div>
+      <pre class="nelumbo-solution" data-syntax data-src="connected/2-solution.nl"></pre>
     </div>
   </section>
   <section class="tutorial-section" id="named-patterns">
@@ -535,38 +285,11 @@ Marie was born on 1990-05-17
        <code>nelumbo.lang</code> uses named patterns itself, for instance
        <code>pattern QNAME ::= &lt;[&gt; &lt;(&gt; &lt;NAME&gt; &lt;,&gt; . &lt;)+&gt; &lt;]&gt;</code> for the dotted
        name after <code>import</code>.</p>
-    <div class="nelumbo-field" data-height="222px" data-syntax>import nelumbo.lang
-Person   :: Object
-Person   ::= Piet, Jan, Marie, Klaas
-pattern GUESTS ::= &lt;(&gt; &lt;Person&gt; &lt;,&gt; , &lt;)+&gt; &lt;(&gt; and &lt;Person&gt; &lt;)?&gt;
-Sentence :: Root
-Sentence ::= &lt;Person&gt; invites &lt;GUESTS&gt; #0,
-             party with &lt;GUESTS&gt;       #0
-Piet invites Jan, Marie and Klaas
-party with Jan and Marie
-</div>
+    <div class="nelumbo-field" data-height="222px" data-syntax data-src="named-patterns/1-example.nl"></div>
     <div class="nelumbo-exercise">
       <p class="challenge">Both sentences use <code>&lt;TIME&gt;</code>, which is not declared yet. Declare it as a named pattern for a time like <code>9:30</code>, above the functor that uses it.</p>
-      <div class="nelumbo-field" data-height="222px" data-syntax="exercise">import nelumbo.lang
-Person   :: Object
-Person   ::= Piet, Marie, Klaas
-// declare the named pattern TIME, for a time like 9:30
-Sentence :: Root
-Sentence ::= &lt;Person&gt; arrives at &lt;TIME&gt;          #0,
-             &lt;Person&gt; works from &lt;TIME&gt; to &lt;TIME&gt; #0
-Marie arrives at 9:30
-Klaas works from 8:00 to 17:30
-</div>
-      <pre class="nelumbo-solution" data-syntax>import nelumbo.lang
-Person   :: Object
-Person   ::= Piet, Marie, Klaas
-pattern TIME ::= &lt;[&gt; &lt;NUMBER&gt; : &lt;NUMBER&gt; &lt;]&gt;
-Sentence :: Root
-Sentence ::= &lt;Person&gt; arrives at &lt;TIME&gt;          #0,
-             &lt;Person&gt; works from &lt;TIME&gt; to &lt;TIME&gt; #0
-Marie arrives at 9:30
-Klaas works from 8:00 to 17:30
-</pre>
+      <div class="nelumbo-field" data-height="222px" data-syntax="exercise" data-src="named-patterns/2-exercise.nl"></div>
+      <pre class="nelumbo-solution" data-syntax data-src="named-patterns/2-solution.nl"></pre>
     </div>
   </section>
   <section class="tutorial-section" id="scoping">
@@ -577,88 +300,16 @@ Klaas works from 8:00 to 17:30
        block and <code>Piet</code> is not. <code>private</code> is also how two functors with the same pattern
        are kept apart: if they are declared side by side, the parser cannot tell them apart and reports a
        <em>non deterministic pattern merge</em>.</p>
-    <div class="nelumbo-field" data-height="332px" data-syntax>import nelumbo.lang
-Person   :: Object
-Sentence :: Root
-Sentence ::= &lt;Person&gt; reads #0
-{
-    private Person ::= Max
-    Person         ::= Piet
-    Max reads
-    {
-        Max reads
-    }
-}
-Piet reads
-// Max reads   does not parse here: Max is private to the block
-</div>
+    <div class="nelumbo-field" data-height="332px" data-syntax data-src="scoping/1-example.nl"></div>
     <div class="nelumbo-exercise">
       <p class="challenge">Both functors are written <code>friend(&lt;Person&gt;)</code>, one for a person and one for a dog, so they clash. Restrict each one to the sentence that uses it so that both sentences parse.</p>
-      <div class="nelumbo-field" data-height="288px" data-syntax="exercise">import nelumbo.lang
-Person   :: Object
-Dog      :: Object
-Person   ::= Piet, Marie
-Sentence :: Root
-Sentence ::= &lt;Person&gt; reads #0,
-             &lt;Dog&gt; barks    #0
-// these two functors clash: restrict each to the sentence that uses it
-Person   ::= friend(&lt;Person&gt;)
-Dog      ::= friend(&lt;Person&gt;)
-friend(Marie) reads
-friend(Piet) barks
-</div>
-      <pre class="nelumbo-solution" data-syntax>import nelumbo.lang
-Person   :: Object
-Dog      :: Object
-Person   ::= Piet, Marie
-Sentence :: Root
-Sentence ::= &lt;Person&gt; reads #0,
-             &lt;Dog&gt; barks    #0
-{
-    private Person ::= friend(&lt;Person&gt;)
-    friend(Marie) reads
-}
-{
-    private Dog ::= friend(&lt;Person&gt;)
-    friend(Piet) barks
-}
-</pre>
+      <div class="nelumbo-field" data-height="288px" data-syntax="exercise" data-src="scoping/2-exercise.nl"></div>
+      <pre class="nelumbo-solution" data-syntax data-src="scoping/2-solution.nl"></pre>
     </div>
     <div class="nelumbo-exercise">
       <p class="challenge"><code>Rex</code> is private to its block, so the last sentence does not parse. Make it parse without moving it.</p>
-      <div class="nelumbo-field" data-height="376px" data-syntax="exercise">import nelumbo.lang
-Person   :: Object
-Dog      :: Object
-Sentence :: Root
-Sentence ::= &lt;Person&gt; reads #0,
-             &lt;Dog&gt; barks    #0
-{
-    private Person ::= Max
-    Max reads
-}
-{
-    private Dog ::= Rex
-    Rex barks
-}
-// make this sentence parse, without moving it
-Rex barks
-</div>
-      <pre class="nelumbo-solution" data-syntax>import nelumbo.lang
-Person   :: Object
-Dog      :: Object
-Sentence :: Root
-Sentence ::= &lt;Person&gt; reads #0,
-             &lt;Dog&gt; barks    #0
-{
-    private Person ::= Max
-    Max reads
-}
-{
-    Dog ::= Rex
-    Rex barks
-}
-Rex barks
-</pre>
+      <div class="nelumbo-field" data-height="376px" data-syntax="exercise" data-src="scoping/3-exercise.nl"></div>
+      <pre class="nelumbo-solution" data-syntax data-src="scoping/3-solution.nl"></pre>
     </div>
   </section>
   <section class="tutorial-section" id="logic">
@@ -681,15 +332,7 @@ Rex barks
     <p>Nelumbo is three-valued: a query is true, false or unknown. <code>unknown &amp; true</code> stays
        <code>unknown</code>, but <code>unknown | true</code> is <code>true</code>, whatever the unknown part turns out to be. Try
        changing the queries below.</p>
-    <div class="nelumbo-field" data-height="240px">import nelumbo.logic
-
-true &amp; true ?
-true &amp; false ?
-true | false ?
-!false ?
-unknown &amp; true ?
-unknown | true ?
-</div>
+    <div class="nelumbo-field" data-height="240px" data-src="logic/1-example.nl"></div>
     <p>After the <code>?</code> you may write the result you expect, in the same notation as the label:
        <code>true &amp; false ? [][()]</code> expects false. The editor then checks it instead of showing the
        result: a green check mark at the end of the line when the result matches; otherwise the expected
@@ -698,14 +341,8 @@ unknown | true ?
     <div class="nelumbo-exercise">
       <p class="challenge">Make the query below come out <strong>true</strong> by changing only the
          operator.</p>
-      <div class="nelumbo-field" data-height="90px">import nelumbo.logic
-
-false &amp; true ? [()][]
-</div>
-      <pre class="nelumbo-solution">import nelumbo.logic
-
-false | true ? [()][]
-</pre>
+      <div class="nelumbo-field" data-height="90px" data-src="logic/2-exercise.nl"></div>
+      <pre class="nelumbo-solution" data-src="logic/2-solution.nl"></pre>
     </div>
   </section>
   <section class="tutorial-section" id="facts">
@@ -715,31 +352,11 @@ false | true ? [()][]
        then a query binds a variable and enumerates every matching answer. Facts are open: what is
        not asserted is not false, so the trailing <code>..</code> in <code>[(X=Jan),..]</code> says
        more answers may exist.</p>
-    <div class="nelumbo-field" data-height="200px">import nelumbo.logic
-Person :: Object
-Boolean ::= friends(&lt;Person&gt;,&lt;Person&gt;)
-Person ::= Piet, Jan, Klaas
-fact friends(Piet, Jan),
-     friends(Jan,  Klaas)
-Person X
-friends(Piet, X) ?
-</div>
+    <div class="nelumbo-field" data-height="200px" data-src="facts/1-example.nl"></div>
     <div class="nelumbo-exercise">
       <p class="challenge">Add a fact so that <code>friends(Klaas, Kees)</code> holds.</p>
-      <div class="nelumbo-field" data-height="150px">import nelumbo.logic
-Person :: Object
-Boolean ::= friends(&lt;Person&gt;,&lt;Person&gt;)
-Person ::= Piet, Jan, Klaas, Kees
-// add a fact here
-friends(Klaas, Kees) ? [()][]
-</div>
-      <pre class="nelumbo-solution">import nelumbo.logic
-Person :: Object
-Boolean ::= friends(&lt;Person&gt;,&lt;Person&gt;)
-Person ::= Piet, Jan, Klaas, Kees
-fact friends(Klaas, Kees)
-friends(Klaas, Kees) ? [()][]
-</pre>
+      <div class="nelumbo-field" data-height="150px" data-src="facts/2-exercise.nl"></div>
+      <pre class="nelumbo-solution" data-src="facts/2-solution.nl"></pre>
     </div>
     <p>A function value can be asserted too. A function has exactly one value, so its fact is
        <em>closed</em>: after <code>fact age(Piet)=40</code> the answer is <code>[(a=40)]</code>
@@ -752,36 +369,11 @@ friends(Klaas, Kees) ? [()][]
        showed and may only add to it. If not, the query reports an inconsistency.
        Only relations and function values can be asserted: <code>fact !friends(Piet, Klaas)</code>
        is an error.</p>
-    <div class="nelumbo-field" data-height="200px">import nelumbo.integers
-Person :: Object
-Person ::= Piet, Jan
-Integer ::= age(&lt;Person&gt;)
-Integer a
-age(Piet)=a ?
-fact age(Piet)=40
-age(Piet)=a ?
-age(Piet)=41 ?
-</div>
+    <div class="nelumbo-field" data-height="200px" data-src="facts/3-example.nl"></div>
     <div class="nelumbo-exercise">
       <p class="challenge">Give Jan an age so that both queries below hold.</p>
-      <div class="nelumbo-field" data-height="170px">import nelumbo.integers
-Person :: Object
-Person ::= Piet, Jan
-Integer ::= age(&lt;Person&gt;)
-Integer a
-// add a fact here
-age(Jan)=a  ? [(a=35)][..]
-age(Jan)=40 ? [][()]
-</div>
-      <pre class="nelumbo-solution">import nelumbo.integers
-Person :: Object
-Person ::= Piet, Jan
-Integer ::= age(&lt;Person&gt;)
-Integer a
-fact age(Jan)=35
-age(Jan)=a  ? [(a=35)][..]
-age(Jan)=40 ? [][()]
-</pre>
+      <div class="nelumbo-field" data-height="170px" data-src="facts/4-exercise.nl"></div>
+      <pre class="nelumbo-solution" data-src="facts/4-solution.nl"></pre>
     </div>
   </section>
   <section class="tutorial-section" id="unique">
@@ -794,49 +386,11 @@ age(Jan)=40 ? [][()]
        has no <code>one</code>, so Piet may like other cities too and Utrecht is unknown. A second city for Piet
        would be rejected as an inconsistency. This is also why a function value is closed: both sides of
        <code>=</code> are unique holes.</p>
-    <div class="nelumbo-field" data-height="398px">import nelumbo.logic
-Person  :: Object
-Person  ::= Piet, Jan
-City    :: Object
-City    ::= Amsterdam, Utrecht
-Boolean ::= &lt;Person&gt; lives in &lt;one City&gt; #30,
-            &lt;Person&gt; likes &lt;City&gt;        #30
-City   c
-Person p
-fact Piet lives in Amsterdam
-fact Piet likes Amsterdam
-Piet lives in c ?
-Piet lives in Utrecht ?
-Jan lives in c ?
-p lives in Amsterdam ?
-Piet likes c ?
-Piet likes Utrecht ?
-</div>
+    <div class="nelumbo-field" data-height="398px" data-src="unique/1-example.nl"></div>
     <div class="nelumbo-exercise">
       <p class="challenge">Everybody was born in exactly one city. Change the pattern so that the expected results hold.</p>
-      <div class="nelumbo-field" data-height="266px">import nelumbo.logic
-Person  :: Object
-Person  ::= Piet, Jan
-City    :: Object
-City    ::= Amsterdam, Utrecht
-// everybody was born in exactly one city: change the pattern so the expected results hold
-Boolean ::= &lt;Person&gt; was born in &lt;City&gt; #30
-City   c
-fact Jan was born in Utrecht
-Jan was born in c         ? [(c=Utrecht)][..]
-Jan was born in Amsterdam ? [][()]
-</div>
-      <pre class="nelumbo-solution">import nelumbo.logic
-Person  :: Object
-Person  ::= Piet, Jan
-City    :: Object
-City    ::= Amsterdam, Utrecht
-Boolean ::= &lt;Person&gt; was born in &lt;one City&gt; #30
-City   c
-fact Jan was born in Utrecht
-Jan was born in c         ? [(c=Utrecht)][..]
-Jan was born in Amsterdam ? [][()]
-</pre>
+      <div class="nelumbo-field" data-height="266px" data-src="unique/2-exercise.nl"></div>
+      <pre class="nelumbo-solution" data-src="unique/2-solution.nl"></pre>
     </div>
   </section>
   <section class="tutorial-section" id="rules">
@@ -849,47 +403,18 @@ Jan was born in Amsterdam ? [][()]
        introduces its own result variable, so the answer lists the value without a name,
        <code>[(13)][..]</code>. It is the same as <code>fib(7)=r ?</code> with a declared
        <code>Integer r</code>.</p>
-    <div class="nelumbo-field" data-height="200px">import nelumbo.integers
-Integer ::= fib(&lt;Integer&gt;)
-Integer n
-fib(n) == n if n&lt;=1, fib(n-1)+fib(n-2) if n&gt;1
-fib(7) ?
-</div>
+    <div class="nelumbo-field" data-height="200px" data-src="rules/1-example.nl"></div>
     <div class="nelumbo-exercise">
       <p class="challenge">Define factorial so that factorial(5) = 120.</p>
-      <div class="nelumbo-field" data-height="150px">import nelumbo.integers
-Integer ::= factorial(&lt;Integer&gt;)
-Integer n
-// fix this rule so factorial(5)=120  (hint: 1 if n&lt;=0, else n*factorial(n-1))
-factorial(n) == n
-factorial(5) ? [(120)][..]
-</div>
-      <pre class="nelumbo-solution">import nelumbo.integers
-Integer ::= factorial(&lt;Integer&gt;)
-Integer n
-factorial(n) == 1 if n&lt;=0, n*factorial(n-1) if n&gt;0
-factorial(5) ? [(120)][..]
-</pre>
+      <div class="nelumbo-field" data-height="150px" data-src="rules/2-exercise.nl"></div>
+      <pre class="nelumbo-solution" data-src="rules/2-solution.nl"></pre>
     </div>
     <p>Adding a rule adds knowledge just like adding a fact. It can even add only falsehoods: below,
        <code>adult(Jan)</code> is unknown until a rule says that nobody younger than 18 is an adult.
        After that rule <code>adult(Jan)</code> is false, while the fact <code>adult(Piet)</code> still
        holds. The rule is silent where its guard fails, so it takes nothing away. Had Piet been 16, the
        query <code>adult(Piet) ?</code> after the rule would report an inconsistency with the fact.</p>
-    <div class="nelumbo-field" data-height="260px">import nelumbo.integers
-Person  :: Object
-Person  ::= Piet, Jan
-Integer ::= age(&lt;Person&gt;)
-Boolean ::= adult(&lt;Person&gt;)
-Person p
-fact age(Piet)=40, age(Jan)=12
-fact adult(Piet)
-adult(Piet) ? [()][]
-adult(Jan)  ? [..][..]          // unknown: no fact, no rule
-adult(p) &lt;=&gt; false if age(p)&lt;18
-adult(Piet) ? [()][]            // unchanged
-adult(Jan)  ? [][()]            // now false: only the falsehood side grew
-</div>
+    <div class="nelumbo-field" data-height="260px" data-src="rules/3-example.nl"></div>
   </section>
   <section class="tutorial-section" id="combining">
     <h2>Combining rules</h2>
@@ -901,46 +426,11 @@ adult(Jan)  ? [][()]            // now false: only the falsehood side grew
        falsehood side: <code>[(f=Apple),(f=Pear),..][(f=Fish),(f=Nut),..]</code>. Bread is on neither side,
        so it stays unknown. The rules must agree: had Piet also liked nuts, the query would report an
        inconsistency.</p>
-    <div class="nelumbo-field" data-height="354px">import nelumbo.logic
-Person  :: Object
-Person  ::= Piet
-Food    :: Object
-Food    ::= Apple, Pear, Nut, Fish, Bread
-Boolean ::= likes(&lt;Person&gt;,&lt;Food&gt;), allergic(&lt;Person&gt;,&lt;Food&gt;), eats(&lt;Person&gt;,&lt;Food&gt;)
-Person  p
-Food    f
-fact likes(Piet, Apple), likes(Piet, Pear)
-fact allergic(Piet, Nut), allergic(Piet, Fish)
-eats(p,f) &lt;=&gt; likes(p,f)
-eats(Piet,f) ?
-eats(p,f) &lt;=&gt; false if allergic(p,f)
-eats(Piet,f) ?
-eats(Piet,Bread) ?
-</div>
+    <div class="nelumbo-field" data-height="354px" data-src="combining/1-example.nl"></div>
     <div class="nelumbo-exercise">
       <p class="challenge">Piet invites his friends, but nothing says whom he does not invite. Add a second rule so that nobody invites someone they quarrel with, and the falsehood side fills up.</p>
-      <div class="nelumbo-field" data-height="244px">import nelumbo.logic
-Person  :: Object
-Person  ::= Piet, Jan, Klaas, Kees, Bob
-Boolean ::= friends(&lt;Person&gt;,&lt;Person&gt;), quarrels(&lt;Person&gt;,&lt;Person&gt;), invites(&lt;Person&gt;,&lt;Person&gt;)
-Person  p, q
-fact friends(Piet, Jan), friends(Piet, Klaas)
-fact quarrels(Piet, Kees), quarrels(Piet, Bob)
-invites(p,q) &lt;=&gt; friends(p,q)
-// add a rule: nobody invites someone they quarrel with
-invites(Piet,q) ? [(q=Jan),(q=Klaas),..][(q=Bob),(q=Kees),..]
-</div>
-      <pre class="nelumbo-solution">import nelumbo.logic
-Person  :: Object
-Person  ::= Piet, Jan, Klaas, Kees, Bob
-Boolean ::= friends(&lt;Person&gt;,&lt;Person&gt;), quarrels(&lt;Person&gt;,&lt;Person&gt;), invites(&lt;Person&gt;,&lt;Person&gt;)
-Person  p, q
-fact friends(Piet, Jan), friends(Piet, Klaas)
-fact quarrels(Piet, Kees), quarrels(Piet, Bob)
-invites(p,q) &lt;=&gt; friends(p,q)
-invites(p,q) &lt;=&gt; false if quarrels(p,q)
-invites(Piet,q) ? [(q=Jan),(q=Klaas),..][(q=Bob),(q=Kees),..]
-</pre>
+      <div class="nelumbo-field" data-height="244px" data-src="combining/2-exercise.nl"></div>
+      <pre class="nelumbo-solution" data-src="combining/2-solution.nl"></pre>
     </div>
   </section>
   <section class="tutorial-section" id="cycles">
@@ -954,49 +444,11 @@ invites(Piet,q) ? [(q=Jan),(q=Klaas),..][(q=Bob),(q=Kees),..]
        rules of one relation are combined. What the fixpoint does not reach stays unknown, not false: no fact
        mentions Bob, but the facts are open, so <code>Bob is a friend of Piet ?</code> is
        <code>[..][..]</code>.</p>
-    <div class="nelumbo-field" data-height="310px">import nelumbo.logic
-Person  :: Object
-Person  ::= Piet, Jan, Klaas, Kees, Bob
-Boolean ::= &lt;Person&gt; is a friend of &lt;Person&gt; #30
-Person  me, f, ff, Who
-// a friend of a friend of mine is a friend of mine
-ff is a friend of me &lt;=&gt; E[f](ff is a friend of f &amp; f is a friend of me)
-fact Jan is a friend of Piet
-fact Klaas is a friend of Jan
-fact Kees is a friend of Klaas
-Who is a friend of Piet ?
-Kees is a friend of Piet ?
-Bob is a friend of Piet ?
-</div>
+    <div class="nelumbo-field" data-height="310px" data-src="cycles/1-example.nl"></div>
     <div class="nelumbo-exercise">
       <p class="challenge">Friendship goes both ways: if Jan is a friend of Piet, Piet is a friend of Jan. Extend the rule so the expected results hold. Through Jan, Piet then turns out to be a friend of himself.</p>
-      <div class="nelumbo-field" data-height="310px">import nelumbo.logic
-Person  :: Object
-Person  ::= Piet, Jan, Klaas, Kees
-Boolean ::= &lt;Person&gt; is a friend of &lt;Person&gt; #30
-Person  me, f, ff, Who
-// friendship goes both ways: extend the rule
-ff is a friend of me &lt;=&gt; E[f](ff is a friend of f &amp; f is a friend of me)
-fact Jan is a friend of Piet
-fact Klaas is a friend of Jan
-fact Kees is a friend of Klaas
-Piet is a friend of Kees ? [()][]
-Piet is a friend of Piet ? [()][]
-Who is a friend of Piet  ? [(Who=Jan),(Who=Kees),(Who=Klaas),(Who=Piet),..][..]
-</div>
-      <pre class="nelumbo-solution">import nelumbo.logic
-Person  :: Object
-Person  ::= Piet, Jan, Klaas, Kees
-Boolean ::= &lt;Person&gt; is a friend of &lt;Person&gt; #30
-Person  me, f, ff, Who
-ff is a friend of me &lt;=&gt; me is a friend of ff | E[f](ff is a friend of f &amp; f is a friend of me)
-fact Jan is a friend of Piet
-fact Klaas is a friend of Jan
-fact Kees is a friend of Klaas
-Piet is a friend of Kees ? [()][]
-Piet is a friend of Piet ? [()][]
-Who is a friend of Piet  ? [(Who=Jan),(Who=Kees),(Who=Klaas),(Who=Piet),..][..]
-</pre>
+      <div class="nelumbo-field" data-height="310px" data-src="cycles/2-exercise.nl"></div>
+      <pre class="nelumbo-solution" data-src="cycles/2-solution.nl"></pre>
     </div>
   </section>
   <section class="tutorial-section" id="types">
@@ -1005,34 +457,13 @@ Who is a friend of Piet  ? [(Who=Jan),(Who=Kees),(Who=Klaas),(Who=Piet),..][..]
        importable, with its own operators and functions. Declare a variable of a type, then let a query
        compute and bind it. Operators like <code>+</code> and functions like <code>len</code> come from
        the imported module.</p>
-    <div class="nelumbo-field" data-height="200px">import nelumbo.integers
-import nelumbo.strings
-Integer i
-String  s
-2+3=i ?
-"foo"+"bar"=s ?
-len("hello")=i ?
-</div>
-    <div class="nelumbo-field" data-height="150px">import nelumbo.collections
-Set&lt;Integer&gt; s
-Integer i
-s={1,2,3} ?
-|{1,2,3}|=i ?
-</div>
+    <div class="nelumbo-field" data-height="200px" data-src="types/1-example.nl"></div>
+    <div class="nelumbo-field" data-height="150px" data-src="types/2-example.nl"></div>
     <div class="nelumbo-exercise">
       <p class="challenge">Fix the concatenation so that <code>a = "lotus"</code> and the length check
          (<code>len(a) = 5</code>) passes.</p>
-      <div class="nelumbo-field" data-height="150px">import nelumbo.strings
-String  a
-Integer d
-// fix the concatenation so a = "lotus" and its length is 5
-"lo"+"xus"=a &amp; len(a)=d ? [(a="lotus",d=5)][..]
-</div>
-      <pre class="nelumbo-solution">import nelumbo.strings
-String  a
-Integer d
-"lo"+"tus"=a &amp; len(a)=d ? [(a="lotus",d=5)][..]
-</pre>
+      <div class="nelumbo-field" data-height="150px" data-src="types/3-exercise.nl"></div>
+      <pre class="nelumbo-solution" data-src="types/3-solution.nl"></pre>
     </div>
   </section>
   <section class="tutorial-section" id="equality">
@@ -1044,37 +475,11 @@ Integer d
        type declared <code>:: Literal</code> builds values instead: <code>pos(1,2)</code> is the value
        itself, equal to another one exactly when it is built the same way, and it can be the answer to a
        query (<code>q=pos(1,2)</code>). Constants such as <code>Piet</code> are literals too.</p>
-    <div class="nelumbo-field" data-height="354px">import nelumbo.integers
-Integer ::= double(&lt;Integer&gt;)
-Integer n
-double(n) == n*2
-double(2)=4 ?
-double(2)=5 ?
-Point   :: Object
-Point   ::= point(&lt;Integer&gt;,&lt;Integer&gt;)
-point(1,2)=point(1,2) ?
-Pos     :: Literal
-Pos     ::= pos(&lt;Integer&gt;,&lt;Integer&gt;)
-Pos     q
-pos(1,2)=pos(1,2) ?
-pos(1,2)=pos(2,1) ?
-q=pos(1,2) ?
-</div>
+    <div class="nelumbo-field" data-height="354px" data-src="equality/1-example.nl"></div>
     <div class="nelumbo-exercise">
       <p class="challenge">A card is its number, nothing more. Change the declaration of <code>Card</code> so that cards are compared by how they are built.</p>
-      <div class="nelumbo-field" data-height="156px">import nelumbo.integers
-// change the declaration of Card so the expected results hold
-Card    :: Object
-Card    ::= card(&lt;Integer&gt;)
-card(7)=card(7) ? [()][]
-card(7)=card(8) ? [][()]
-</div>
-      <pre class="nelumbo-solution">import nelumbo.integers
-Card    :: Literal
-Card    ::= card(&lt;Integer&gt;)
-card(7)=card(7) ? [()][]
-card(7)=card(8) ? [][()]
-</pre>
+      <div class="nelumbo-field" data-height="156px" data-src="equality/2-exercise.nl"></div>
+      <pre class="nelumbo-solution" data-src="equality/2-solution.nl"></pre>
     </div>
   </section>
   <section class="tutorial-section" id="relations">
@@ -1085,57 +490,12 @@ card(7)=card(8) ? [][()]
        relation <code>m</code> is derived from <code>pc</code> via an existential over female parents.
        Because <code>pc</code> facts are open, Beatrix may have parents not asserted here: the answer
        ends in <code>..</code>.</p>
-    <div class="nelumbo-field" data-height="240px">import nelumbo.logic
-Person   :: Object
-Male     :: Person
-Female   :: Person
-Boolean ::= pc(&lt;Person&gt;,&lt;Person&gt;), m(&lt;Person&gt;,&lt;Person&gt;)
-Person a, b
-Female x
-m(a,b) &lt;=&gt; E[x](pc(x,a) &amp; b=x)
-Female ::= Juliana, Beatrix
-fact pc(Juliana, Beatrix)
-Person who
-m(Beatrix,who) ?
-</div>
+    <div class="nelumbo-field" data-height="240px" data-src="relations/1-example.nl"></div>
     <div class="nelumbo-exercise">
       <p class="challenge">Add a father relation <code>f</code> that mirrors the mother rule, using
          <code>E[y]</code> over male parents, so <code>f(Beatrix,who)</code> finds Bernhard.</p>
-      <div class="nelumbo-field" data-height="260px">import nelumbo.logic
-Person   :: Object
-Male     :: Person
-Female   :: Person
-Boolean ::= pc(&lt;Person&gt;,&lt;Person&gt;), m(&lt;Person&gt;,&lt;Person&gt;), f(&lt;Person&gt;,&lt;Person&gt;)
-Person a, b
-Female x
-Male   y
-m(a,b) &lt;=&gt; E[x](pc(x,a) &amp; b=x)
-// fix this rule so f(Beatrix,who) finds Bernhard (mirror the mother rule using Male y)
-f(a,b) &lt;=&gt; E[y](pc(a,y) &amp; b=y)
-Female ::= Juliana, Beatrix
-Male   ::= Bernhard
-fact pc(Juliana, Beatrix),
-     pc(Bernhard, Beatrix)
-Person who
-f(Beatrix,who) ? [(who=Bernhard),..][..]
-</div>
-      <pre class="nelumbo-solution">import nelumbo.logic
-Person   :: Object
-Male     :: Person
-Female   :: Person
-Boolean ::= pc(&lt;Person&gt;,&lt;Person&gt;), m(&lt;Person&gt;,&lt;Person&gt;), f(&lt;Person&gt;,&lt;Person&gt;)
-Person a, b
-Female x
-Male   y
-m(a,b) &lt;=&gt; E[x](pc(x,a) &amp; b=x)
-f(a,b) &lt;=&gt; E[y](pc(y,a) &amp; b=y)
-Female ::= Juliana, Beatrix
-Male   ::= Bernhard
-fact pc(Juliana, Beatrix),
-     pc(Bernhard, Beatrix)
-Person who
-f(Beatrix,who) ? [(who=Bernhard),..][..]
-</pre>
+      <div class="nelumbo-field" data-height="260px" data-src="relations/2-exercise.nl"></div>
+      <pre class="nelumbo-solution" data-src="relations/2-solution.nl"></pre>
     </div>
   </section>
   <section class="tutorial-section" id="quantifiers">
@@ -1150,51 +510,11 @@ f(Beatrix,who) ? [(who=Bernhard),..][..]
        known collection (<code>c in children(Juliana)</code>). Over a closed set such as Juliana's children,
        <code>A</code> can be true and <code>E</code> false; over open facts more children may exist, so only
        finding an example decides. Put the membership in parentheses before <code>-&gt;</code>.</p>
-    <div class="nelumbo-field" data-height="376px">import nelumbo.collections
-Person      :: Object
-Person      ::= Juliana, Beatrix, Irene, Margriet
-Integer     ::= age(&lt;Person&gt;)
-Set&lt;Person&gt; ::= children(&lt;Person&gt;)
-Person      c
-fact age(Beatrix)=20, age(Irene)=15, age(Margriet)=30
-fact children(Juliana)={Beatrix, Irene, Margriet}
-// no navigation: c gets no values
-E[c](age(c)&gt;18) ?
-A[c](age(c)&gt;10) ?
-// navigate from Juliana to her children
-E[c](c in children(Juliana) &amp; age(c)&gt;18) ?
-E[c](c in children(Juliana) &amp; age(c)&gt;40) ?
-A[c]((c in children(Juliana)) -&gt; age(c)&gt;10) ?
-A[c]((c in children(Juliana)) -&gt; age(c)&gt;18) ?
-</div>
+    <div class="nelumbo-field" data-height="376px" data-src="quantifiers/1-example.nl"></div>
     <div class="nelumbo-exercise">
       <p class="challenge">Both questions are about Juliana&#39;s children, but the quantifiers do not navigate there, so they give no answer. Make them navigate so the expected results hold.</p>
-      <div class="nelumbo-field" data-height="288px">import nelumbo.collections
-Person      :: Object
-Person      ::= Juliana, Beatrix, Irene, Margriet
-Integer     ::= age(&lt;Person&gt;)
-Set&lt;Person&gt; ::= children(&lt;Person&gt;)
-Person      c
-fact age(Beatrix)=20, age(Irene)=15, age(Margriet)=30
-fact children(Juliana)={Beatrix, Irene, Margriet}
-// is every child of Juliana older than 12?
-A[c](age(c)&gt;12) ? [()][]
-// does Juliana have a child younger than 18?
-E[c](age(c)&lt;18) ? [()][]
-</div>
-      <pre class="nelumbo-solution">import nelumbo.collections
-Person      :: Object
-Person      ::= Juliana, Beatrix, Irene, Margriet
-Integer     ::= age(&lt;Person&gt;)
-Set&lt;Person&gt; ::= children(&lt;Person&gt;)
-Person      c
-fact age(Beatrix)=20, age(Irene)=15, age(Margriet)=30
-fact children(Juliana)={Beatrix, Irene, Margriet}
-// is every child of Juliana older than 12?
-A[c]((c in children(Juliana)) -&gt; age(c)&gt;12) ? [()][]
-// does Juliana have a child younger than 18?
-E[c](c in children(Juliana) &amp; age(c)&lt;18) ? [()][]
-</pre>
+      <div class="nelumbo-field" data-height="288px" data-src="quantifiers/2-exercise.nl"></div>
+      <pre class="nelumbo-solution" data-src="quantifiers/2-solution.nl"></pre>
     </div>
   </section>
   <section class="tutorial-section" id="dsl">
@@ -1204,46 +524,13 @@ E[c](c in children(Juliana) &amp; age(c)&lt;18) ? [()][]
        rule makes the <code>friends</code> facts symmetric and transitive, then the phrase
        <code>X is a friend of Y</code> is declared as a <code>Boolean</code> pattern that reads as
        ordinary English.</p>
-    <div class="nelumbo-field" data-height="260px">import nelumbo.logic
-Person   :: Object
-Boolean ::= friends(&lt;Person&gt;,&lt;Person&gt;)
-Person   ::= Piet, Jan, Klaas
-Person a, b, c, Who
-friends(a,c) &lt;=&gt; friends(a,c) | friends(c,a) | E[b](friends(a,b) &amp; friends(b,c))
-Boolean ::= &lt;Person&gt; is a friend of &lt;Person&gt; #30
-Person X, Y
-X is a friend of Y &lt;=&gt; friends(Y,X)
-fact friends(Piet, Jan), friends(Jan, Klaas)
-Who is a friend of Piet ?
-</div>
+    <div class="nelumbo-field" data-height="260px" data-src="dsl/1-example.nl"></div>
     <div class="nelumbo-exercise">
       <p class="challenge">A synonym phrase <code>X knows Y</code> has been declared but its rule is
          wrong (<code>X knows Y &lt;=&gt; X=Y</code>). Fix the rule so <code>Who knows Piet</code> lists the
          same friends as the phrase above.</p>
-      <div class="nelumbo-field" data-height="260px">import nelumbo.logic
-Person   :: Object
-Boolean ::= friends(&lt;Person&gt;,&lt;Person&gt;)
-Person   ::= Piet, Jan, Klaas
-Person a, b, c, Who
-friends(a,c) &lt;=&gt; friends(a,c) | friends(c,a) | E[b](friends(a,b) &amp; friends(b,c))
-Boolean ::= &lt;Person&gt; knows &lt;Person&gt; #30
-Person X, Y
-X knows Y &lt;=&gt; X=Y
-fact friends(Piet, Jan), friends(Jan, Klaas)
-Who knows Piet ? [(Who=Jan),(Who=Klaas),(Who=Piet),..][..]
-</div>
-      <pre class="nelumbo-solution">import nelumbo.logic
-Person   :: Object
-Boolean ::= friends(&lt;Person&gt;,&lt;Person&gt;)
-Person   ::= Piet, Jan, Klaas
-Person a, b, c, Who
-friends(a,c) &lt;=&gt; friends(a,c) | friends(c,a) | E[b](friends(a,b) &amp; friends(b,c))
-Boolean ::= &lt;Person&gt; knows &lt;Person&gt; #30
-Person X, Y
-X knows Y &lt;=&gt; friends(Y,X)
-fact friends(Piet, Jan), friends(Jan, Klaas)
-Who knows Piet ? [(Who=Jan),(Who=Klaas),(Who=Piet),..][..]
-</pre>
+      <div class="nelumbo-field" data-height="260px" data-src="dsl/2-exercise.nl"></div>
+      <pre class="nelumbo-solution" data-src="dsl/2-solution.nl"></pre>
     </div>
   </section>
   <section class="tutorial-section" id="transform">
@@ -1253,74 +540,13 @@ Who knows Piet ? [(Who=Jan),(Who=Klaas),(Who=Piet),..][..]
        <code>o.name</code> and a <code>:=</code> setter that itself transforms into a
        <code>fact</code> about that function. Declaring <code>attr Person name String</code> then
        behaves as if both were written by hand.</p>
-    <div class="nelumbo-field" data-height="300px">import nelumbo.strings
-Root ::= attr &lt;Type&gt; &lt;NAME&gt; &lt;Type&gt; #100
-Type OT, AT
-NAME AN
-attr OT AN AT ::&gt; {
-    AT   ::= &lt;OT&gt;.AN                             #30
-    Root ::= &lt;{OT,Literal}&gt;.AN := &lt;{AT,Literal}&gt; #30
-    {OT,Literal} ol
-    {AT,Literal} al
-    ol.AN := al ::&gt; {
-        fact ol.AN = al
-    }
-}
-Person :: Object
-attr Person name String
-Person ::= Piet
-Piet.name := "Piet"
-String n
-Piet.name=n ?
-</div>
+    <div class="nelumbo-field" data-height="300px" data-src="transform/1-example.nl"></div>
     <div class="nelumbo-exercise">
       <p class="challenge">An <code>address</code> attribute has been added to <code>Person</code>, but
          Piet's address is set to the wrong value. Set it to <code>"Kalverstraat"</code> so the query
          matches.</p>
-      <div class="nelumbo-field" data-height="300px">import nelumbo.strings
-Root ::= attr &lt;Type&gt; &lt;NAME&gt; &lt;Type&gt; #100
-Type OT, AT
-NAME AN
-attr OT AN AT ::&gt; {
-    AT   ::= &lt;OT&gt;.AN                             #30
-    Root ::= &lt;{OT,Literal}&gt;.AN := &lt;{AT,Literal}&gt; #30
-    {OT,Literal} ol
-    {AT,Literal} al
-    ol.AN := al ::&gt; {
-        fact ol.AN = al
-    }
-}
-Person :: Object
-attr Person name String
-attr Person address String
-Person ::= Piet
-Piet.name := "Piet"
-Piet.address := "Dam"
-String a
-Piet.address=a ? [(a="Kalverstraat")][..]
-</div>
-      <pre class="nelumbo-solution">import nelumbo.strings
-Root ::= attr &lt;Type&gt; &lt;NAME&gt; &lt;Type&gt; #100
-Type OT, AT
-NAME AN
-attr OT AN AT ::&gt; {
-    AT   ::= &lt;OT&gt;.AN                             #30
-    Root ::= &lt;{OT,Literal}&gt;.AN := &lt;{AT,Literal}&gt; #30
-    {OT,Literal} ol
-    {AT,Literal} al
-    ol.AN := al ::&gt; {
-        fact ol.AN = al
-    }
-}
-Person :: Object
-attr Person name String
-attr Person address String
-Person ::= Piet
-Piet.name := "Piet"
-Piet.address := "Kalverstraat"
-String a
-Piet.address=a ? [(a="Kalverstraat")][..]
-</pre>
+      <div class="nelumbo-field" data-height="300px" data-src="transform/2-exercise.nl"></div>
+      <pre class="nelumbo-solution" data-src="transform/2-solution.nl"></pre>
     </div>
   </section>
   <section class="tutorial-section" id="cnl">
@@ -1335,163 +561,11 @@ Piet.address=a ? [(a="Kalverstraat")][..]
        question becomes a query. Nothing says that Tom is not a dog, so <code>is Tom a dog ?</code> is
        unknown. The Dutch example <a href="/sandbox.html#deHet">deHet</a> does the same with the articles
        <code>de</code> and <code>het</code>.</p>
-    <div class="nelumbo-field" data-height="1084px">import nelumbo.logic
-Article :: Object
-Article ::= a, an
-Root    ::= noun &lt;Article&gt; &lt;NAME&gt; #100,
-            verb &lt;NAME&gt;           #100
-Thing   :: Object
-{
-    Article ar
-    NAME    n, v
-    noun ar n ::&gt; {
-        Root            ::= &lt;{Thing,Literal}&gt; is &lt;ar&gt; n #0
-        Root            ::= is &lt;Thing&gt; &lt;ar&gt; n ?         #0
-        private Boolean ::= n(&lt;Thing&gt;)
-        Thing x
-        is x ar n ? ::&gt; {
-            n(x) ?
-        }
-        {Thing,Literal} t
-        t is ar n ::&gt; {
-            fact n(t)
-        }
-    }
-    verb v ::&gt; {
-        Root            ::= &lt;{Thing,Literal}&gt; v &lt;{Thing,Literal}&gt; #0
-        Root            ::= who v &lt;Thing&gt; ?                       #0
-        private Boolean ::= v(&lt;Thing&gt;,&lt;Thing&gt;)
-        Thing x, y
-        who v y ? ::&gt; {
-            v(x,y) ?
-        }
-        {Thing,Literal} s, o
-        s v o ::&gt; {
-            fact v(s,o)
-        }
-    }
-}
-
-noun a dog
-noun an owl
-noun a cat
-verb chases
-
-Thing ::= Rex, Hoot, Tom
-Rex is a dog
-Hoot is an owl
-Tom is a cat
-Rex chases Tom
-Tom chases Hoot
-
-is Rex a dog ?
-is Hoot an owl ?
-is Tom a dog ?
-who chases Hoot ?
-</div>
+    <div class="nelumbo-field" data-height="1084px" data-src="cnl/1-example.nl"></div>
     <div class="nelumbo-exercise">
       <p class="challenge">Dumbo is an elephant and scares Rex, but <code>elephant</code> and <code>scares</code> are not in the dictionary yet. Add them so that all sentences and questions parse.</p>
-      <div class="nelumbo-field" data-height="1004px" data-syntax="exercise">import nelumbo.logic
-Article :: Object
-Article ::= a, an
-Root    ::= noun &lt;Article&gt; &lt;NAME&gt; #100,
-            verb &lt;NAME&gt;           #100
-Thing   :: Object
-{
-    Article ar
-    NAME    n, v
-    noun ar n ::&gt; {
-        Root            ::= &lt;{Thing,Literal}&gt; is &lt;ar&gt; n #0
-        Root            ::= is &lt;Thing&gt; &lt;ar&gt; n ?         #0
-        private Boolean ::= n(&lt;Thing&gt;)
-        Thing x
-        is x ar n ? ::&gt; {
-            n(x) ?
-        }
-        {Thing,Literal} t
-        t is ar n ::&gt; {
-            fact n(t)
-        }
-    }
-    verb v ::&gt; {
-        Root            ::= &lt;{Thing,Literal}&gt; v &lt;{Thing,Literal}&gt; #0
-        Root            ::= who v &lt;Thing&gt; ?                       #0
-        private Boolean ::= v(&lt;Thing&gt;,&lt;Thing&gt;)
-        Thing x, y
-        who v y ? ::&gt; {
-            v(x,y) ?
-        }
-        {Thing,Literal} s, o
-        s v o ::&gt; {
-            fact v(s,o)
-        }
-    }
-}
-
-noun a dog
-noun an owl
-// add the missing words to the dictionary
-
-Thing ::= Rex, Hoot, Dumbo
-Rex is a dog
-Hoot is an owl
-Dumbo is an elephant
-Dumbo scares Rex
-
-is Dumbo an elephant ?
-who scares Rex ?
-</div>
-      <pre class="nelumbo-solution">import nelumbo.logic
-Article :: Object
-Article ::= a, an
-Root    ::= noun &lt;Article&gt; &lt;NAME&gt; #100,
-            verb &lt;NAME&gt;           #100
-Thing   :: Object
-{
-    Article ar
-    NAME    n, v
-    noun ar n ::&gt; {
-        Root            ::= &lt;{Thing,Literal}&gt; is &lt;ar&gt; n #0
-        Root            ::= is &lt;Thing&gt; &lt;ar&gt; n ?         #0
-        private Boolean ::= n(&lt;Thing&gt;)
-        Thing x
-        is x ar n ? ::&gt; {
-            n(x) ?
-        }
-        {Thing,Literal} t
-        t is ar n ::&gt; {
-            fact n(t)
-        }
-    }
-    verb v ::&gt; {
-        Root            ::= &lt;{Thing,Literal}&gt; v &lt;{Thing,Literal}&gt; #0
-        Root            ::= who v &lt;Thing&gt; ?                       #0
-        private Boolean ::= v(&lt;Thing&gt;,&lt;Thing&gt;)
-        Thing x, y
-        who v y ? ::&gt; {
-            v(x,y) ?
-        }
-        {Thing,Literal} s, o
-        s v o ::&gt; {
-            fact v(s,o)
-        }
-    }
-}
-
-noun a dog
-noun an owl
-noun an elephant
-verb scares
-
-Thing ::= Rex, Hoot, Dumbo
-Rex is a dog
-Hoot is an owl
-Dumbo is an elephant
-Dumbo scares Rex
-
-is Dumbo an elephant ?
-who scares Rex ?
-</pre>
+      <div class="nelumbo-field" data-height="1004px" data-syntax="exercise" data-src="cnl/2-exercise.nl"></div>
+      <pre class="nelumbo-solution" data-src="cnl/2-solution.nl"></pre>
     </div>
   </section>
   <section class="tutorial-section" id="family-tree">
@@ -1521,77 +595,8 @@ who scares Rex ?
     </details>
     <div class="nelumbo-exercise">
       <p class="challenge">Write the language above the given part so that the facts parse and every question gets the expected answer.</p>
-      <div class="nelumbo-field" data-height="1000px" data-syntax="exercise">import nelumbo.logic
-
-// build your language here: types, people, sentences, variables and rules
-
-
-
-// ---- given: make these facts parse and these questions give the expected answers ----
-fact Juliana   is the mother of Beatrix, Juliana  is the mother of Irene, Juliana  is the mother of Margriet
-fact Bernhard  is the father of Beatrix, Bernhard is the father of Irene, Bernhard is the father of Margriet
-fact Beatrix   is the mother of Alexander, Beatrix is the mother of Friso
-fact Claus     is the father of Alexander, Claus   is the father of Friso
-fact Alexander is the father of Amalia
-
-Who is the mother of Beatrix   ? [(Who=Juliana)][..]
-Irene is the mother of Beatrix ? [][()]
-Who is a parent of Beatrix     ? [(Who=Bernhard),(Who=Juliana)][..]
-Who is a grandparent of Amalia ? [(Who=Beatrix),(Who=Claus),..][..]
-Who is a grandchild of Juliana ? [(Who=Alexander),(Who=Friso),..][..]
-Who is an ancestor of Amalia   ? [(Who=Alexander),(Who=Beatrix),(Who=Bernhard),(Who=Claus),(Who=Juliana),..][..]
-Who is a sister of Beatrix     ? [(Who=Irene),(Who=Margriet),..][(Who=Beatrix),..]
-Who is a brother of Alexander  ? [(Who=Friso),..][(Who=Alexander),..]
-Friso is a sister of Alexander ? [][()]
-Who is an aunt of Alexander    ? [(Who=Irene),(Who=Margriet),..][..]
-</div>
-      <pre class="nelumbo-solution">import nelumbo.logic
-Person  :: Object
-Male    :: Person
-Female  :: Person
-Male    ::= Bernhard, Claus, Alexander, Friso
-Female  ::= Juliana, Beatrix, Irene, Margriet, Amalia
-Boolean ::= &lt;one Person&gt; is the mother of &lt;Person&gt; #30,
-            &lt;one Person&gt; is the father of &lt;Person&gt; #30,
-            &lt;Person&gt; is female                     #30,
-            &lt;Person&gt; is a parent of &lt;Person&gt;       #30,
-            &lt;Person&gt; is a grandparent of &lt;Person&gt;  #30,
-            &lt;Person&gt; is a grandchild of &lt;Person&gt;   #30,
-            &lt;Person&gt; is an ancestor of &lt;Person&gt;    #30,
-            &lt;Person&gt; is a sister of &lt;Person&gt;       #30,
-            &lt;Person&gt; is a brother of &lt;Person&gt;      #30,
-            &lt;Person&gt; is an aunt of &lt;Person&gt;        #30
-Person  p, c, g, a, s, x, Who
-Female  f
-Male    m
-f is female             &lt;=&gt; true
-m is female             &lt;=&gt; false
-p is a parent of c      &lt;=&gt; p is the mother of c | p is the father of c
-g is a grandparent of c &lt;=&gt; E[p](g is a parent of p &amp; p is a parent of c)
-c is a grandchild of g  &lt;=&gt; g is a grandparent of c
-a is an ancestor of c   &lt;=&gt; a is a parent of c | E[p](a is a parent of p &amp; p is an ancestor of c)
-s is a sister of x      &lt;=&gt; s is female &amp; s != x &amp; E[p](p is a parent of x &amp; p is a parent of s)
-s is a brother of x     &lt;=&gt; !(s is female) &amp; s != x &amp; E[p](p is a parent of x &amp; p is a parent of s)
-s is an aunt of c       &lt;=&gt; E[p](p is a parent of c &amp; s is a sister of p)
-
-// ---- given: make these facts parse and these questions give the expected answers ----
-fact Juliana   is the mother of Beatrix, Juliana  is the mother of Irene, Juliana  is the mother of Margriet
-fact Bernhard  is the father of Beatrix, Bernhard is the father of Irene, Bernhard is the father of Margriet
-fact Beatrix   is the mother of Alexander, Beatrix is the mother of Friso
-fact Claus     is the father of Alexander, Claus   is the father of Friso
-fact Alexander is the father of Amalia
-
-Who is the mother of Beatrix   ? [(Who=Juliana)][..]
-Irene is the mother of Beatrix ? [][()]
-Who is a parent of Beatrix     ? [(Who=Bernhard),(Who=Juliana)][..]
-Who is a grandparent of Amalia ? [(Who=Beatrix),(Who=Claus),..][..]
-Who is a grandchild of Juliana ? [(Who=Alexander),(Who=Friso),..][..]
-Who is an ancestor of Amalia   ? [(Who=Alexander),(Who=Beatrix),(Who=Bernhard),(Who=Claus),(Who=Juliana),..][..]
-Who is a sister of Beatrix     ? [(Who=Irene),(Who=Margriet),..][(Who=Beatrix),..]
-Who is a brother of Alexander  ? [(Who=Friso),..][(Who=Alexander),..]
-Friso is a sister of Alexander ? [][()]
-Who is an aunt of Alexander    ? [(Who=Irene),(Who=Margriet),..][..]
-</pre>
+      <div class="nelumbo-field" data-height="1000px" data-syntax="exercise" data-src="family-tree/1-exercise.nl"></div>
+      <pre class="nelumbo-solution" data-src="family-tree/1-solution.nl"></pre>
     </div>
   </section>
   <section class="tutorial-section" id="club-fees">
@@ -1619,84 +624,8 @@ Who is an aunt of Alexander    ? [(Who=Irene),(Who=Margriet),..][..]
     </details>
     <div class="nelumbo-exercise">
       <p class="challenge">Write the language above the given part so that the facts parse and every question gets the expected answer.</p>
-      <div class="nelumbo-field" data-height="1000px" data-syntax="exercise">import nelumbo.integers
-
-// build your language here: types, members, sentences, variables and rules
-
-
-
-// ---- given: the club's rules, its members, and the answers they should get ----
-// Juniors (younger than 18) pay 50 euros, adults 120 euros, seniors (65 or older) 84 euros.
-// Weekday members pay 20 euros less. Volunteers pay nothing.
-fact Anna is 30 years old, Lisa is 16 years old, Henk is 70 years old, Kees is 12 years old,
-     Marie is 45 years old, Sven is 18 years old, Eva is 65 years old
-fact Anna has a regular membership, Lisa has a weekday membership, Henk has a weekday membership,
-     Kees has a regular membership, Marie has a volunteer membership, Sven has a regular membership,
-     Eva has a regular membership, Piet has a weekday membership, Bram has a volunteer membership
-
-Lisa is a junior              ? [()][]
-Henk is a junior              ? [][()]
-Sven is an adult              ? [()][]
-Eva is a senior               ? [()][]
-Anna is 31 years old          ? [][()]
-Anna has a weekday membership ? [][()]
-Anna's fee                    ? [(120)][..]
-Lisa's fee                    ? [(30)][..]
-Henk's fee                    ? [(64)][..]
-Kees's fee                    ? [(50)][..]
-Marie's fee                   ? [(0)][..]
-Sven's fee                    ? [(120)][..]
-Eva's fee                     ? [(84)][..]
-Piet's fee                    ? [..][..]
-Bram's fee                    ? [(0)][..]
-</div>
-      <pre class="nelumbo-solution">import nelumbo.integers
-Person     :: Object
-Person     ::= Anna, Lisa, Henk, Kees, Marie, Sven, Eva, Piet, Bram
-Membership :: Object
-Membership ::= regular, weekday, volunteer
-Boolean    ::= &lt;Person&gt; is &lt;one Integer&gt; years old        #30,
-               &lt;Person&gt; has a &lt;one Membership&gt; membership #30,
-               &lt;Person&gt; is a junior                       #30,
-               &lt;Person&gt; is an adult                       #30,
-               &lt;Person&gt; is a senior                       #30
-Integer    ::= &lt;Person&gt;'s base fee #60,
-               &lt;Person&gt;'s fee      #60
-Person     p
-Integer    n
-p is a junior &lt;=&gt; E[n](p is n years old &amp; n&lt;18)
-p is an adult &lt;=&gt; E[n](p is n years old &amp; n&gt;=18 &amp; n&lt;65)
-p is a senior &lt;=&gt; E[n](p is n years old &amp; n&gt;=65)
-p's base fee == 50 if p is a junior, 120 if p is an adult, 84 if p is a senior
-p's fee == p's base fee      if p has a regular membership,
-           p's base fee - 20 if p has a weekday membership,
-           0                 if p has a volunteer membership
-
-// ---- given: the club's rules, its members, and the answers they should get ----
-// Juniors (younger than 18) pay 50 euros, adults 120 euros, seniors (65 or older) 84 euros.
-// Weekday members pay 20 euros less. Volunteers pay nothing.
-fact Anna is 30 years old, Lisa is 16 years old, Henk is 70 years old, Kees is 12 years old,
-     Marie is 45 years old, Sven is 18 years old, Eva is 65 years old
-fact Anna has a regular membership, Lisa has a weekday membership, Henk has a weekday membership,
-     Kees has a regular membership, Marie has a volunteer membership, Sven has a regular membership,
-     Eva has a regular membership, Piet has a weekday membership, Bram has a volunteer membership
-
-Lisa is a junior              ? [()][]
-Henk is a junior              ? [][()]
-Sven is an adult              ? [()][]
-Eva is a senior               ? [()][]
-Anna is 31 years old          ? [][()]
-Anna has a weekday membership ? [][()]
-Anna's fee                    ? [(120)][..]
-Lisa's fee                    ? [(30)][..]
-Henk's fee                    ? [(64)][..]
-Kees's fee                    ? [(50)][..]
-Marie's fee                   ? [(0)][..]
-Sven's fee                    ? [(120)][..]
-Eva's fee                     ? [(84)][..]
-Piet's fee                    ? [..][..]
-Bram's fee                    ? [(0)][..]
-</pre>
+      <div class="nelumbo-field" data-height="1000px" data-syntax="exercise" data-src="club-fees/1-exercise.nl"></div>
+      <pre class="nelumbo-solution" data-src="club-fees/1-solution.nl"></pre>
     </div>
   </section>
   <section class="tutorial-section" id="train-network">
@@ -1726,61 +655,8 @@ Bram's fee                    ? [(0)][..]
     </details>
     <div class="nelumbo-exercise">
       <p class="challenge">Write the language above the given part so that the facts parse and every question gets the expected answer.</p>
-      <div class="nelumbo-field" data-height="1000px" data-syntax="exercise">import nelumbo.integers
-
-// build your language here: cities, sentences, variables and rules
-
-
-
-// ---- given: the timetable and the answers it should give ----
-fact there is a train between Utrecht and Amsterdam, there is a train between Amsterdam and Haarlem,
-     there is a train between Haarlem and Leiden,    there is a train between Leiden and Delft,
-     there is a train between Delft and Rotterdam,   there is a train between Rotterdam and Gouda,
-     there is a train between Gouda and Utrecht,     there is a train between Zwolle and Groningen
-
-Utrecht is connected to Amsterdam                      ? [()][]
-Amsterdam is connected to Utrecht                      ? [()][]
-Which is connected to Utrecht                          ? [(Which=Amsterdam),(Which=Gouda),..][..]
-Utrecht is connected to Leiden                         ? [..][..]
-I can travel from Utrecht to Leiden                    ? [()][]
-I can travel from Utrecht to Groningen                 ? [..][..]
-I can travel from Utrecht to Which                     ? [(Which=Amsterdam),(Which=Delft),(Which=Gouda),(Which=Haarlem),(Which=Leiden),(Which=Rotterdam),(Which=Utrecht),..][..]
-I can travel from Utrecht to Leiden in at most 3 steps ? [()][]
-I can travel from Utrecht to Leiden in at most 2 steps ? [..][..]
-I can travel from Utrecht to Delft in at most 3 steps  ? [()][]
-I can travel from Utrecht to Delft in at most 0 steps  ? [][()]
-</div>
-      <pre class="nelumbo-solution">import nelumbo.integers
-City    :: Object
-City    ::= Utrecht, Amsterdam, Haarlem, Leiden, Delft, Rotterdam, Gouda, Zwolle, Groningen
-Boolean ::= there is a train between &lt;City&gt; and &lt;City&gt;                #30,
-            &lt;City&gt; is connected to &lt;City&gt;                             #30,
-            I can travel from &lt;City&gt; to &lt;City&gt;                        #30,
-            I can travel from &lt;City&gt; to &lt;City&gt; in at most &lt;Integer&gt; steps #30
-City    a, b, c, Which
-Integer n
-a is connected to b &lt;=&gt; there is a train between a and b | there is a train between b and a
-I can travel from a to b &lt;=&gt; a is connected to b | E[c](a is connected to c &amp; I can travel from c to b)
-I can travel from a to b in at most n steps &lt;=&gt; n&gt;0 &amp; E[c](a is connected to c &amp; (c=b | I can travel from c to b in at most n-1 steps))
-
-// ---- given: the timetable and the answers it should give ----
-fact there is a train between Utrecht and Amsterdam, there is a train between Amsterdam and Haarlem,
-     there is a train between Haarlem and Leiden,    there is a train between Leiden and Delft,
-     there is a train between Delft and Rotterdam,   there is a train between Rotterdam and Gouda,
-     there is a train between Gouda and Utrecht,     there is a train between Zwolle and Groningen
-
-Utrecht is connected to Amsterdam                      ? [()][]
-Amsterdam is connected to Utrecht                      ? [()][]
-Which is connected to Utrecht                          ? [(Which=Amsterdam),(Which=Gouda),..][..]
-Utrecht is connected to Leiden                         ? [..][..]
-I can travel from Utrecht to Leiden                    ? [()][]
-I can travel from Utrecht to Groningen                 ? [..][..]
-I can travel from Utrecht to Which                     ? [(Which=Amsterdam),(Which=Delft),(Which=Gouda),(Which=Haarlem),(Which=Leiden),(Which=Rotterdam),(Which=Utrecht),..][..]
-I can travel from Utrecht to Leiden in at most 3 steps ? [()][]
-I can travel from Utrecht to Leiden in at most 2 steps ? [..][..]
-I can travel from Utrecht to Delft in at most 3 steps  ? [()][]
-I can travel from Utrecht to Delft in at most 0 steps  ? [][()]
-</pre>
+      <div class="nelumbo-field" data-height="1000px" data-syntax="exercise" data-src="train-network/1-exercise.nl"></div>
+      <pre class="nelumbo-solution" data-src="train-network/1-solution.nl"></pre>
     </div>
   </section>
   <section class="tutorial-section" id="number-toolkit">
@@ -1817,68 +693,8 @@ I can travel from Utrecht to Delft in at most 0 steps  ? [][()]
     </details>
     <div class="nelumbo-exercise">
       <p class="challenge">Write the language above the given part so that every question gets the expected answer.</p>
-      <div class="nelumbo-field" data-height="800px" data-syntax="exercise">import nelumbo.integers
-
-// build your language here: operators, variables and rules
-
-
-
-// ---- given: the questions and the answers they should get ----
-5!             ? [(120)][..]
-0!             ? [(1)][..]
-2 * 3!         ? [(12)][..]
-2^10           ? [(1024)][..]
-2^3^2          ? [(512)][..]
-2^3 * 2        ? [(16)][..]
-17 mod 5       ? [(2)][..]
-2 + 10 mod 4   ? [(4)][..]
-(2 + 10) mod 4 ? [(0)][..]
-gcd(12, 18)    ? [(6)][..]
-gcd(17, 5)     ? [(1)][..]
-3 divides 12   ? [()][]
-5 divides 12   ? [][()]
-prime 2        ? [()][]
-prime 97       ? [()][]
-prime 91       ? [][()]
-prime 1        ? [][()]</div>
-      <pre class="nelumbo-solution">import nelumbo.integers
-Integer ::= &lt;Integer&gt; !                 #70,
-            &lt;Integer#61&gt; ^ &lt;Integer#59&gt; #60,
-            &lt;Integer&gt; mod &lt;Integer&gt;     #50,
-            gcd(&lt;Integer&gt;, &lt;Integer&gt;)
-Boolean ::= &lt;Integer&gt; divides &lt;Integer&gt;          #30,
-            prime &lt;Integer&gt;                      #30,
-            no divisor of &lt;Integer&gt; up to &lt;Integer&gt; #30
-Integer n, k, a, b, d
-n!       == 1 if n=0, n*(n-1)! if n&gt;0
-a^k      == 1 if k=0, a*a^(k-1) if k&gt;0
-a mod b  == a if a&lt;b, (a-b) mod b if a&gt;=b
-gcd(a,b) == a if b=0, gcd(b, a mod b) if b&gt;0
-d divides n             &lt;=&gt; n mod d = 0
-no divisor of n up to d &lt;=&gt; true  if d&lt;=1,
-                            false if d&gt;1 &amp; d divides n,
-                            no divisor of n up to d-1 if d&gt;1 &amp; !(d divides n)
-prime n                 &lt;=&gt; n&gt;1 &amp; no divisor of n up to n-1
-
-// ---- given: the questions and the answers they should get ----
-5!             ? [(120)][..]
-0!             ? [(1)][..]
-2 * 3!         ? [(12)][..]
-2^10           ? [(1024)][..]
-2^3^2          ? [(512)][..]
-2^3 * 2        ? [(16)][..]
-17 mod 5       ? [(2)][..]
-2 + 10 mod 4   ? [(4)][..]
-(2 + 10) mod 4 ? [(0)][..]
-gcd(12, 18)    ? [(6)][..]
-gcd(17, 5)     ? [(1)][..]
-3 divides 12   ? [()][]
-5 divides 12   ? [][()]
-prime 2        ? [()][]
-prime 97       ? [()][]
-prime 91       ? [][()]
-prime 1        ? [][()]
-</pre>
+      <div class="nelumbo-field" data-height="800px" data-syntax="exercise" data-src="number-toolkit/1-exercise.nl"></div>
+      <pre class="nelumbo-solution" data-src="number-toolkit/1-solution.nl"></pre>
     </div>
   </section>
   <section class="tutorial-section" id="set-algebra">
@@ -1909,47 +725,8 @@ prime 1        ? [][()]
     </details>
     <div class="nelumbo-exercise">
       <p class="challenge">Write the language above the given part so that every question gets the expected answer.</p>
-      <div class="nelumbo-field" data-height="700px" data-syntax="exercise">import nelumbo.collections
-
-// build your language here: operators, variables and rules
-
-
-
-// ---- given: the questions and the answers they should get ----
-{1,2,3} xor {2,3,4}   ? [({1,4})][..]
-{1,2} xor {2,1}       ? [({})][..]
-{1,2} disjoint {3,4}  ? [()][]
-{1,2} disjoint {2,3}  ? [][()]
-{1,2,3} * 10          ? [({10,20,30})][..]
-{1,2} + {10,20}       ? [({11,12,21,22})][..]
-|{1,2,3} + {1,2,3}|   ? [(5)][..]
-{1,2} + {10} * 2      ? [({21,22})][..]
-{1,2} + {0} = {1,2}   ? [()][]
-{1,2,..} xor {2}      ? [({1,..})][..]</div>
-      <pre class="nelumbo-solution">import nelumbo.collections
-Set&lt;Integer&gt; ::= &lt;Set&lt;Integer&gt;&gt; xor &lt;Set&lt;Integer&gt;&gt; #60,
-                 &lt;Set&lt;Integer&gt;&gt; + &lt;Set&lt;Integer&gt;&gt;   #40,
-                 &lt;Set&lt;Integer&gt;&gt; * &lt;Integer&gt;        #50
-Boolean      ::= &lt;Set&lt;Integer&gt;&gt; disjoint &lt;Set&lt;Integer&gt;&gt; #30
-Set&lt;Integer&gt; s, t
-Integer      i, j, k, n
-s xor t      == (s - t) || (t - s)
-s * k        == {[n](E[i](i in s &amp; n = i*k))}
-s + t        == {[n](E[i,j](i in s &amp; j in t &amp; n = i+j))}
-s disjoint t &lt;=&gt; s &amp;&amp; t = {}
-
-// ---- given: the questions and the answers they should get ----
-{1,2,3} xor {2,3,4}   ? [({1,4})][..]
-{1,2} xor {2,1}       ? [({})][..]
-{1,2} disjoint {3,4}  ? [()][]
-{1,2} disjoint {2,3}  ? [][()]
-{1,2,3} * 10          ? [({10,20,30})][..]
-{1,2} + {10,20}       ? [({11,12,21,22})][..]
-|{1,2,3} + {1,2,3}|   ? [(5)][..]
-{1,2} + {10} * 2      ? [({21,22})][..]
-{1,2} + {0} = {1,2}   ? [()][]
-{1,2,..} xor {2}      ? [({1,..})][..]
-</pre>
+      <div class="nelumbo-field" data-height="700px" data-syntax="exercise" data-src="set-algebra/1-exercise.nl"></div>
+      <pre class="nelumbo-solution" data-src="set-algebra/1-solution.nl"></pre>
     </div>
   </section>
   <section class="tutorial-section" id="list-statistics">
@@ -1982,54 +759,8 @@ s disjoint t &lt;=&gt; s &amp;&amp; t = {}
     </details>
     <div class="nelumbo-exercise">
       <p class="challenge">Write the language above the given part so that every question gets the expected answer.</p>
-      <div class="nelumbo-field" data-height="800px" data-syntax="exercise">import nelumbo.collections
-
-// build your language here: functions, variables and rules
-
-
-
-// ---- given: the questions and the answers they should get ----
-sum [3,4,5]                  ? [(12)][..]
-sum []                       ? [(0)][..]
-max [3,9,4]                  ? [(9)][..]
-mean [2,4,9]                 ? [(5)][..]
-mean [1,2]                   ? [][..]
-median [7,1,5]               ? [(5)][..]
-[1,2,3] dot [4,5,6]          ? [(32)][..]
-sum ([1,2,3] map [i](i*i))   ? [(14)][..]
-max ([3,9,4] where [i](i&lt;5)) ? [(4)][..]</div>
-      <pre class="nelumbo-solution">import nelumbo.collections
-Integer ::= sum &lt;List&lt;Integer&gt;&gt;                     #45,
-            sum &lt;List&lt;Integer&gt;&gt; from &lt;Integer&gt;      #45,
-            max &lt;List&lt;Integer&gt;&gt;                     #45,
-            max &lt;List&lt;Integer&gt;&gt; from &lt;Integer&gt;      #45,
-            mean &lt;List&lt;Integer&gt;&gt;                    #45,
-            median &lt;List&lt;Integer&gt;&gt;                  #45,
-            &lt;List&lt;Integer&gt;&gt; dot &lt;List&lt;Integer&gt;&gt;     #50,
-            products of &lt;List&lt;Integer&gt;&gt; and &lt;List&lt;Integer&gt;&gt; from &lt;Integer&gt; #45
-List&lt;Integer&gt; l, m
-Integer       i, j
-sum l from i == 0 if i &gt;= |l|, (at i in l) + sum l from (i+1) if i &lt; |l|
-sum l        == sum l from 0
-max l from i == at i in l if i = |l|-1,
-                (at i in l &gt; max l from (i+1) then at i in l else max l from (i+1)) if i &lt; |l|-1
-max l        == max l from 0
-mean l       == (sum l) / (|l|)
-median l     == at ((|l|-1)/2) in (l sort [i,j](i&lt;j))
-products of l and m from i == 0 if i &gt;= |l|, (at i in l) * (at i in m) + products of l and m from (i+1) if i &lt; |l|
-l dot m      == products of l and m from 0
-
-// ---- given: the questions and the answers they should get ----
-sum [3,4,5]                  ? [(12)][..]
-sum []                       ? [(0)][..]
-max [3,9,4]                  ? [(9)][..]
-mean [2,4,9]                 ? [(5)][..]
-mean [1,2]                   ? [][..]
-median [7,1,5]               ? [(5)][..]
-[1,2,3] dot [4,5,6]          ? [(32)][..]
-sum ([1,2,3] map [i](i*i))   ? [(14)][..]
-max ([3,9,4] where [i](i&lt;5)) ? [(4)][..]
-</pre>
+      <div class="nelumbo-field" data-height="800px" data-syntax="exercise" data-src="list-statistics/1-exercise.nl"></div>
+      <pre class="nelumbo-solution" data-src="list-statistics/1-solution.nl"></pre>
     </div>
   </section>
   <section class="tutorial-section" id="vectors">
@@ -2060,51 +791,8 @@ max ([3,9,4] where [i](i&lt;5)) ? [(4)][..]
     </details>
     <div class="nelumbo-exercise">
       <p class="challenge">Write the language above the given part so that every question gets the expected answer.</p>
-      <div class="nelumbo-field" data-height="700px" data-syntax="exercise">import nelumbo.integers
-
-// build your language here: the vector type, operators, variables and rules
-
-
-
-// ---- given: the questions and the answers they should get ----
-vec(1,2) + vec(3,4)                     ? [(vec(4,6))][..]
-vec(1,2) - vec(3,4)                     ? [(vec(-2,-2))][..]
-2 * vec(1,2)                            ? [(vec(2,4))][..]
-vec(1,2) + 2 * vec(1,1)                 ? [(vec(3,4))][..]
-vec(1,2) . vec(3,4)                     ? [(11)][..]
-vec(1+1, 2) = vec(2, 2)                 ? [()][]
-vec(1,2) + vec(3,4) = vec(4,6)          ? [()][]
-vec(1,2) = vec(2,1)                     ? [][()]
-vec(2,1) is perpendicular to vec(-1,2)  ? [()][]
-vec(2,1) is perpendicular to vec(1,2)   ? [][()]</div>
-      <pre class="nelumbo-solution">import nelumbo.integers
-Vec           :: Object
-{Literal,Vec} ::= vec(&lt;Integer&gt;, &lt;Integer&gt;)
-Vec           ::= &lt;Vec&gt; + &lt;Vec&gt;      #40,
-                  &lt;Vec&gt; - &lt;Vec&gt;      #40,
-                  &lt;Integer&gt; * &lt;Vec&gt;  #50
-Integer       ::= &lt;Vec&gt; . &lt;Vec&gt;      #50
-Boolean       ::= &lt;Vec&gt; is perpendicular to &lt;Vec&gt; #30
-Vec     u, v
-Integer a, b, c, d, k
-vec(a,b) + vec(c,d) == vec(a+c, b+d)
-vec(a,b) - vec(c,d) == vec(a-c, b-d)
-k * vec(a,b)        == vec(k*a, k*b)
-vec(a,b) . vec(c,d) == a*c + b*d
-u is perpendicular to v &lt;=&gt; u . v = 0
-
-// ---- given: the questions and the answers they should get ----
-vec(1,2) + vec(3,4)                     ? [(vec(4,6))][..]
-vec(1,2) - vec(3,4)                     ? [(vec(-2,-2))][..]
-2 * vec(1,2)                            ? [(vec(2,4))][..]
-vec(1,2) + 2 * vec(1,1)                 ? [(vec(3,4))][..]
-vec(1,2) . vec(3,4)                     ? [(11)][..]
-vec(1+1, 2) = vec(2, 2)                 ? [()][]
-vec(1,2) + vec(3,4) = vec(4,6)          ? [()][]
-vec(1,2) = vec(2,1)                     ? [][()]
-vec(2,1) is perpendicular to vec(-1,2)  ? [()][]
-vec(2,1) is perpendicular to vec(1,2)   ? [][()]
-</pre>
+      <div class="nelumbo-field" data-height="700px" data-syntax="exercise" data-src="vectors/1-exercise.nl"></div>
+      <pre class="nelumbo-solution" data-src="vectors/1-solution.nl"></pre>
     </div>
   </section>
   <section class="tutorial-section" id="interpreter">
@@ -2135,52 +823,8 @@ vec(2,1) is perpendicular to vec(1,2)   ? [][()]
     </details>
     <div class="nelumbo-exercise">
       <p class="challenge">Write the language above the given part so that the facts parse and every question gets the expected answer.</p>
-      <div class="nelumbo-field" data-height="700px" data-syntax="exercise">import nelumbo.integers
-
-// build your language here: expressions, eval, variables and rules
-
-
-
-// ---- given: the variables, and the questions with the answers they should get ----
-fact x := 3, y := 4
-
-eval #5               ? [(5)][..]
-eval x                ? [(3)][..]
-eval (x + #2)         ? [(5)][..]
-eval (x + y * #2)     ? [(11)][..]
-eval ((x + y) * #2)   ? [(14)][..]
-eval (z + #1)         ? [..][..]
-x + #2 = x + #2       ? [()][]
-x + #2 = #2 + x       ? [][()]</div>
-      <pre class="nelumbo-solution">import nelumbo.integers
-Expr           :: Object
-Var            :: Expr
-Var            ::= x, y, z
-{Literal,Expr} ::= # &lt;Integer&gt;      #90,
-                   &lt;Expr&gt; + &lt;Expr&gt;  #40,
-                   &lt;Expr&gt; * &lt;Expr&gt;  #50
-Integer        ::= eval &lt;Expr&gt;      #80
-Boolean        ::= &lt;Var&gt; := &lt;one Integer&gt; #20
-Expr    e, f
-Var     v
-Integer i
-eval #i      == i
-eval v = i   &lt;=&gt; v := i
-eval (e + f) == eval e + eval f
-eval (e * f) == eval e * eval f
-
-// ---- given: the variables, and the questions with the answers they should get ----
-fact x := 3, y := 4
-
-eval #5               ? [(5)][..]
-eval x                ? [(3)][..]
-eval (x + #2)         ? [(5)][..]
-eval (x + y * #2)     ? [(11)][..]
-eval ((x + y) * #2)   ? [(14)][..]
-eval (z + #1)         ? [..][..]
-x + #2 = x + #2       ? [()][]
-x + #2 = #2 + x       ? [][()]
-</pre>
+      <div class="nelumbo-field" data-height="700px" data-syntax="exercise" data-src="interpreter/1-exercise.nl"></div>
+      <pre class="nelumbo-solution" data-src="interpreter/1-solution.nl"></pre>
     </div>
   </section>
   <section class="tutorial-section" id="room-booking">
@@ -2212,67 +856,8 @@ x + #2 = #2 + x       ? [][()]
     </details>
     <div class="nelumbo-exercise">
       <p class="challenge">Write the language above the given part so that the facts parse and every question gets the expected answer.</p>
-      <div class="nelumbo-field" data-height="1000px" data-syntax="exercise">import nelumbo.collections
-
-// build your language here: times, slots, rooms, sentences, variables and rules
-
-
-
-// ---- given: today's bookings, complete per room, and the answers they should give ----
-fact the bookings for Blue  = {9:30 to 11:00, 13:00 to 14:30}
-fact the bookings for Red   = {9:00 to 10:30, 10:00 to 11:00}
-fact the bookings for Green = {}
-
-Blue is free at 10:00                ? [][()]
-Blue is free at 12:00                ? [()][]
-Blue is free at 11:00                ? [()][]
-Blue is free between 11:00 and 13:00 ? [()][]
-Blue is free between 10:30 and 12:00 ? [][()]
-Blue is free between 12:00 and 15:00 ? [][()]
-Green is free at 10:00               ? [()][]
-Yellow is free at 10:00              ? [..][..]
-Red has clashing bookings            ? [()][]
-Blue has clashing bookings           ? [][()]
-</div>
-      <pre class="nelumbo-solution">import nelumbo.collections
-pattern TIME ::= &lt;[&gt; &lt;Integer#100&gt; : &lt;Integer#100&gt; &lt;]&gt;
-Slot      :: Literal
-Slot      ::= &lt;TIME&gt; to &lt;TIME&gt; #35
-Room      :: Object
-Room      ::= Blue, Red, Green, Yellow
-Set&lt;Slot&gt; ::= the bookings for &lt;Room&gt; #60
-Boolean   ::= &lt;Integer&gt; falls in &lt;Slot&gt;                 #30,
-              &lt;Integer&gt; is the start of &lt;Slot&gt;          #30,
-              &lt;Room&gt; is free at &lt;TIME&gt;                  #30,
-              &lt;Room&gt; is free between &lt;TIME&gt; and &lt;TIME&gt;  #30,
-              &lt;Room&gt; has clashing bookings              #30
-Integer   h1, m1, h2, m2, n
-Slot      b, c
-Room      r
-n falls in h1:m1 to h2:m2         &lt;=&gt; h1*60+m1 &lt;= n &amp; n &lt; h2*60+m2
-n is the start of h1:m1 to h2:m2  &lt;=&gt; n = h1*60+m1
-r is free at h1:m1                &lt;=&gt; A[b]((b in the bookings for r) -&gt; !(h1*60+m1 falls in b))
-r is free between h1:m1 and h2:m2 &lt;=&gt; r is free at h1:m1 &amp;
-                                      A[b]((b in the bookings for r) -&gt; !E[n](n is the start of b &amp; h1*60+m1 &lt;= n &amp; n &lt; h2*60+m2))
-r has clashing bookings           &lt;=&gt; E[b,c](b in the bookings for r &amp; c in the bookings for r &amp; b != c &amp;
-                                             E[n](n is the start of c &amp; n falls in b))
-
-// ---- given: today's bookings, complete per room, and the answers they should give ----
-fact the bookings for Blue  = {9:30 to 11:00, 13:00 to 14:30}
-fact the bookings for Red   = {9:00 to 10:30, 10:00 to 11:00}
-fact the bookings for Green = {}
-
-Blue is free at 10:00                ? [][()]
-Blue is free at 12:00                ? [()][]
-Blue is free at 11:00                ? [()][]
-Blue is free between 11:00 and 13:00 ? [()][]
-Blue is free between 10:30 and 12:00 ? [][()]
-Blue is free between 12:00 and 15:00 ? [][()]
-Green is free at 10:00               ? [()][]
-Yellow is free at 10:00              ? [..][..]
-Red has clashing bookings            ? [()][]
-Blue has clashing bookings           ? [][()]
-</pre>
+      <div class="nelumbo-field" data-height="1000px" data-syntax="exercise" data-src="room-booking/1-exercise.nl"></div>
+      <pre class="nelumbo-solution" data-src="room-booking/1-solution.nl"></pre>
     </div>
   </section>
   <section class="tutorial-section" id="access-policy">
@@ -2308,110 +893,8 @@ Blue has clashing bookings           ? [][()]
     </details>
     <div class="nelumbo-exercise">
       <p class="challenge">Write the language above the given part so that the dictionary, the policy and the staff parse and every question gets the expected answer.</p>
-      <div class="nelumbo-field" data-height="1000px" data-syntax="exercise">import nelumbo.logic
-
-// build your language here: types, the dictionary, statements, questions and transformations
-
-
-
-// ---- given: the dictionary, the policy, the staff, and the answers they should give ----
-role a manager
-role an intern
-role an employee
-role an auditor
-
-every manager is an employee
-every intern is an employee
-every employee may read contracts
-every manager may approve invoices
-no intern may approve invoices
-no intern may sign contracts
-every auditor may read invoices
-
-Jan is a manager
-Ann is an intern
-Eva is an auditor
-
-Jan may approve invoices ? [()][]
-Ann may approve invoices ? [][()]
-Eva may approve invoices ? [..][..]
-Ann may read contracts   ? [()][]
-Eva may read contracts   ? [..][..]
-Ann may sign contracts   ? [][()]
-Jan may sign contracts   ? [..][..]
-Who may approve invoices ? [(Who=Jan),..][(Who=Ann),..]
-Who may read contracts   ? [(Who=Ann),(Who=Jan),..][..]
-</div>
-      <pre class="nelumbo-solution">import nelumbo.logic
-Person  :: Object
-Person  ::= Jan, Ann, Eva, Bob
-Article :: Object
-Article ::= a, an
-Role    :: Object
-Role    ::= manager, intern, employee, auditor
-Action  :: Object
-Action  ::= approve, read, sign
-Item    :: Object
-Item    ::= invoices, contracts
-Boolean ::= &lt;Person&gt; may &lt;Action&gt; &lt;Item&gt; #30
-private Boolean ::= &lt;Person&gt; has role &lt;Role&gt; #30
-Root    ::= role &lt;Article&gt; &lt;Role&gt;             #100,
-            every &lt;Role&gt; may &lt;Action&gt; &lt;Item&gt;  #0,
-            no &lt;Role&gt; may &lt;Action&gt; &lt;Item&gt;     #0
-{
-    Article          ar
-    {Role,Literal}   r, s
-    {Action,Literal} x
-    {Item,Literal}   i
-    {Person,Literal} p
-    Person           q
-    role ar r ::&gt; {
-        Root ::= &lt;{Person,Literal}&gt; is &lt;ar&gt; &lt;r&gt;     #0
-        Root ::= every &lt;{Role,Literal}&gt; is &lt;ar&gt; &lt;r&gt; #0
-        p is ar r ::&gt; {
-            fact p has role r
-        }
-        every s is ar r ::&gt; {
-            q has role r &lt;=&gt; true if q has role s
-        }
-    }
-    every r may x i ::&gt; {
-        q may x i &lt;=&gt; true if q has role r
-    }
-    no r may x i ::&gt; {
-        q may x i &lt;=&gt; false if q has role r
-    }
-}
-Person Who
-
-// ---- given: the dictionary, the policy, the staff, and the answers they should give ----
-role a manager
-role an intern
-role an employee
-role an auditor
-
-every manager is an employee
-every intern is an employee
-every employee may read contracts
-every manager may approve invoices
-no intern may approve invoices
-no intern may sign contracts
-every auditor may read invoices
-
-Jan is a manager
-Ann is an intern
-Eva is an auditor
-
-Jan may approve invoices ? [()][]
-Ann may approve invoices ? [][()]
-Eva may approve invoices ? [..][..]
-Ann may read contracts   ? [()][]
-Eva may read contracts   ? [..][..]
-Ann may sign contracts   ? [][()]
-Jan may sign contracts   ? [..][..]
-Who may approve invoices ? [(Who=Jan),..][(Who=Ann),..]
-Who may read contracts   ? [(Who=Ann),(Who=Jan),..][..]
-</pre>
+      <div class="nelumbo-field" data-height="1000px" data-syntax="exercise" data-src="access-policy/1-exercise.nl"></div>
+      <pre class="nelumbo-solution" data-src="access-policy/1-solution.nl"></pre>
     </div>
   </section>
 </main>

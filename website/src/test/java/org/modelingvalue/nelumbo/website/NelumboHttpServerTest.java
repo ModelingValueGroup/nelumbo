@@ -333,6 +333,34 @@ class NelumboHttpServerTest {
      * Syntax-only editors ({@code data-syntax}) have no queries; a syntax exercise ({@code data-syntax="exercise"})
      * starts with a parse error that the learner fixes, its solution parses without errors.
      */
+    /**
+     * Every tutorial editor's text lives in a {@code .nl} file of the core jar ({@code data-src}), so it can be
+     * edited and run as Nelumbo; the page itself holds no code. The server fills the files in.
+     */
+    @Test
+    void tutorialEditorsComeFromNlFiles() throws Exception {
+        String  raw    = new String(NelumboHttpServer.class.getResourceAsStream("/public/tutorial.html").readAllBytes(),
+                java.nio.charset.StandardCharsets.UTF_8);
+        Pattern editor = Pattern.compile("<(div|pre) class=\"(nelumbo-field|nelumbo-solution)\"([^>]*)>(.*?)</\\1>", Pattern.DOTALL);
+        Matcher inPage = editor.matcher(raw);
+        int     count  = 0;
+        while (inPage.find()) {
+            count++;
+            assertTrue(inPage.group(3).contains(" data-src=\"") && inPage.group(4).isEmpty(),
+                    "a tutorial editor without a data-src .nl file: " + inPage.group());
+        }
+        assertTrue(20 < count, "expected the tutorial's editors, found " + count);
+        String  served = get("/tutorial.html").body();
+        assertFalse(served.contains("data-src="), "the served tutorial should have every editor filled in");
+        Matcher filled = editor.matcher(served);
+        int     texts  = 0;
+        while (filled.find()) {
+            assertFalse(filled.group(4).isBlank(), "an empty tutorial editor: " + filled.group());
+            texts++;
+        }
+        assertEquals(count, texts);
+    }
+
     @Test
     void everyTutorialEditorEvaluates() throws Exception {
         NelumboHttpServer tutorial     = new NelumboHttpServer(KnowledgeBaseLoader.load(List.of()), List.of());

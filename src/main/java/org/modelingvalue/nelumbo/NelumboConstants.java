@@ -24,4 +24,5 @@ public interface NelumboConstants {
     String NELUMBO_EXAMPLES = NELUMBO_LIBRARY + "examples/";
     String NELUMBO_TESTS    = NELUMBO_LIBRARY + "tests/";
     String NELUMBO_BUGS     = NELUMBO_LIBRARY + "bugs/";
+    String NELUMBO_TUTORIAL = NELUMBO_LIBRARY + "tutorial/";
 }
