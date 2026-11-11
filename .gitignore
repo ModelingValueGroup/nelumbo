@@ -98,3 +98,6 @@ gradle-app.setting
 # GitHub Copilot persisted chat sessions
 /.idea/copilot/chatSessions
 /nelumbo/
+
+# superpowers skills: brainstorm mockups and plan ledgers (local scratch)
+/.superpowers/
