@@ -149,9 +149,13 @@ allprojects {
     }
 }
 
-// maven central refuses releases while the organization is over its monthly publishing limit
-// ("Publishing blocked: ..."): accepted for now, such a version is only on the github package
-// repo; every other maven central failure still fails the build
+// maven central refusals that are no fault of the build are accepted, such a version is then only
+// on the github package repo:
+// - "Publishing blocked: ...": the organization is over its monthly publishing limit
+// - "Could not find a public key by the key fingerprint": central could not reach the keyservers
+//   with the signing key (keyserver.ubuntu.com was down for hours on 2026-11-11)
+// every other maven central failure still fails the build
+val acceptedCentralRefusals = listOf("Publishing blocked", "Could not find a public key by the key fingerprint")
 gradle.taskGraph.whenReady {
     allTasks.filter { it.name == "mvgcentralpublisher" }.forEach { central ->
         val upload = central.actions.toList()
@@ -160,7 +164,7 @@ gradle.taskGraph.whenReady {
                 try {
                     action.execute(this)
                 } catch (e: Exception) {
-                    if (e.message?.contains("Publishing blocked") != true) {
+                    if (acceptedCentralRefusals.none { e.message?.contains(it) == true }) {
                         throw e
                     }
                     logger.warn("::warning::not published on maven central: ${e.message}")
