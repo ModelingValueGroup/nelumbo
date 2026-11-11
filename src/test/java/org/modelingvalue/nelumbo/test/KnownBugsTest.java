@@ -310,4 +310,10 @@ public class KnownBugsTest extends NelumboTestBase {
     public void openSetIntersectionClosed() {
         bugResource("open-set-intersection-closed.nl");
     }
+
+    @KnownBug("= between a collection literal with a computed element and an equal literal is false ({1+1} = {2} gives [][()])")
+    @Test
+    public void computedCollectionElementEquality() {
+        bugResource("computed-collection-element-equality.nl");
+    }
 }
