@@ -1,6 +1,6 @@
 import { test, expect, Page, Locator, Browser, Dialog } from '@playwright/test';
 
-// Save as... / Load...: a text saved under a name in one browser loads by that name in any other.
+// Share... / Load shared...: a text shared under a name in one browser loads by that name in any other.
 // Names are global on the server and stay taken for a week, so every run uses names of its own.
 
 const RUN: string = String(Date.now());
@@ -26,26 +26,26 @@ function firstField(page: Page): Locator {
     return page.locator('#logic .nelumbo-field-wrap, main > .nelumbo-field-wrap').first();
 }
 
-async function share(wrap: Locator, action: 'Save' | 'Load', name: string): Promise<Locator> {
-    await wrap.getByRole('button', { name: action === 'Save' ? 'Save as...' : 'Load...' }).click();
+async function share(wrap: Locator, action: 'Share' | 'Load', name: string): Promise<Locator> {
+    await wrap.getByRole('button', { name: action === 'Share' ? 'Share...' : 'Load shared...' }).click();
     await wrap.getByLabel('Solution name').fill(name);
     await wrap.getByLabel('Solution name').press('Enter');
     return wrap.locator('.nelumbo-share-message');
 }
 
-test('a saved solution loads in another browser, padded name and all', async ({ browser }: { browser: Browser }): Promise<void> => {
+test('a shared solution loads in another browser, padded name and all', async ({ browser }: { browser: Browser }): Promise<void> => {
     const name: string = 'a' + RUN;
     const a:    Page   = await (await browser.newContext()).newPage();
     await a.goto('/tutorial.html#logic');
     await waitForEditors(a);
     await typeAtEnd(a, 0, '\n// by frits\n');
-    await expect(await share(firstField(a), 'Save', '  ' + name + ' ')).toHaveText('Saved as "' + name + '" (kept 7 days)');
+    await expect(await share(firstField(a), 'Share', '  ' + name + ' ')).toHaveText('Shared as "' + name + '" (kept 7 days)');
     const b: Page = await (await browser.newContext()).newPage();
     await b.goto('/sandbox.html');
     await waitForEditors(b);
     await expect(await share(firstField(b), 'Load', name)).toHaveText('Loaded "' + name + '"');
     expect(await editorText(b, 0)).toBe(await editorText(a, 0));
-    await expect(await share(firstField(b), 'Save', name)).toHaveText('"' + name + '" is taken');
+    await expect(await share(firstField(b), 'Share', name)).toHaveText('"' + name + '" is taken');
 });
 
 test('Load asks first only when the field holds own work', async ({ page }: { page: Page }): Promise<void> => {
@@ -55,7 +55,7 @@ test('Load asks first only when the field holds own work', async ({ page }: { pa
     await waitForEditors(page);
     const original: string = await editorText(page, 0);
     await typeAtEnd(page, 0, '\n// saved\n');
-    await expect(await share(firstField(page), 'Save', name)).toHaveText('Saved as "' + name + '" (kept 7 days)');
+    await expect(await share(firstField(page), 'Share', name)).toHaveText('Shared as "' + name + '" (kept 7 days)');
     await firstField(page).getByRole('button', { name: 'Reset' }).click();
     page.on('dialog', (d: Dialog): void => {
         dialogs.push(d.message());
@@ -76,7 +76,7 @@ test('Reset after Load brings back the original', async ({ page }: { page: Page 
     await waitForEditors(page);
     const original: string = await editorText(page, 0);
     await typeAtEnd(page, 0, '\n// c\n');
-    await expect(await share(firstField(page), 'Save', name)).toHaveText('Saved as "' + name + '" (kept 7 days)');
+    await expect(await share(firstField(page), 'Share', name)).toHaveText('Shared as "' + name + '" (kept 7 days)');
     await firstField(page).getByRole('button', { name: 'Reset' }).click();
     await expect(await share(firstField(page), 'Load', name)).toHaveText('Loaded "' + name + '"');
     await firstField(page).getByRole('button', { name: 'Reset' }).click();
@@ -87,8 +87,8 @@ test('the name field remembers the last name', async ({ page }: { page: Page }):
     const name: string = 'd' + RUN;
     await page.goto('/sandbox.html');
     await waitForEditors(page);
-    await expect(await share(firstField(page), 'Save', name)).toHaveText('Saved as "' + name + '" (kept 7 days)');
-    await firstField(page).getByRole('button', { name: 'Load...' }).click();
+    await expect(await share(firstField(page), 'Share', name)).toHaveText('Shared as "' + name + '" (kept 7 days)');
+    await firstField(page).getByRole('button', { name: 'Load shared...' }).click();
     await expect(firstField(page).getByLabel('Solution name')).toHaveValue(name);
 });
 
@@ -96,17 +96,17 @@ test('the landing page and the library have no share buttons', async ({ page }: 
     for (const path of ['/', '/library.html']) {
         await page.goto(path);
         await waitForEditors(page);
-        await expect(page.getByRole('button', { name: 'Save as...' })).toHaveCount(0);
+        await expect(page.getByRole('button', { name: 'Share...' })).toHaveCount(0);
     }
 });
 
 // crypto.randomUUID exists only in secure contexts: a server jar run on a classroom LAN over plain HTTP has none
-test('saving works without crypto.randomUUID', async ({ page }: { page: Page }): Promise<void> => {
+test('sharing works without crypto.randomUUID', async ({ page }: { page: Page }): Promise<void> => {
     const name: string = 'e' + RUN;
     await page.addInitScript((): void => {
         delete (Crypto.prototype as any).randomUUID;
     });
     await page.goto('/sandbox.html');
     await waitForEditors(page);
-    await expect(await share(firstField(page), 'Save', name)).toHaveText('Saved as "' + name + '" (kept 7 days)');
+    await expect(await share(firstField(page), 'Share', name)).toHaveText('Shared as "' + name + '" (kept 7 days)');
 });

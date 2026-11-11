@@ -83,7 +83,7 @@
     margin-left: auto;
 }
 
-/* Save as... / Load...: the name row replaces the two buttons while open (nelumbo-fields.ts addShareButtons) */
+/* Share... / Load shared...: the name row replaces the two buttons while open (nelumbo-fields.ts addShareButtons) */
 .nelumbo-share {
     display:     flex;
     flex-wrap:   wrap;

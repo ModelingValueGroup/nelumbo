@@ -17,8 +17,10 @@
 package org.modelingvalue.nelumbo.website;
 
 /**
- * The samples of one UTC minute (or, aggregated, of a longer bucket): maxima, the average CPU load, and how much the
- * evaluation and overload counters grew. {@code t} is the bucket start in epoch milliseconds.
+ * The samples of one UTC minute (or, aggregated, of a longer bucket): maxima (also of the stored shared solutions and
+ * their bytes), the average CPU load, and how much the evaluation, overload and save counters grew. {@code t} is the
+ * bucket start in epoch milliseconds.
  */
-record MinuteStats(long t, int sessionsMax, int runningMax, double cpuAvg, double cpuMax, long heapMaxMb, long evaluations, long overloads) {
+record MinuteStats(long t, int sessionsMax, int runningMax, double cpuAvg, double cpuMax, long heapMaxMb, long evaluations, long overloads,
+                   int solutionsMax, long solutionBytesMax, long saves) {
 }

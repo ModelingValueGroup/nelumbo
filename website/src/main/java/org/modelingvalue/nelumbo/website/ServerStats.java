@@ -32,12 +32,12 @@ final class ServerStats {
     }
 
     // the process CPU load covers the time since the previous read, so only the StatsRecorder reads it
-    static StatsSample read(int openSessions, EvalGate gate) {
+    static StatsSample read(int openSessions, EvalGate gate, SolutionService.Usage solutions) {
         OperatingSystemMXBean os      = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
         Runtime               runtime = Runtime.getRuntime();
         return new StatsSample(System.currentTimeMillis(), openSessions, gate.running(), gate.total(), gate.overloaded(),
                 cpuLoad(os.getProcessCpuLoad()), (runtime.totalMemory() - runtime.freeMemory()) >> 20,
-                ManagementFactory.getRuntimeMXBean().getUptime() / 1000);
+                ManagementFactory.getRuntimeMXBean().getUptime() / 1000, solutions.solutions(), solutions.bytes(), solutions.saves());
     }
 
     static Map<String, Object> json(StatsSample sample, int maxSessions, EvalGate gate) {
@@ -49,6 +49,7 @@ final class ServerStats {
         stats.put("evaluations", Map.of("running", sample.running(), "threshold", gate.threshold(), "total", sample.total(), "overloaded", sample.overloaded()));
         stats.put("cpu", Map.of("load", sample.cpuLoad(), "cpus", runtime.availableProcessors()));
         stats.put("heap", Map.of("usedMb", sample.heapUsedMb(), "maxMb", runtime.maxMemory() >> 20));
+        stats.put("solutions", Map.of("count", sample.solutions(), "bytes", sample.solutionBytes(), "maxBytes", SolutionService.MAX_TOTAL_BYTES, "saves", sample.saves()));
         stats.put("uptimeSeconds", sample.uptimeSeconds());
         return stats;
     }

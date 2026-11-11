@@ -12,9 +12,9 @@
 <link rel="stylesheet" href="/assets/status-chart.css">
 <style>
   :root { --bg: #1b1d23; --panel: #23262e; --text: #e6e8ee; --muted: #9aa0ac; --accent: #c184d8; --grid: #343843;
-          --series-cpu: #9085e9; --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; }
+          --series-cpu: #9085e9; --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500; }
   [data-theme="light"] { --bg: #fbfafc; --panel: #f2eff5; --text: #1f1b24; --muted: #6b6475; --accent: #9246b0; --grid: #e0dbe6;
-          --series-cpu: #4a3aa7; --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; }
+          --series-cpu: #4a3aa7; --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --series-4: #eda100; }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 "Instrument Sans", system-ui, sans-serif; }
   main { max-width: 960px; margin: 0 auto; padding: 40px 16px; }
@@ -59,6 +59,8 @@
       <dt>Evaluations running</dt> <dd id="running">-</dd>
       <dt>Evaluations total</dt>   <dd id="total">-</dd>
       <dt>Stopped (busy)</dt>      <dd id="overloaded">-</dd>
+      <dt>Shared solutions</dt>    <dd id="solutions">-</dd>
+      <dt>Solutions on disk</dt>   <dd id="solution-disk">-</dd>
       <dt>CPU</dt>                 <dd id="cpu">-</dd>
       <dt>Heap</dt>                <dd id="heap">-</dd>
       <dt>Uptime</dt>              <dd id="uptime">-</dd>
@@ -73,12 +75,14 @@
       <button type="button" data-range="week" aria-pressed="false">week</button>
     </div>
     <div class="chart"><h3>CPU (% of the container's cores)</h3><div id="chart-cpu"></div></div>
-    <div class="chart"><h3>Activity (per point: max sessions, max running evaluations, evaluations stopped as busy)</h3><div id="chart-activity"></div></div>
+    <div class="chart"><h3>Activity (per point: max sessions, max running evaluations, evaluations stopped as busy, solutions shared)</h3><div id="chart-activity"></div></div>
+    <div class="chart"><h3>Shared solutions (max per point)</h3><div id="chart-solutions"></div></div>
+    <div class="chart"><h3>Solutions on disk (MB, limit 100)</h3><div id="chart-disk"></div></div>
     <details>
       <summary>Data table</summary>
       <div class="table-wrap">
         <table id="history-table">
-          <thead><tr><th>Time</th><th>CPU avg</th><th>CPU max</th><th>Sessions</th><th>Running</th><th>Stopped</th><th>Evaluations</th></tr></thead>
+          <thead><tr><th>Time</th><th>CPU avg</th><th>CPU max</th><th>Sessions</th><th>Running</th><th>Stopped</th><th>Evaluations</th><th>Shares</th><th>Shared</th><th>Disk MB</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>

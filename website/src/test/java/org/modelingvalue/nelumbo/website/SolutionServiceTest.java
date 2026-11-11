@@ -40,7 +40,7 @@ class SolutionServiceTest {
 
     @Test
     void aSavedSolutionLoadsByName() {
-        assertEquals(new SolutionService.Response(200, "Saved as \"Frits\" (kept 7 days)"), service.save("Frits", "fact p(A)", "b1", "1.1.1.1"));
+        assertEquals(new SolutionService.Response(200, "Shared as \"Frits\" (kept 7 days)"), service.save("Frits", "fact p(A)", "b1", "1.1.1.1"));
         assertEquals(new SolutionService.Response(200, "fact p(A)"), service.load("FRITS"));
     }
 
@@ -70,13 +70,13 @@ class SolutionServiceTest {
     @Test
     void theSizeIsMeasuredJsonEscaped() {
         assertEquals(200, service.save("a", "a".repeat(32 * 1024), "b1", "1.1.1.1").status());
-        assertEquals(new SolutionService.Response(413, "Not saved: too large (max 32 KB)"), service.save("b", "a".repeat(32 * 1024 + 1), "b1", "1.1.1.1"));
+        assertEquals(new SolutionService.Response(413, "Not shared: too large (max 32 KB)"), service.save("b", "a".repeat(32 * 1024 + 1), "b1", "1.1.1.1"));
         assertEquals(413, service.save("c", "\n".repeat(16 * 1024 + 1), "b1", "1.1.1.1").status());
     }
 
     @Test
     void blockedWordsAreRefusedInNameAndText() {
-        assertEquals(new SolutionService.Response(422, "Not saved: contains a blocked word"), service.save("Kut", "x", "b1", "1.1.1.1"));
+        assertEquals(new SolutionService.Response(422, "Not shared: contains a blocked word"), service.save("Kut", "x", "b1", "1.1.1.1"));
         assertEquals(422, service.save("Frits", "fact kut(A)", "b1", "1.1.1.1").status());
     }
 
@@ -85,7 +85,7 @@ class SolutionServiceTest {
         for (int i = 0; i < 30; i++) {
             assertEquals(200, service.save("n" + i, "x", "b1", "1.1.1." + i).status());
         }
-        assertEquals(new SolutionService.Response(429, "Too many saves, try again later"), service.save("n30", "x", "b1", "1.1.1.99"));
+        assertEquals(new SolutionService.Response(429, "Too many shares, try again later"), service.save("n30", "x", "b1", "1.1.1.99"));
         now.addAndGet(3_600_000L);
         assertEquals(200, service.save("n30", "x", "b1", "1.1.1.99").status());
     }
@@ -103,7 +103,7 @@ class SolutionServiceTest {
     void growthCountsAgainstTheTotal() {
         service = service(Solution.ENTRY_BYTES + 10);
         assertEquals(200, service.save("a", "12345", "b1", "1.1.1.1").status());
-        assertEquals(new SolutionService.Response(503, "Not saved: the server is full, try again later"), service.save("b", "123456", "b2", "1.1.1.1"));
+        assertEquals(new SolutionService.Response(503, "Not shared: the server is full, try again later"), service.save("b", "123456", "b2", "1.1.1.1"));
         assertEquals(200, service.save("a", "1234567890", "b1", "1.1.1.1").status());
         assertEquals(503, service.save("b", "1", "b2", "1.1.1.1").status());
         assertEquals(200, service.save("a", "0987654321", "b1", "1.1.1.1").status());
@@ -117,6 +117,22 @@ class SolutionServiceTest {
     }
 
     @Test
+    void usageCountsTheSolutionsTheirBytesAndTheSaves() {
+        service.save("a", "x", "b1", "1.1.1.1");
+        service.save("b", "yy", "b2", "1.1.1.1");
+        service.save("a", "xyz", "b1", "1.1.1.1");
+        service.save("a", "nope", "b2", "1.1.1.1");
+        assertEquals(new SolutionService.Usage(2, 2 * Solution.ENTRY_BYTES + 5, 3), service.usage());
+    }
+
+    @Test
+    void expiredSolutionsLeaveTheUsageWithinAnHour() {
+        service.save("a", "x", "b1", "1.1.1.1");
+        now.addAndGet(SolutionStore.KEEP_MS + 3_600_000L);
+        assertEquals(new SolutionService.Usage(0, 0, 1), service.usage());
+    }
+
+    @Test
     void anExpiredNameCanBeClaimed() {
         service.save("Frits", "v1", "b1", "1.1.1.1");
         now.addAndGet(SolutionStore.KEEP_MS + 1);
@@ -125,7 +141,7 @@ class SolutionServiceTest {
 
     @Test
     void anUnknownNameIsNotFound() {
-        assertEquals(new SolutionService.Response(404, "No solution named \"Frits\""), service.load("Frits"));
+        assertEquals(new SolutionService.Response(404, "No shared solution named \"Frits\""), service.load("Frits"));
     }
 
     @Test

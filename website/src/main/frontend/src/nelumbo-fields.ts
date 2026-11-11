@@ -373,7 +373,7 @@ function revealTop(model: monaco.editor.ITextModel): void {
     }
 }
 
-// The random id that makes a saved name this browser's (the server keeps only its hash). Without storage
+// The random id that makes a shared name this browser's (the server keeps only its hash). Without storage
 // (private mode, blocked) it lives for this page only: saving works, updating after a reload does not.
 function browserId(): string {
     try {
@@ -431,7 +431,7 @@ async function saveSolution(field: Field, name: string): Promise<ShareOutcome> {
         }
         return { text: await response.text(), error: !response.ok };
     } catch {
-        return { text: 'Not saved: no connection to the server', error: true };
+        return { text: 'Not shared: no connection to the server', error: true };
     }
 }
 
@@ -465,14 +465,14 @@ function toolbarButton(text: string): HTMLButtonElement {
     return button;
 }
 
-// Save as... / Load...: each opens a name row (input, action, Cancel) in place of the two buttons; the
+// Share... / Load shared...: each opens a name row (input, action, Cancel) in place of the two buttons; the
 // outcome stays in the toolbar until the next opening.
 function addShareButtons(toolbar: HTMLDivElement, field: Field): void {
     const share:   HTMLSpanElement   = document.createElement('span');
-    const saveAs:  HTMLButtonElement = toolbarButton('Save as...');
-    const loadAs:  HTMLButtonElement = toolbarButton('Load...');
+    const saveAs:  HTMLButtonElement = toolbarButton('Share...');
+    const loadAs:  HTMLButtonElement = toolbarButton('Load shared...');
     const input:   HTMLInputElement  = document.createElement('input');
-    const go:      HTMLButtonElement = toolbarButton('Save');
+    const go:      HTMLButtonElement = toolbarButton('Share');
     const cancel:  HTMLButtonElement = toolbarButton('Cancel');
     const message: HTMLSpanElement   = document.createElement('span');
     let   saving:  boolean           = true;
@@ -500,7 +500,7 @@ function addShareButtons(toolbar: HTMLDivElement, field: Field): void {
 
     function open(save: boolean): void {
         saving              = save;
-        go.textContent      = save ? 'Save' : 'Load';
+        go.textContent      = save ? 'Share' : 'Load';
         message.textContent = '';
         message.classList.remove('error');
         input.value         = lastShareName();

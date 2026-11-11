@@ -44,6 +44,10 @@ final class SolutionService {
     record Response(int status, String body) {
     }
 
+    /** For the status page: the stored solutions, their bytes (as counted against the cap) and the saves since start. */
+    record Usage(int solutions, long bytes, long saves) {
+    }
+
     static final int  MAX_NAME_CHARS             = 40;
     // JSON-escaped, so a loaded text always fits a 64 K /lsp frame (LspWebSocket.MAX_MESSAGE_CHARS)
     static final int  MAX_TEXT_CHARS             = 32 * 1024;
@@ -63,6 +67,7 @@ final class SolutionService {
     private final HourlyCounter browserSaves = new HourlyCounter();
     private final HourlyCounter ipNewNames   = new HourlyCounter();
     private long                lastHousekeeping;
+    private long                saves;
 
     SolutionService(SolutionStore store, BlockedWords words, LongSupplier clock, long maxTotalBytes) {
         this.store         = store;
@@ -71,14 +76,24 @@ final class SolutionService {
         this.maxTotalBytes = maxTotalBytes;
     }
 
-    synchronized Response save(String name, String text, String browserId, String ip) {
-        long now = clock.getAsLong();
+    synchronized Usage usage() {
+        housekeep(clock.getAsLong());
+        return new Usage(store.count(), store.totalBytes(), saves);
+    }
+
+    // at most once an hour: expired solutions leave the store, empty counters leave memory
+    private void housekeep(long now) {
         if (now - lastHousekeeping >= HOUR_MS) {
             store.expire();
             browserSaves.prune(now);
             ipNewNames.prune(now);
             lastHousekeeping = now;
         }
+    }
+
+    synchronized Response save(String name, String text, String browserId, String ip) {
+        long now = clock.getAsLong();
+        housekeep(now);
         if (!NAME.matcher(name).matches()) {
             return new Response(400, BAD_NAME);
         }
@@ -86,10 +101,10 @@ final class SolutionService {
             return new Response(400, "Missing browser id");
         }
         if (escapedLength(text) > MAX_TEXT_CHARS) {
-            return new Response(413, "Not saved: too large (max 32 KB)");
+            return new Response(413, "Not shared: too large (max 32 KB)");
         }
         if (words.inName(name) || words.inText(text)) {
-            return new Response(422, "Not saved: contains a blocked word");
+            return new Response(422, "Not shared: contains a blocked word");
         }
         String             owner = sha256(browserId);
         Optional<Solution> old   = store.get(name);
@@ -98,26 +113,27 @@ final class SolutionService {
         }
         String network = ipKey(ip);
         if (browserSaves.count(owner, now) >= SAVES_PER_BROWSER_PER_HOUR || old.isEmpty() && ipNewNames.count(network, now) >= NEW_NAMES_PER_IP_PER_HOUR) {
-            return new Response(429, "Too many saves, try again later");
+            return new Response(429, "Too many shares, try again later");
         }
         Solution solution = new Solution(name, owner, now, text);
         long     growth   = solution.bytes() - old.map(Solution::bytes).orElse(0L);
         if (growth > 0 && store.totalBytes() + growth > maxTotalBytes) {
-            return new Response(503, "Not saved: the server is full, try again later");
+            return new Response(503, "Not shared: the server is full, try again later");
         }
         store.put(solution);
+        saves++;
         browserSaves.add(owner, now);
         if (old.isEmpty()) {
             ipNewNames.add(network, now);
         }
-        return new Response(200, "Saved as \"" + name + "\" (kept 7 days)");
+        return new Response(200, "Shared as \"" + name + "\" (kept 7 days)");
     }
 
     Response load(String name) {
         if (!NAME.matcher(name).matches()) {
             return new Response(400, BAD_NAME);
         }
-        return store.get(name).map(s -> new Response(200, s.text())).orElse(new Response(404, "No solution named \"" + name + "\""));
+        return store.get(name).map(s -> new Response(200, s.text())).orElse(new Response(404, "No shared solution named \"" + name + "\""));
     }
 
     // Traefik appends the address it saw: earlier entries come from the client and can be forged

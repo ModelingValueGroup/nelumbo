@@ -17,5 +17,6 @@
 package org.modelingvalue.nelumbo.website;
 
 /** One reading of the server's numbers: LSP sessions, the shared evaluation gate, CPU and heap. */
-record StatsSample(long time, int sessions, int running, long total, long overloaded, double cpuLoad, long heapUsedMb, long uptimeSeconds) {
+record StatsSample(long time, int sessions, int running, long total, long overloaded, double cpuLoad, long heapUsedMb, long uptimeSeconds,
+                   int solutions, long solutionBytes, long saves) {
 }

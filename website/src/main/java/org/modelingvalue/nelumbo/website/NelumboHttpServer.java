@@ -114,7 +114,8 @@ public final class NelumboHttpServer {
         SolutionService solutions = new SolutionService(new SolutionStore(solutionsDir, System::currentTimeMillis), BlockedWords.load(),
                 System::currentTimeMillis, SolutionService.MAX_TOTAL_BYTES);
         stream               = new StatsStream();
-        recorder             = new StatsRecorder(history, () -> ServerStats.read(lsp.sessionCount(), EvalGate.GLOBAL), sample -> stream.broadcast(statsJson(sample)));
+        recorder             = new StatsRecorder(history, () -> ServerStats.read(lsp.sessionCount(), EvalGate.GLOBAL, solutions.usage()),
+                sample -> stream.broadcast(statsJson(sample)));
         recorder.start();
         app = Javalin.create(config -> {
             // serve the bundled frontend (Monaco js/css + codicon font) from the classpath under /assets
@@ -167,7 +168,7 @@ public final class NelumboHttpServer {
             config.routes.post("/eval", ctx -> handleEval(ctx, false));
             config.routes.post("/eval/trace", ctx -> handleEval(ctx, true));
             config.routes.get("/metadata", ctx -> ctx.json(service.metadata()));
-            config.routes.get("/stats", ctx -> ctx.json(ServerStats.json(latestSample(lsp), maxLspSessions, EvalGate.GLOBAL)));
+            config.routes.get("/stats", ctx -> ctx.json(ServerStats.json(latestSample(lsp, solutions), maxLspSessions, EvalGate.GLOBAL)));
             config.routes.get("/stats/history", ctx -> {
                 StatsHistory.Range range;
                 try {
@@ -194,9 +195,9 @@ public final class NelumboHttpServer {
     }
 
     // before the first scheduled sample has landed, read one directly
-    private StatsSample latestSample(LspWebSocket lsp) {
+    private StatsSample latestSample(LspWebSocket lsp, SolutionService solutions) {
         StatsSample latest = recorder.latest();
-        return latest != null ? latest : ServerStats.read(lsp.sessionCount(), EvalGate.GLOBAL);
+        return latest != null ? latest : ServerStats.read(lsp.sessionCount(), EvalGate.GLOBAL, solutions.usage());
     }
 
     private String statsJson(StatsSample sample) {

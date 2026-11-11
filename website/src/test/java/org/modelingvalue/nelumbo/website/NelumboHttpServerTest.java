@@ -430,6 +430,10 @@ class NelumboHttpServerTest {
         assertTrue(stats.get("cpu").has("load"), "cpu.load");
         assertTrue(0 < stats.get("cpu").get("cpus").asInt(), "cpu.cpus");
         assertTrue(0 < stats.get("heap").get("maxMb").asLong(), "heap.maxMb");
+        for (String field : List.of("count", "bytes", "maxBytes", "saves")) {
+            assertTrue(stats.get("solutions").has(field), "solutions." + field);
+        }
+        assertEquals(SolutionService.MAX_TOTAL_BYTES, stats.get("solutions").get("maxBytes").asLong());
         assertTrue(stats.has("uptimeSeconds"), "uptimeSeconds");
     }
 
@@ -503,7 +507,7 @@ class NelumboHttpServerTest {
         String text = "fact p(A)\r\n// Zoë ✓\n";
         HttpResponse<String> saved = put("/solutions/Frits", "b1", text);
         assertEquals(200, saved.statusCode());
-        assertEquals("Saved as \"Frits\" (kept 7 days)", saved.body());
+        assertEquals("Shared as \"Frits\" (kept 7 days)", saved.body());
         HttpResponse<String> loaded = get("/solutions/frits");
         assertEquals(200, loaded.statusCode());
         assertEquals(text, loaded.body());
@@ -546,5 +550,19 @@ class NelumboHttpServerTest {
         }
         assertEquals(429, putFrom("forged", "bf", "5.5.5.5, 9.9.9.9"));
         assertEquals(200, putFrom("other", "bo", "8.8.8.8"));
+    }
+
+    @Test
+    @Timeout(20)
+    void statsCountTheSavedSolutions() throws Exception {
+        put("/solutions/Frits", "b1", "x");
+        JsonNode solutions = mapper.readTree(get("/stats").body()).get("solutions");
+        while (solutions.get("count").asInt() == 0) {
+            Thread.sleep(200); // the next 5-second sample
+            solutions = mapper.readTree(get("/stats").body()).get("solutions");
+        }
+        assertEquals(1, solutions.get("count").asInt());
+        assertEquals(Solution.ENTRY_BYTES + 1, solutions.get("bytes").asLong());
+        assertEquals(1, solutions.get("saves").asLong());
     }
 }

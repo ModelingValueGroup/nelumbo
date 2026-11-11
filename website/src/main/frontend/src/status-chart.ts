@@ -9,6 +9,7 @@ interface Stats {
     cpu:           { load: number; cpus: number };
     heap:          { usedMb: number; maxMb: number };
     uptimeSeconds: number;
+    solutions:     { count: number; bytes: number; maxBytes: number; saves: number };
 }
 
 interface Point {
@@ -18,8 +19,11 @@ interface Point {
     cpuAvg:      number;
     cpuMax:      number;
     heapMaxMb:   number;
-    evaluations: number;
-    overloads:   number | null;
+    evaluations:      number;
+    overloads:        number | null;
+    solutionsMax:     number;
+    solutionBytesMax: number;
+    saves:            number | null;
 }
 
 interface History {
@@ -33,13 +37,14 @@ const POLL_MS:            number = 5_000;
 const RECONNECT_MS:       number = 60_000;
 const CHART_HEIGHT:       number = 200;
 const WINDOW_S:           Record<string, number> = { hour: 3600, day: 86400, week: 604800 };
+const CHART_IDS:          string[]               = ['chart-cpu', 'chart-activity', 'chart-solutions', 'chart-disk'];
+const MB:                 number                 = 1024 * 1024;
 
 let range:       string             = 'hour';
 let resolution:  number             = 60;
 let history:     Point[]            = [];
 let latest:      Stats | null       = null;
-let cpuChart:    uPlot | null       = null;
-let actChart:    uPlot | null       = null;
+let charts:      uPlot[]            = [];
 let pollTimer:   number | undefined = undefined;
 
 function el(id: string): HTMLElement {
@@ -91,6 +96,8 @@ function showStats(s: Stats): void {
     set('running', s.evaluations.running + ' (overloaded at ' + s.evaluations.threshold + ')');
     set('total', String(s.evaluations.total));
     set('overloaded', String(s.evaluations.overloaded));
+    set('solutions', String(s.solutions.count));
+    set('solution-disk', (s.solutions.bytes / MB).toFixed(1) + ' MB of ' + Math.round(s.solutions.maxBytes / MB) + ' MB');
     set('cpu', Math.round(s.cpu.load * 100) + '% of ' + s.cpu.cpus + ' cores');
     set('heap', s.heap.usedMb + ' / ' + s.heap.maxMb + ' MB');
     set('uptime', Math.floor(s.uptimeSeconds / 3600) + 'h ' + Math.floor(s.uptimeSeconds % 3600 / 60) + 'm');
@@ -168,7 +175,8 @@ function series(): (Point | null)[] {
     // in the hour view the latest live sample extends the lines to now
     if (range === 'hour' && latest !== null) {
         points.push({ t: latest.time, sessionsMax: latest.sessions.open, runningMax: latest.evaluations.running, cpuAvg: latest.cpu.load,
-                      cpuMax: latest.cpu.load, heapMaxMb: latest.heap.usedMb, evaluations: 0, overloads: null });
+                      cpuMax: latest.cpu.load, heapMaxMb: latest.heap.usedMb, evaluations: 0, overloads: null,
+                      solutionsMax: latest.solutions.count, solutionBytesMax: latest.solutions.bytes, saves: null });
     }
     return points;
 }
@@ -212,55 +220,105 @@ function draw(): void {
     }
     const val: (f: (p: Point) => number | null) => (number | null)[] = (f: (p: Point) => number | null): (number | null)[] =>
         rows.map((p: Point | null): number | null => p === null ? null : f(p));
-    const cpuData: uPlot.AlignedData = [xs, val((p: Point): number | null => p.cpuAvg * 100), val((p: Point): number | null => p.cpuMax * 100)];
-    const actData: uPlot.AlignedData = [xs, val((p: Point): number | null => p.sessionsMax), val((p: Point): number | null => p.runningMax),
-                                        val((p: Point): number | null => p.overloads)];
-    if (cpuChart === null || actChart === null) {
-        build(cpuData, actData);
+    const data: uPlot.AlignedData[] = [
+        [xs, val((p: Point): number | null => p.cpuAvg * 100), val((p: Point): number | null => p.cpuMax * 100)],
+        [xs, val((p: Point): number | null => p.sessionsMax), val((p: Point): number | null => p.runningMax),
+         val((p: Point): number | null => p.overloads), val((p: Point): number | null => p.saves)],
+        [xs, val((p: Point): number | null => p.solutionsMax)],
+        [xs, val((p: Point): number | null => p.solutionBytesMax / MB), val((): number | null => limitMb())],
+    ];
+    if (charts.length === 0) {
+        build(data);
         return;
     }
-    cpuChart.setData(cpuData);
-    actChart.setData(actData);
+    charts.forEach((chart: uPlot, i: number): void => chart.setData(data[i]));
 }
 
-function build(cpuData: uPlot.AlignedData, actData: uPlot.AlignedData): void {
-    cpuChart?.destroy();
-    actChart?.destroy();
-    el('chart-cpu').textContent      = '';
-    el('chart-activity').textContent = '';
-    const cpu: string = css('--series-cpu');
-    cpuChart = new uPlot({
+// the server's cap on the stored solutions, in MB; 100 until the first stats arrive
+function limitMb(): number {
+    return latest !== null ? latest.solutions.maxBytes / MB : 100;
+}
+
+function build(data: uPlot.AlignedData[]): void {
+    destroyCharts();
+    for (const id of CHART_IDS) {
+        el(id).textContent = '';
+    }
+    const cpu:      string = css('--series-cpu');
+    const solution: string = css('--series-4');
+    charts.push(new uPlot({
         width:  width('chart-cpu'),
         height: CHART_HEIGHT,
         scales: { x: { time: true, range: xRange }, y: { range: [0, 100] } },
         legend: LEGEND,
         axes:   axes((v: number): string => v + '%'),
         series: [
-            { value: (_u: uPlot, v: number | null): string => v === null ? '--' : dateTime(v * 1000) },
+            timeSeries(),
             { label: 'CPU avg', stroke: cpu, width: 2 },
             { label: 'CPU max', stroke: cpu, width: 1, dash: [4, 4] },
         ],
-    }, cpuData, el('chart-cpu'));
-    actChart = new uPlot({
+    }, data[0], el('chart-cpu')));
+    charts.push(new uPlot({
         width:  width('chart-activity'),
         height: CHART_HEIGHT,
-        scales: { x: { time: true, range: xRange }, y: { range: (_u: uPlot, _min: number, max: number): [number, number] => [0, Math.max(4, max)] } },
+        scales: { x: { time: true, range: xRange }, y: countScale() },
         legend: LEGEND,
         axes:   axes((v: number): string => String(v)),
         series: [
-            { value: (_u: uPlot, v: number | null): string => v === null ? '--' : dateTime(v * 1000) },
+            timeSeries(),
             { label: 'Sessions', stroke: css('--series-1'), width: 2 },
             { label: 'Evaluations running', stroke: css('--series-2'), width: 2 },
             { label: 'Stopped (busy)', stroke: css('--series-3'), width: 2 },
+            { label: 'Shares', stroke: solution, width: 2 },
         ],
-    }, actData, el('chart-activity'));
+    }, data[1], el('chart-activity')));
+    charts.push(new uPlot({
+        width:  width('chart-solutions'),
+        height: CHART_HEIGHT,
+        scales: { x: { time: true, range: xRange }, y: countScale() },
+        legend: LEGEND,
+        axes:   axes((v: number): string => String(v)),
+        series: [
+            timeSeries(),
+            { label: 'Shared solutions', stroke: solution, width: 2 },
+        ],
+    }, data[2], el('chart-solutions')));
+    charts.push(new uPlot({
+        width:  width('chart-disk'),
+        height: CHART_HEIGHT,
+        scales: { x: { time: true, range: xRange }, y: { range: (): [number, number] => [0, limitMb()] } },
+        legend: LEGEND,
+        axes:   axes((v: number): string => String(v)),
+        series: [
+            timeSeries(),
+            { label: 'On disk', stroke: solution, width: 2, value: (_u: uPlot, v: number | null): string => v === null ? '--' : v.toFixed(1) + ' MB' },
+            { label: 'Limit', stroke: css('--muted'), width: 1, dash: [4, 4], value: (_u: uPlot, v: number | null): string => v === null ? '--' : v + ' MB' },
+        ],
+    }, data[3], el('chart-disk')));
+}
+
+// a fresh object per chart: no option object is shared between uPlot instances
+function timeSeries(): uPlot.Series {
+    return { value: (_u: uPlot, v: number | null): string => v === null ? '--' : dateTime(v * 1000) };
+}
+
+function countScale(): uPlot.Scale {
+    return { range: (_u: uPlot, _min: number, max: number): [number, number] => [0, Math.max(4, max)] };
+}
+
+function destroyCharts(): void {
+    for (const chart of charts) {
+        chart.destroy();
+    }
+    charts = [];
 }
 
 function fillTable(): void {
     const body: HTMLElement = el('history-table').querySelector('tbody') as HTMLElement;
     const rows: string[]    = history.slice().reverse().map((p: Point): string =>
         '<tr><td>' + dateTime(p.t) + '</td><td>' + Math.round(p.cpuAvg * 100) + '%</td><td>' + Math.round(p.cpuMax * 100)
-        + '%</td><td>' + p.sessionsMax + '</td><td>' + p.runningMax + '</td><td>' + p.overloads + '</td><td>' + p.evaluations + '</td></tr>');
+        + '%</td><td>' + p.sessionsMax + '</td><td>' + p.runningMax + '</td><td>' + p.overloads + '</td><td>' + p.evaluations
+        + '</td><td>' + p.saves + '</td><td>' + p.solutionsMax + '</td><td>' + (p.solutionBytesMax / MB).toFixed(1) + '</td></tr>');
     body.innerHTML = rows.join('');
 }
 
@@ -278,15 +336,11 @@ export function start(): void {
     }
     // colours are read from the theme's CSS variables, so a theme switch rebuilds the charts
     new MutationObserver((): void => {
-        cpuChart?.destroy();
-        actChart?.destroy();
-        cpuChart = null;
-        actChart = null;
+        destroyCharts();
         draw();
     }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     window.addEventListener('resize', (): void => {
-        cpuChart?.setSize({ width: width('chart-cpu'), height: CHART_HEIGHT });
-        actChart?.setSize({ width: width('chart-activity'), height: CHART_HEIGHT });
+        charts.forEach((chart: uPlot, i: number): void => chart.setSize({ width: width(CHART_IDS[i]), height: CHART_HEIGHT }));
     });
     poll();
     connectStream();

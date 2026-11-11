@@ -49,3 +49,13 @@ test('the status page falls back to polling when the stream is blocked', async (
     const first: string = await updated.innerText();
     await expect(updated).not.toHaveText(first, { timeout: 15_000 });
 });
+
+test('the status page shows the shared solutions', async ({ page }: { page: Page }): Promise<void> => {
+    await page.goto('/status.html');
+    await expect(page.locator('#solutions')).toHaveText(/^\d+$/, { timeout: 10_000 });
+    await expect(page.locator('#solution-disk')).toHaveText(/^\d+\.\d MB of 100 MB$/);
+    await expect(page.locator('#chart-solutions .uplot')).toHaveCount(1);
+    await expect(page.locator('#chart-disk .uplot')).toHaveCount(1);
+    await expect(page.locator('#chart-activity .u-legend')).toContainText('Shares');
+    await expect(page.locator('#history-table thead')).toContainText('Disk MB');
+});

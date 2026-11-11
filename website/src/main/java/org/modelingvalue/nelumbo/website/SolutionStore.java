@@ -74,6 +74,10 @@ final class SolutionStore {
         return totalBytes;
     }
 
+    synchronized int count() {
+        return solutions.size();
+    }
+
     synchronized void expire() {
         Iterator<Solution> it = solutions.values().iterator();
         while (it.hasNext()) {

@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -34,7 +35,7 @@ class StatsHistoryTest {
     private static final long NOW = 1_800_000_000_000L - 1_800_000_000_000L % 60_000; // a whole minute
 
     private static MinuteStats row(long t, int sessions, double cpu, long evaluations) {
-        return new MinuteStats(t, sessions, sessions, cpu, cpu, 100, evaluations, 0);
+        return new MinuteStats(t, sessions, sessions, cpu, cpu, 100, evaluations, 0, 0, 0, 0);
     }
 
     @Test
@@ -59,9 +60,9 @@ class StatsHistoryTest {
     @Test
     void weekAggregatesTenMinuteBuckets() {
         List<MinuteStats> rows = List.of(
-                new MinuteStats(NOW, 2, 1, 0.2, 0.5, 100, 10, 1),
-                new MinuteStats(NOW + 60_000, 5, 3, 0.4, 0.9, 300, 20, 0),
-                new MinuteStats(NOW + 600_000, 1, 1, 0.1, 0.1, 50, 1, 0));
+                new MinuteStats(NOW, 2, 1, 0.2, 0.5, 100, 10, 1, 3, 1000, 2),
+                new MinuteStats(NOW + 60_000, 5, 3, 0.4, 0.9, 300, 20, 0, 4, 1500, 5),
+                new MinuteStats(NOW + 600_000, 1, 1, 0.1, 0.1, 50, 1, 0, 4, 1500, 0));
         List<MinuteStats> week = StatsHistory.aggregate(rows, 600_000);
         assertEquals(2, week.size());
         MinuteStats first = week.get(0);
@@ -73,6 +74,9 @@ class StatsHistoryTest {
         assertEquals(300, first.heapMaxMb());
         assertEquals(30, first.evaluations());
         assertEquals(1, first.overloads());
+        assertEquals(4, first.solutionsMax());
+        assertEquals(1500, first.solutionBytesMax());
+        assertEquals(7, first.saves());
     }
 
     @Test
@@ -80,6 +84,16 @@ class StatsHistoryTest {
         new StatsHistory(dir, () -> NOW).add(row(NOW - 60_000, 7, 0.5, 42));
         List<MinuteStats> reloaded = new StatsHistory(dir, () -> NOW).rows(StatsHistory.Range.HOUR);
         assertEquals(List.of(row(NOW - 60_000, 7, 0.5, 42)), reloaded);
+    }
+
+    @Test
+    void aRowWrittenBeforeTheSolutionFieldsLoadsWithZeros(@TempDir Path dir) throws Exception {
+        long minute = NOW - 60_000;
+        Files.writeString(dir.resolve("stats-" + LocalDate.ofInstant(Instant.ofEpochMilli(minute), ZoneOffset.UTC) + ".jsonl"),
+                "{\"t\":" + minute + ",\"sessionsMax\":1,\"runningMax\":0,\"cpuAvg\":0.1,\"cpuMax\":0.1,\"heapMaxMb\":100,\"evaluations\":2,\"overloads\":0}\n");
+        List<MinuteStats> rows = new StatsHistory(dir, () -> NOW).rows(StatsHistory.Range.HOUR);
+        assertEquals(1, rows.size());
+        assertEquals(new MinuteStats(minute, 1, 0, 0.1, 0.1, 100, 2, 0, 0, 0, 0), rows.get(0));
     }
 
     @Test
