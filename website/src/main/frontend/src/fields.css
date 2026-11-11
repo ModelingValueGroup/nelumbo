@@ -49,6 +49,7 @@
 .nelumbo-field-toolbar {
     display:     flex;
     align-items: center;
+    flex-wrap:   wrap;
     gap:         14px;
     padding:     8px 12px;
     border-top:  1px solid var(--nf-border);
@@ -80,6 +81,44 @@
 
 .nelumbo-field-toolbar .nelumbo-reset {
     margin-left: auto;
+}
+
+/* Save as... / Load...: the name row replaces the two buttons while open (nelumbo-fields.ts addShareButtons) */
+.nelumbo-share {
+    display:     flex;
+    flex-wrap:   wrap;
+    align-items: center;
+    gap:         14px;
+}
+
+.nelumbo-share-name {
+    background:    transparent;
+    color:         var(--nf-text);
+    border:        1px solid var(--nf-accent);
+    border-radius: 6px;
+    padding:       6px 8px;
+    font-family:   inherit;
+    font-size:     13px;
+    width:         12em;
+    max-width:     100%;
+}
+
+.nelumbo-field-toolbar .nelumbo-share-go {
+    color:        var(--nf-text);
+    border-color: var(--nf-accent);
+}
+
+.nelumbo-share-message {
+    font-size: 12px;
+    color:     var(--nf-muted);
+}
+
+.nelumbo-share-message.error {
+    color: var(--nf-overload-fg);
+}
+
+.nelumbo-share-message:empty {
+    display: none;
 }
 
 .nelumbo-field-editor {

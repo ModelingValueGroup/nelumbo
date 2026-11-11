@@ -27,6 +27,8 @@ services:
     volumes:
       # per-minute stats history (/stats/history); lives in /data/sites/nelumbo.nl/stats on the host
       - ./stats:/data/stats
+      # shared editor solutions (PUT/GET /solutions); /data/sites/nelumbo.nl/solutions on the host
+      - ./solutions:/data/solutions
     networks:
       - web
     expose:

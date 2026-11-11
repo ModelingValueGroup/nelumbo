@@ -49,6 +49,7 @@ public final class Main {
         int               maxLspSessions = NelumboHttpServer.DEFAULT_MAX_LSP_SESSIONS;
         boolean           noGui          = false;
         Path              statsDir       = null;
+        Path              solutionsDir   = null;
         List<Path>        paths          = new ArrayList<>();
         for (int i = 0; i < args.length; i++) {
             String a = args[i];
@@ -80,6 +81,12 @@ public final class Main {
                 }
                 statsDir = Path.of(args[++i]);
                 break;
+            case "--solutions-dir":
+                if (i + 1 >= args.length) {
+                    fail("missing value for " + a);
+                }
+                solutionsDir = Path.of(args[++i]);
+                break;
             case "--no-gui":
                 noGui = true;
                 break;
@@ -110,7 +117,7 @@ public final class Main {
         }
 
         KnowledgeBase base   = KnowledgeBaseLoader.load(sources);
-        NelumboHttpServer server = new NelumboHttpServer(base, files, timeoutMs, maxLspSessions, statsDir);
+        NelumboHttpServer server = new NelumboHttpServer(base, files, timeoutMs, maxLspSessions, statsDir, solutionsDir);
         int bound = server.start(port);
         String detail = files.size() + " file(s) loaded, timeout " + timeoutMs + " ms";
         System.out.println("Nelumbo HTTP server listening on http://localhost:" + bound + " (" + detail + ")");
@@ -177,11 +184,14 @@ public final class Main {
         out.println("  POST /eval/trace   like /eval, with a (currently stubbed) trace field");
         out.println("  GET  /metadata     knowledge base metadata (types, counts, loaded files)");
         out.println("  GET  /health       liveness check");
+        out.println("  PUT  /solutions/<name>  save a shared editor solution (header X-Nelumbo-Browser)");
+        out.println("  GET  /solutions/<name>  load a shared editor solution");
         out.println();
         out.println("  -p, --port N      port to listen on (default 8080; 0 picks a free port)");
         out.println("  -t, --timeout MS  per-request inference budget in ms (default 30000; 0 disables)");
         out.println("  -s, --max-lsp-sessions N  cap on concurrent LSP editor sessions (default 32)");
         out.println("      --stats-dir <dir>       keep the per-minute server stats history in <dir> (default: memory only)");
+        out.println("      --solutions-dir <dir>   keep shared editor solutions in <dir> (default: memory only)");
         out.println("      --no-gui      never show the status window (shown when launched without a console)");
         out.println("  -h, --help        show this help and exit");
     }

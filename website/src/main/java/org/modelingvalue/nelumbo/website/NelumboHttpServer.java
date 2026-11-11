@@ -57,6 +57,7 @@ public final class NelumboHttpServer {
     private final long          timeoutMs;
     private final int           maxLspSessions;
     private final Path          statsDir;
+    private final Path          solutionsDir;
     private final ObjectMapper  statsMapper = new ObjectMapper();
 
     private Javalin       app;
@@ -79,11 +80,17 @@ public final class NelumboHttpServer {
 
     /** {@code statsDir} keeps the per-minute stats history across restarts; null keeps it in memory only. */
     public NelumboHttpServer(KnowledgeBase baseKb, List<String> loadedFiles, long timeoutMs, int maxLspSessions, Path statsDir) {
+        this(baseKb, loadedFiles, timeoutMs, maxLspSessions, statsDir, null);
+    }
+
+    /** {@code solutionsDir} keeps the shared editor solutions ({@code /solutions}) across restarts; null keeps them in memory only. */
+    public NelumboHttpServer(KnowledgeBase baseKb, List<String> loadedFiles, long timeoutMs, int maxLspSessions, Path statsDir, Path solutionsDir) {
         this.service        = new EvalService(baseKb, loadedFiles, timeoutMs);
         this.baseKb         = baseKb;
         this.timeoutMs      = timeoutMs;
         this.maxLspSessions = maxLspSessions;
         this.statsDir       = statsDir;
+        this.solutionsDir   = solutionsDir;
     }
 
     /** Starts the server on {@code port} (use 0 for an ephemeral port) and returns the actually bound port. */
@@ -104,6 +111,8 @@ public final class NelumboHttpServer {
         List<String> examples = NelumboServer.exampleNames().stream().filter(n -> !n.startsWith("sudoku")).toList();
         LspWebSocket lsp  = new LspWebSocket(baseKb, timeoutMs, maxLspSessions);
         StatsHistory history = new StatsHistory(statsDir, System::currentTimeMillis);
+        SolutionService solutions = new SolutionService(new SolutionStore(solutionsDir, System::currentTimeMillis), BlockedWords.load(),
+                System::currentTimeMillis, SolutionService.MAX_TOTAL_BYTES);
         stream               = new StatsStream();
         recorder             = new StatsRecorder(history, () -> ServerStats.read(lsp.sessionCount(), EvalGate.GLOBAL), sample -> stream.broadcast(statsJson(sample)));
         recorder.start();
@@ -175,6 +184,9 @@ public final class NelumboHttpServer {
                 StatsSample latest = recorder.latest();
                 stream.connect(StatsStream.Client.of(client), latest == null ? null : statsJson(latest));
             });
+            config.routes.put("/solutions/{name}", ctx -> reply(ctx, solutions.save(ctx.pathParam("name"), ctx.body(),
+                    ctx.header("X-Nelumbo-Browser"), SolutionService.clientIp(ctx.header("X-Forwarded-For"), ctx.ip()))));
+            config.routes.get("/solutions/{name}", ctx -> reply(ctx, solutions.load(ctx.pathParam("name"))));
             config.routes.ws("/lsp", lsp::configure);
         });
         app.start(port);
@@ -222,6 +234,10 @@ public final class NelumboHttpServer {
                 ctx.status(404).html(docs.notFoundPage());
             }
         }
+    }
+
+    private static void reply(Context ctx, SolutionService.Response response) {
+        ctx.status(response.status()).contentType("text/plain; charset=utf-8").result(response.body());
     }
 
     private void handleEval(Context ctx, boolean pathTrace) {

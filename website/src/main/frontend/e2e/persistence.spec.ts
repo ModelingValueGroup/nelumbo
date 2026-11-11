@@ -62,8 +62,8 @@ test('Reset shows only for an edited field and brings back the original', async 
     const wrap:     Locator = page.locator('#logic .nelumbo-field-wrap').first();
     const reset:    Locator = wrap.getByRole('button', { name: 'Reset' });
     const original: string  = await editorText(page, 0);
-    // a field without a solution has no toolbar until it is edited
-    await expect(wrap.locator('.nelumbo-field-toolbar')).toBeHidden();
+    // Reset shows only for an edited field
+    await expect(reset).toBeHidden();
     await typeAtEnd(page, 0, '\n// mine\n');
     await expect(reset).toBeVisible();
     await reset.click();

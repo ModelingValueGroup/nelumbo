@@ -26,6 +26,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -35,6 +36,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.io.TempDir;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.server.KnowledgeBaseLoader;
 import org.modelingvalue.nelumbo.server.NamedSource;
@@ -485,5 +487,64 @@ class NelumboHttpServerTest {
             assertTrue(first.contains("event: stats"), "got " + first);
             assertTrue(first.stream().anyMatch(l -> l.startsWith("data: {") && l.contains("\"sessions\"")), "got " + first);
         }
+    }
+
+    private HttpResponse<String> put(String path, String browserId, String body) throws Exception {
+        HttpRequest.Builder request = HttpRequest.newBuilder(URI.create("http://localhost:" + port + path))
+                .header("Content-Type", "text/plain; charset=utf-8").PUT(BodyPublishers.ofString(body));
+        if (browserId != null) {
+            request.header("X-Nelumbo-Browser", browserId);
+        }
+        return client.send(request.build(), BodyHandlers.ofString());
+    }
+
+    @Test
+    void aSolutionIsSavedAndLoadedByName() throws Exception {
+        String text = "fact p(A)\r\n// Zoë ✓\n";
+        HttpResponse<String> saved = put("/solutions/Frits", "b1", text);
+        assertEquals(200, saved.statusCode());
+        assertEquals("Saved as \"Frits\" (kept 7 days)", saved.body());
+        HttpResponse<String> loaded = get("/solutions/frits");
+        assertEquals(200, loaded.statusCode());
+        assertEquals(text, loaded.body());
+        assertTrue(loaded.headers().firstValue("Content-Type").orElse("").startsWith("text/plain"));
+    }
+
+    @Test
+    void anotherBrowserGetsTakenAndANoIdSaveIsRefused() throws Exception {
+        put("/solutions/Frits", "b1", "x");
+        HttpResponse<String> taken = put("/solutions/Frits", "b2", "y");
+        assertEquals(409, taken.statusCode());
+        assertEquals("\"Frits\" is taken", taken.body());
+        assertEquals(400, put("/solutions/Other", null, "x").statusCode());
+        assertEquals(404, get("/solutions/Nobody").statusCode());
+    }
+
+    @Test
+    void solutionsSurviveARestart(@TempDir Path dir) throws Exception {
+        server.stop();
+        KnowledgeBase base = KnowledgeBaseLoader.load(List.of(new NamedSource("fibonacci.nl", FIB_BASE)));
+        server = new NelumboHttpServer(base, List.of("fibonacci.nl"), NelumboHttpServer.DEFAULT_TIMEOUT_MS, NelumboHttpServer.DEFAULT_MAX_LSP_SESSIONS, null, dir);
+        port = server.start(0);
+        put("/solutions/Frits", "b1", "kept");
+        server.stop();
+        server = new NelumboHttpServer(base, List.of("fibonacci.nl"), NelumboHttpServer.DEFAULT_TIMEOUT_MS, NelumboHttpServer.DEFAULT_MAX_LSP_SESSIONS, null, dir);
+        port = server.start(0);
+        assertEquals("kept", get("/solutions/Frits").body());
+    }
+
+    private int putFrom(String name, String browserId, String forwardedFor) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/solutions/" + name))
+                .header("X-Nelumbo-Browser", browserId).header("X-Forwarded-For", forwardedFor).PUT(BodyPublishers.ofString("x")).build();
+        return client.send(request, BodyHandlers.ofString()).statusCode();
+    }
+
+    @Test
+    void theNewNameLimitCountsTheAddressTraefikAppended() throws Exception {
+        for (int i = 0; i < SolutionService.NEW_NAMES_PER_IP_PER_HOUR; i++) {
+            assertEquals(200, putFrom("n" + i, "b" + i, "1.1.1." + i + ", 9.9.9.9"));
+        }
+        assertEquals(429, putFrom("forged", "bf", "5.5.5.5, 9.9.9.9"));
+        assertEquals(200, putFrom("other", "bo", "8.8.8.8"));
     }
 }

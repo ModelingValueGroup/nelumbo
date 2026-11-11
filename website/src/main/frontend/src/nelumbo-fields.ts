@@ -128,6 +128,9 @@ const OVERLOAD_CODE:  string                = 'server-overloaded';
 let   overloadBanner: HTMLDivElement | null = null;
 
 const STORAGE_PREFIX: string = 'nelumbo-field:';
+const BROWSER_ID_KEY: string = 'nelumbo-browser-id';
+const SHARE_NAME_KEY: string = 'nelumbo-share-name';
+let   pageBrowserId:  string | null = null;
 
 // A mounted .nelumbo-field. Edits are kept in localStorage under `key` as {original, text}, and only
 // restored while the field's original text is still `original` (an exercise changed by a deploy
@@ -360,6 +363,191 @@ function replaceText(model: monaco.editor.ITextModel, text: string): void {
     model.pushStackElement();
 }
 
+// replacing the whole text leaves it all selected: start at the top of the new document instead
+function revealTop(model: monaco.editor.ITextModel): void {
+    for (const editor of monaco.editor.getEditors()) {
+        if (editor.getModel() === model) {
+            editor.setPosition({ lineNumber: 1, column: 1 });
+            editor.revealLine(1);
+        }
+    }
+}
+
+// The random id that makes a saved name this browser's (the server keeps only its hash). Without storage
+// (private mode, blocked) it lives for this page only: saving works, updating after a reload does not.
+function browserId(): string {
+    try {
+        const stored: string | null = localStorage.getItem(BROWSER_ID_KEY);
+        if (stored !== null) {
+            return stored;
+        }
+    } catch {
+        // no storage: the page's own id below
+    }
+    if (pageBrowserId === null) {
+        // not crypto.randomUUID: it exists only in secure contexts, not on a classroom server over plain HTTP
+        const bytes: Uint8Array = crypto.getRandomValues(new Uint8Array(16));
+        pageBrowserId           = Array.from(bytes, (b: number): string => b.toString(16).padStart(2, '0')).join('');
+        try {
+            localStorage.setItem(BROWSER_ID_KEY, pageBrowserId);
+        } catch {
+            // the id lives for this page only
+        }
+    }
+    return pageBrowserId;
+}
+
+function lastShareName(): string {
+    try {
+        return localStorage.getItem(SHARE_NAME_KEY) ?? '';
+    } catch {
+        return '';
+    }
+}
+
+function rememberShareName(name: string): void {
+    try {
+        localStorage.setItem(SHARE_NAME_KEY, name);
+    } catch {
+        // no storage: the name is just not prefilled next time
+    }
+}
+
+interface ShareOutcome {
+    text:  string;
+    error: boolean;
+}
+
+// the server's answer is the message to show, success or not
+async function saveSolution(field: Field, name: string): Promise<ShareOutcome> {
+    try {
+        const response: Response = await fetch('/solutions/' + encodeURIComponent(name), {
+            method:  'PUT',
+            headers: { 'Content-Type': 'text/plain; charset=utf-8', 'X-Nelumbo-Browser': browserId() },
+            body:    field.model.getValue(),
+        });
+        if (response.ok) {
+            rememberShareName(name);
+        }
+        return { text: await response.text(), error: !response.ok };
+    } catch {
+        return { text: 'Not saved: no connection to the server', error: true };
+    }
+}
+
+// null when the user keeps their own text. Asking first: the loaded text replaces the field's saved edit
+// (saveText), so after a reload neither undo nor Reset brings the own attempt back.
+async function loadSolution(field: Field, name: string): Promise<ShareOutcome | null> {
+    let response: Response;
+    let text:     string;
+    try {
+        response = await fetch('/solutions/' + encodeURIComponent(name));
+        text     = await response.text();
+    } catch {
+        return { text: 'Not loaded: no connection to the server', error: true };
+    }
+    if (!response.ok) {
+        return { text: text, error: true };
+    }
+    if (field.model.getValue() !== field.original && !confirm('Replace your own text?')) {
+        return null;
+    }
+    replaceText(field.model, text);
+    revealTop(field.model);
+    rememberShareName(name);
+    return { text: 'Loaded "' + name + '"', error: false };
+}
+
+function toolbarButton(text: string): HTMLButtonElement {
+    const button: HTMLButtonElement = document.createElement('button');
+    button.type                     = 'button';
+    button.textContent              = text;
+    return button;
+}
+
+// Save as... / Load...: each opens a name row (input, action, Cancel) in place of the two buttons; the
+// outcome stays in the toolbar until the next opening.
+function addShareButtons(toolbar: HTMLDivElement, field: Field): void {
+    const share:   HTMLSpanElement   = document.createElement('span');
+    const saveAs:  HTMLButtonElement = toolbarButton('Save as...');
+    const loadAs:  HTMLButtonElement = toolbarButton('Load...');
+    const input:   HTMLInputElement  = document.createElement('input');
+    const go:      HTMLButtonElement = toolbarButton('Save');
+    const cancel:  HTMLButtonElement = toolbarButton('Cancel');
+    const message: HTMLSpanElement   = document.createElement('span');
+    let   saving:  boolean           = true;
+
+    share.className    = 'nelumbo-share';
+    saveAs.title       = 'Anyone who knows the name can load it';
+    input.type         = 'text';
+    input.className    = 'nelumbo-share-name';
+    input.maxLength    = 40;
+    input.placeholder  = 'name';
+    input.spellcheck   = false;
+    input.autocomplete = 'off';
+    input.setAttribute('aria-label', 'Solution name');
+    go.className       = 'nelumbo-share-go';
+    message.className  = 'nelumbo-share-message';
+    message.setAttribute('role', 'status');
+
+    function setOpen(open: boolean): void {
+        saveAs.hidden = open;
+        loadAs.hidden = open;
+        input.hidden  = !open;
+        go.hidden     = !open;
+        cancel.hidden = !open;
+    }
+
+    function open(save: boolean): void {
+        saving              = save;
+        go.textContent      = save ? 'Save' : 'Load';
+        message.textContent = '';
+        message.classList.remove('error');
+        input.value         = lastShareName();
+        setOpen(true);
+        input.focus();
+        input.select();
+    }
+
+    async function run(): Promise<void> {
+        const name: string = input.value.trim();
+        if (name === '') {
+            input.focus();
+            return;
+        }
+        setOpen(false);
+        const outcome: ShareOutcome | null = saving ? await saveSolution(field, name) : await loadSolution(field, name);
+        if (outcome !== null) {
+            message.textContent = outcome.text;
+            message.classList.toggle('error', outcome.error);
+        }
+    }
+
+    saveAs.addEventListener('click', (): void => {
+        open(true);
+    });
+    loadAs.addEventListener('click', (): void => {
+        open(false);
+    });
+    go.addEventListener('click', (): void => {
+        void run();
+    });
+    cancel.addEventListener('click', (): void => {
+        setOpen(false);
+    });
+    input.addEventListener('keydown', (event: KeyboardEvent): void => {
+        if (event.key === 'Enter') {
+            void run();
+        } else if (event.key === 'Escape') {
+            setOpen(false);
+        }
+    });
+
+    share.append(saveAs, loadAs, input, go, cancel, message);
+    setOpen(false);
+    toolbar.insertBefore(share, field.reset);
+}
+
 // Always LF line endings: a model whose text has none (an empty field) otherwise takes the OS default, CRLF on
 // Windows, and its text would never equal an original loaded from the server.
 function createModel(text: string, uri: monaco.Uri): monaco.editor.ITextModel {
@@ -442,6 +630,9 @@ function buildField(div: HTMLElement, index: number): void {
         saveText(field);
     });
     reset.hidden = model.getValue() === original;
+    if (!div.hasAttribute('data-no-share')) {
+        addShareButtons(toolbar, field);
+    }
 
     const editor: monaco.editor.IStandaloneCodeEditor = monaco.editor.create(host, {
         model:                model,
@@ -500,13 +691,7 @@ export function setFieldText(div: HTMLElement, text: string, name: string): bool
     field.key      = field.baseKey + '#' + name;
     field.original = text;
     replaceText(field.model, savedText(field.key, text));
-    // replacing the whole text leaves it all selected: start at the top of the new document instead
-    for (const editor of monaco.editor.getEditors()) {
-        if (editor.getModel() === field.model) {
-            editor.setPosition({ lineNumber: 1, column: 1 });
-            editor.revealLine(1);
-        }
-    }
+    revealTop(field.model);
     // the edit does not fire a change when the text stays the same, but the key and original did change
     saveText(field);
     return true;
