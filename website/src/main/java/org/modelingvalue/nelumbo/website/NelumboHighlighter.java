@@ -89,18 +89,25 @@ final class NelumboHighlighter {
      */
     String highlight(String context, String code) {
         try {
-            return colored(context, code);
+            return colored(base, context, code);
+        } catch (RuntimeException | StackOverflowError e) {
+            System.err.println("docs: cannot highlight a nelumbo block on the stdlib, trying it on its own: " + e);
+        }
+        // a stdlib module quoted in the docs re-declares what the stdlib base already has, which can crash the
+        // parser (bugs/continuation-line-equals-pattern-overflow.nl); on its own it parses as in its own file
+        try {
+            return colored(KnowledgeBase.BASE, context, code);
         } catch (RuntimeException | StackOverflowError e) {
             System.err.println("docs: cannot highlight a nelumbo block, showing it plain: " + e);
             return escape(code);
         }
     }
 
-    private String colored(String context, String code) {
+    private String colored(KnowledgeBase parent, String context, String code) {
         String source = context.isEmpty() ? code : context + "\n" + code;
         int start = source.length() - code.length();
         // a throwaway child per snippet, so declarations in one block never color another
-        KnowledgeBase kb = new KnowledgeBase(base);
+        KnowledgeBase kb = new KnowledgeBase(parent);
         kb.setDeadlineNanos(System.nanoTime() + DEADLINE_MS * 1_000_000L);
         return kb.get(() -> {
             TokenizerResult tokens = new Tokenizer(source, "<docs>").tokenize();

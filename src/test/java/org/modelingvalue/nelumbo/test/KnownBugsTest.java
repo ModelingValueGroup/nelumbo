@@ -17,6 +17,7 @@
 package org.modelingvalue.nelumbo.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.util.List;
@@ -147,6 +148,18 @@ public class KnownBugsTest extends NelumboTestBase {
     @Test
     public void singleHoleFunctorParserNpe() {
         bugResource("single-hole-functor-parser-npe.nl");
+    }
+
+    // the correct outcome is a parse error, which bugResource (a clean run) cannot express
+    @KnownBug("unquoted = or != in a functor alternative after a line break overflows the parser stack instead of a parse error")
+    @Test
+    public void continuationLineEqualsPatternOverflow() throws IOException {
+        String     name   = "continuation-line-equals-pattern-overflow.nl";
+        String     source = new String(
+                KnownBugsTest.class.getResourceAsStream(NelumboConstants.NELUMBO_BUGS + name).readAllBytes());
+        EvalResult result = evaluate(source, name, 60_000);
+        assertEquals(1, result.diagnostics().size(), "diagnostics: " + result.diagnostics());
+        assertTrue(result.diagnostics().get(0).message().startsWith("Unexpected token '<'"), "diagnostics: " + result.diagnostics());
     }
 
     // ==== logic / quantifiers / facts ====

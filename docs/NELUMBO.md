@@ -8,6 +8,10 @@ A logic meta-language for specifying DSLs
 
 **nelumbo.nl/tutorial.html**
 
+Wim Bast — Tom Brus — Victor Lap
+
+Modeling Value Group — Open Walnoot
+
 ---
 
 ## Today

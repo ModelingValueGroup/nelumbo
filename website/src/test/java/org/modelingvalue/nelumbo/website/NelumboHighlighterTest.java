@@ -87,9 +87,9 @@ class NelumboHighlighterTest {
     }
 
     @Test
-    void aSnippetTheEngineCrashesOnIsShownPlainInsteadOfFailingTheDocs() {
-        // re-declaring logic.nl on top of the imported logic overflows the stack in the engine (seen in the stdlib
-        // tour, 2026-10-07); the docs must still render that block
+    void aSnippetTheEngineCrashesOnIsColoredOnItsOwn() {
+        // re-declaring logic.nl on top of the imported logic overflows the stack in the engine
+        // (bugs/continuation-line-equals-pattern-overflow.nl); on its own, as in its own file, it parses
         String code = """
                 import nelumbo.lang
 
@@ -132,6 +132,8 @@ class NelumboHighlighterTest {
                 l1 = f1  <=> f1 = l1
                 n1 != n2 <=> !(n1 = n2)
                 """;
-        assertEquals(code, visibleText(HIGHLIGHTER.highlight(code)));
+        String html = HIGHLIGHTER.highlight(code);
+        assertEquals(code, visibleText(html));
+        assertTrue(html.contains("<span class=\"nl-type\">Boolean</span>"), html);
     }
 }
