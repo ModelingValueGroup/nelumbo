@@ -22,3 +22,8 @@ revealjs:
   height: 910
   width: 1445
   transition: slide
+  controlsBackArrows: visible
+plugins:
+  - name: NelumboNav
+    extra_javascript:
+      - nelumbo-nav.js

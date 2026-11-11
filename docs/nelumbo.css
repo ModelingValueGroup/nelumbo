@@ -99,12 +99,34 @@ html:root {
   color: var(--nl-accent);
 }
 
+/* the previous/next arrows bottom center: the pair spans 10em left of the box's right edge */
 .reveal .controls {
+  right: calc(50% - 5em);
   color: var(--nl-accent);
+}
+
+/* no vertical slides, so the arrows need no room for up/down below them */
+.reveal .controls .navigate-left,
+.reveal .controls .navigate-right {
+  bottom: 0;
 }
 
 .reveal .slide-number {
   background: transparent;
+  color: var(--nl-faint);
+}
+
+/* on every slide, bottom left, mirroring the slide number; build-slides fills in @VERSION@ */
+.reveal::after {
+  content: "nelumbo @VERSION@";
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  z-index: 31;
+  padding: 5px;
+  font-size: 12px;
+  font-style: normal;
+  line-height: 1;
   color: var(--nl-faint);
 }
 

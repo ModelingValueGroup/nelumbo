@@ -94,6 +94,9 @@ tasks.register<Exec>("build-slides") {
     val docsDir = file("${project.projectDir}/docs").absolutePath
     val projectRoot = project.projectDir.absolutePath
     val coloredDir = layout.buildDirectory.dir("slides").get().asFile.absolutePath
+    // shown on every slide (nelumbo.css); a local build is "dev", not "vdev"
+    val buildVersion = project.version.toString()
+    val versionLabel = if (buildVersion.first().isDigit()) "v$buildVersion" else buildVersion
 
     val dockerCandidateFile = file("/opt/local/bin/docker")
     executable = if (dockerCandidateFile.exists() && dockerCandidateFile.canExecute()) dockerCandidateFile.absolutePath else "docker"
@@ -111,7 +114,8 @@ tasks.register<Exec>("build-slides") {
         ln -s /project/src ../src 2>/dev/null || true; \
         pip install -q --disable-pip-version-check --root-user-action=ignore mkslides 2>&1 | grep -v 'Created wheel' || true; \
         mkslides build /colored/NELUMBO.md
-        cp nelumbo.svg nelumbo.css site/
+        cp nelumbo.svg nelumbo-nav.js site/
+        sed 's/@VERSION@/$versionLabel/' nelumbo.css > site/nelumbo.css
         """
     )
 }
