@@ -465,12 +465,19 @@ function toolbarButton(text: string): HTMLButtonElement {
     return button;
 }
 
-// Share... / Load shared...: each opens a name row (input, action, Cancel) in place of the two buttons; the
-// outcome stays in the toolbar until the next opening.
+// a globe drawn with the text colour (outline, meridian, equator)
+const GLOBE_SVG: string = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" '
+                        + 'stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18'
+                        + 'M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9s1.3-6.3 3.8-9z"/></svg>';
+
+// The globe opens a menu with Share... and Load...; each opens a name row (input, action, Cancel) in place of
+// the globe. The outcome stays in the toolbar until the next opening.
 function addShareButtons(toolbar: HTMLDivElement, field: Field): void {
     const share:   HTMLSpanElement   = document.createElement('span');
-    const saveAs:  HTMLButtonElement = toolbarButton('Share...');
-    const loadAs:  HTMLButtonElement = toolbarButton('Load shared...');
+    const globe:   HTMLButtonElement = toolbarButton('');
+    const menu:    HTMLDivElement    = document.createElement('div');
+    const shareAs: HTMLButtonElement = toolbarButton('Share...');
+    const loadAs:  HTMLButtonElement = toolbarButton('Load...');
     const input:   HTMLInputElement  = document.createElement('input');
     const go:      HTMLButtonElement = toolbarButton('Share');
     const cancel:  HTMLButtonElement = toolbarButton('Cancel');
@@ -478,7 +485,16 @@ function addShareButtons(toolbar: HTMLDivElement, field: Field): void {
     let   saving:  boolean           = true;
 
     share.className    = 'nelumbo-share';
-    saveAs.title       = 'Anyone who knows the name can load it';
+    globe.className    = 'nelumbo-share-globe';
+    globe.innerHTML    = GLOBE_SVG;
+    globe.title        = 'Share or load by name';
+    globe.setAttribute('aria-label', 'Share or load by name');
+    globe.setAttribute('aria-haspopup', 'menu');
+    menu.className     = 'nelumbo-share-menu';
+    menu.setAttribute('role', 'menu');
+    shareAs.title      = 'Anyone who knows the name can load it';
+    shareAs.setAttribute('role', 'menuitem');
+    loadAs.setAttribute('role', 'menuitem');
     input.type         = 'text';
     input.className    = 'nelumbo-share-name';
     input.maxLength    = 40;
@@ -490,12 +506,23 @@ function addShareButtons(toolbar: HTMLDivElement, field: Field): void {
     message.className  = 'nelumbo-share-message';
     message.setAttribute('role', 'status');
 
+    function setMenu(open: boolean): void {
+        menu.hidden = !open;
+        globe.setAttribute('aria-expanded', String(open));
+    }
+
+    // back to the globe; it gets the focus the hidden row had
     function setOpen(open: boolean): void {
-        saveAs.hidden = open;
-        loadAs.hidden = open;
+        setMenu(false);
+        globe.hidden  = open;
         input.hidden  = !open;
         go.hidden     = !open;
         cancel.hidden = !open;
+    }
+
+    function close(): void {
+        setOpen(false);
+        globe.focus();
     }
 
     function open(save: boolean): void {
@@ -515,7 +542,7 @@ function addShareButtons(toolbar: HTMLDivElement, field: Field): void {
             input.focus();
             return;
         }
-        setOpen(false);
+        close();
         const outcome: ShareOutcome | null = saving ? await saveSolution(field, name) : await loadSolution(field, name);
         if (outcome !== null) {
             message.textContent = outcome.text;
@@ -523,27 +550,47 @@ function addShareButtons(toolbar: HTMLDivElement, field: Field): void {
         }
     }
 
-    saveAs.addEventListener('click', (): void => {
+    globe.addEventListener('click', (): void => {
+        setMenu(menu.hidden);
+        if (!menu.hidden) {
+            shareAs.focus();
+        }
+    });
+    shareAs.addEventListener('click', (): void => {
         open(true);
     });
     loadAs.addEventListener('click', (): void => {
         open(false);
     });
+    menu.addEventListener('keydown', (event: KeyboardEvent): void => {
+        if (event.key === 'Escape') {
+            setMenu(false);
+            globe.focus();
+        }
+    });
+    document.addEventListener('pointerdown', (event: PointerEvent): void => {
+        if (!menu.hidden && !share.contains(event.target as Node)) {
+            setMenu(false);
+        }
+    });
     go.addEventListener('click', (): void => {
         void run();
     });
     cancel.addEventListener('click', (): void => {
-        setOpen(false);
+        close();
     });
     input.addEventListener('keydown', (event: KeyboardEvent): void => {
         if (event.key === 'Enter') {
+            // else the Enter also clicks the globe, which gets the focus during run()
+            event.preventDefault();
             void run();
         } else if (event.key === 'Escape') {
-            setOpen(false);
+            close();
         }
     });
 
-    share.append(saveAs, loadAs, input, go, cancel, message);
+    menu.append(shareAs, loadAs);
+    share.append(globe, menu, input, go, cancel, message);
     setOpen(false);
     toolbar.insertBefore(share, field.reset);
 }

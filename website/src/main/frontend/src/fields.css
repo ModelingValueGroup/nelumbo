@@ -83,12 +83,49 @@
     margin-left: auto;
 }
 
-/* Share... / Load shared...: the name row replaces the two buttons while open (nelumbo-fields.ts addShareButtons) */
+/* the globe menu (Share... / Load...); the name row replaces the globe while open (nelumbo-fields.ts addShareButtons) */
 .nelumbo-share {
+    position:    relative;
     display:     flex;
     flex-wrap:   wrap;
     align-items: center;
     gap:         14px;
+}
+
+.nelumbo-field-toolbar .nelumbo-share-globe {
+    padding:     5px 8px;
+    line-height: 0;
+}
+
+/* opens upward: the field wrap clips everything below the toolbar (overflow: hidden) */
+.nelumbo-share-menu {
+    position:       absolute;
+    bottom:         calc(100% + 6px);
+    left:           0;
+    z-index:        100;
+    display:        flex;
+    flex-direction: column;
+    min-width:      9em;
+    padding:        4px;
+    background:     var(--nf-panel);
+    border:         1px solid var(--nf-border);
+    border-radius:  6px;
+}
+
+.nelumbo-share-menu[hidden] {
+    display: none;
+}
+
+.nelumbo-field-toolbar .nelumbo-share-menu button {
+    border:     none;
+    text-align: left;
+    padding:    6px 10px;
+}
+
+.nelumbo-field-toolbar .nelumbo-share-menu button:hover,
+.nelumbo-field-toolbar .nelumbo-share-menu button:focus-visible {
+    color:      var(--nf-text);
+    background: var(--nf-border);
 }
 
 .nelumbo-share-name {

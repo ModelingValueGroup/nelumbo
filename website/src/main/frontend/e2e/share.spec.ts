@@ -1,6 +1,6 @@
 import { test, expect, Page, Locator, Browser, Dialog } from '@playwright/test';
 
-// Share... / Load shared...: a text shared under a name in one browser loads by that name in any other.
+// The globe menu (Share... / Load...): a text shared under a name in one browser loads by that name in any other.
 // Names are global on the server and stay taken for a week, so every run uses names of its own.
 
 const RUN: string = String(Date.now());
@@ -26,8 +26,13 @@ function firstField(page: Page): Locator {
     return page.locator('#logic .nelumbo-field-wrap, main > .nelumbo-field-wrap').first();
 }
 
+async function openMenu(wrap: Locator, item: 'Share...' | 'Load...'): Promise<void> {
+    await wrap.getByRole('button', { name: 'Share or load by name' }).click();
+    await wrap.getByRole('menuitem', { name: item }).click();
+}
+
 async function share(wrap: Locator, action: 'Share' | 'Load', name: string): Promise<Locator> {
-    await wrap.getByRole('button', { name: action === 'Share' ? 'Share...' : 'Load shared...' }).click();
+    await openMenu(wrap, action === 'Share' ? 'Share...' : 'Load...');
     await wrap.getByLabel('Solution name').fill(name);
     await wrap.getByLabel('Solution name').press('Enter');
     return wrap.locator('.nelumbo-share-message');
@@ -88,7 +93,7 @@ test('the name field remembers the last name', async ({ page }: { page: Page }):
     await page.goto('/sandbox.html');
     await waitForEditors(page);
     await expect(await share(firstField(page), 'Share', name)).toHaveText('Shared as "' + name + '" (kept 7 days)');
-    await firstField(page).getByRole('button', { name: 'Load shared...' }).click();
+    await openMenu(firstField(page), 'Load...');
     await expect(firstField(page).getByLabel('Solution name')).toHaveValue(name);
 });
 
@@ -96,7 +101,7 @@ test('the landing page and the library have no share buttons', async ({ page }: 
     for (const path of ['/', '/library.html']) {
         await page.goto(path);
         await waitForEditors(page);
-        await expect(page.getByRole('button', { name: 'Share...' })).toHaveCount(0);
+        await expect(page.getByRole('button', { name: 'Share or load by name' })).toHaveCount(0);
     }
 });
 
@@ -109,4 +114,22 @@ test('sharing works without crypto.randomUUID', async ({ page }: { page: Page })
     await page.goto('/sandbox.html');
     await waitForEditors(page);
     await expect(await share(firstField(page), 'Share', name)).toHaveText('Shared as "' + name + '" (kept 7 days)');
+});
+
+test('the globe opens a menu with Share and Load that closes on Escape and outside clicks', async ({ page }: { page: Page }): Promise<void> => {
+    await page.goto('/sandbox.html');
+    await waitForEditors(page);
+    const globe: Locator = firstField(page).getByRole('button', { name: 'Share or load by name' });
+    const menu:  Locator = firstField(page).getByRole('menu');
+    await expect(menu).toBeHidden();
+    await expect(firstField(page).getByRole('button', { name: 'Share...' })).toHaveCount(0);
+    await globe.click();
+    await expect(menu.getByRole('menuitem')).toHaveText(['Share...', 'Load...']);
+    await expect(globe).toHaveAttribute('aria-expanded', 'true');
+    await page.keyboard.press('Escape');
+    await expect(menu).toBeHidden();
+    await expect(globe).toHaveAttribute('aria-expanded', 'false');
+    await globe.click();
+    await page.locator('main .intro').click();
+    await expect(menu).toBeHidden();
 });
