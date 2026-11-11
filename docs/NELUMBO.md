@@ -18,7 +18,7 @@ Modeling Value Group — Open Walnoot
 
 ## Today
 
-We follow the tutorial **together, in its order**: four rounds,
+We work through the tutorial **together, in order**: four rounds,
 each with a short explanation, exercises and a **checkpoint**.
 
 | Round                      | Tutorial sections                     |
@@ -38,10 +38,10 @@ A **logic meta-language**. In one `.nl` file you define:
 * its **meaning**: facts and rules
 * its **tests**: questions with the answers you expect
 
-You get an editor for your language right away: highlighting, hover,
-and results while you type, in the browser and in any IDE (via LSP).
+You get an editor for your language right away, with highlighting, hover information
+and results as you type: in the browser and in any IDE (via LSP).
 
-Made for knowledge that has to be exact, such as complex tax laws and clinical knowledge.
+Built for knowledge that must be exact, such as complex tax law and clinical guidelines.
 
 ---
 
@@ -50,10 +50,10 @@ Made for knowledge that has to be exact, such as complex tax laws and clinical k
 * **Declarative**: no order of execution, no over-specification
 * **Three-valued**: true, false *and* unknown
   * reasoning over incomplete facts *and* incomplete falsehoods
-  * support for logical not (`!`), no negation as failure
-* **Monotonic**: new knowledge never takes back an answer; contradictions are reported
+  * real logical negation (`!`), not negation as failure
+* **Monotonic**: new knowledge never retracts an answer; contradictions are reported
 * **Strongly typed**, with generics
-* **Navigation only**: a variable gets values from known relations, never by trying everything
+* **Navigation only**: a variable only gets values from known relations, never by trying every possible value
 * **Extensible**: built-in types and operators are Nelumbo modules backed by Java
 
 ---
@@ -106,21 +106,21 @@ Nothing to install: a browser is all you need.
 
 * Edit the code: results appear at the end of each line
 * Hover over a result, a name or an error for details
-* Red underline: a parse error or a wrong result; a green check mark: done
+* Red underline: a parse error or a wrong result. Green check mark: done
 * **Show solution** when you are stuck, **Reset** to start over
-* Your edits are saved in your browser: come back later and continue
-* Look at the library and the documentation for help
+* Your edits are saved in your browser: come back later and pick up where you left off
+* For help, see the Library and the Docs
 
 ---
 
 ## How we work
 
-* Everybody follows the **same order**: the order of the tutorial
-* Work in **pairs**: e.g. one types, both think; switch roles
-* At a **checkpoint** everybody stops, finished or not, and we compare
-* **Behind?** Use **Show solution** to catch up: the next round starts together
-* **Ahead?** Help a neighbour, or vary the exercise: fool around
-* Note what surprised you: we collect it at every checkpoint
+* Everyone works in the **same order**: the tutorial's
+* Work in **pairs**: one types, both think; switch roles now and then
+* At a **checkpoint** everyone stops, finished or not, and we compare notes
+* **Behind?** Use **Show solution** to catch up: we start each round together
+* **Ahead?** Help a neighbour, or invent your own variations on the exercise
+* Note down what surprises you: we collect it at every checkpoint
 
 ---
 
@@ -200,18 +200,18 @@ There are no queries yet: an exercise is done when every sentence parses.
 
 ## Checkpoint 1: Syntax
 
-* Which sentence was hardest to make parse? What was the error message?
+* Which sentence was the hardest to get to parse? What was the error message?
 * Where did you need a precedence `#N`, and how did you pick the number?
 * When would you use `private` in a language of your own?
 * What surprised you?
 
-**Take away**: a language is types plus phrases; precedence decides how phrases group.
+**Takeaway**: a language is types plus phrases; precedence decides how phrases group.
 
 ---
 
 # Round 2: Semantics
 
-Give the phrases a meaning by facts and rules
+Give the phrases meaning with facts and rules
 
 ---
 
@@ -226,7 +226,7 @@ unknown | true ?     // [()][]
 
 A result is `[facts][falsehoods]`: the answers for which the query is true, and those for which it is false.
 
-| Result          | Means                                        |
+| Result          | Meaning                                      |
 |-----------------|----------------------------------------------|
 | `[()][]`        | true                                         |
 | `[][()]`        | false                                        |
@@ -252,9 +252,9 @@ friends(Piet, X) ? [(X=Jan),..][..]
 * Write the result you expect after the `?`
 * Match: a **green check mark** at the end of the line
 * Mismatch: the expectation is **underlined in red**, followed by the actual result
-* No expectation: the result in a **purple label**; hover to see all of it
+* No expectation: the result appears in a **purple label**; hover to see it in full
 
-There is no Run button: everything is evaluated while you type.
+There is no Run button: everything is evaluated as you type.
 The exercises use expected results to show when you are done.
 
 ---
@@ -281,7 +281,7 @@ age(Piet)=41 ?          // [][()]
 
 * What is not asserted is **unknown**, not false
 * A function has one value; `<one City>` makes any hole unique
-* **Monotonic**: a later `fact age(Piet)=22` is an inconsistency
+* **Monotonic**: a later `fact age(Piet)=22` is reported as an inconsistency
 
 ---
 
@@ -297,7 +297,7 @@ fib(7) ?                // [(13)][..]
 
 * `<=>` defines a relation, `==` the value of a function
 * `if` guards each alternative; a rule may call itself
-* Where a guard fails, the alternative is **silent**: it says nothing, it does not say false
+* When a guard fails, its alternative is **silent**: it says nothing, rather than false
 
 ---
 
@@ -312,7 +312,7 @@ In this order, in the **Semantics** group:
 5. Combining rules
 6. Cyclic rules
 
-From here on an exercise is done when every query shows a green check mark.
+From here on, an exercise is done when every query has a green check mark.
 
 ---
 
@@ -321,9 +321,9 @@ From here on an exercise is done when every query shows a green check mark.
 * Which result surprised you? Was it unknown where you expected false?
 * When does an answer have no `..`? What closed it?
 * Did you run into an inconsistency? What caused it?
-* How did the fixpoint of the cyclic rule find its answers?
+* How did the cyclic rule reach its fixpoint?
 
-**Take away**: unknown is not false; facts and rules only add knowledge, never take it back.
+**Takeaway**: unknown is not false; facts and rules only add knowledge, never retract it.
 
 ---
 
@@ -337,8 +337,8 @@ Functions, literals, quantifiers and transformations
 
 * Built-in types come from modules: `import nelumbo.integers`, `strings`, `collections`, ...
 * A functor of an `Object` type is a **function**: `double(2)` stands for the value a rule or fact gives it
-* Without a rule or fact that value is unknown: even `point(1,2)=point(1,2)` is unknown
-* A type declared `:: Literal` builds **values**: `pos(1,2)` is equal to another one exactly when it is built the same way
+* Without a rule or fact, that value is unknown: even `point(1,2)=point(1,2)` is unknown
+* A type declared `:: Literal` builds **values**: `pos(1,2)` equals another value exactly when both are built the same way
 
 ---
 
@@ -367,7 +367,7 @@ A[c]((c in children(Juliana)) -> age(c)>18) ?   // [][()]
 
 ## Transformations
 
-A transformation `::>` turns one statement into others, for example a dictionary into sentences:
+A transformation `::>` turns one statement into others, for example, dictionary entries into sentences:
 
 <!-- nelumbo-context
 Article :: Object
@@ -442,12 +442,12 @@ In this order:
 
 ## Checkpoint 3: Next-level languages
 
-* Why does a quantifier not try every declared person? What would go wrong?
+* Why doesn't a quantifier try every declared person? What would go wrong?
 * When is `=` decided, and when does it stay unknown?
 * Which words did you add to the controlled English? What would you add next?
 * What surprised you?
 
-**Take away**: navigate from what is known; a transformation turns your simple sentences into complete syntax and semantics.
+**Takeaway**: navigate from what is known; a transformation turns your simple sentences into complete syntax and semantics.
 
 ---
 
@@ -461,7 +461,7 @@ A whole language from given facts and questions
 
 * Only the end of the file is given: facts and questions with expected answers
 * You write the language above it: types, phrases, variables and rules
-* Hints are folded away under each project
+* Each project has hints, collapsed until you open them
 * In this order, as far as you get: 1a, 2a, 1b, 2b, ...
   1. Family tree, Club fees, Train network, Room booking, Access policy
   2. Number toolkit, Set algebra, List statistics, Vectors, Expression interpreter
@@ -471,19 +471,19 @@ A whole language from given facts and questions
 ## When you are stuck
 
 * A sentence (`:: Root`) needs `#0`; a phrase starting with a hole needs a precedence
-* `[..][..]` is not false: facts are open. Close them with `one`, or a rule giving `false`
+* `[..][..]` is not false: facts are open. Close them with `one`, or with a rule that gives `false`
 * A failing guard is silent: write the `false if ...` branch yourself
 * A quantifier gives no answer? Let it navigate from a known relation
 * Everything unknown at once? Check the types of your variables
-* Still stuck: **Show solution**, or ask us
+* Still stuck? **Show solution**, or ask us
 
 ---
 
 ## Final round: show and compare
 
-* Show your **Family tree**: how did you define ancestor, sister, aunt? Several solutions are right
-* How far did you get? Which project was hardest, and why?
-* Which knowledge from your own work would you write in Nelumbo? What is missing for it?
+* Show your **Family tree**: how did you define ancestor, sister, aunt? There is more than one right answer
+* How far did you get? Which project was the hardest, and why?
+* What knowledge from your own work would you capture in Nelumbo? What is still missing to do that?
 * What should change in the tutorial?
 
 ---
@@ -491,7 +491,7 @@ A whole language from given facts and questions
 ## Beyond the browser
 
 * **nelumbo.nl**: Sandbox (examples), Library (standard modules), Docs (reference)
-* **Command line**: `java -jar nelumbo-cli-<version>.jar file.nl` checks every expected result, for CI too; `-i` for a REPL
+* **Command line**: `java -jar nelumbo-cli-<version>.jar file.nl` checks every expected result, also in CI; `-i` starts a REPL
 * **IDE plugins**: VS Code, IntelliJ, Eclipse (Language Server Protocol)
 * **MCP server**: let an AI assistant write and check Nelumbo
 * Downloads: GitHub releases
@@ -500,14 +500,16 @@ A whole language from given facts and questions
 
 ## Where Nelumbo stands
 
-Early stage: incompatible changes are likely.
+Early stage: breaking changes are likely.
 
-Recently added: generics, lists and sets, transformations, the editor on the web.
+Recently added: generics, lists and sets, transformations, the web editor.
 
-On the list:
+On the roadmap:
 
 * Reactive update execution semantics
-* Removal of functors, private import and external DSLs
+* Removal of functors
+* Private import
+* External DSLs
 * Deprecation and migration support
 * Full Unicode in names, operators and patterns
 
@@ -516,9 +518,9 @@ On the list:
 ## Help us
 
 * Tell us what surprised or confused you today
-* Try to falsify the logic
+* Try to break the logic: look for wrong answers
 * Write tests and libraries
-* Help write scientific publications
+* Co-author scientific papers
 * GitHub: https://github.com/ModelingValueGroup/nelumbo
 * Email: wim.bast@gmail.com
 
