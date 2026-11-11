@@ -98,7 +98,9 @@ jobs:
                 working-directory: website/src/main/frontend
                 run : |
                     npm ci
-                    npx playwright install --with-deps chromium
+                    # --with-deps installs system packages from the Ubuntu mirrors; when those are unreachable
+                    # (DNS failures on the runner) the libraries already on the runner image are enough
+                    npx playwright install --with-deps chromium || npx playwright install chromium
                     npx playwright test
 
             ################################################################################
