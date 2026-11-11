@@ -44,7 +44,7 @@ dependencies {
     // root project get the (single) version from the catalog on their compile classpath
     api(libs.immutable.collections)
     implementation(libs.mvg.json)
-    implementation("com.formdev:flatlaf:3.7.2")
+    implementation("com.formdev:flatlaf:3.8")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
