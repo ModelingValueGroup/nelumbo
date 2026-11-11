@@ -35,8 +35,8 @@ List<E>        :: Collection<E>
 ## Literals
 
 ```nelumbo
-{Literal,Set<E>}  ::= { <(> <(> <E> <|> .. <)> <,> , <)*> }  @nelumbo.collections.NSet
-{Literal,List<E>} ::= [ <(> <(> <E> <|> .. <)> <,> , <)*> ]  @nelumbo.collections.NList
+struct Set<E>     ::= { <(> <(> <E> <|> .. <)> <,> , <)*> }  @nelumbo.collections.NSet
+struct List<E>    ::= [ <(> <(> <E> <|> .. <)> <,> , <)*> ]  @nelumbo.collections.NList
 ```
 
 | Syntax        | Type      | Notes                                       |
@@ -52,7 +52,7 @@ List<E>        :: Collection<E>
 
 The `<(> ... <,> , <)*>` fragment is the zero-or-more comma-separated repetition (see [`built-in-tokens.md`](../lang/built-in-tokens.md#structural-markers--repetition-and-grouping)). The element type `E` is inferred from the surrounding context — the declared type of the receiving variable or pattern hole.
 
-The result type `{Literal,Set<E>}` is an intersection: a collection literal is a `Set<E>` *and* a `Literal`. `Literal` values have **structural equality** — two literals are equal when their elements are — which is what makes `{1,2}={2,1}` true and `[1,2]=[1,2]` decidable without any rule.
+Both functors are declared [`struct`](../lang/grammar.md#struct-functors--struct): a collection whose elements are all literals is a `Literal` itself. Literals have **structural equality** — two literals are equal when their elements are — which is what makes `{1,2}={2,1}` true and `[1,2]=[1,2]` decidable without any rule.
 
 ### Open collections — `..`
 

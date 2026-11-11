@@ -2,11 +2,11 @@
 // argument: owns(Piet,box(n)) is unknown, while E[b](owns(Piet,b) & b=box(n)) finds n=1.
 import nelumbo.integers
 
-Person  :: Object
-Box     :: Literal
-Boolean ::= owns(<Person>,<Box>)
-Box     ::= box(<Integer>)
-Person  ::= Piet
+Person     :: Object
+Box        :: Object
+Boolean    ::= owns(<Person>,<Box>)
+struct Box ::= box(<Integer>)
+Person     ::= Piet
 
 Integer n
 Box     b

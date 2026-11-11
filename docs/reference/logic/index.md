@@ -24,7 +24,7 @@ Function  :: Object
 Literal   :: Object
 ```
 - `Boolean` — the type of truth-valued expressions.
-- `Literal` — values that are their own canonical form, with **structural equality**: two literals are equal when their parts are. Named constants such as `T1`, `Hendrik`, `true`, integers, strings, and collection literals such as `{1,2}` and `[1,2]`. A user type declared `:: Literal` gets the same for its functors (see the example below).
+- `Literal` — values that are their own canonical form, with **structural equality**: two literals are equal when their parts are. Named constants such as `T1`, `Hendrik`, `true`, integers, strings, and collection literals such as `{1,2}` and `[1,2]`. A user functor declared [`struct`](../lang/grammar.md#struct-functors--struct) builds literals too (see the example below).
 - `Function` — values produced by functional patterns (e.g., `a+b`, `fib(n)`, `r(x/y)`) that reduce by rules.
 
 The `Literal` / `Function` split is what makes the rules in *Equality* (below) sufficient: every operand of `=` is either a literal, a function, or a variable, and the rules cover the relevant cases.
@@ -145,14 +145,14 @@ Both holes of `=` are [unique holes](statements.md#open-facts-and-one) (`<one Ob
 - Only a variable in the hole is constrained, not a term: `m(x)=Juliana` may have many answers (`m` need not be injective), and `x=y` with both unbound is not checked.
 - Because a closed result is the only possible one, a later fact or rule can only agree with it or contradict it (an error): this is what keeps Nelumbo [monotonic](three-valued-logic.md#monotonicity).
 
-`=` is what makes ordinary rule bodies work — `f=fib(n-1)+fib(n-2)` succeeds when both sides reduce to the same value — and is the surface form used in queries to bind variables. Note that a class-less `Object` functor with arguments is `Function`-typed, so `f(1)=f(1)` is undecided unless the result type is declared `:: Literal` (structural equality):
+`=` is what makes ordinary rule bodies work — `f=fib(n-1)+fib(n-2)` succeeds when both sides reduce to the same value — and is the surface form used in queries to bind variables. Note that a class-less `Object` functor with arguments is `Function`-typed, so `f(1)=f(1)` is undecided unless the functor is declared [`struct`](../lang/grammar.md#struct-functors--struct) (structural equality):
 
 ```nelumbo
 import nelumbo.integers
 
-Box :: Literal
-Box ::= box(<Integer>)
-Box   b
+Box        :: Object
+struct Box ::= box(<Integer>)
+Box b
 
 box(1)=box(1) ? [()][]
 box(1)=box(2) ? [][()]

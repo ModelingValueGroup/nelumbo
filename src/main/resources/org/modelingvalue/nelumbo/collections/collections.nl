@@ -31,7 +31,7 @@ Boolean           ::= <Set<E>> "<"  <Set<E>>        #30,
                       <Set<E>> ">=" <Set<E>>        #30,
                       <E>      "in" <Collection<E>> #30
 
-{Literal,Set<E>}  ::= { <(> <(> <E> <|> .. <)> <,> , <)*> }  @nelumbo.collections.NSet
+struct Set<E>     ::= { <(> <(> <E> <|> .. <)> <,> , <)*> }  @nelumbo.collections.NSet
 
 Set<E>            ::= { <Lambda1<E,Boolean>> },
                       <Set<E>> where <Lambda1<E,Boolean>> #37,
@@ -46,13 +46,13 @@ Integer           ::= | <Collection<E>> |           #35,
 
 Set<Integer>      ::= <E> "indexes" <List<E>> #40
 
-{Literal,List<E>} ::= [ <(> <(> <E> <|> .. <)> <,> , <)*> ]  @nelumbo.collections.NList
+struct List<E>    ::= [ <(> <(> <E> <|> .. <)> <,> , <)*> ]  @nelumbo.collections.NList
 
 List<E>           ::= <List<E>> + <List<E>>                       #50,
                       <List<E>> where <Lambda1<E,Boolean>>        #37,
                       <Collection<F>> map <Lambda1<F,E>>          #37,
                       <Collection<E>> sort <Lambda2<E,E,Boolean>> #37,
-                      set <E> at <Integer> in <List<E>>           #50       
+                      set <E> at <Integer> in <List<E>>           #50
 
 E                 ::= "first" "in"<List<E>>         #40,
                       "last" "in" <List<E>>         #40,

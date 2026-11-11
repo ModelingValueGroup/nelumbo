@@ -138,10 +138,10 @@ A[a,b](a=T1&b=T2&a$b) ? [..][..]
 
 // Structs
 
-Sid :: Literal
-Sid ::= rep <(> aa <)+>
-Sid ::= opt <(> aa <)?>
-Sid ::= alt <(> aa <|> bb <)>
+Sid :: Object
+struct Sid ::= rep <(> aa <)+>
+struct Sid ::= opt <(> aa <)?>
+struct Sid ::= alt <(> aa <|> bb <)>
 
 rep aa = rep aa aa ? [][()]
 rep aa = rep aa    ? [()][]

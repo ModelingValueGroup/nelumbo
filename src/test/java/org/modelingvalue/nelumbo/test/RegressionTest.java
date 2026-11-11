@@ -61,6 +61,26 @@ public class RegressionTest extends NelumboTestBase {
     }
 
     @RepeatedTest(10)
+    public void literalTypeInIntersectionHole() {
+        testResource("literal-type-in-intersection-hole.nl");
+    }
+
+    // Each query's expected binding is wrong on purpose, so each must report
+    // "Expected result" (counted from the source: a parse error leaves no query outcomes).
+    @RepeatedTest(10)
+    public void literalBindingExpectationUnchecked() throws IOException {
+        String name = "literal-binding-expectation-unchecked.nl";
+        String source = new String(
+                RegressionTest.class.getResourceAsStream(NelumboConstants.NELUMBO_TESTS + name).readAllBytes());
+        long queries = source.lines().filter(l -> !l.startsWith("//") && l.contains(" ? [")).count();
+        EvalResult result = evaluate(source, name, 60_000);
+        List<String> mismatches = result.diagnostics().stream().map(Diagnostic::message)
+                .filter(m -> m.startsWith("Expected result")).toList();
+        assertEquals(2, queries);
+        assertEquals(queries, mismatches.size(), "diagnostics: " + result.diagnostics());
+    }
+
+    @RepeatedTest(10)
     public void repetitionCountLost() {
         testResource("repetition-count-lost.nl");
     }
@@ -157,8 +177,8 @@ public class RegressionTest extends NelumboTestBase {
         testResource("four-var-quantifier-crash.nl");
     }
 
-    // Seq<T> must stay a Literal: as an Object its functor is Function-typed and `=`
-    // is undecided
+    // seq must stay a struct: without it the functor is a function and `=` is
+    // undecided
     @RepeatedTest(10)
     public void repetitionSeparatorGreedy() {
         testResource("repetition-separator-greedy.nl");

@@ -194,7 +194,7 @@ Root ::= "import" <(> <QNAME> <,> , <)+>                                        
          <Root#0> ::> <RootNamespace>                                                       @nelumbo.lang.Transform,
          <(> "hidden" <)?> <Type#100> <(> <NAME> <,> , <)+>                                 @nelumbo.lang.Variable,
          <[> <NAME> <(> < <Type#100> > <)?> <]> :: <(> <Type#100> <,> , <)+> <(> # <NAME> <)?>  @nelumbo.lang.Type,
-         <(> "private" <)?> <Type#100> ::= <(> <PATTERNS>
+         <(> "private" <)?> <(> "struct" <)?> <Type#100> ::= <(> <PATTERNS>
              <(> # <NUMBER> <)?>
              <(> @ <QNAME> <)?>
              <,> , <)+>                                                                     @nelumbo.lang.Functor
@@ -210,10 +210,10 @@ Five top-level statement forms here, plus `PatternPart`:
 | `<Root> ::> { ... }` — pattern transformation                          | `nelumbo.lang.Transform`|
 | `(hidden)? T v`, `T v1, v2, v3` — variable declaration                 | `nelumbo.lang.Variable` |
 | `T<P>? :: S1, S2 (#tag)?` — type declaration                           | `nelumbo.lang.Type`     |
-| `(private)? T ::= P1 (#N)? (@class)?, P2, ...` — pattern declaration   | `nelumbo.lang.Functor`  |
+| `(private)? (struct)? T ::= P1 (#N)? (@class)?, P2, ...` — pattern declaration | `nelumbo.lang.Functor`  |
 | `pattern N ::= P` — named pattern declaration                          | `nelumbo.lang.PatternPart` |
 
-The `Functor` alternative is the dense one: it carries the optional `private` modifier, the optional `#N` precedence annotation, the optional `@`-bound native class, and the comma-separated list of patterns — all in a single declaration. This is the syntax every other stdlib file uses to declare anything.
+The `Functor` alternative is the dense one: it carries the optional `private` and [`struct`](grammar.md#struct-functors--struct) modifiers, the optional `#N` precedence annotation, the optional `@`-bound native class, and the comma-separated list of patterns — all in a single declaration. This is the syntax every other stdlib file uses to declare anything.
 
 The `import` and `@`-binding forms now share the `QNAME` [named pattern](#named-patterns) for the dotted qualified name; the `import` alternative still permits both comma-separated lists (`import M1, M2`) and dotted module paths (`import a.b.c`). The type-declaration head (`<[> <NAME> … <]>`) is a connected-token group, so `Set<E>` must be written tightly.
 
@@ -229,7 +229,7 @@ The `::>` transformation (Transform) takes any `<Root>` shape on the left and a 
 Type ::= { <(> <Type> <,> , <)+> }   @nelumbo.lang.Type
 ```
 
-A type written as a brace list, `{A,B}`, is the intersection of its members: a value of `{A,B}` is both an `A` and a `B`. It is not declared with `::`; it can be written wherever a type is expected — in a variable declaration (`{E,Literal} l1` in `logic.nl`, so the equality rules apply to literals only), in a pattern hole (`<{Variable,A1}>` in the lambda patterns, which accepts only a variable), or as a functor's result type (`{Literal,Set<E>} ::= { ... }` in `collections.nl`, which makes set literals `Literal`s). See also [Type declarations](grammar.md#intersection-types--ab).
+A type written as a brace list, `{A,B}`, is the intersection of its members: a value of `{A,B}` is both an `A` and a `B`. It is not declared with `::`; it can be written wherever a type is expected — in a variable declaration (`{E,Literal} l1` in `logic.nl`, so the equality rules apply to literals only), or in a pattern hole (`<{Variable,A1}>` in the lambda patterns, which accepts only a variable; `<{Thing,Literal}>` accepts only a literal `Thing`). To make a functor build values, declare it [`struct`](grammar.md#struct-functors--struct) instead of giving it a `Literal` result type. See also [Type declarations](grammar.md#intersection-types--ab).
 
 ---
 

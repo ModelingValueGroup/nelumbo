@@ -71,11 +71,14 @@ import org.modelingvalue.nelumbo.tools.NelumboEvaluator.EvalResult;
 // Lambda4..6, so E/A/lambdas take up to 6 variables in every position) and
 // the pattern repro repetition-separator-greedy (the separator backtracking
 // was in since eeb06747; the repro only stayed red because its `:: Object`
-// functor is Function-typed since bba88fc8 - it is declared `:: Literal` now),
+// functor is Function-typed since bba88fc8 - its functor is a `struct` now),
 // and its sibling optional-presence-lost (OptionalPattern.args keeps a matched
-// argument-less body as present; also declared `:: Literal` in the promoted
-// file) and alternation-option-identity (the keep flag is passed through
-// SequencePattern.args now; `:: Literal` too) - no pattern repro is left.
+// argument-less body as present; also a `struct` in the promoted file) and
+// alternation-option-identity (the keep flag is passed through
+// SequencePattern.args now; `struct` too) - no pattern repro is left.
+// Promoted on 2026-11-11, when the `struct` functor modifier replaced user
+// `:: Literal` types: literal-type-in-intersection-hole and
+// literal-binding-expectation-unchecked.
 //
 // Findings WITHOUT an .nl repro (from the 2026-09-07 review; kept here so
 // they are not lost - they cannot be tested from this suite):
@@ -290,12 +293,6 @@ public class KnownBugsTest extends NelumboTestBase {
         bugResource("holeless-functor-in-transformation.nl");
     }
 
-    @KnownBug("intersection hole of a :: Literal type and Literal (<{Point,Literal}> with Point :: Literal) rejects a Point (p(1,2) of unexpected type Point)")
-    @Test
-    public void literalTypeInIntersectionHole() {
-        bugResource("literal-type-in-intersection-hole.nl");
-    }
-
     @KnownBug("rule head variable of a narrower type (Female f) yields bindings of the wrong type for an open query (Who is a sister of Piet lists a Male)")
     @Test
     public void typedHeadVariableOpenQuery() {
@@ -306,21 +303,6 @@ public class KnownBugsTest extends NelumboTestBase {
     @Test
     public void relationGuardOnTwoHeadVariablesHangs() {
         bugResource("relation-guard-on-two-head-variables-hangs.nl");
-    }
-
-    // an expected-error repro: each query's expected binding is wrong, so each must report
-    // "Expected result" (counted from the source: a parse error leaves no query outcomes)
-    @KnownBug("expected result binding a variable of a user Literal type is not checked (here = p ? [(p=there)][..] passes) or, depending on the JVM, does not parse")
-    @Test
-    public void literalBindingExpectationUnchecked() throws IOException {
-        String name = "literal-binding-expectation-unchecked.nl";
-        String source = new String(
-                KnownBugsTest.class.getResourceAsStream(NelumboConstants.NELUMBO_BUGS + name).readAllBytes());
-        long queries = source.lines().filter(l -> !l.startsWith("//") && l.contains(" ? [")).count();
-        EvalResult result = evaluate(source, name, 60_000);
-        List<String> mismatches = result.diagnostics().stream().map(NelumboEvaluator.Diagnostic::message)
-                .filter(m -> m.startsWith("Expected result")).toList();
-        assertEquals(queries, mismatches.size(), "diagnostics: " + result.diagnostics());
     }
 
     @KnownBug("intersection of an open and a closed set is closed although an element may be in the open set ({1,..} && {2} is {} instead of {..})")

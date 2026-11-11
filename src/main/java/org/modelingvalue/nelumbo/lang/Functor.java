@@ -61,18 +61,18 @@ public class Functor extends Node implements FunctorOrType {
 
     public static Functor of(Pattern pattern, Type result, Type local, Class<?> clazz, Integer leftPrecedence)
             throws ParseException {
-        return of(List.of(), pattern, result, local, clazz, leftPrecedence, false, false);
+        return of(List.of(), pattern, result, local, false, clazz, leftPrecedence, false, false);
     }
 
-    public static Functor of(List<AstElement> elements, Pattern pattern, Type result, Type local, Class<?> clazz,
-            Integer leftPrecedence, boolean hasLiteral, boolean function) throws ParseException {
+    public static Functor of(List<AstElement> elements, Pattern pattern, Type result, Type local, boolean struct,
+            Class<?> clazz, Integer leftPrecedence, boolean hasLiteral, boolean function) throws ParseException {
         return of(elements, pattern, result, local,
                 clazz != null ? NelumboConstructor.Finder.find(clazz, KnowledgeBase.current(), List.of()) : null,
                 leftPrecedence,
                 clazz != null ? NelumboMethod.Finder.find(clazz, pattern.name(), KnowledgeBase.current(), List.of())
                         : null,
-                hasLiteral, function,
-                clazz != null && Predicate.class.isAssignableFrom(clazz) && overridesInfer(clazz));
+                hasLiteral, function, clazz != null && Predicate.class.isAssignableFrom(clazz) && overridesInfer(clazz),
+                struct);
     }
 
     private static boolean overridesInfer(Class<?> clazz) {
@@ -85,10 +85,10 @@ public class Functor extends Node implements FunctorOrType {
 
     private static Functor of(List<AstElement> elements, Pattern pattern, Type result, Type local,
             Constructor<?> constructor, Integer leftPrecedence, Method method, boolean hasLiteral, boolean function,
-            boolean overridesInfer) {
+            boolean overridesInfer, boolean struct) {
         pattern = pattern.setPresedence(leftPrecedence != null ? leftPrecedence : Integer.MIN_VALUE);
         return new Functor(elements, pattern, result, local, constructor, leftPrecedence, method, hasLiteral, function,
-                overridesInfer);
+                overridesInfer, struct);
     }
 
     private String        name;
@@ -135,11 +135,7 @@ public class Functor extends Node implements FunctorOrType {
 
     @Override
     public Type resultType() {
-        Type type = (Type) get(1);
-        if (isFunction()) {
-            type = type.toFunction();
-        }
-        return type;
+        return (Type) get(1);
     }
 
     public Type local() {
@@ -178,6 +174,10 @@ public class Functor extends Node implements FunctorOrType {
             return false;
         }
         return (Boolean) get(8);
+    }
+
+    public boolean isStruct() {
+        return (Boolean) get(9);
     }
 
     @Override
@@ -353,9 +353,15 @@ public class Functor extends Node implements FunctorOrType {
         if (reason == ConstructionReason.parsing) {
             Type local = null;
             int start = 2;
-            Object mod = get(0);
-            if (mod != null && mod.equals("private")) {
+            Object opt = get(0);
+            if (opt != null && opt.equals("private")) {
                 local = Type.NAMESPACE;
+                start += 1;
+            }
+            boolean struct = false;
+            opt = get(1);
+            if (opt != null && opt.equals("struct")) {
+                struct = true;
                 start += 1;
             }
             List<AstElement> elements = astElements();
@@ -371,7 +377,8 @@ public class Functor extends Node implements FunctorOrType {
                     if (t == null || t.text().equals(",")) {
                         Pattern pattern = Pattern.pattern(pttrn);
                         pattern = pattern.setPresedence(precedence != null ? precedence : Integer.MIN_VALUE);
-                        roots = createFunctor(type, roots, ast, clazz, pattern, local, precedence, knowledgeBase, ctx);
+                        roots = createFunctor(type, roots, ast, clazz, pattern, local, struct, precedence,
+                                knowledgeBase, ctx);
                         if (t != null) {
                             roots = roots.setAstElements(roots.astElements().add(t));
                         }
@@ -436,7 +443,8 @@ public class Functor extends Node implements FunctorOrType {
     }
 
     private NList createFunctor(Type type, NList roots, List<AstElement> ast, Class<?> clazz, Pattern pattern,
-            Type local, Integer prec, KnowledgeBase knowledgeBase, ParseContext ctx) throws ParseException {
+            Type local, boolean struct, Integer prec, KnowledgeBase knowledgeBase, ParseContext ctx)
+            throws ParseException {
         ast = ast.prepend(pattern);
         boolean toLiteral = false, function = false;
         List<Type> args = pattern.argTypes(List.of());
@@ -456,7 +464,8 @@ public class Functor extends Node implements FunctorOrType {
                 }
             }
         }
-        Functor nodFunctor = Functor.of(ast, pattern, type, local, clazz, prec, toLiteral, function)
+        Functor nodFunctor = Functor
+                .of(ast, pattern, function ? type.toFunction() : type, local, struct, clazz, prec, toLiteral, function)
                 .makeVariablesUnique(ctx).resetOriginal();
         nodFunctor.init(knowledgeBase, ctx, ConstructionReason.transforming);
         roots = new NList(List.of(), roots, nodFunctor);
@@ -489,11 +498,10 @@ public class Functor extends Node implements FunctorOrType {
         if (literal == null) {
             Pattern litPattern = pattern().setTypes(Type::toLiteral);
             Type type = (Type) get(1);
-            boolean lit = Type.LITERAL.isAssignableFrom(type);
-            Functor f = Functor
-                    .of(astElements(), litPattern, lit ? type.toLiteralDeep() : type, local(), (Constructor<?>) get(3),
-                            leftPrecedence(), (Method) get(5), false, !lit && isFunction(), (boolean) get(8))
-                    .incrementVariables("$");
+            boolean struct = isStruct();
+            Functor f = Functor.of(astElements(), litPattern, struct ? type.toLiteralDeep() : type, local(),
+                    (Constructor<?>) get(3), leftPrecedence(), (Method) get(5), false, !struct && isFunction(),
+                    (boolean) get(8), struct).incrementVariables("$");
             Functor original = original();
             if (original == this) {
                 f = f.resetOriginal();

@@ -94,7 +94,7 @@ run_repro() {
         limit=(gtimeout $((SLOW_SECONDS + 5)))
     fi
     # an expected-error repro runs quiet: only its error lines are printed, not the results
-    # of queries that have one besides the error (a mismatch: literal-binding-expectation-unchecked.nl)
+    # of queries that have one besides the error (such as an expectation mismatch)
     local quiet=()
     if expects_error "$file"; then
         quiet=(-q)

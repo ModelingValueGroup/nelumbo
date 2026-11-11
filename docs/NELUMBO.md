@@ -338,7 +338,7 @@ Functions, literals, quantifiers and transformations
 * Built-in types come from modules: `import nelumbo.integers`, `strings`, `collections`, ...
 * A functor of an `Object` type is a **function**: `double(2)` stands for the value a rule or fact gives it
 * Without a rule or fact, that value is unknown: even `point(1,2)=point(1,2)` is unknown
-* A type declared `:: Literal` builds **values**: `pos(1,2)` equals another value exactly when both are built the same way
+* A functor declared `struct` builds **values**: `pos(1,2)` equals another value exactly when both are built the same way
 
 ---
 

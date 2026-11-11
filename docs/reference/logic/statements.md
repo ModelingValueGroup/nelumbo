@@ -31,7 +31,7 @@ A fact must be ground (no variables) and must not be a **compound** expression: 
 
 A functor whose result type is not `Boolean` and that has arguments is a **function**: `Female ::= m(<Person>)`, `Integer ::= fib(<Integer>)`, `Integer ::= <Integer> + <Integer>`. Its value is reached through `=`, so `m(Beatrix)=Juliana` is a relation between the application and its value, asserted as a fact or defined by a rule (`==`, see [Function rules](writing-rules.md#function-rules--)). Because `=` has [unique holes](#open-facts-and-one), a function is a relation with an implicit `one` result: `m(<Person>)` behaves as `m(<Person>, <one Female>)` would. A `Boolean` pattern with a `<one T>` hole is the explicit form of the same thing.
 
-Two kinds of functor are not functions: one without arguments (a constant such as `Piet`), and one whose result type is declared `:: Literal`, which builds a structural value (see [Equality](index.md#equality)).
+Two kinds of functor are not functions: one without arguments (a constant such as `Piet`), and one declared [`struct`](../lang/grammar.md#struct-functors--struct), which builds a structural value when its arguments are values (see [Equality](index.md#equality)).
 
 ### Open facts and `one`
 

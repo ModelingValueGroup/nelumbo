@@ -4,12 +4,12 @@
 // (Was: OptionalPattern.args recorded such a match as Optional.empty, i.e. as
 // absent, so `wrap big bang = wrap` was true. Fixed in OptionalPattern.args: a
 // matched body without an argument is kept as a non-empty Optional now.)
-// C is declared `:: Literal` - the supertype for plain structural equality, as
+// wrap is a `struct` functor, which gives it plain structural equality, as
 // in tests/repetition-separator-greedy.nl and logicTest.nl "Structs".
 import nelumbo.logic
 
-C :: Literal
-C ::= wrap <(> big bang <)?>
+C        :: Object
+struct C ::= wrap <(> big bang <)?>
 
 wrap big bang = wrap          ? [][()]
 wrap big bang = wrap big bang ? [()][]

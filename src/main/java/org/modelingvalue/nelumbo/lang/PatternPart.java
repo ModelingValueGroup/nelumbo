@@ -55,8 +55,8 @@ public final class PatternPart extends Node {
             args = args.replaceAll(a -> a.nonRepetition());
             boolean literal = args.noneMatch(t -> Type.OBJECT.isAssignableFrom(t) && !Type.LITERAL.isAssignableFrom(t));
             Node self = setArgs(name, pattern, literal);
-            Functor functor = Functor.of(List.of(self), t(name), Type.PATTERN_PART, Type.NAMESPACE, PatternPart.class,
-                    null, false, false);
+            Functor functor = Functor.of(List.of(self), t(name), Type.PATTERN_PART, Type.NAMESPACE, false,
+                    PatternPart.class, null, false, false);
             functor.init(knowledgeBase, ctx, transforming);
             return self;
         }

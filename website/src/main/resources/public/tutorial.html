@@ -487,7 +487,7 @@
        <code>Object</code> type, is a <em>function</em>: <code>double(2)</code> stands for the value a rule or
        fact gives it, so <code>double(2)=4</code> is true and <code>double(2)=5</code> is false. Without
        such a rule or fact the value is unknown, so even <code>point(1,2)=point(1,2)</code> is unknown. A
-       type declared <code>:: Literal</code> builds values instead: <code>pos(1,2)</code> is the value
+       functor declared <code>struct</code> builds values instead: <code>pos(1,2)</code> is the value
        itself, equal to another one exactly when it is built the same way, and it can be the answer to a
        query (<code>q=pos(1,2)</code>). Constants such as <code>Piet</code> are literals too.</p>
     <div class="nelumbo-field" data-height="354px" data-src="equality/1-example.nl"></div>
@@ -783,15 +783,15 @@
     <p>Not every value is a number or a name. Here a vector such as <code>vec(1,2)</code> is a value of its own:
        two vectors are equal exactly when their parts are, and a vector can be an answer. Its operators are
        functions that compute a new vector: <code>vec(1,2) + vec(3,4)</code> is <code>vec(4,6)</code>. That takes
-       two kinds of declarations: the constructor <code>vec</code> is a literal, the operators are not. A vector
+       two kinds of declarations: the constructor <code>vec</code> is a struct, the operators are functions. A vector
        with a computed part is computed first, so <code>vec(1+1, 2)</code> equals <code>vec(2, 2)</code>.</p>
     <details class="project-hints">
       <summary>Hints</summary>
       <ol>
-        <li>Declare <code>Vec :: Object</code>, and only the constructor as a literal:
-            <code>{Literal,Vec} ::= vec(&lt;Integer&gt;, &lt;Integer&gt;)</code>, the way the library declares its
-            set and list literals. With <code>Vec :: Literal</code>, every functor that returns a <code>Vec</code>
-            would be a constructor, so <code>+</code> could not compute anything.</li>
+        <li>Declare <code>Vec :: Object</code>, and only the constructor as a struct:
+            <code>struct Vec ::= vec(&lt;Integer&gt;, &lt;Integer&gt;)</code>, the way the library declares its
+            set and list literals. The operators are declared without <code>struct</code>, so they are functions
+            that compute a vector.</li>
         <li>Declare the operators with the precedences of their integer counterparts:
             <code>Vec ::= &lt;Vec&gt; + &lt;Vec&gt; #40</code>, the same for <code>-</code>, and
             <code>&lt;Integer&gt; * &lt;Vec&gt; #50</code>. The dot product is
@@ -822,8 +822,8 @@
       <ol>
         <li>Declare <code>Expr :: Object</code>, and <code>Var :: Expr</code> with the constants <code>x</code>,
             <code>y</code> and <code>z</code>.</li>
-        <li>Declare the other expressions as literals so that an expression is a value:
-            <code>{Literal,Expr} ::= # &lt;Integer&gt; #90, &lt;Expr&gt; + &lt;Expr&gt; #40,
+        <li>Declare the other expressions as structs so that an expression is a value:
+            <code>struct Expr ::= # &lt;Integer&gt; #90, &lt;Expr&gt; + &lt;Expr&gt; #40,
             &lt;Expr&gt; * &lt;Expr&gt; #50</code>. The types of the operands tell <code>x + #2</code> apart from
             <code>3 + 2</code>.</li>
         <li>Declare <code>eval &lt;Expr&gt;</code> as an <code>Integer</code> function with <code>#80</code>, and
@@ -832,8 +832,6 @@
         <li>Write one rule per kind of expression, with a head that takes it apart:
             <code>eval (e + f) == eval e + eval f</code>. A variable's value comes from its fact:
             <code>eval v = i &lt;=&gt; v := i</code>.</li>
-        <li>Do not declare <code>Expr :: Literal</code>: a functor whose holes all have literal types is a
-            constructor, so <code>eval</code> would become one too.</li>
       </ol>
     </details>
     <div class="nelumbo-exercise">
@@ -856,8 +854,9 @@
             does not: <code>pattern TIME ::= &lt;[&gt; &lt;Integer#100&gt; : &lt;Integer#100&gt; &lt;]&gt;</code>.
             In a phrase, <code>&lt;TIME&gt;</code> gives two Integer arguments, hours and minutes; compare times
             in minutes, <code>h*60+m</code>.</li>
-        <li>A booking is a value, not a fact: declare <code>Slot :: Literal</code> with the pattern
-            <code>&lt;TIME&gt; to &lt;TIME&gt;</code> (precedence <code>#35</code>), and
+        <li>A booking is a value, not a fact: declare <code>Slot :: Object</code> and a
+            <code>struct Slot</code> with the pattern <code>&lt;TIME&gt; to &lt;TIME&gt;</code> (precedence
+            <code>#35</code>), and
             <code>the bookings for &lt;Room&gt;</code> as a function that returns a <code>Set&lt;Slot&gt;</code>
             (precedence <code>#60</code>).</li>
         <li>Because each set is complete, <code>A[b]((b in the bookings for r) -&gt; ...)</code> can be true.</li>

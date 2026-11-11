@@ -32,8 +32,12 @@ Reading `.nl` code - the whole notation in eight lines:
   a type; a predicate with two or more unbound arguments (`q(x)` with all unbound, `t(a,x,y)`),
   and `E[x](q(x))`, are unknown even over facts. Unasserted facts are unknown, not false.
   Closed results come only from `<one T>` holes: `=` is `<one Object> = <one Object>`, so a
-  function (a non-Boolean functor with arguments, unless its type is `:: Literal`) has one,
-  closed result.
+  function (a non-Boolean functor with arguments, unless the functor is declared `struct`)
+  has one, closed result.
+- `struct T ::= f(<A>, <B>)` makes a functor a constructor: `f(1,2)` is a value with
+  structural equality (equal when its parts are) and can be an answer; with a computed
+  argument it is computed first (`f(1+1,2) = f(2,2)`). A property of the functor, not of
+  its type: `struct Vec ::= vec(...)` next to `Vec ::= <Vec> + <Vec> #40` (a function).
 - Monotonic: facts and all rules of a relation are combined by bi-implication and must agree
   (a fact and a falsehood, a binding outside a closed side, or a second function value is an
   `Inconsistent result` error), so adding facts or rules only adds facts and falsehoods or
@@ -57,7 +61,7 @@ example file in the project is unreadable.
 
 - [Bootstrap grammar](https://nelumbo.nl/docs/reference/core/bootstrap.html): the syntax hardcoded in Java so that `lang.nl` can be loaded
 - [nelumbo.lang](https://nelumbo.nl/docs/reference/lang/index.html): the bootstrap layer - token types, object hierarchy, the pattern meta-grammar, top-level statements
-- [Grammar](https://nelumbo.nl/docs/reference/lang/grammar.html): types, patterns, variables, scope blocks and `::>` - the syntax-shaping declarations from `nelumbo.lang`
+- [Grammar](https://nelumbo.nl/docs/reference/lang/grammar.html): types, patterns, `struct` functors, variables, scope blocks and `::>` - the syntax-shaping declarations from `nelumbo.lang`
 - [Built-in tokens and pattern holes](https://nelumbo.nl/docs/reference/lang/built-in-tokens.html): `<NUMBER>`, `<STRING>`, `<Variable>` and friends
 - [Precedence and associativity](https://nelumbo.nl/docs/reference/lang/precedence-and-associativity.html): the `#N` system
 - [Visibility](https://nelumbo.nl/docs/reference/lang/visibility.html): `private`, `hidden` variables (implicit operands: `hidden Integer a` makes `>10` read `a>10`), `<hidden T>`/`<visible T>` holes, and scope blocks

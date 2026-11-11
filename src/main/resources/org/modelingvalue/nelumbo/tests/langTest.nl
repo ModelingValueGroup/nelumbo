@@ -143,8 +143,8 @@ c3=blue  ? [(c3=blue)][..]
 // =========================================================
 
 Type T
-Box<T> :: Literal
-Box<T> ::= box(<T>)
+Box<T>        :: Object
+struct Box<T> ::= box(<T>)
 
 // Structural equality on ground terms of a generic functor
 box(red)=box(red)     ? [()][]

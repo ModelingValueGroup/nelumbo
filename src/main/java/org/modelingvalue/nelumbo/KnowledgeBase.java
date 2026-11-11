@@ -178,8 +178,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                 type = nat.setAstElements(type.astElements());
             }
         }
-        Functor functor = Functor.of(List.of(type), pattern, Type.TYPE, var != null ? Type.NAMESPACE : null, Type.class,
-                null, false, false);
+        Functor functor = Functor.of(List.of(type), pattern, Type.TYPE, var != null ? Type.NAMESPACE : null, false,
+                Type.class, null, false, false);
         functor.init(this, ctx, bootstrapping);
         return functor;
     }
@@ -190,7 +190,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         } else {
             Type type = var.type().toVariable();
             Functor functor = Functor.of(List.of(var), t(List.of(var), var), type,
-                    worldScopedVariables ? null : Type.NAMESPACE, Variable.class, null, false, false);
+                    worldScopedVariables ? null : Type.NAMESPACE, false, Variable.class, null, false, false);
             functor.init(this, ctx, bootstrapping);
             return functor;
         }
@@ -263,7 +263,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
                         null).init(this, parseContext, bootstrapping);
 
                 Functor.of(
-                        s(o(k("private")), n(Type.TYPE, 100), t("::="),
+                        s(o(k("private")), o(k("struct")), n(Type.TYPE, 100), t("::="),
                                 r(s(PATTERNS, o(s(t("#"), t(NUMBER))), o(s(t("@"), QNAME))), true, t(","))),
                         Type.ROOT, null, Functor.class, 0).init(this, parseContext, bootstrapping);
 

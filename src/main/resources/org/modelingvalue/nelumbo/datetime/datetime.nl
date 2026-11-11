@@ -5,9 +5,9 @@ Date                :: Object
 Time                :: Object
 Period              :: Object
 
-{Literal,DateTime}  ::= <[> <Date> T <Time> <]> #100 @nelumbo.datetime.NDateTime
-DateTime            ::= <DateTime> + <Period>   #40,
-                        <DateTime> - <Period>   #40
+struct DateTime     ::= <[> <Date> T <Time> <]> #100 @nelumbo.datetime.NDateTime
+DateTime            ::= <DateTime> + <Period> #40,
+                        <DateTime> - <Period> #40
 
 Date                ::= <[> <NUMBER> - <NUMBER> - <NUMBER> <]> @nelumbo.datetime.NDate,
                         <Date> + <Period> #40,

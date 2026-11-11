@@ -71,7 +71,7 @@ Wherever a type is expected, `{A,B}` (two or more types between braces) is the t
 ```nelumbo
 {E,Literal}  l1, l2                                    // logic.nl: a literal of type E
 Lambda1<A1,R> ::= [<{Variable,A1}>](<R#0>)             // logic.nl: a hole that takes only a variable of type A1
-{Literal,Set<E>} ::= { <(> <(> <E> <|> .. <)> <,> , <)*> }  // collections.nl: set literals are Literals
+Boolean ::= <{Thing,Literal}> is <ar> n #0             // tutorial: a hole that takes only a literal Thing
 ```
 
 See [Intersection types](index.md#intersection-types) in `nelumbo.lang`.
@@ -114,6 +114,43 @@ Note:
 - `"<"` is an ordinary literal. Operator-like characters that would otherwise confuse the parser are written quoted.
 - A pattern may begin with a hole (`<Integer> - <Integer>`), a literal (`- <Integer>`), or a mix.
 - The same type may be declared with many `::=` patterns; each adds another alternative. They do not conflict with each other as long as they parse unambiguously.
+
+### Struct functors — `struct`
+
+```nelumbo
+struct T ::= pattern1, pattern2
+private struct T ::= pattern
+```
+
+A functor with arguments whose result type is not `Boolean` is a **function**: `point(1,2)` stands for the value a rule or fact gives it, so `point(1,2)=point(1,2)` is unknown without one. The `struct` modifier makes it a **constructor** instead: an application is a value of its own, equal to another one exactly when it is built from equal parts, and it can be the answer to a query. `struct` applies to every pattern of that `::=` declaration and comes after `private`.
+
+Whether a functor is a struct is a property of the functor, not of its type. One type can have struct functors that build its values and ordinary functors that compute them:
+
+```nelumbo
+import nelumbo.integers
+
+Vec        :: Object
+struct Vec ::= vec(<Integer>, <Integer>)
+Vec        ::= <Vec> + <Vec> #40
+Vec     u
+Integer a, b, c, d
+vec(a,b) + vec(c,d) == vec(a+c, b+d)
+
+vec(1,2) = vec(1,2)       ? [()][]
+vec(1,2) = vec(2,1)       ? [][()]
+vec(1,2) + vec(3,4)       ? [(vec(4,6))][..]
+vec(1+1,2) = vec(2,2)     ? [()][]
+u = vec(1,2)              ? [(u=vec(1,2))][..]
+```
+
+A struct application is a literal when all its arguments are literals (`vec(1,2)`). When an argument is not (`vec(1+1,2)`), it is a function that evaluates its arguments first, so `vec(1+1,2)` equals `vec(2,2)`. A rule head can take a struct apart (`vec(a,b) + vec(c,d) == ...`).
+
+`struct` is only needed for a functor with a hole of a non-literal type such as `Integer`, `Vec` or `E`. A functor without holes (a constant such as `Piet`) or whose holes take only tokens (`<NUMBER>`, keywords) is a literal anyway. The stdlib declares its collection literals and `DateTime` as structs:
+
+```nelumbo
+struct Set<E>     ::= { <(> <(> <E> <|> .. <)> <,> , <)*> }  @nelumbo.collections.NSet
+struct DateTime   ::= <[> <Date> T <Time> <]> #100           @nelumbo.datetime.NDateTime
+```
 
 ### Literal enumerations
 

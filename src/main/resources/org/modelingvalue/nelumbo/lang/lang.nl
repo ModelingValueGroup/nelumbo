@@ -47,11 +47,11 @@ Pattern          ::= <NAME>                                                     
 
 Type             ::= { <(> <Type> <,> , <)+> } @nelumbo.lang.Type
 
-Root             ::= "import" <(> <QNAME> <,> , <)+>                                                                          #0 @nelumbo.lang.Import,
-                     <Root#0> ::> <RootNamespace#100>                                                                            @nelumbo.lang.Transform,
-                     <(> "hidden" <)?> <Type#100> <(> <NAME> <,> , <)+>                                                       #0 @nelumbo.lang.Variable,
-                     <[> <NAME> <(> "<" <(> <Type#100> <,> , <)+> ">" <)?> <]> :: <(> <Type#100> <,> , <)+> <(> # <NAME> <)?> #0 @nelumbo.lang.Type,
-                     <(> "private" <)?> <Type#100> ::= <(> <PATTERNS> <(> "#" <NUMBER> <)?> <(> "@" <QNAME> <)?> <,> , <)+>   #0 @nelumbo.lang.Functor
+Root             ::= "import" <(> <QNAME> <,> , <)+>                                                                                          #0 @nelumbo.lang.Import,
+                     <Root#0> ::> <RootNamespace#100>                                                                                            @nelumbo.lang.Transform,
+                     <(> "hidden" <)?> <Type#100> <(> <NAME> <,> , <)+>                                                                       #0 @nelumbo.lang.Variable,
+                     <[> <NAME> <(> "<" <(> <Type#100> <,> , <)+> ">" <)?> <]> :: <(> <Type#100> <,> , <)+> <(> # <NAME> <)?>                 #0 @nelumbo.lang.Type,
+                     <(> "private" <)?> <(> "struct" <)?> <Type#100> ::= <(> <PATTERNS> <(> "#" <NUMBER> <)?> <(> "@" <QNAME> <)?> <,> , <)+> #0 @nelumbo.lang.Functor
 
 Type P
 
