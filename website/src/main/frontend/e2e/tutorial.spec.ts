@@ -78,6 +78,16 @@ test('Next and Previous walk the sections in sidebar order', async ({ page }: { 
     }
 });
 
+test('a sidebar group collapses and opens again when one of its sections is shown', async ({ page }: { page: Page }): Promise<void> => {
+    await page.goto('/tutorial.html#scoping');
+    const link: Locator = page.locator('aside nav a[data-section="logic"]');
+    await page.locator('aside nav .group', { hasText: 'Semantics' }).click();
+    await expect(link).toBeHidden();
+    await page.locator('#scoping .pager a.next').click();
+    await expect(link).toBeVisible();
+    await expect(link).toHaveClass(/active/);
+});
+
 test('the Sandbox link navigates to /sandbox.html', async ({ page }: { page: Page }): Promise<void> => {
     await page.goto('/tutorial.html#logic');
     await page.locator('.site-header nav a[href="/sandbox.html"]').click();

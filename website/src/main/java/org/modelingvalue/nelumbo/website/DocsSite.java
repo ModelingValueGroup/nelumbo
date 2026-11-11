@@ -181,10 +181,11 @@ public final class DocsSite {
                             .thenComparing(Page::title, String.CASE_INSENSITIVE_ORDER))
                     .toList();
             if (!members.isEmpty()) {
-                sb.append("<div class=\"group\">").append(escape(group[1])).append("</div>\n");
+                sb.append("<details open>\n<summary class=\"group\">").append(escape(group[1])).append("</summary>\n");
                 for (Page p : members) {
                     sb.append(navLink(p.url(), p.title(), activeUrl)).append('\n');
                 }
+                sb.append("</details>\n");
             }
         }
         return sb.toString();

@@ -49,7 +49,14 @@
   aside nav a { display: block; padding: 5px 16px; color: var(--muted); text-decoration: none; font-size: 13px; line-height: 1.4; }
   aside nav a:hover { color: var(--text); }
   aside nav a.active { color: var(--accent); border-left: 2px solid var(--accent); padding-left: 14px; }
-  aside nav .group { padding: 14px 16px 4px; color: var(--faint); font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+  aside nav details { margin-top: 12px; }
+  aside nav .group { display: flex; align-items: center; gap: 8px; padding: 6px 16px; color: var(--text); font: 700 12.5px/1.4 "Bricolage Grotesque", "Instrument Sans", sans-serif; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; list-style: none; user-select: none; }
+  aside nav .group::-webkit-details-marker { display: none; }
+  aside nav .group::before { content: ""; flex: 0 0 auto; width: 6px; height: 6px; border-right: 2px solid var(--accent); border-bottom: 2px solid var(--accent); transform: rotate(-45deg); transition: transform .15s ease; }
+  aside nav details[open] > .group::before { transform: rotate(45deg); }
+  aside nav .group:hover { color: var(--accent); }
+  aside nav details a { padding-left: 32px; }
+  aside nav details a.active { padding-left: 30px; }
   aside nav .version { display: block; padding: 6px 16px; color: var(--faint); font-size: 12px; }
   aside .sep { border-top: 1px solid var(--border); margin: 12px 0; }
   main { flex: 1; overflow: auto; }
@@ -155,6 +162,18 @@
     toggle.addEventListener('click', function () { document.body.classList.toggle('nav-open'); });
     backdrop.addEventListener('click', function () { document.body.classList.remove('nav-open'); });
     var active = document.querySelector('aside nav a.active');
+    // every docs link loads a new page: remember the collapsed groups, but always show the active page's group
+    var groups = document.querySelectorAll('aside nav details');
+    var collapsed = [];
+    try { collapsed = JSON.parse(localStorage.getItem('nelumbo-docs-collapsed')) || []; } catch (e) { /* storage unavailable */ }
+    groups.forEach(function (d) {
+      if (collapsed.indexOf(d.querySelector('summary').textContent) >= 0 && !d.contains(active)) { d.open = false; }
+      d.addEventListener('toggle', function () {
+        var closed = Array.prototype.filter.call(groups, function (g) { return !g.open; })
+                                        .map(function (g) { return g.querySelector('summary').textContent; });
+        try { localStorage.setItem('nelumbo-docs-collapsed', JSON.stringify(closed)); } catch (e) { /* storage unavailable */ }
+      });
+    });
     if (active) { active.scrollIntoView({ block: 'center' }); }
   })();
 </script>

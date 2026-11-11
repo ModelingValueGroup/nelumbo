@@ -1,4 +1,4 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, Page, Locator } from '@playwright/test';
 
 test('docs overview lists the pages in a sidebar and renders the markdown', async ({ page }: { page: Page }): Promise<void> => {
     await page.goto('/docs/');
@@ -46,4 +46,17 @@ test('nelumbo code blocks are syntax highlighted', async ({ page }: { page: Page
     const typeColor: string = await block.locator('.nl-type').first().evaluate((e: Element): string => getComputedStyle(e).color);
     const keywordColor: string = await block.locator('.nl-keyword').first().evaluate((e: Element): string => getComputedStyle(e).color);
     expect(typeColor).not.toBe(keywordColor);
+});
+
+test('a collapsed sidebar group stays collapsed on the next page, unless it holds that page', async ({ page }: { page: Page }): Promise<void> => {
+    await page.goto('/docs/');
+    const grammar: Locator = page.locator('aside nav a[href="/docs/reference/lang/grammar.html"]');
+    await page.locator('aside nav .group', { hasText: 'Reference: Lang' }).click();
+    await expect(grammar).toBeHidden();
+    await page.locator('aside nav a[href="/docs/getting-started/first-program.html"]').click();
+    await expect(page).toHaveURL(/first-program\.html$/);
+    await expect(grammar).toBeHidden();
+    await page.goto('/docs/reference/lang/grammar.html');
+    await expect(grammar).toBeVisible();
+    await expect(grammar).toHaveClass(/\bactive\b/);
 });

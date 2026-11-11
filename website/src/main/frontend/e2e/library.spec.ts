@@ -61,3 +61,14 @@ test('the module source is syntax colored', async ({ page }: { page: Page }): Pr
         return colors.size;
     }), { timeout: 10_000 }).toBeGreaterThan(1);
 });
+
+test('a sidebar group collapses and opens again when one of its modules is shown', async ({ page }: { page: Page }): Promise<void> => {
+    await page.goto('/library.html');
+    const link: Locator = page.locator('aside nav a[data-module="datetime"]');
+    await expect(link).toBeVisible();
+    await page.locator('aside nav .group', { hasText: 'Packages' }).click();
+    await expect(link).toBeHidden();
+    await page.evaluate((): void => { location.hash = 'datetime'; });
+    await expect(link).toBeVisible();
+    await expect(link).toHaveClass(/\bactive\b/);
+});

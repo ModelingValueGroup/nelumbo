@@ -44,8 +44,15 @@
   aside nav a { display: block; padding: 6px 16px; color: var(--muted); text-decoration: none; font-size: 13px; cursor: pointer; }
   aside nav a:hover { color: var(--text); }
   aside nav a.active { color: var(--accent); border-left: 2px solid var(--accent); padding-left: 14px; }
-  aside nav .group { padding: 14px 16px 4px; color: var(--faint); font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
-  aside nav .group:first-child { padding-top: 0; }
+  aside nav details { margin-top: 12px; }
+  aside nav details:first-child { margin-top: 0; }
+  aside nav .group { display: flex; align-items: center; gap: 8px; padding: 6px 16px; color: var(--text); font: 700 12.5px/1.4 "Bricolage Grotesque", "Instrument Sans", sans-serif; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; list-style: none; user-select: none; }
+  aside nav .group::-webkit-details-marker { display: none; }
+  aside nav .group::before { content: ""; flex: 0 0 auto; width: 6px; height: 6px; border-right: 2px solid var(--accent); border-bottom: 2px solid var(--accent); transform: rotate(-45deg); transition: transform .15s ease; }
+  aside nav details[open] > .group::before { transform: rotate(45deg); }
+  aside nav .group:hover { color: var(--accent); }
+  aside nav details a { padding-left: 32px; }
+  aside nav details a.active { padding-left: 30px; }
   aside nav .version { display: block; padding: 6px 16px; color: var(--faint); font-size: 12px; }
   aside .sep { border-top: 1px solid var(--border); margin: 12px 0; }
   main { flex: 1; overflow: auto; }
@@ -120,7 +127,8 @@
 <div class="layout">
 <aside>
   <nav>
-    <div class="group">Syntax</div>
+    <details open>
+    <summary class="group">Syntax</summary>
     <a data-section="syntax" class="active">Types &amp; functors</a>
     <a data-section="patterns">Patterns</a>
     <a data-section="precedence">Precedence</a>
@@ -129,7 +137,9 @@
     <a data-section="connected">Connected tokens</a>
     <a data-section="named-patterns">Named patterns</a>
     <a data-section="scoping">Scoping</a>
-    <div class="group">Semantics</div>
+    </details>
+    <details open>
+    <summary class="group">Semantics</summary>
     <a data-section="logic">Propositional logic</a>
     <a data-section="facts">Facts &amp; queries</a>
     <a data-section="unique">Unique values</a>
@@ -141,10 +151,14 @@
     <a data-section="relations">Relational KB</a>
     <a data-section="quantifiers">Quantifiers</a>
     <a data-section="dsl">Custom DSL</a>
-    <div class="group">Transformations</div>
+    </details>
+    <details open>
+    <summary class="group">Transformations</summary>
     <a data-section="transform">Transformations</a>
     <a data-section="cnl">Controlled English</a>
-    <div class="group">Projects</div>
+    </details>
+    <details open>
+    <summary class="group">Projects</summary>
     <a data-section="family-tree">Family tree</a>
     <a data-section="club-fees">Club fees</a>
     <a data-section="train-network">Train network</a>
@@ -155,6 +169,7 @@
     <a data-section="interpreter">Expression interpreter</a>
     <a data-section="room-booking">Room booking</a>
     <a data-section="access-policy">Access policy</a>
+    </details>
     <div class="sep"></div>
     <span class="version">@VERSION@ <span class="status-dot" data-status-link aria-hidden="true"></span></span>
   </nav>
@@ -926,7 +941,12 @@
       if (!found) { return; }
       if (!found.classList.contains('active')) { main.scrollTop = 0; }
       sections.forEach(function (s) { s.classList.toggle('active', s.id === id); });
-      links.forEach(function (a) { a.classList.toggle('active', a.getAttribute('data-section') === id); });
+      links.forEach(function (a) {
+        var active = a.getAttribute('data-section') === id;
+        a.classList.toggle('active', active);
+        // a section reached by Next/Previous or a link must not hide in a collapsed group
+        if (active) { a.parentElement.open = true; }
+      });
       NelumboFields.mountFields(found);
       if (location.hash !== '#' + id) { history.replaceState(null, '', '#' + id); }
     }

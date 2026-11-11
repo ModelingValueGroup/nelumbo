@@ -38,3 +38,14 @@ test('a #name link opens the sandbox with that example loaded', async ({ page }:
     await expect.poll(async (): Promise<string> => editorText(page)).toBe(source);
     await expect(page.locator('aside nav a[data-example="family"]')).toHaveClass(/\bactive\b/);
 });
+
+test('a sidebar group collapses and opens again when one of its examples is shown', async ({ page }: { page: Page }): Promise<void> => {
+    await page.goto('/sandbox.html');
+    const answer: Locator = page.locator('aside nav a[data-example="family"]');
+    await expect(answer).toBeVisible();
+    await page.locator('aside nav .group', { hasText: 'Exercises' }).click();
+    await expect(answer).toBeHidden();
+    await page.evaluate((): void => { location.hash = 'family'; });
+    await expect(answer).toBeVisible();
+    await expect(answer).toHaveClass(/\bactive\b/);
+});

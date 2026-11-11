@@ -54,8 +54,15 @@
   aside nav a { display: block; padding: 5px 16px; color: var(--muted); text-decoration: none; font-size: 13px; }
   aside nav a:hover { color: var(--text); }
   aside nav a.active { color: var(--accent); border-left: 2px solid var(--accent); padding-left: 14px; }
-  aside nav .group { padding: 14px 16px 4px; color: var(--faint); font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
-  aside nav .group:first-child { padding-top: 0; }
+  aside nav details { margin-top: 12px; }
+  aside nav details:first-child { margin-top: 0; }
+  aside nav .group { display: flex; align-items: center; gap: 8px; padding: 6px 16px; color: var(--text); font: 700 12.5px/1.4 "Bricolage Grotesque", "Instrument Sans", sans-serif; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; list-style: none; user-select: none; }
+  aside nav .group::-webkit-details-marker { display: none; }
+  aside nav .group::before { content: ""; flex: 0 0 auto; width: 6px; height: 6px; border-right: 2px solid var(--accent); border-bottom: 2px solid var(--accent); transform: rotate(-45deg); transition: transform .15s ease; }
+  aside nav details[open] > .group::before { transform: rotate(45deg); }
+  aside nav .group:hover { color: var(--accent); }
+  aside nav details a { padding-left: 32px; }
+  aside nav details a.active { padding-left: 30px; }
   main { flex: 1; display: block; min-height: 0; overflow: auto; padding: 16px; }
   #nav-toggle, #nav-backdrop { display: none; }
   @media (max-width: 760px) {
@@ -161,28 +168,37 @@
       fetch('/library/' + encodeURIComponent(name)).then(function (r) { return r.ok ? r.text() : null; }).then(function (source) {
         if (source === null || !NelumboFields.setFieldText(field, source, name)) { return; }
         show(modules[name]);
-        nav.querySelectorAll('a').forEach(function (a) { a.classList.toggle('active', a.dataset.module === name); });
+        nav.querySelectorAll('a').forEach(function (a) {
+          var active = a.dataset.module === name;
+          a.classList.toggle('active', active);
+          // a module opened by a #name link must not hide in a collapsed group
+          if (active) { a.parentElement.open = true; }
+        });
         if (setHash && location.hash !== '#' + name) { history.replaceState(null, '', '#' + name); }
       });
     }
 
     NelumboFields.initNelumboFields();
     fetch('/library').then(function (r) { return r.json(); }).then(function (body) {
-      var group = null;
+      var group   = null;
+      var details = null;
       body.modules.forEach(function (m) {
         modules[m.name] = m;
         if (m.group !== group) {
           group = m.group;
-          var div = document.createElement('div');
-          div.className = 'group';
-          div.textContent = group;
-          nav.appendChild(div);
+          details = document.createElement('details');
+          details.open = true;
+          var summary = document.createElement('summary');
+          summary.className = 'group';
+          summary.textContent = group;
+          details.appendChild(summary);
+          nav.appendChild(details);
         }
         var a = document.createElement('a');
         a.href = '#' + m.name;
         a.dataset.module = m.name;
         a.textContent = m.name;
-        nav.appendChild(a);
+        details.appendChild(a);
       });
       nav.addEventListener('click', function (e) {
         var a = e.target.closest('a[data-module]');
