@@ -133,3 +133,16 @@ test('the globe opens a menu with Share and Load that closes on Escape and outsi
     await page.locator('main .intro').click();
     await expect(menu).toBeHidden();
 });
+
+test('the share message disappears after 10 seconds', async ({ page }: { page: Page }): Promise<void> => {
+    const name: string = 'f' + RUN;
+    await page.clock.install();
+    await page.goto('/sandbox.html');
+    await waitForEditors(page);
+    const message: Locator = await share(firstField(page), 'Share', name);
+    await expect(message).toHaveText('Shared as "' + name + '" (kept 7 days)');
+    await page.clock.fastForward(9_000);
+    await expect(message).toHaveText('Shared as "' + name + '" (kept 7 days)');
+    await page.clock.fastForward(1_000);
+    await expect(message).toBeHidden();
+});

@@ -465,24 +465,27 @@ function toolbarButton(text: string): HTMLButtonElement {
     return button;
 }
 
+const SHARE_MESSAGE_MS: number = 10_000;
+
 // a globe drawn with the text colour (outline, meridian, equator)
 const GLOBE_SVG: string = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" '
                         + 'stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18'
                         + 'M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9s1.3-6.3 3.8-9z"/></svg>';
 
 // The globe opens a menu with Share... and Load...; each opens a name row (input, action, Cancel) in place of
-// the globe. The outcome stays in the toolbar until the next opening.
+// the globe. The outcome shows in the toolbar for SHARE_MESSAGE_MS, or until the next opening.
 function addShareButtons(toolbar: HTMLDivElement, field: Field): void {
-    const share:   HTMLSpanElement   = document.createElement('span');
-    const globe:   HTMLButtonElement = toolbarButton('');
-    const menu:    HTMLDivElement    = document.createElement('div');
-    const shareAs: HTMLButtonElement = toolbarButton('Share...');
-    const loadAs:  HTMLButtonElement = toolbarButton('Load...');
-    const input:   HTMLInputElement  = document.createElement('input');
-    const go:      HTMLButtonElement = toolbarButton('Share');
-    const cancel:  HTMLButtonElement = toolbarButton('Cancel');
-    const message: HTMLSpanElement   = document.createElement('span');
-    let   saving:  boolean           = true;
+    const share:        HTMLSpanElement    = document.createElement('span');
+    const globe:        HTMLButtonElement  = toolbarButton('');
+    const menu:         HTMLDivElement     = document.createElement('div');
+    const shareAs:      HTMLButtonElement  = toolbarButton('Share...');
+    const loadAs:       HTMLButtonElement  = toolbarButton('Load...');
+    const input:        HTMLInputElement   = document.createElement('input');
+    const go:           HTMLButtonElement  = toolbarButton('Share');
+    const cancel:       HTMLButtonElement  = toolbarButton('Cancel');
+    const message:      HTMLSpanElement    = document.createElement('span');
+    let   saving:       boolean            = true;
+    let   messageTimer: number | undefined = undefined;
 
     share.className    = 'nelumbo-share';
     globe.className    = 'nelumbo-share-globe';
@@ -525,11 +528,19 @@ function addShareButtons(toolbar: HTMLDivElement, field: Field): void {
         globe.focus();
     }
 
+    function showMessage(text: string, error: boolean): void {
+        window.clearTimeout(messageTimer);
+        message.textContent = text;
+        message.classList.toggle('error', error);
+        if (text !== '') {
+            messageTimer = window.setTimeout((): void => showMessage('', false), SHARE_MESSAGE_MS);
+        }
+    }
+
     function open(save: boolean): void {
         saving              = save;
         go.textContent      = save ? 'Share' : 'Load';
-        message.textContent = '';
-        message.classList.remove('error');
+        showMessage('', false);
         input.value         = lastShareName();
         setOpen(true);
         input.focus();
@@ -545,8 +556,7 @@ function addShareButtons(toolbar: HTMLDivElement, field: Field): void {
         close();
         const outcome: ShareOutcome | null = saving ? await saveSolution(field, name) : await loadSolution(field, name);
         if (outcome !== null) {
-            message.textContent = outcome.text;
-            message.classList.toggle('error', outcome.error);
+            showMessage(outcome.text, outcome.error);
         }
     }
 
