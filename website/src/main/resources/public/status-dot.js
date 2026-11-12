@@ -8,10 +8,7 @@
 // specific language governing permissions and limitations under the License.                                          ~
 //                                                                                                                     ~
 // Maintainers:                                                                                                        ~
-//     Wim Bast, Tom Brus                                                                                              ~
-//                                                                                                                     ~
-// Contributors:                                                                                                       ~
-//     Victor Lap                                                                                                      ~
+//     Wim Bast, Tom Brus, Victor Lap                                                                                  ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 // Server status dot: every <a class="status-dot"> on the page shows the /stats status as a coloured dot

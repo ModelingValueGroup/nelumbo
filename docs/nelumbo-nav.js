@@ -8,10 +8,7 @@
 // specific language governing permissions and limitations under the License.                                          ~
 //                                                                                                                     ~
 // Maintainers:                                                                                                        ~
-//     Wim Bast, Tom Brus                                                                                              ~
-//                                                                                                                     ~
-// Contributors:                                                                                                       ~
-//     Victor Lap                                                                                                      ~
+//     Wim Bast, Tom Brus, Victor Lap                                                                                  ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 // reveal.js plugin (mkslides.yml): shift-click on the previous/next arrow jumps to the first/last slide

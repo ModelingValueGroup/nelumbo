@@ -9,10 +9,7 @@
 ## specific language governing permissions and limitations under the License.                                          ~
 ##                                                                                                                     ~
 ## Maintainers:                                                                                                        ~
-##     Wim Bast, Tom Brus                                                                                              ~
-##                                                                                                                     ~
-## Contributors:                                                                                                       ~
-##     Victor Lap                                                                                                      ~
+##     Wim Bast, Tom Brus, Victor Lap                                                                                  ~
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 set -ue
