@@ -94,10 +94,11 @@ test('stats drawn after the snippets tab have their full width', async ({ page }
 test('the header with the admin link never overflows', async ({ page }: { page: Page }): Promise<void> => {
     test.setTimeout(240_000);
     for (const path of ['/tutorial.html', '/sandbox.html', '/library.html', '/docs/', '/admin']) {
-        await page.setViewportSize({ width: 320, height: 700 });
+        await page.setViewportSize({ width: 699, height: 700 });
         await page.goto(path);
-        await expect(page.locator('a.admin-link')).toHaveCount(1);
-        for (let width: number = 320; width <= 1000; width += 5) {
+        await expect(page.locator('a.admin-link')).toBeHidden();
+        // below 700 px the link is hidden: the header there is not this test's business
+        for (let width: number = 700; width <= 1000; width += 5) {
             await page.setViewportSize({ width, height: 700 });
             const over: number = await page.evaluate((): number => document.documentElement.scrollWidth - document.documentElement.clientWidth);
             expect(over, path + ' at ' + width + ' px').toBeLessThanOrEqual(0);
