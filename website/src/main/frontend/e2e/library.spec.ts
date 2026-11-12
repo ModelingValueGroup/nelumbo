@@ -42,6 +42,43 @@ test('clicking a module loads its source and explanation', async ({ page }: { pa
     expect(await page.evaluate((): boolean => (window as any).NelumboFields.__editors[0].editor.getSelection().isEmpty())).toBe(true);
 });
 
+// every module opened from the sidebar is a history entry, so Back and Forward walk them, back to the first module
+test('Back and Forward return to the modules opened from the sidebar', async ({ page }: { page: Page }): Promise<void> => {
+    await page.goto('/library.html');
+    const lang: string = await moduleSource(page, 'lang');
+    const collections: string = await moduleSource(page, 'collections');
+    const datetime: string = await moduleSource(page, 'datetime');
+    await expect.poll(async (): Promise<string> => editorText(page)).toBe(lang);
+    await page.locator('aside nav a[data-module="collections"]').click();
+    await expect.poll(async (): Promise<string> => editorText(page)).toBe(collections);
+    await page.locator('aside nav a[data-module="datetime"]').click();
+    await expect.poll(async (): Promise<string> => editorText(page)).toBe(datetime);
+    await page.goBack();
+    await expect(page).toHaveURL(/#collections$/);
+    await expect.poll(async (): Promise<string> => editorText(page)).toBe(collections);
+    await expect(page.locator('#module-name')).toHaveText('nelumbo.collections');
+    await page.goBack();
+    await expect(page).toHaveURL(/\/library\.html$/);
+    await expect.poll(async (): Promise<string> => editorText(page)).toBe(lang);
+    await expect(page.locator('aside nav a[data-module="lang"]')).toHaveClass(/\bactive\b/);
+    await page.goForward();
+    await expect.poll(async (): Promise<string> => editorText(page)).toBe(collections);
+});
+
+test('Cmd/Ctrl+click on a module opens it in a new tab and leaves this one alone', async ({ page }: { page: Page }): Promise<void> => {
+    await page.goto('/library.html#lang');
+    const source: string = await moduleSource(page, 'lang');
+    await expect.poll(async (): Promise<string> => editorText(page)).toBe(source);
+    const opened: Promise<Page> = page.context().waitForEvent('page');
+    await page.locator('aside nav a[data-module="datetime"]').click({ modifiers: ['ControlOrMeta'] });
+    const tab: Page = await opened;
+    await tab.waitForFunction((): boolean => ((window as any).NelumboFields?.__editors?.length ?? 0) > 0);
+    await expect.poll(async (): Promise<string> => editorText(tab), { timeout: 20_000 }).toBe(await moduleSource(page, 'datetime'));
+    await tab.close();
+    expect(await editorText(page)).toBe(source);
+    await expect(page).toHaveURL(/#lang$/);
+});
+
 test('a #name link opens the library with that module loaded', async ({ page }: { page: Page }): Promise<void> => {
     await page.goto('/library.html#datetime');
     const source: string = await moduleSource(page, 'datetime');

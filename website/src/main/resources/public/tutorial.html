@@ -129,46 +129,46 @@
   <nav>
     <details open>
     <summary class="group">Syntax</summary>
-    <a data-section="syntax" class="active">Types &amp; functors</a>
-    <a data-section="patterns">Patterns</a>
-    <a data-section="precedence">Precedence</a>
-    <a data-section="parentheses">Parentheses</a>
-    <a data-section="generics">Generics</a>
-    <a data-section="connected">Connected tokens</a>
-    <a data-section="named-patterns">Named patterns</a>
-    <a data-section="scoping">Scoping</a>
+    <a href="#syntax" data-section="syntax" class="active">Types &amp; functors</a>
+    <a href="#patterns" data-section="patterns">Patterns</a>
+    <a href="#precedence" data-section="precedence">Precedence</a>
+    <a href="#parentheses" data-section="parentheses">Parentheses</a>
+    <a href="#generics" data-section="generics">Generics</a>
+    <a href="#connected" data-section="connected">Connected tokens</a>
+    <a href="#named-patterns" data-section="named-patterns">Named patterns</a>
+    <a href="#scoping" data-section="scoping">Scoping</a>
     </details>
     <details open>
     <summary class="group">Semantics</summary>
-    <a data-section="logic">Propositional logic</a>
-    <a data-section="facts">Facts &amp; queries</a>
-    <a data-section="unique">Unique values</a>
-    <a data-section="rules">Rules &amp; recursion</a>
-    <a data-section="combining">Combining rules</a>
-    <a data-section="cycles">Cyclic rules</a>
-    <a data-section="types">Data types</a>
-    <a data-section="equality">Equality</a>
-    <a data-section="relations">Relational KB</a>
-    <a data-section="quantifiers">Quantifiers</a>
-    <a data-section="dsl">Custom DSL</a>
+    <a href="#logic" data-section="logic">Propositional logic</a>
+    <a href="#facts" data-section="facts">Facts &amp; queries</a>
+    <a href="#unique" data-section="unique">Unique values</a>
+    <a href="#rules" data-section="rules">Rules &amp; recursion</a>
+    <a href="#combining" data-section="combining">Combining rules</a>
+    <a href="#cycles" data-section="cycles">Cyclic rules</a>
+    <a href="#types" data-section="types">Data types</a>
+    <a href="#equality" data-section="equality">Equality</a>
+    <a href="#relations" data-section="relations">Relational KB</a>
+    <a href="#quantifiers" data-section="quantifiers">Quantifiers</a>
+    <a href="#dsl" data-section="dsl">Custom DSL</a>
     </details>
     <details open>
     <summary class="group">Transformations</summary>
-    <a data-section="transform">Transformations</a>
-    <a data-section="cnl">Controlled English</a>
+    <a href="#transform" data-section="transform">Transformations</a>
+    <a href="#cnl" data-section="cnl">Controlled English</a>
     </details>
     <details open>
     <summary class="group">Projects</summary>
-    <a data-section="family-tree">Family tree</a>
-    <a data-section="club-fees">Club fees</a>
-    <a data-section="train-network">Train network</a>
-    <a data-section="number-toolkit">Number toolkit</a>
-    <a data-section="set-algebra">Set algebra</a>
-    <a data-section="list-statistics">List statistics</a>
-    <a data-section="vectors">Vectors</a>
-    <a data-section="interpreter">Expression interpreter</a>
-    <a data-section="room-booking">Room booking</a>
-    <a data-section="access-policy">Access policy</a>
+    <a href="#family-tree" data-section="family-tree">Family tree</a>
+    <a href="#club-fees" data-section="club-fees">Club fees</a>
+    <a href="#train-network" data-section="train-network">Train network</a>
+    <a href="#number-toolkit" data-section="number-toolkit">Number toolkit</a>
+    <a href="#set-algebra" data-section="set-algebra">Set algebra</a>
+    <a href="#list-statistics" data-section="list-statistics">List statistics</a>
+    <a href="#vectors" data-section="vectors">Vectors</a>
+    <a href="#interpreter" data-section="interpreter">Expression interpreter</a>
+    <a href="#room-booking" data-section="room-booking">Room booking</a>
+    <a href="#access-policy" data-section="access-policy">Access policy</a>
     </details>
     <div class="sep"></div>
     <span class="version">@VERSION@ <span class="status-dot" aria-hidden="true"></span></span>
@@ -932,10 +932,13 @@
     var toggle = document.getElementById('nav-toggle');
     var backdrop = document.getElementById('nav-backdrop');
     function closeNav() { document.body.classList.remove('nav-open'); }
+    // a modified click (Cmd/Ctrl: new tab, Shift: new window) or a non-primary button is left to the browser
+    function newTabClick(e) { return e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0; }
     toggle.addEventListener('click', function () { document.body.classList.toggle('nav-open'); });
     backdrop.addEventListener('click', closeNav);
     var main = document.querySelector('main');
-    function show(id) {
+    // push: a click (a history entry, so Back/Forward walk the sections); not on load or Back/Forward itself
+    function show(id, push) {
       var found = document.getElementById(id);
       if (!found) { return; }
       if (!found.classList.contains('active')) { main.scrollTop = 0; }
@@ -947,10 +950,13 @@
         if (active) { a.parentElement.open = true; }
       });
       NelumboFields.mountFields(found);
-      if (location.hash !== '#' + id) { history.replaceState(null, '', '#' + id); }
+      if (location.hash !== '#' + id) { history[push ? 'pushState' : 'replaceState'](null, '', '#' + id); }
     }
     links.forEach(function (a) {
-      a.addEventListener('click', function (e) { e.preventDefault(); show(a.getAttribute('data-section')); closeNav(); });
+      a.addEventListener('click', function (e) {
+        if (newTabClick(e)) { return; }
+        e.preventDefault(); show(a.getAttribute('data-section'), true); closeNav();
+      });
     });
     // Previous / Next at the bottom of every section, in the order of the sidebar
     var order = Array.prototype.map.call(links, function (a) { return { id: a.getAttribute('data-section'), title: a.textContent }; });
@@ -966,7 +972,7 @@
       title.textContent = item.title;
       a.appendChild(dir);
       a.appendChild(title);
-      a.addEventListener('click', function (e) { e.preventDefault(); show(item.id); });
+      a.addEventListener('click', function (e) { if (newTabClick(e)) { return; } e.preventDefault(); show(item.id, true); });
       return a;
     }
     order.forEach(function (item, i) {
@@ -982,6 +988,11 @@
     NelumboFields.connect();
     var initial = (location.hash || '').replace('#', '');
     show(document.getElementById(initial) ? initial : sections[0].id);
+    // Back/Forward (and a hash typed in the address bar) show the section of the new URL
+    window.addEventListener('popstate', function () {
+      var id = (location.hash || '').replace('#', '');
+      show(document.getElementById(id) ? id : sections[0].id);
+    });
   })();
 </script>
 <script src="/status-dot.js" defer></script>

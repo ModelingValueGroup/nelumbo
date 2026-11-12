@@ -174,7 +174,8 @@ fib(7)=r ?
       return details;
     }
     // replaces the document (one undoable edit) and marks the example as current
-    function load(name) {
+    // push: a click (a history entry, so Back/Forward walk the examples, via hashchange)
+    function load(name, push) {
       fetch('/examples/' + encodeURIComponent(name)).then(function (r) { return r.ok ? r.text() : null; }).then(function (source) {
         if (source === null || !NelumboFields.setFieldText(field, source, name)) { return; }
         nav.querySelectorAll('a').forEach(function (a) {
@@ -183,7 +184,7 @@ fib(7)=r ?
           // an example opened by a #name link must not hide in a collapsed group
           if (active) { a.closest('details').open = true; }
         });
-        if (location.hash !== '#' + name) { history.replaceState(null, '', '#' + name); }
+        if (location.hash !== '#' + name) { history[push ? 'pushState' : 'replaceState'](null, '', '#' + name); }
       });
     }
 
@@ -207,14 +208,20 @@ fib(7)=r ?
       });
       nav.addEventListener('click', function (e) {
         var a = e.target.closest('a[data-example]');
-        if (!a) { return; }
+        // a modified click (Cmd/Ctrl: new tab, Shift: new window) is left to the browser
+        if (!a || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) { return; }
         e.preventDefault();
-        load(a.dataset.example);
+        load(a.dataset.example, true);
         closeNav();
       });
       window.addEventListener('hashchange', function () {
         var name = location.hash.slice(1);
-        if (names.indexOf(name) >= 0) { load(name); }
+        // Back to the page without an example: its own starter document
+        if (names.indexOf(name) >= 0) {
+          load(name);
+        } else if (!name && NelumboFields.restoreFieldText(field)) {
+          nav.querySelectorAll('a').forEach(function (a) { a.classList.remove('active'); });
+        }
       });
       var initial = location.hash.slice(1);
       if (names.indexOf(initial) >= 0) { load(initial); }

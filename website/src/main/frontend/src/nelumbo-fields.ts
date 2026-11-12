@@ -140,6 +140,7 @@ interface Field {
     baseKey:  string;
     key:      string;
     original: string;
+    pageText: string; // the original from the page itself, under baseKey (restoreFieldText)
     reset:    HTMLButtonElement;
 }
 
@@ -692,7 +693,7 @@ function buildField(div: HTMLElement, index: number): void {
 
     const uri:   monaco.Uri               = monaco.Uri.parse('inmemory://field-' + index + '.nl');
     const model: monaco.editor.ITextModel = createModel(savedText(baseKey, original), uri);
-    const field: Field                    = { model: model, baseKey: baseKey, key: baseKey, original: original, reset: reset };
+    const field: Field                    = { model: model, baseKey: baseKey, key: baseKey, original: original, pageText: original, reset: reset };
     reset.addEventListener('click', (): void => {
         replaceText(model, field.original);
     });
@@ -759,10 +760,18 @@ export function mountFields(container: ParentNode): void {
 // Ctrl/Cmd+Z brings back what was there; false when the field is not mounted (yet).
 export function setFieldText(div: HTMLElement, text: string, name: string): boolean {
     const field: Field | undefined = fields.get(div);
-    if (field === undefined) {
-        return false;
-    }
-    field.key      = field.baseKey + '#' + name;
+    return field !== undefined && loadText(field, field.baseKey + '#' + name, text);
+}
+
+// Back to the field's own document from the page (the sandbox's starter, when Back leaves the examples): its saved
+// edits when there are any. One undoable edit; false when the field is not mounted (yet).
+export function restoreFieldText(div: HTMLElement): boolean {
+    const field: Field | undefined = fields.get(div);
+    return field !== undefined && loadText(field, field.baseKey, field.pageText);
+}
+
+function loadText(field: Field, key: string, text: string): boolean {
+    field.key      = key;
     field.original = text;
     replaceText(field.model, savedText(field.key, text));
     revealTop(field.model);

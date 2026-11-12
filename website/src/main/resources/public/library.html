@@ -164,7 +164,8 @@
       document.getElementById('module-meta').hidden = false;
     }
     // replaces the document (one undoable edit) and marks the module as current
-    function load(name, setHash) {
+    // push: a click (a history entry, so Back/Forward walk the modules, via hashchange)
+    function load(name, setHash, push) {
       fetch('/library/' + encodeURIComponent(name)).then(function (r) { return r.ok ? r.text() : null; }).then(function (source) {
         if (source === null || !NelumboFields.setFieldText(field, source, name)) { return; }
         show(modules[name]);
@@ -174,7 +175,7 @@
           // a module opened by a #name link must not hide in a collapsed group
           if (active) { a.parentElement.open = true; }
         });
-        if (setHash && location.hash !== '#' + name) { history.replaceState(null, '', '#' + name); }
+        if (setHash && location.hash !== '#' + name) { history[push ? 'pushState' : 'replaceState'](null, '', '#' + name); }
       });
     }
 
@@ -202,14 +203,16 @@
       });
       nav.addEventListener('click', function (e) {
         var a = e.target.closest('a[data-module]');
-        if (!a) { return; }
+        // a modified click (Cmd/Ctrl: new tab, Shift: new window) is left to the browser
+        if (!a || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) { return; }
         e.preventDefault();
-        load(a.dataset.module, true);
+        load(a.dataset.module, true, true);
         closeNav();
       });
       window.addEventListener('hashchange', function () {
         var name = location.hash.slice(1);
-        if (modules[name]) { load(name, true); }
+        // Back to the page without a module: the first one, as on opening it
+        if (modules[name]) { load(name, true); } else if (!name && body.modules.length) { load(body.modules[0].name, false); }
       });
       var initial = location.hash.slice(1);
       if (modules[initial]) { load(initial, true); } else if (body.modules.length) { load(body.modules[0].name, false); }

@@ -88,6 +88,42 @@ test('a sidebar group collapses and opens again when one of its sections is show
     await expect(link).toHaveClass(/active/);
 });
 
+// every section switch is a history entry, so the browser's Back and Forward buttons walk the sections visited
+test('Back and Forward return to the sections visited with Next and the sidebar', async ({ page }: { page: Page }): Promise<void> => {
+    await page.goto('/tutorial.html#logic');
+    await page.locator('#logic .pager a.next').click();
+    await expect(page.locator('#facts')).toHaveClass(/active/);
+    await showSection(page, 'rules');
+    await page.goBack();
+    await expect(page).toHaveURL(/#facts$/);
+    await expect(page.locator('#facts')).toHaveClass(/active/);
+    await expect(page.locator('aside nav a[data-section="facts"]')).toHaveClass(/active/);
+    await page.goBack();
+    await expect(page).toHaveURL(/#logic$/);
+    await expect(page.locator('#logic')).toHaveClass(/active/);
+    await page.goForward();
+    await expect(page.locator('#facts')).toHaveClass(/active/);
+    await page.goForward();
+    await expect(page.locator('#rules')).toHaveClass(/active/);
+});
+
+// Cmd/Ctrl+click is how people open a section next to the one they are working in: the page must not swallow it
+test('Cmd/Ctrl+click on a sidebar or pager link opens that section in a new tab', async ({ page }: { page: Page }): Promise<void> => {
+    await page.goto('/tutorial.html#logic');
+    for (const link of [page.locator('aside nav a[data-section="rules"]'), page.locator('#logic .pager a.next')]) {
+        const opened: Promise<Page> = page.context().waitForEvent('page');
+        await link.click({ modifiers: ['ControlOrMeta'] });
+        const tab: Page = await opened;
+        await tab.waitForLoadState();
+        const id: string = (await link.getAttribute('href'))!.slice(1);
+        await expect(tab.locator('#' + id)).toHaveClass(/active/);
+        await tab.close();
+        // the original tab stays where it was
+        await expect(page.locator('#logic')).toHaveClass(/active/);
+        await expect(page).toHaveURL(/#logic$/);
+    }
+});
+
 test('the Sandbox link navigates to /sandbox.html', async ({ page }: { page: Page }): Promise<void> => {
     await page.goto('/tutorial.html#logic');
     await page.locator('.site-header nav a[href="/sandbox.html"]').click();
