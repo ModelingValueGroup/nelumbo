@@ -2,6 +2,8 @@
 
 <p align="center"><img src="docs/nelumbo.svg" alt="Nelumbo" width="50" height="50"/></p>
 
+<p align="center"><a href="https://nelumbo.nl">everything about Nelumbo</a></p>
+
 Nelumbo aims to be a powerful and extensible declarative logic programming language, designed for defining and executing
 custom syntax and semantics. As a meta-language, Nelumbo will be easily extensible, making it suitable for a wide range
 of applications. The goal is to integrate it with any IDE using the Language Server Protocol, allowing Nelumbo to serve
