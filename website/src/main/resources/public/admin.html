@@ -13,10 +13,12 @@
 <style>
   :root { --bg: #1b1d23; --panel: #23262e; --text: #e6e8ee; --muted: #9aa0ac; --accent: #c184d8; --grid: #343843;
           --border: #343843; --faint: #5c6270; --accent-soft: #edd4e8; color-scheme: dark;
-          --series-cpu: #9085e9; --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500; }
+          --series-cpu: #9085e9; --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500;
+          --night: #17191e; }
   [data-theme="light"] { --bg: #fbfafc; --panel: #f2eff5; --text: #1f1b24; --muted: #6b6475; --accent: #9246b0; --grid: #e0dbe6;
           --border: #e0dbe6; --faint: #958e9e; --accent-soft: #74358f; color-scheme: light;
-          --series-cpu: #4a3aa7; --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --series-4: #eda100; }
+          --series-cpu: #4a3aa7; --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --series-4: #eda100;
+          --night: #e4e0e9; }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 "Instrument Sans", system-ui, sans-serif; }
   .site-header { flex: 0 0 auto; display: flex; align-items: center; gap: 12px; height: 56px; padding: 0 24px; border-bottom: 1px solid var(--border); }
@@ -66,7 +68,7 @@
   #snippets td.num { text-align: right; }
   #snippets tr.snippet-text td { white-space: normal; }
   #snippets tr.snippet-text pre { margin: 0; max-height: 320px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
-  main { max-width: 960px; margin: 0 auto; padding: 40px 16px; }
+  main { padding: 40px clamp(16px, 3vw, 48px); }
   h2 { font-family: "Bricolage Grotesque", system-ui, sans-serif; font-size: 18px; margin: 32px 0 8px; }
   .panel { padding: 18px 20px; background: var(--panel); border-radius: 10px; }
   dl { display: grid; grid-template-columns: max-content 1fr; gap: 8px 24px; margin: 0; }
@@ -138,11 +140,7 @@
       <button type="button" data-range="day" aria-pressed="false">day</button>
       <button type="button" data-range="week" aria-pressed="false">week</button>
     </div>
-    <div class="chart"><h3>CPU (% of the container's cores)</h3><div id="chart-cpu"></div></div>
-    <div class="chart"><h3>Evaluations per second (average per point)</h3><div id="chart-evals"></div></div>
-    <div class="chart"><h3>Activity (per point: max sessions, max running evaluations, evaluations stopped as busy, solutions shared)</h3><div id="chart-activity"></div></div>
-    <div class="chart"><h3>Shared solutions (max per point)</h3><div id="chart-solutions"></div></div>
-    <div class="chart"><h3>Solutions on disk (MB, limit 100)</h3><div id="chart-disk"></div></div>
+    <div class="chart"><h3>Server activity</h3><div id="chart-stats"></div></div>
     <details>
       <summary>Data table</summary>
       <div class="table-wrap">

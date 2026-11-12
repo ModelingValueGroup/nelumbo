@@ -86,8 +86,8 @@ test('a snippet text shows as text', async ({ page }: { page: Page }): Promise<v
 test('stats drawn after the snippets tab have their full width', async ({ page }: { page: Page }): Promise<void> => {
     await page.goto('/admin#snippets');
     await page.getByRole('tab', { name: 'Stats' }).click();
-    await expect(page.locator('#chart-cpu .uplot')).toHaveCount(1, { timeout: 10_000 });
-    const box: { x: number; y: number; width: number; height: number } | null = await page.locator('#chart-cpu .uplot').boundingBox();
+    await expect(page.locator('#chart-stats .uplot')).toHaveCount(1, { timeout: 10_000 });
+    const box: { x: number; y: number; width: number; height: number } | null = await page.locator('#chart-stats .uplot').boundingBox();
     expect(box!.width).toBeGreaterThan(200);
 });
 

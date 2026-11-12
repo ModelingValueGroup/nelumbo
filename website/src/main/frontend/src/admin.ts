@@ -1,5 +1,8 @@
 import { start as startStats } from './status-chart';
 
+// for the e2e test of the night shading
+export { nights } from './status-chart';
+
 interface Snippet {
     name:    string;
     savedAt: number;
