@@ -146,3 +146,11 @@ test('the share message disappears after 10 seconds', async ({ page }: { page: P
     await page.clock.fastForward(1_000);
     await expect(message).toBeHidden();
 });
+
+test('the share item tells that the IP is kept', async ({ page }: { page: Page }): Promise<void> => {
+    await page.goto('/sandbox.html');
+    await waitForEditors(page);
+    await firstField(page).getByRole('button', { name: 'Share or load by name' }).click();
+    await expect(firstField(page).getByRole('menuitem', { name: 'Share...' }))
+        .toHaveAttribute('title', 'Anyone who knows the name can load it. Your IP address is kept with it for 7 days.');
+});

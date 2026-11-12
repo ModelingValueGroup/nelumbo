@@ -4,6 +4,7 @@ import { resolve }               from 'node:path';
 
 const PORT:    number = 8899;
 const OVERLOAD_PORT: number = 8898;
+const ADMIN_PORT:    number = 8897;
 const LIBSDIR: string = resolve(__dirname, '../../../build/libs');
 
 function serverJar(): string {
@@ -44,6 +45,14 @@ export default defineConfig({
             url:                 'http://localhost:' + OVERLOAD_PORT + '/health',
             reuseExistingServer: !process.env.CI,
             timeout:             60_000,
+        },
+        {
+            // a proxy secret, so the admin specs can fake a client address with X-Forwarded-For
+            command:             'java -jar "' + serverJar() + '" --port ' + ADMIN_PORT + ' --no-gui',
+            url:                 'http://localhost:' + ADMIN_PORT + '/health',
+            reuseExistingServer: !process.env.CI,
+            timeout:             60_000,
+            env:                 { ...(process.env as Record<string, string>), PROXY_SECRET: 'e2e-secret' },
         },
     ],
 });

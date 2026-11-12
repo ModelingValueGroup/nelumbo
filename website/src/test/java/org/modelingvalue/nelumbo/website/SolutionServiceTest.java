@@ -32,10 +32,11 @@ import org.junit.jupiter.api.Test;
 class SolutionServiceTest {
 
     private final AtomicLong now     = new AtomicLong(1_000_000_000_000L);
+    private SolutionStore    store   = new SolutionStore(null, now::get);
     private SolutionService  service = service(SolutionService.MAX_TOTAL_BYTES);
 
     private SolutionService service(long max) {
-        return new SolutionService(new SolutionStore(null, now::get), new BlockedWords(List.of("kut")), now::get, max);
+        return new SolutionService(store, new BlockedWords(List.of("kut")), now::get, max);
     }
 
     @Test
@@ -166,14 +167,6 @@ class SolutionServiceTest {
     }
 
     @Test
-    void clientIpIsTheLastForwardedEntry() {
-        assertEquals("10.0.0.1", SolutionService.clientIp(null, "10.0.0.1"));
-        assertEquals("10.0.0.1", SolutionService.clientIp(" ", "10.0.0.1"));
-        assertEquals("5.6.7.8", SolutionService.clientIp("1.2.3.4, 5.6.7.8", "10.0.0.1"));
-        assertEquals("9.9.9.9", SolutionService.clientIp(" 9.9.9.9 ", "10.0.0.1"));
-    }
-
-    @Test
     void concurrentSavesOfOneNameHaveOneOwner() throws Exception {
         List<Callable<Integer>> saves = IntStream.range(0, 20).<Callable<Integer>> mapToObj(i -> () -> service.save("Frits", "x" + i, "b" + i, "1.1.1." + i).status()).toList();
         try (ExecutorService pool = Executors.newFixedThreadPool(20)) {
@@ -184,5 +177,20 @@ class SolutionServiceTest {
             assertEquals(1, statuses.stream().filter(s -> s == 200).count());
             assertEquals(19, statuses.stream().filter(s -> s == 409).count());
         }
+    }
+
+    @Test
+    void sharingOffRefusesSaveAndLoad() {
+        service.save("Frits", "x", "b1", "1.1.1.1");
+        store.setSharingEnabled(false);
+        assertEquals(new SolutionService.Response(403, "Sharing is turned off"), service.save("Other", "x", "b1", "1.1.1.1"));
+        assertEquals(new SolutionService.Response(403, "Sharing is turned off"), service.load("Frits"));
+        assertEquals(new SolutionService.Response(403, "Sharing is turned off"), service.save("bad name", "x", "b1", "1.1.1.1"));
+    }
+
+    @Test
+    void aSaveKeepsTheFullAddress() {
+        service.save("Frits", "x", "b1", "2001:db8:1:2:3:4:5:6");
+        assertEquals("2001:db8:1:2:3:4:5:6", store.get("Frits").orElseThrow().ip());
     }
 }

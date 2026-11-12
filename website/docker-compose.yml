@@ -29,6 +29,9 @@ services:
       - ./stats:/data/stats
       # shared editor solutions (PUT/GET /solutions); /data/sites/nelumbo.nl/solutions on the host
       - ./solutions:/data/solutions
+    environment:
+      - ADMIN_IPS=${ADMIN_IPS:-}
+      - PROXY_SECRET=${PROXY_SECRET:-}
     networks:
       - web
     expose:
@@ -36,7 +39,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.nelumbo.rule=Host(`nelumbo.nl`)"
-      - "traefik.http.routers.nelumbo.middlewares=nelumbo-hsts"
+      - "traefik.http.routers.nelumbo.middlewares=nelumbo-hsts,nelumbo-proxy"
+      - "traefik.http.middlewares.nelumbo-proxy.headers.customrequestheaders.X-Nelumbo-Proxy=${PROXY_SECRET}"
       - "traefik.http.middlewares.nelumbo-hsts.headers.stsSeconds=31536000"
       - "traefik.http.middlewares.nelumbo-hsts.headers.stsIncludeSubdomains=true"
       - "traefik.http.routers.nelumbo-www.rule=Host(`www.nelumbo.nl`)"

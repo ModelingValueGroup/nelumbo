@@ -19,7 +19,7 @@ interface Point {
     cpuAvg:      number;
     cpuMax:      number;
     heapMaxMb:   number;
-    evaluations:      number;
+    evaluations:      number | null;
     overloads:        number | null;
     solutionsMax:     number;
     solutionBytesMax: number;
@@ -37,7 +37,7 @@ const POLL_MS:            number = 5_000;
 const RECONNECT_MS:       number = 60_000;
 const CHART_HEIGHT:       number = 200;
 const WINDOW_S:           Record<string, number> = { hour: 3600, day: 86400, week: 604800 };
-const CHART_IDS:          string[]               = ['chart-cpu', 'chart-activity', 'chart-solutions', 'chart-disk'];
+const CHART_IDS:          string[]               = ['chart-cpu', 'chart-evals', 'chart-activity', 'chart-solutions', 'chart-disk'];
 const MB:                 number                 = 1024 * 1024;
 
 let range:       string             = 'hour';
@@ -175,7 +175,7 @@ function series(): (Point | null)[] {
     // in the hour view the latest live sample extends the lines to now
     if (range === 'hour' && latest !== null) {
         points.push({ t: latest.time, sessionsMax: latest.sessions.open, runningMax: latest.evaluations.running, cpuAvg: latest.cpu.load,
-                      cpuMax: latest.cpu.load, heapMaxMb: latest.heap.usedMb, evaluations: 0, overloads: null,
+                      cpuMax: latest.cpu.load, heapMaxMb: latest.heap.usedMb, evaluations: null, overloads: null,
                       solutionsMax: latest.solutions.count, solutionBytesMax: latest.solutions.bytes, saves: null });
     }
     return points;
@@ -200,6 +200,10 @@ function xRange(): [number, number] {
     return [now - WINDOW_S[range], now];
 }
 
+function rate(p: Point): number | null {
+    return p.evaluations === null ? null : p.evaluations / resolution;
+}
+
 function width(id: string): number {
     return el(id).clientWidth;
 }
@@ -222,6 +226,7 @@ function draw(): void {
         rows.map((p: Point | null): number | null => p === null ? null : f(p));
     const data: uPlot.AlignedData[] = [
         [xs, val((p: Point): number | null => p.cpuAvg * 100), val((p: Point): number | null => p.cpuMax * 100)],
+        [xs, val(rate)],
         [xs, val((p: Point): number | null => p.sessionsMax), val((p: Point): number | null => p.runningMax),
          val((p: Point): number | null => p.overloads), val((p: Point): number | null => p.saves)],
         [xs, val((p: Point): number | null => p.solutionsMax)],
@@ -259,6 +264,17 @@ function build(data: uPlot.AlignedData[]): void {
         ],
     }, data[0], el('chart-cpu')));
     charts.push(new uPlot({
+        width:  width('chart-evals'),
+        height: CHART_HEIGHT,
+        scales: { x: { time: true, range: xRange }, y: { range: (_u: uPlot, _min: number, max: number): [number, number] => [0, Math.max(0.1, max)] } },
+        legend: LEGEND,
+        axes:   axes((v: number): string => v.toFixed(2)),
+        series: [
+            timeSeries(),
+            { label: 'Evaluations/s', stroke: css('--series-2'), width: 2, value: (_u: uPlot, v: number | null): string => v === null ? '--' : v.toFixed(2) },
+        ],
+    }, data[1], el('chart-evals')));
+    charts.push(new uPlot({
         width:  width('chart-activity'),
         height: CHART_HEIGHT,
         scales: { x: { time: true, range: xRange }, y: countScale() },
@@ -271,7 +287,7 @@ function build(data: uPlot.AlignedData[]): void {
             { label: 'Stopped (busy)', stroke: css('--series-3'), width: 2 },
             { label: 'Shares', stroke: solution, width: 2 },
         ],
-    }, data[1], el('chart-activity')));
+    }, data[2], el('chart-activity')));
     charts.push(new uPlot({
         width:  width('chart-solutions'),
         height: CHART_HEIGHT,
@@ -282,7 +298,7 @@ function build(data: uPlot.AlignedData[]): void {
             timeSeries(),
             { label: 'Shared solutions', stroke: solution, width: 2 },
         ],
-    }, data[2], el('chart-solutions')));
+    }, data[3], el('chart-solutions')));
     charts.push(new uPlot({
         width:  width('chart-disk'),
         height: CHART_HEIGHT,
@@ -294,7 +310,7 @@ function build(data: uPlot.AlignedData[]): void {
             { label: 'On disk', stroke: solution, width: 2, value: (_u: uPlot, v: number | null): string => v === null ? '--' : v.toFixed(1) + ' MB' },
             { label: 'Limit', stroke: css('--muted'), width: 1, dash: [4, 4], value: (_u: uPlot, v: number | null): string => v === null ? '--' : v + ' MB' },
         ],
-    }, data[3], el('chart-disk')));
+    }, data[4], el('chart-disk')));
 }
 
 // a fresh object per chart: no option object is shared between uPlot instances
@@ -313,12 +329,16 @@ function destroyCharts(): void {
     charts = [];
 }
 
+function fixed(v: number | null): string {
+    return v === null ? '-' : v.toFixed(2);
+}
+
 function fillTable(): void {
     const body: HTMLElement = el('history-table').querySelector('tbody') as HTMLElement;
     const rows: string[]    = history.slice().reverse().map((p: Point): string =>
         '<tr><td>' + dateTime(p.t) + '</td><td>' + Math.round(p.cpuAvg * 100) + '%</td><td>' + Math.round(p.cpuMax * 100)
         + '%</td><td>' + p.sessionsMax + '</td><td>' + p.runningMax + '</td><td>' + p.overloads + '</td><td>' + p.evaluations
-        + '</td><td>' + p.saves + '</td><td>' + p.solutionsMax + '</td><td>' + (p.solutionBytesMax / MB).toFixed(1) + '</td></tr>');
+        + '</td><td>' + fixed(rate(p)) + '</td><td>' + p.saves + '</td><td>' + p.solutionsMax + '</td><td>' + (p.solutionBytesMax / MB).toFixed(1) + '</td></tr>');
     body.innerHTML = rows.join('');
 }
 

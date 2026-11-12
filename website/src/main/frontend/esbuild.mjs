@@ -17,13 +17,13 @@ const options = {
 
 await build(options);
 
-// the status page's live numbers and history charts; separate from the Monaco bundle so the page stays light
+// the admin page (status charts + snippets); separate from the Monaco bundle so the page stays light
 await build({
-    entryPoints: ['src/status-chart.ts'],
+    entryPoints: ['src/admin.ts'],
     bundle:      true,
     outdir:      'dist',
     format:      'iife',
-    globalName:  'NelumboStatus',
+    globalName:  'NelumboAdmin',
     sourcemap:   true,
     minify:      true,
     loader:      { '.css': 'css' },

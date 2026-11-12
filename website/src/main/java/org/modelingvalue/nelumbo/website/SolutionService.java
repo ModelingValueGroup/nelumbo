@@ -48,6 +48,8 @@ final class SolutionService {
     record Usage(int solutions, long bytes, long saves) {
     }
 
+    static final String SHARING_OFF = "Sharing is turned off";
+
     static final int  MAX_NAME_CHARS             = 40;
     // JSON-escaped, so a loaded text always fits a 64 K /lsp frame (LspWebSocket.MAX_MESSAGE_CHARS)
     static final int  MAX_TEXT_CHARS             = 32 * 1024;
@@ -92,6 +94,9 @@ final class SolutionService {
     }
 
     synchronized Response save(String name, String text, String browserId, String ip) {
+        if (!store.sharingEnabled()) {
+            return new Response(403, SHARING_OFF);
+        }
         long now = clock.getAsLong();
         housekeep(now);
         if (!NAME.matcher(name).matches()) {
@@ -115,7 +120,7 @@ final class SolutionService {
         if (browserSaves.count(owner, now) >= SAVES_PER_BROWSER_PER_HOUR || old.isEmpty() && ipNewNames.count(network, now) >= NEW_NAMES_PER_IP_PER_HOUR) {
             return new Response(429, "Too many shares, try again later");
         }
-        Solution solution = new Solution(name, owner, now, text);
+        Solution solution = new Solution(name, owner, now, text, ip);
         long     growth   = solution.bytes() - old.map(Solution::bytes).orElse(0L);
         if (growth > 0 && store.totalBytes() + growth > maxTotalBytes) {
             return new Response(503, "Not shared: the server is full, try again later");
@@ -130,19 +135,13 @@ final class SolutionService {
     }
 
     Response load(String name) {
+        if (!store.sharingEnabled()) {
+            return new Response(403, SHARING_OFF);
+        }
         if (!NAME.matcher(name).matches()) {
             return new Response(400, BAD_NAME);
         }
         return store.get(name).map(s -> new Response(200, s.text())).orElse(new Response(404, "No shared solution named \"" + name + "\""));
-    }
-
-    // Traefik appends the address it saw: earlier entries come from the client and can be forged
-    static String clientIp(String forwardedFor, String remoteIp) {
-        if (forwardedFor == null || forwardedFor.isBlank()) {
-            return remoteIp;
-        }
-        String[] entries = forwardedFor.split(",");
-        return entries[entries.length - 1].strip();
     }
 
     // An IPv6 client usually has a whole /64 to pick addresses from: count per network (the first 4 groups).

@@ -81,7 +81,7 @@ fun findNpm(): String {
 }
 
 val npmBundle = tasks.register<Exec>("npmBundle") {
-    description = "install frontend deps and build both frontend bundles (nelumbo-fields and status-chart)"
+    description = "install frontend deps and build both frontend bundles (nelumbo-fields and admin)"
     workingDir  = frontendDir.asFile
     commandLine(findNpm(), "run", "dist")
     inputs.dir(frontendDir.dir("src"))

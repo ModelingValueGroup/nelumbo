@@ -20,12 +20,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.Socket;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -438,25 +442,30 @@ class NelumboHttpServerTest {
     }
 
     @Test
-    void statusPageAndDotScriptAreServed() throws Exception {
-        HttpResponse<String> page = get("/status.html");
-        assertEquals(200, page.statusCode());
-        assertTrue(page.body().contains("src=\"/assets/status-chart.js\""), "the status page loads its chart bundle");
+    void theDotScriptIsServed() throws Exception {
         HttpResponse<String> dot = get("/status-dot.js");
         assertEquals(200, dot.statusCode());
         assertTrue(dot.headers().firstValue("Content-Type").orElse("").contains("javascript"), "the dot script is served as JavaScript");
-        assertEquals(200, get("/assets/status-chart.js").statusCode(), "the chart bundle is served");
     }
 
     @Test
-    void everyPageWithAVersionShowsTheStatusDotButNoStatusLink() throws Exception {
+    void everyPageWithAVersionShowsTheStatusDotButNoAdminLink() throws Exception {
         for (String page : List.of("/", "/tutorial.html", "/sandbox.html", "/library.html", "/docs/")) {
             String body = get(page).body();
             assertTrue(body.contains("<span class=\"status-dot\""), page + " shows the status dot");
             assertTrue(body.contains("src=\"/status-dot.js\""), page + " loads the status dot script");
-            assertFalse(body.contains("href=\"/status.html\""), page + " has no visible link to the internal status page");
-            assertTrue(body.contains("<span class=\"status-dot\" data-status-link"), page + " makes its status dot the shift+click shortcut to the status page");
+            assertFalse(body.contains("href=\"/admin\""), page + " has no admin link in its HTML");
+            assertFalse(body.contains("data-status-link"), page + " has no status link marker");
         }
+    }
+
+    @Test
+    void adminPageLoadsItsBundle() throws Exception {
+        String body = get("/admin").body();
+        assertTrue(body.contains("src=\"/assets/admin.js\""), "the admin page loads its script");
+        assertTrue(body.contains("href=\"/assets/admin.css\""), "the admin page loads its stylesheet");
+        assertEquals(200, get("/assets/admin.js").statusCode());
+        assertEquals(200, get("/assets/admin.css").statusCode());
     }
 
     @Test
@@ -537,19 +546,153 @@ class NelumboHttpServerTest {
         assertEquals("kept", get("/solutions/Frits").body());
     }
 
-    private int putFrom(String name, String browserId, String forwardedFor) throws Exception {
-        HttpRequest request = HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/solutions/" + name))
-                .header("X-Nelumbo-Browser", browserId).header("X-Forwarded-For", forwardedFor).PUT(BodyPublishers.ofString("x")).build();
-        return client.send(request, BodyHandlers.ofString()).statusCode();
+    private HttpResponse<String> request(String method, String path, String body, String... headers) throws Exception {
+        HttpRequest.Builder request = HttpRequest.newBuilder(URI.create("http://localhost:" + port + path))
+                .method(method, body == null ? BodyPublishers.noBody() : BodyPublishers.ofString(body));
+        for (int i = 0; i < headers.length; i += 2) {
+            request.header(headers[i], headers[i + 1]);
+        }
+        return client.send(request.build(), BodyHandlers.ofString());
+    }
+
+    @Test
+    void adminPathsAre404ForANonAdmin() throws Exception {
+        restartWith(ClientAccess.of(null, "s3cret"));
+        String[] headers = {ClientAccess.PROXY_HEADER, "s3cret", "X-Forwarded-For", "203.0.113.5"};
+        String[][] calls = {{"GET", "/admin"}, {"GET", "/admin/"}, {"HEAD", "/admin"}, {"HEAD", "/admin/me"}, {"HEAD", "/admin/solutions"}, {"HEAD", "/admin/solutions/Frits"}, {"HEAD", "/admin/sharing"}, {"OPTIONS", "/admin/solutions"}, {"GET", "/admin/me"}, {"GET", "/admin/solutions"}, {"GET", "/admin/solutions/Frits"},
+                {"DELETE", "/admin/solutions/Frits"}, {"DELETE", "/admin/solutions"}, {"GET", "/admin/sharing"}, {"PUT", "/admin/sharing"}};
+        for (String[] call : calls) {
+            String                  body     = call[0].equals("PUT") ? "{\"enabled\":false}" : null;
+            HttpResponse<String>    actual   = request(call[0], call[1], body, headers);
+            HttpResponse<String>    expected = request(call[0], "/no-such-page", body, headers);
+            assertEquals(expected.statusCode(), actual.statusCode(), call[0] + " " + call[1]);
+            assertEquals(404, actual.statusCode(), call[0] + " " + call[1]);
+            assertEquals(expected.body().replace("/no-such-page", call[1]), actual.body(), call[0] + " " + call[1]);
+        }
+    }
+
+    @Test
+    void localhostIsAdmin() throws Exception {
+        HttpResponse<String> me = get("/admin/me");
+        assertEquals(204, me.statusCode());
+        assertEquals("no-store", me.headers().firstValue("Cache-Control").orElse(""));
+        assertEquals("DENY", me.headers().firstValue("X-Frame-Options").orElse(""));
+        assertEquals("frame-ancestors 'none'", me.headers().firstValue("Content-Security-Policy").orElse(""));
+        assertEquals("same-origin", me.headers().firstValue("Cross-Origin-Resource-Policy").orElse(""));
+        assertEquals(200, get("/admin").statusCode());
+    }
+
+    private int rawStatus(String... headerLines) throws Exception {
+        try (Socket socket = new Socket("localhost", port)) {
+            StringBuilder request = new StringBuilder("GET /admin/me HTTP/1.1\r\n");
+            for (String line : headerLines) {
+                request.append(line).append("\r\n");
+            }
+            request.append("Connection: close\r\n\r\n");
+            socket.getOutputStream().write(request.toString().getBytes(StandardCharsets.US_ASCII));
+            String status = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.US_ASCII)).readLine();
+            return Integer.parseInt(status.split(" ")[1]);
+        }
+    }
+
+    @Test
+    void proxySecretAndHostDecideAdminOverHttp() throws Exception {
+        restartWith(ClientAccess.of("198.51.100.0/24", "s3cret"));
+        String host = "Host: evil.example";
+        String xff  = "X-Forwarded-For: 198.51.100.9";
+        assertEquals(404, rawStatus(host, xff));
+        assertEquals(404, rawStatus(host, xff, "X-Nelumbo-Proxy: wrong"));
+        assertEquals(204, rawStatus(host, xff, "X-Nelumbo-Proxy: s3cret"));
+        assertEquals(404, rawStatus(host));
+    }
+
+    @Test
+    void theLastForwardedForLineWins() throws Exception {
+        restartWith(ClientAccess.of("198.51.100.0/24", "s3cret"));
+        String host  = "Host: evil.example";
+        String proxy = "X-Nelumbo-Proxy: s3cret";
+        assertEquals(404, rawStatus(host, proxy, "X-Forwarded-For: 198.51.100.9", "X-Forwarded-For: 203.0.113.5"));
+        assertEquals(204, rawStatus(host, proxy, "X-Forwarded-For: 203.0.113.5", "X-Forwarded-For: 198.51.100.9"));
+    }
+
+    @Test
+    void adminListsOpensAndDeletesSnippets() throws Exception {
+        put("/solutions/Frits", "b1", "abc");
+        put("/solutions/Anna", "b2", "x");
+        JsonNode rows = mapper.readTree(get("/admin/solutions").body());
+        assertEquals(2, rows.size());
+        JsonNode frits = null;
+        for (JsonNode row : rows) {
+            if (row.get("name").asText().equals("Frits")) {
+                frits = row;
+            }
+        }
+        assertEquals(3, frits.get("bytes").asInt());
+        assertEquals(6, frits.get("owner").asText().length());
+        assertFalse(frits.get("ip").isNull());
+        assertEquals("abc", get("/admin/solutions/frits").body());
+        assertEquals(204, request("DELETE", "/admin/solutions/Frits", null).statusCode());
+        assertEquals(404, request("DELETE", "/admin/solutions/Frits", null).statusCode());
+        assertEquals(404, get("/solutions/Frits").statusCode());
+        assertEquals("{\"deleted\":1}", request("DELETE", "/admin/solutions", null).body().replace(" ", ""));
+    }
+
+    @Test
+    void theSharingSwitchStopsShareAndLoad() throws Exception {
+        put("/solutions/Frits", "b1", "x");
+        assertEquals("{\"enabled\":true}", get("/solutions").body().replace(" ", ""));
+        assertEquals("{\"enabled\":false}", request("PUT", "/admin/sharing", "{\"enabled\":false}").body().replace(" ", ""));
+        assertEquals("{\"enabled\":false}", get("/solutions").body().replace(" ", ""));
+        HttpResponse<String> refused = put("/solutions/Other", "b2", "y");
+        assertEquals(403, refused.statusCode());
+        assertEquals("Sharing is turned off", refused.body());
+        assertEquals(403, get("/solutions/Frits").statusCode());
+        HttpResponse<String> admin = get("/admin/solutions/Frits");
+        assertEquals(200, admin.statusCode());
+        assertEquals("x", admin.body());
+        assertEquals(400, request("PUT", "/admin/sharing", "nonsense").statusCode());
+        request("PUT", "/admin/sharing", "{\"enabled\":true}");
+        assertEquals("x", get("/solutions/Frits").body());
+    }
+
+    @Test
+    void theStatusPageIsGone() throws Exception {
+        assertEquals(404, get("/status.html").statusCode());
+    }
+
+    private void restartWith(ClientAccess access) {
+        server.stop();
+        KnowledgeBase base = KnowledgeBaseLoader.load(List.of(new NamedSource("fibonacci.nl", FIB_BASE)));
+        server = new NelumboHttpServer(base, List.of("fibonacci.nl"), NelumboHttpServer.DEFAULT_TIMEOUT_MS, NelumboHttpServer.DEFAULT_MAX_LSP_SESSIONS, null, null, access);
+        port   = server.start(0);
+    }
+
+    private int putFrom(String name, String browserId, String forwardedFor, String secret) throws Exception {
+        HttpRequest.Builder request = HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/solutions/" + name))
+                .header("X-Nelumbo-Browser", browserId).header("X-Forwarded-For", forwardedFor);
+        if (secret != null) {
+            request.header(ClientAccess.PROXY_HEADER, secret);
+        }
+        return client.send(request.PUT(BodyPublishers.ofString("x")).build(), BodyHandlers.ofString()).statusCode();
     }
 
     @Test
     void theNewNameLimitCountsTheAddressTraefikAppended() throws Exception {
+        restartWith(ClientAccess.of(null, "s3cret"));
         for (int i = 0; i < SolutionService.NEW_NAMES_PER_IP_PER_HOUR; i++) {
-            assertEquals(200, putFrom("n" + i, "b" + i, "1.1.1." + i + ", 9.9.9.9"));
+            assertEquals(200, putFrom("n" + i, "b" + i, "1.1.1." + i + ", 9.9.9.9", "s3cret"));
         }
-        assertEquals(429, putFrom("forged", "bf", "5.5.5.5, 9.9.9.9"));
-        assertEquals(200, putFrom("other", "bo", "8.8.8.8"));
+        assertEquals(429, putFrom("forged", "bf", "5.5.5.5, 9.9.9.9", "s3cret"));
+        assertEquals(200, putFrom("other", "bo", "8.8.8.8", "s3cret"));
+    }
+
+    @Test
+    void forwardedForWithoutTheSecretIsIgnored() throws Exception {
+        restartWith(ClientAccess.of(null, "s3cret"));
+        for (int i = 0; i < SolutionService.NEW_NAMES_PER_IP_PER_HOUR; i++) {
+            assertEquals(200, putFrom("n" + i, "b" + i, "1.1.1." + i, null));
+        }
+        assertEquals(429, putFrom("one-more", "bm", "2.2.2.2", null));
     }
 
     @Test

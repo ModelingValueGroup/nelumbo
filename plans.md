@@ -57,6 +57,101 @@ Taken or misleading, do not use:
 
 ## Todo
 
+### Review the tutorial: section order and concept coverage
+
+Status: todo (2026-11-12).
+
+Read:
+- The 31 sections of `website/src/main/resources/public/tutorial.html`, with their texts.
+- Their `.nl` files in `src/main/resources/org/modelingvalue/nelumbo/tutorial/<section>/`.
+
+Check:
+- [ ] Is the order of the sections logical?
+- [ ] Does each text explain exactly the language concepts its code uses, no more and no less?
+
+Known (2026-11-12): `E[...]` is used before it is explained.
+- `#cycles` (section 14) uses `E[f](...)` in its example, exercise and solution, without a word about it.
+- `#relations` (17) only glosses it: "`E[x]` (there exists) and `A[y]` (for all)".
+- `#quantifiers` (18) is where it is explained.
+- Fix: reshuffle the sections, or explain `E[...]` in the opening text of `#cycles`.
+
+### Encourage reuse
+
+Status: todo (2026-11-12). Find a way to encourage reuse of Nelumbo models.
+
+Ideas:
+- [ ] A marketplace.
+- [ ] Libraries beyond the stdlib.
+- [ ] Real-world examples and deployments.
+
+Already there (CLAUDE.md):
+- `library.html`: the stdlib modules only (`Library.MODULES`).
+- `sandbox.html`: the cli examples.
+- Shared solutions: by name, kept 7 days, no public list (admins see them, with the sharer's IP, on `/admin`).
+- `import` resolves from the jar (CLI) or the stdlib: there is no way yet to import a module from elsewhere.
+
+### Stats do not show timed-out evaluations
+
+Status: todo (2026-11-12). During the workshop the status page showed no "Stopped (busy)" evaluations, while people saw the timeout message in the editor.
+
+Found (code read, 2026-11-12):
+- "Stopped (busy)" is `EvalGate.overloaded`, raised by `gate.recordOverload()` in `QueryResultCache` only when the evaluation ran under the short overload budget (`overloadBudget`).
+- A timeout at the normal workspace deadline gives an ERROR result and is counted nowhere.
+
+To do:
+- [ ] Count timeouts at the workspace deadline too (a counter of its own next to `overloaded`), in `/stats`, the history and the status charts.
+- [ ] Check the text the editor shows for each of the two cases.
+
+### AI on the website
+
+Status: todo (2026-11-12). Find a way to use AI on nelumbo.nl.
+
+Ideas:
+- [ ] Ask questions in the tutorial.
+- [ ] Hints about what the user is doing in an editor.
+- [ ] Generate Nelumbo from a description in plain language.
+
+Already there:
+- The MCP server (`mcp/`): `eval_nl`, `search_docs`, `get_example`, `new_model`.
+- `llms.txt` at the site root.
+
+Decide:
+- [ ] Which model or service, and who pays per request.
+- [ ] Editor texts would go to an outside service: what visitors are told.
+- [ ] Limits per visitor, as the shares have (public site).
+
+### Progress, stop and parallel queries while evaluating
+
+Status: todo (2026-11-12).
+
+Now the editor shows feedback only after the whole document has been evaluated.
+
+Wanted:
+- [ ] A busy indicator while an expression is being evaluated.
+- [ ] A stop button.
+- [ ] Per query: done (with its result), being evaluated, or waiting.
+- [ ] Evaluate `?` statements in parallel.
+
+Current state (CLAUDE.md):
+- Until an edit's re-evaluation finishes, `QueryResultCache` serves only the hints on unchanged lines.
+- Evaluation stops at the workspace deadline or the overload budget; there is no user stop.
+- A fact or rule that fails stops the evaluation: the queries after it get no hint.
+
+Find out:
+- [ ] Which editors: the website only, or every LSP client?
+- [ ] Parallel queries: a result must not depend on an earlier query. That was once a bug (fixed 2026-10-27, `tests/solve-depends-on-earlier-query.nl`); running queries in parallel tests it harder.
+- [ ] Parallel queries share the one inference pool (`KnowledgeBase.POOL`) and the overload threshold.
+
+### Wrong highlighting now and then
+
+Status: todo (2026-11-12).
+
+Sometimes the highlighting is wrong. Clearing the whole editor and pasting the text back often fixes it.
+
+Find out:
+- [ ] In which editor (website, IntelliJ, Eclipse, VS Code, Swing editor)?
+- [ ] A text and a sequence of edits that reproduce it.
+
 ### Full Unicode in names, operators and patterns
 
 Status: todo (2026-11-10). Allow the full Unicode character set wherever it is useful.

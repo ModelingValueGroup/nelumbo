@@ -18,8 +18,8 @@ package org.modelingvalue.nelumbo.website;
 
 import java.nio.charset.StandardCharsets;
 
-/** A shared editor solution: {@code ownerHash} is the SHA-256 hex of the browser id that saved it first. */
-record Solution(String name, String ownerHash, long savedAt, String text) {
+/** A shared editor solution: {@code ownerHash} is the SHA-256 hex of the browser id that saved it first, {@code ip} the full address of the sharer (null in files from before it was kept). */
+record Solution(String name, String ownerHash, long savedAt, String text, String ip) {
 
     // what one name costs besides its text (a disk block, the record in memory): else empty texts fill nothing
     // and the total cap never stops them

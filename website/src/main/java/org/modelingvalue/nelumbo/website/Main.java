@@ -117,7 +117,8 @@ public final class Main {
         }
 
         KnowledgeBase base   = KnowledgeBaseLoader.load(sources);
-        NelumboHttpServer server = new NelumboHttpServer(base, files, timeoutMs, maxLspSessions, statsDir, solutionsDir);
+        NelumboHttpServer server = new NelumboHttpServer(base, files, timeoutMs, maxLspSessions, statsDir, solutionsDir,
+                ClientAccess.of(System.getenv("ADMIN_IPS"), System.getenv("PROXY_SECRET")));
         int bound = server.start(port);
         String detail = files.size() + " file(s) loaded, timeout " + timeoutMs + " ms";
         System.out.println("Nelumbo HTTP server listening on http://localhost:" + bound + " (" + detail + ")");
@@ -194,5 +195,9 @@ public final class Main {
         out.println("      --solutions-dir <dir>   keep shared editor solutions in <dir> (default: memory only)");
         out.println("      --no-gui      never show the status window (shown when launched without a console)");
         out.println("  -h, --help        show this help and exit");
+        out.println();
+        out.println("Environment:");
+        out.println("  ADMIN_IPS     addresses or CIDR ranges that may open /admin (localhost always may)");
+        out.println("  PROXY_SECRET  value of the X-Nelumbo-Proxy header Traefik adds; X-Forwarded-For is trusted only with it");
     }
 }

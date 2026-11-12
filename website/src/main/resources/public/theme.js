@@ -20,8 +20,8 @@
 //   data-theme-mode  the user's choice, 'auto', 'light' or 'dark' - picks the switch's icon
 // The choice lives in localStorage; no stored choice means 'auto' = follow the OS preference.
 // nelumbo-fields.ts watches data-theme to switch the Monaco editors along.
-// Also, being the one script on every page: shift+click on the status dot ([data-status-link]) opens the
-// internal /status.html page, which the site deliberately does not link visibly (a plain click does nothing).
+// Also, being the one script on every page: it asks /admin/me and, for an admin (a 404 for everyone else),
+// adds the "Admin" link to the header.
 (function () {
     var KEY   = 'nelumbo-theme';
     var NEXT  = { auto: 'light', light: 'dark', dark: 'auto' };
@@ -63,9 +63,25 @@
     document.addEventListener('DOMContentLoaded', label);
     document.addEventListener('click', function (e) {
         if (e.target.closest && e.target.closest('.theme-toggle')) { cycle(); }
-        if (e.shiftKey && e.target.closest && e.target.closest('[data-status-link]')) {
-            e.preventDefault();
-            window.location.href = '/status.html';
-        }
     });
+
+    function addAdminLink() {
+        var nav = document.querySelector('.site-header nav');
+        if (!nav) { return; }
+        fetch('/admin/me').then(function (response) {
+            if (response.status !== 204) { return; }
+            var link         = document.createElement('a');
+            link.className   = 'admin-link';
+            link.href        = '/admin';
+            link.textContent = 'Admin';
+            if (window.location.pathname === '/admin') { link.setAttribute('aria-current', 'page'); }
+            var github = nav.querySelector('a[aria-label="GitHub"]');
+            nav.insertBefore(link, github || nav.querySelector('.theme-toggle'));
+            var style         = document.createElement('style');
+            style.textContent = '@media (max-width: 699px) { .site-header nav a.admin-link { display: none; } }';
+            document.head.appendChild(style);
+        }).catch(function () { /* no admin link without an answer */ });
+    }
+
+    document.addEventListener('DOMContentLoaded', addAdminLink);
 })();

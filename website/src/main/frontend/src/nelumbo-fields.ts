@@ -472,6 +472,19 @@ const GLOBE_SVG: string = '<svg viewBox="0 0 24 24" width="18" height="18" fill=
                         + 'stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18'
                         + 'M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9s1.3-6.3 3.8-9z"/></svg>';
 
+let sharingPromise: Promise<boolean> | null = null;
+
+// One request per page; the globe is only added while the server allows sharing.
+function sharingEnabled(): Promise<boolean> {
+    if (sharingPromise === null) {
+        sharingPromise = fetch('/solutions')
+            .then((response: Response): Promise<{ enabled: boolean }> => response.json())
+            .then((body: { enabled: boolean }): boolean => body.enabled === true)
+            .catch((): boolean => false);
+    }
+    return sharingPromise;
+}
+
 // The globe opens a menu with Share... and Load...; each opens a name row (input, action, Cancel) in place of
 // the globe. The outcome shows in the toolbar for SHARE_MESSAGE_MS, or until the next opening.
 function addShareButtons(toolbar: HTMLDivElement, field: Field): void {
@@ -495,7 +508,7 @@ function addShareButtons(toolbar: HTMLDivElement, field: Field): void {
     globe.setAttribute('aria-haspopup', 'menu');
     menu.className     = 'nelumbo-share-menu';
     menu.setAttribute('role', 'menu');
-    shareAs.title      = 'Anyone who knows the name can load it';
+    shareAs.title      = 'Anyone who knows the name can load it. Your IP address is kept with it for 7 days.';
     shareAs.setAttribute('role', 'menuitem');
     loadAs.setAttribute('role', 'menuitem');
     input.type         = 'text';
@@ -688,7 +701,11 @@ function buildField(div: HTMLElement, index: number): void {
     });
     reset.hidden = model.getValue() === original;
     if (!div.hasAttribute('data-no-share')) {
-        addShareButtons(toolbar, field);
+        void sharingEnabled().then((enabled: boolean): void => {
+            if (enabled) {
+                addShareButtons(toolbar, field);
+            }
+        });
     }
 
     const editor: monaco.editor.IStandaloneCodeEditor = monaco.editor.create(host, {

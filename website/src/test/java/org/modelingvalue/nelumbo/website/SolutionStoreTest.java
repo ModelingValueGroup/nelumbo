@@ -18,11 +18,13 @@ package org.modelingvalue.nelumbo.website;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 
@@ -42,7 +44,7 @@ class SolutionStoreTest {
     @Test
     void namesIgnoreCase() {
         SolutionStore store = store(dir);
-        store.put(new Solution("Frits", "h1", now.get(), "fact p(A)"));
+        store.put(new Solution("Frits", "h1", now.get(), "fact p(A)", null));
         assertEquals("fact p(A)", store.get("FRITS").orElseThrow().text());
         assertEquals("Frits", store.get("frits").orElseThrow().name());
     }
@@ -50,9 +52,9 @@ class SolutionStoreTest {
     @Test
     void aSolutionExpiresSevenDaysAfterItsLastSave() {
         SolutionStore store = store(dir);
-        store.put(new Solution("Frits", "h1", now.get(), "v1"));
+        store.put(new Solution("Frits", "h1", now.get(), "v1", null));
         now.addAndGet(SolutionStore.KEEP_MS - 1);
-        store.put(new Solution("Frits", "h1", now.get(), "v2"));
+        store.put(new Solution("Frits", "h1", now.get(), "v2", null));
         now.addAndGet(2);
         assertEquals("v2", store.get("Frits").orElseThrow().text());
         now.addAndGet(SolutionStore.KEEP_MS);
@@ -64,15 +66,15 @@ class SolutionStoreTest {
 
     @Test
     void solutionsSurviveARestart() {
-        store(dir).put(new Solution("Frits", "h1", now.get(), "Zoë\r\n"));
+        store(dir).put(new Solution("Frits", "h1", now.get(), "Zoë\r\n", null));
         SolutionStore again = store(dir);
-        assertEquals(new Solution("Frits", "h1", now.get(), "Zoë\r\n"), again.get("frits").orElseThrow());
+        assertEquals(new Solution("Frits", "h1", now.get(), "Zoë\r\n", null), again.get("frits").orElseThrow());
         assertEquals(Solution.ENTRY_BYTES + 6, again.totalBytes());
     }
 
     @Test
     void expiredFilesAreDeletedAtStart() throws IOException {
-        store(dir).put(new Solution("Frits", "h1", now.get(), "x"));
+        store(dir).put(new Solution("Frits", "h1", now.get(), "x", null));
         now.addAndGet(SolutionStore.KEEP_MS + 1);
         store(dir);
         try (Stream<Path> files = Files.list(dir)) {
@@ -82,7 +84,7 @@ class SolutionStoreTest {
 
     @Test
     void aBrokenFileIsSkipped() throws IOException {
-        store(dir).put(new Solution("Frits", "h1", now.get(), "x"));
+        store(dir).put(new Solution("Frits", "h1", now.get(), "x", null));
         Files.writeString(dir.resolve("broken.json"), "{\"name\":\"bro");
         SolutionStore again = store(dir);
         assertTrue(again.get("broken").isEmpty());
@@ -92,16 +94,71 @@ class SolutionStoreTest {
     @Test
     void totalBytesFollowsReplacements() {
         SolutionStore store = store(dir);
-        store.put(new Solution("Frits", "h1", now.get(), "ë"));
+        store.put(new Solution("Frits", "h1", now.get(), "ë", null));
         assertEquals(Solution.ENTRY_BYTES + 2, store.totalBytes());
-        store.put(new Solution("frits", "h1", now.get(), "abc"));
+        store.put(new Solution("frits", "h1", now.get(), "abc", null));
         assertEquals(Solution.ENTRY_BYTES + 3, store.totalBytes());
     }
 
     @Test
     void withoutADirItIsMemoryOnly() {
         SolutionStore store = store(null);
-        store.put(new Solution("Frits", "h1", now.get(), "x"));
+        store.put(new Solution("Frits", "h1", now.get(), "x", null));
         assertEquals("x", store.get("Frits").orElseThrow().text());
+    }
+
+    @Test
+    void theIpIsStoredAndAnOldFileWithoutItLoads() throws Exception {
+        store(dir).put(new Solution("Frits", "h1", now.get(), "x", "2001:db8::7"));
+        assertEquals("2001:db8::7", store(dir).get("Frits").orElseThrow().ip());
+        Files.writeString(dir.resolve("old.json"), "{\"name\":\"Old\",\"ownerHash\":\"h2\",\"savedAt\":" + now.get() + ",\"text\":\"y\"}");
+        assertNull(store(dir).get("Old").orElseThrow().ip());
+    }
+
+    @Test
+    void listIsNewestFirstWithoutExpired() {
+        SolutionStore store = store(dir);
+        store.put(new Solution("A", "h1", now.get(), "a", null));
+        now.addAndGet(1000);
+        store.put(new Solution("B", "h1", now.get(), "b", null));
+        assertEquals(List.of("B", "A"), store.list().stream().map(Solution::name).toList());
+        now.addAndGet(SolutionStore.KEEP_MS + 1);
+        assertEquals(List.of(), store.list());
+    }
+
+    @Test
+    void deleteFreesTheNameAndItsBytes() {
+        SolutionStore store = store(dir);
+        store.put(new Solution("Frits", "h1", now.get(), "abc", null));
+        assertTrue(store.delete("FRITS"));
+        assertFalse(store.delete("Frits"));
+        assertEquals(0, store.totalBytes());
+        assertFalse(Files.exists(dir.resolve("frits.json")));
+        assertTrue(store(dir).get("Frits").isEmpty());
+    }
+
+    @Test
+    void deleteAllCountsAndEmpties() {
+        SolutionStore store = store(dir);
+        store.put(new Solution("A", "h1", now.get(), "a", null));
+        store.put(new Solution("B", "h2", now.get(), "b", null));
+        assertEquals(2, store.deleteAll());
+        assertEquals(0, store.count());
+        assertEquals(0, store.totalBytes());
+        assertEquals(0, store(dir).count());
+    }
+
+    @Test
+    void theSharingSwitchSurvivesARestart() {
+        Path fresh = dir.resolve("not-yet-there");
+        assertTrue(store(fresh).sharingEnabled());
+        store(fresh).setSharingEnabled(false);
+        assertFalse(store(fresh).sharingEnabled());
+        assertTrue(Files.exists(fresh.resolve(SolutionStore.SHARING_OFF_FILE)));
+        store(fresh).setSharingEnabled(true);
+        assertTrue(store(fresh).sharingEnabled());
+        SolutionStore memory = store(null);
+        memory.setSharingEnabled(false);
+        assertFalse(memory.sharingEnabled());
     }
 }

@@ -10,7 +10,7 @@ appear inline as end-of-line inlay hints (full result in the hover tooltip).
 npm install      # first time (creates package-lock.json)
 npm run check    # tsc --noEmit typecheck
 npm run build    # esbuild -> dist/nelumbo-fields.js + .css (+ codicon .ttf)
-# esbuild builds two entries: nelumbo-fields.js (Monaco editors) and status-chart.js (status page, uPlot)
+# esbuild builds two entries: nelumbo-fields.js (Monaco editors) and admin.js (admin page, uPlot)
 npm run dist     # npm ci + build (used by the Gradle :website:npmBundle task)
 ```
 

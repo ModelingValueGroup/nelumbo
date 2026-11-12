@@ -21,6 +21,9 @@ import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -31,12 +34,14 @@ import org.modelingvalue.nelumbo.server.EvalService;
 import org.modelingvalue.nelumbo.server.NelumboServer;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 import io.javalin.http.staticfiles.Location;
+import io.javalin.router.EndpointNotFound;
 
 /**
  * The website HTTP server: the shared {@link EvalService} REST endpoints (eval/metadata/health) plus the public
@@ -58,6 +63,7 @@ public final class NelumboHttpServer {
     private final int           maxLspSessions;
     private final Path          statsDir;
     private final Path          solutionsDir;
+    private final ClientAccess  access;
     private final ObjectMapper  statsMapper = new ObjectMapper();
 
     private Javalin       app;
@@ -85,12 +91,18 @@ public final class NelumboHttpServer {
 
     /** {@code solutionsDir} keeps the shared editor solutions ({@code /solutions}) across restarts; null keeps them in memory only. */
     public NelumboHttpServer(KnowledgeBase baseKb, List<String> loadedFiles, long timeoutMs, int maxLspSessions, Path statsDir, Path solutionsDir) {
+        this(baseKb, loadedFiles, timeoutMs, maxLspSessions, statsDir, solutionsDir, ClientAccess.of(null, null));
+    }
+
+    /** {@code access} decides the client address (trusted proxy header) and who is admin. */
+    public NelumboHttpServer(KnowledgeBase baseKb, List<String> loadedFiles, long timeoutMs, int maxLspSessions, Path statsDir, Path solutionsDir, ClientAccess access) {
         this.service        = new EvalService(baseKb, loadedFiles, timeoutMs);
         this.baseKb         = baseKb;
         this.timeoutMs      = timeoutMs;
         this.maxLspSessions = maxLspSessions;
         this.statsDir       = statsDir;
         this.solutionsDir   = solutionsDir;
+        this.access         = access;
     }
 
     /** Starts the server on {@code port} (use 0 for an ephemeral port) and returns the actually bound port. */
@@ -98,10 +110,10 @@ public final class NelumboHttpServer {
         String landing    = loadResource("/public/landing.html");
         String tutorial   = TutorialPage.render(loadResource("/public/tutorial.html"));
         String sandbox    = loadResource("/public/sandbox.html");
+        String admin      = loadResource("/public/admin.html");
         String libraryPage = loadResource("/public/library.html");
         String favicon    = loadResource("/public/favicon.svg");
         String theme      = loadResource("/public/theme.js");
-        String status     = loadResource("/public/status.html");
         String statusDot  = loadResource("/public/status-dot.js");
         String llms       = loadResource("/public/llms.txt");
         String docsLogo   = loadResource(DocsSite.RESOURCE_ROOT + "nelumbo.svg");
@@ -109,9 +121,10 @@ public final class NelumboHttpServer {
         Library library   = Library.load(docs);
         // the sandbox's example list; the sudokus run far past the eval deadline, so they are left out
         List<String> examples = NelumboServer.exampleNames().stream().filter(n -> !n.startsWith("sudoku")).toList();
-        LspWebSocket lsp  = new LspWebSocket(baseKb, timeoutMs, maxLspSessions);
-        StatsHistory history = new StatsHistory(statsDir, System::currentTimeMillis);
-        SolutionService solutions = new SolutionService(new SolutionStore(solutionsDir, System::currentTimeMillis), BlockedWords.load(),
+        LspWebSocket    lsp       = new LspWebSocket(baseKb, timeoutMs, maxLspSessions);
+        StatsHistory    history   = new StatsHistory(statsDir, System::currentTimeMillis);
+        SolutionStore   store     = new SolutionStore(solutionsDir, System::currentTimeMillis);
+        SolutionService solutions = new SolutionService(store, BlockedWords.load(),
                 System::currentTimeMillis, SolutionService.MAX_TOTAL_BYTES);
         stream               = new StatsStream();
         recorder             = new StatsRecorder(history, () -> ServerStats.read(lsp.sessionCount(), EvalGate.GLOBAL, solutions.usage()),
@@ -129,10 +142,12 @@ public final class NelumboHttpServer {
             // make the 64 KB text-frame limit explicit (Jetty's default is the same size, but do not rely on it)
             config.jetty.modifyWebSocketServletFactory(factory ->
                     factory.setMaxTextMessageSize(LspWebSocket.MAX_MESSAGE_CHARS));
+            // before-handlers run for every method (also HEAD, which skips the GET handler): a non-admin gets exactly the 404 of an unknown route
+            config.routes.before("/admin", this::guardAdmin);
+            config.routes.before("/admin/*", this::guardAdmin);
             config.routes.get("/", ctx -> ctx.html(landing));
             config.routes.get("/favicon.svg", ctx -> ctx.contentType("image/svg+xml").result(favicon));
             config.routes.get("/theme.js", ctx -> ctx.contentType("text/javascript; charset=utf-8").result(theme));
-            config.routes.get("/status.html", ctx -> ctx.html(status));
             config.routes.get("/status-dot.js", ctx -> ctx.contentType("text/javascript; charset=utf-8").result(statusDot));
             config.routes.get("/llms.txt", ctx -> ctx.contentType("text/plain; charset=utf-8").result(llms));
             config.routes.get("/tutorial.html", ctx -> ctx.html(tutorial));
@@ -186,8 +201,50 @@ public final class NelumboHttpServer {
                 stream.connect(StatsStream.Client.of(client), latest == null ? null : statsJson(latest));
             });
             config.routes.put("/solutions/{name}", ctx -> reply(ctx, solutions.save(ctx.pathParam("name"), ctx.body(),
-                    ctx.header("X-Nelumbo-Browser"), SolutionService.clientIp(ctx.header("X-Forwarded-For"), ctx.ip()))));
+                    ctx.header("X-Nelumbo-Browser"), clientIp(ctx))));
             config.routes.get("/solutions/{name}", ctx -> reply(ctx, solutions.load(ctx.pathParam("name"))));
+            config.routes.get("/solutions", ctx -> ctx.json(Map.of("enabled", store.sharingEnabled())));
+            config.routes.get("/admin/me", ctx -> ctx.status(HttpStatus.NO_CONTENT));
+            config.routes.get("/admin", ctx -> ctx.html(admin));
+            config.routes.get("/admin/solutions", ctx -> {
+                List<Map<String, Object>> rows = new ArrayList<>();
+                for (Solution s : store.list()) {
+                    Map<String, Object> row = new LinkedHashMap<>();
+                    row.put("name", s.name());
+                    row.put("savedAt", s.savedAt());
+                    row.put("bytes", s.text().getBytes(StandardCharsets.UTF_8).length);
+                    row.put("owner", s.ownerHash().substring(0, 6));
+                    row.put("ip", s.ip());
+                    rows.add(row);
+                }
+                ctx.json(rows);
+            });
+            config.routes.get("/admin/solutions/{name}", ctx -> {
+                Optional<Solution> found = store.get(ctx.pathParam("name"));
+                if (found.isEmpty()) {
+                    ctx.status(HttpStatus.NOT_FOUND).result("unknown solution");
+                } else {
+                    ctx.contentType("text/plain; charset=utf-8").result(found.get().text());
+                }
+            });
+            config.routes.delete("/admin/solutions/{name}", ctx ->
+                    ctx.status(store.delete(ctx.pathParam("name")) ? HttpStatus.NO_CONTENT : HttpStatus.NOT_FOUND));
+            config.routes.delete("/admin/solutions", ctx -> ctx.json(Map.of("deleted", store.deleteAll())));
+            config.routes.get("/admin/sharing", ctx -> ctx.json(Map.of("enabled", store.sharingEnabled())));
+            config.routes.put("/admin/sharing", ctx -> {
+                JsonNode body = null;
+                try {
+                    body = statsMapper.readTree(ctx.body());
+                } catch (JsonProcessingException e) {
+                    // answered below
+                }
+                if (body == null || !body.has("enabled") || !body.get("enabled").isBoolean()) {
+                    ctx.status(HttpStatus.BAD_REQUEST).result("expected {\"enabled\": true|false}");
+                    return;
+                }
+                store.setSharingEnabled(body.get("enabled").asBoolean());
+                ctx.json(Map.of("enabled", store.sharingEnabled()));
+            });
             config.routes.ws("/lsp", lsp::configure);
         });
         app.start(port);
@@ -235,6 +292,21 @@ public final class NelumboHttpServer {
                 ctx.status(404).html(docs.notFoundPage());
             }
         }
+    }
+
+    private String clientIp(Context ctx) {
+        List<String> lines = Collections.list(ctx.req().getHeaders("X-Forwarded-For"));
+        return access.clientIp(lines.isEmpty() ? null : String.join(",", lines), ctx.header(ClientAccess.PROXY_HEADER), ctx.ip());
+    }
+
+    private void guardAdmin(Context ctx) {
+        if (!access.isAdmin(clientIp(ctx), ctx.host())) {
+            throw new EndpointNotFound(ctx.method(), ctx.path());
+        }
+        ctx.header("Cache-Control", "no-store");
+        ctx.header("X-Frame-Options", "DENY");
+        ctx.header("Content-Security-Policy", "frame-ancestors 'none'");
+        ctx.header("Cross-Origin-Resource-Policy", "same-origin");
     }
 
     private static void reply(Context ctx, SolutionService.Response response) {
