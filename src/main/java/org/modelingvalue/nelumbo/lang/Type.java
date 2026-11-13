@@ -72,8 +72,7 @@ public final class Type extends Node implements FunctorOrType {
     public static final Type  COLLECTION      = new Type("Collection", OBJECT, List.of(ELEMENT_ARG_VAR), DEFAULT_GROUP);
     public static final Type  SET             = new Type("Set", COLLECTION, List.of(ELEMENT_ARG_VAR), DEFAULT_GROUP);
     public static final Type  LIST            = new Type("List", COLLECTION, List.of(ELEMENT_ARG_VAR), DEFAULT_GROUP);
-    public static final Type  REPETITION      = new Type(" Repetition", OBJECT, List.of(ELEMENT_ARG_VAR),
-            DEFAULT_GROUP);
+    public static final Type  REPETITION      = new Type("Repetition", OBJECT, List.of(ELEMENT_ARG_VAR), DEFAULT_GROUP);
     public static final Type  LAMBDA          = new Type("Lambda", OBJECT);
 
     public static List<Type> predefined() {

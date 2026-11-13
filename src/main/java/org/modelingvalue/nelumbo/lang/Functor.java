@@ -331,7 +331,9 @@ public class Functor extends Node implements FunctorOrType {
 
     public String string(List<Object> args, RenderOptions options) {
         Pattern pattern = pattern();
-        if (pattern instanceof SequencePattern && argTypes().size() > 1) {
+        List<Type> argTypes = argTypes();
+        if (pattern instanceof SequencePattern && (argTypes.size() > 1 || (argTypes.size() == 1
+                && Type.REPETITION.objectArgsOnly().isAssignableFrom(argTypes.first().objectArgsOnly())))) {
             args = List.of(args);
         }
         StringBuffer sb = new StringBuffer();
