@@ -99,7 +99,7 @@ run_repro() {
     if expects_error "$file"; then
         quiet=(-q)
     fi
-    out=$(${limit[@]+"${limit[@]}"} java -ea -DPARALLEL_COLLECTIONS=false -jar "$jar" ${quiet[@]+"${quiet[@]}"} "$file" 2>&1)
+    out=$(${limit[@]+"${limit[@]}"} "$ROOT_DIR/java-ci" -ea -DPARALLEL_COLLECTIONS=false -jar "$jar" ${quiet[@]+"${quiet[@]}"} "$file" 2>&1)
     local code=$?
     local elapsed=$(( $(date +%s) - start ))
     local name

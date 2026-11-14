@@ -50,11 +50,11 @@ public final class NelumboEvaluator {
      * completeFacts/completeFalsehoods tell whether facts/falsehoods are all of
      * them (no {@code ..} in the result); without them an empty list could mean
      * "none" or "unknown". All three are null, like result, when the query has no
-     * result.
+     * result. micros is the wall-clock time of the query's inference.
      */
     public record QueryOutcome(String query, String result, Boolean expectationMatched,
             List<java.util.Map<String, String>> facts, List<java.util.Map<String, String>> falsehoods,
-            Boolean completeFacts, Boolean completeFalsehoods) {
+            Boolean completeFacts, Boolean completeFalsehoods, long micros) {
     }
 
     public record EvalResult(boolean ok, List<Diagnostic> diagnostics, List<QueryOutcome> queries,
@@ -102,7 +102,7 @@ public final class NelumboEvaluator {
         KnowledgeBase evalKb = new KnowledgeBase(base);
         // set unconditionally: a session base may carry a stale inherited deadline
         evalKb.setDeadlineNanos(deadlineMs > 0 ? System.nanoTime() + deadlineMs * 1_000_000L : 0);
-        KnowledgeBase resultKb = base;
+        KnowledgeBase resultKb;
         try {
             resultKb = evalKb.invoke(() -> {
                 KnowledgeBase kb = KnowledgeBase.current();
@@ -209,7 +209,8 @@ public final class NelumboEvaluator {
                 ir == null ? List.of() : bindings(ir.trueBindings()),
                 ir == null ? List.of() : bindings(ir.falseBindings()),
                 ir == null ? null : ir.completeFacts(),
-                ir == null ? null : ir.completeFalsehoods());
+                ir == null ? null : ir.completeFalsehoods(),
+                query.inferMicros());
     }
 
     private static List<java.util.Map<String, String>> bindings(

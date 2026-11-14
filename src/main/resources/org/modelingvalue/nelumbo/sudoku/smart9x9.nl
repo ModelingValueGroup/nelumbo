@@ -6,7 +6,7 @@ import nelumbo.collections
 // (the placing E fails, backtracking immediately). Only when no forced blank
 // exists solveBX guesses at the first blank. With enough memoization
 // (-DMAX_LOGIC_MEMOIZ=100000) the plain brute force of brute9x9.nl is faster.
-// Puzzles: examples/sudoku-smart-9x9-easy.nl, unit tests: tests/sudokuSmart9x9Test.nl.
+// Puzzles: examples/sudoku-smart-9x9.nl, unit tests: tests/sudokuSmart9x9Test.nl.
 //
 // Rule-shape notes: at/row are bounds-guarded because guards are probed
 // speculatively and an out-of-range index is an error; the alternatives of

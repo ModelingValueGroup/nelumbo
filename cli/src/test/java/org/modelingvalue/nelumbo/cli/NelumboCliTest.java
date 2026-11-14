@@ -76,12 +76,36 @@ class NelumboCliTest {
 
     @Test
     void queryWithoutResultHasNoCompleteness() {
-        Map<String, Object> entry = NelumboCli.queryEntry(new QueryOutcome("q", null, null, List.of(), List.of(), null, null));
+        Map<String, Object> entry = NelumboCli.queryEntry(new QueryOutcome("q", null, null, List.of(), List.of(), null, null, 0));
         Map<String, Object> complete = new java.util.LinkedHashMap<>();
         complete.put("facts", null);
         complete.put("falsehoods", null);
         assertEquals(complete, entry.get("complete"));
         assertTrue(Json.toJson(entry).contains("\"complete\":{\"facts\":null,\"falsehoods\":null}"), () -> Json.toJson(entry));
+    }
+
+    @Test
+    void jsonHasTheInferenceTimeOfEveryQuery() {
+        String source = """
+                import  nelumbo.integers
+
+                Integer ::= fib(<Integer>)
+
+                Integer n, f
+
+                fib(n)=f <=>  f=n                 if n>=0 & n<=1,
+                              f=fib(n-1)+fib(n-2) if n>1
+
+                fib(25)=f ? [(f=75025)][..]
+                1+1=2     ? [()][]
+                """;
+        Map<String, Object> object = NelumboCli.jsonObject(NelumboEvaluator.evaluate(source, "micros.nl", 0), "micros.nl");
+        assertEquals(List.of(), object.get("errors"));
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> queries = (List<Map<String, Object>>) object.get("queries");
+        long                      fib     = (Long) queries.get(0).get("micros");
+        long                      sum     = (Long) queries.get(1).get("micros");
+        assertTrue(fib > sum && sum >= 0, () -> "micros: " + queries);
     }
 
     @Test

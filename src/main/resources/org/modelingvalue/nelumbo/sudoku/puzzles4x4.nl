@@ -1,5 +1,5 @@
 // 4x4 sudoku puzzles with their solutions (0 = blank), for the example files
-// examples/sudoku-{brute,smart,csp}-4x4-easy.nl: puzzle(name) is the input, solution(name)
+// examples/sudoku-{brute,smart,csp}-4x4.nl: puzzle(name) is the input, solution(name)
 // the expected output of any solver's sudoku(puzzle(name)).
 import nelumbo.collections
 

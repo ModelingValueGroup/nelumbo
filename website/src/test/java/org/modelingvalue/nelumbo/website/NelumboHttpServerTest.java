@@ -96,6 +96,7 @@ class NelumboHttpServerTest {
         JsonNode query = mapper.readTree(response.body()).get("queries").get(0);
         assertEquals("true", query.get("status").asText());
         assertEquals("5", query.get("bindings").get(0).get("r").asText());
+        assertTrue(query.get("micros").isIntegralNumber() && query.get("micros").asLong() >= 0, "micros: " + query);
     }
 
     @Test
@@ -159,7 +160,7 @@ class NelumboHttpServerTest {
         assertEquals(200, example.statusCode());
         assertTrue(example.headers().firstValue("Content-Type").orElse("").contains("text/plain"), "served as text, not HTML");
         assertTrue(example.body().contains("fib("), "the fibonacci example source");
-        assertEquals(404, get("/examples/sudoku-brute-4x4-easy").statusCode(), "unlisted examples are not served");
+        assertEquals(404, get("/examples/sudoku-brute-4x4").statusCode(), "unlisted examples are not served");
         assertEquals(404, get("/examples/noSuchExample").statusCode());
     }
 

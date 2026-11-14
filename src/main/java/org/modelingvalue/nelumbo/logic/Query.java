@@ -37,6 +37,7 @@ public final class Query extends Node implements Evaluatable {
     private static final long serialVersionUID = -6751904607718047038L;
 
     private InferResult inferResult;
+    private long        inferMicros;
 
     @NelumboConstructor
     public Query(NodeInfo nodeInfo, Object... args) {
@@ -184,8 +185,9 @@ public final class Query extends Node implements Evaluatable {
 
     @Override
     public void evaluate(KnowledgeBase knowledgeBase, ParseExceptionHandler handler) throws ParseException {
-        Predicate predicate = predicate();
+        Predicate   predicate = predicate();
         InferResult found;
+        long        start     = System.nanoTime();
         try {
             found = predicate.infer().predicate(predicate);
             if (found.isUnknownWithPossibleCyclesOrExceptions() && !found.exceptions().isEmpty()) {
@@ -204,6 +206,8 @@ public final class Query extends Node implements Evaluatable {
         InconsistencyException ie) {
             handler.addException(new ParseException(ie, ie.getMessage(), predicate));
             return;
+        } finally {
+            inferMicros = (System.nanoTime() - start) / 1000;
         }
         inferResult = found;
         if (hasExpected()) {
@@ -226,6 +230,11 @@ public final class Query extends Node implements Evaluatable {
 
     public InferResult inferResult() {
         return inferResult;
+    }
+
+    // wall-clock time of this query's inference (also when it failed), 0 before evaluate
+    public long inferMicros() {
+        return inferMicros;
     }
 
 }

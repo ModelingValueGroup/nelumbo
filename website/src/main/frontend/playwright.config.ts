@@ -6,6 +6,8 @@ const PORT:    number = 8899;
 const OVERLOAD_PORT: number = 8898;
 const ADMIN_PORT:    number = 8897;
 const LIBSDIR: string = resolve(__dirname, '../../../build/libs');
+// the JVM sees a CI runner (4 vCPUs, 16 GB) on every machine, like the test JVMs (root build.gradle.kts)
+const JAVA:    string = 'java -XX:ActiveProcessorCount=4 -XX:MaxRAM=16g -XX:+UseG1GC';
 
 function serverJar(): string {
     let jars: string[] = [];
@@ -34,21 +36,21 @@ export default defineConfig({
     ],
     webServer: [
         {
-            command:             'java -jar "' + serverJar() + '" --port ' + PORT + ' --no-gui',
+            command:             JAVA + ' -jar "' + serverJar() + '" --port ' + PORT + ' --no-gui',
             url:                 'http://localhost:' + PORT + '/health',
             reuseExistingServer: !process.env.CI,
             timeout:             60_000,
         },
         {
             // every evaluation counts as busy and gets a 300 ms budget (e2e/overload.spec.ts)
-            command:             'java -DNELUMBO_OVERLOAD_THRESHOLD=0 -DNELUMBO_OVERLOAD_BUDGET_MS=300 -jar "' + serverJar() + '" --port ' + OVERLOAD_PORT + ' --no-gui',
+            command:             JAVA + ' -DNELUMBO_OVERLOAD_THRESHOLD=0 -DNELUMBO_OVERLOAD_BUDGET_MS=300 -jar "' + serverJar() + '" --port ' + OVERLOAD_PORT + ' --no-gui',
             url:                 'http://localhost:' + OVERLOAD_PORT + '/health',
             reuseExistingServer: !process.env.CI,
             timeout:             60_000,
         },
         {
             // a proxy secret, so the admin specs can fake a client address with X-Forwarded-For
-            command:             'java -jar "' + serverJar() + '" --port ' + ADMIN_PORT + ' --no-gui',
+            command:             JAVA + ' -jar "' + serverJar() + '" --port ' + ADMIN_PORT + ' --no-gui',
             url:                 'http://localhost:' + ADMIN_PORT + '/health',
             reuseExistingServer: !process.env.CI,
             timeout:             60_000,

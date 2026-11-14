@@ -9,7 +9,7 @@ import nelumbo.collections
 // scanF walks the grid looking for a forced blank (at most one fitting digit):
 // exactly one is a forced move (placed without branching), zero is a dead end.
 // Only when no forced blank exists solveBX guesses at the first blank.
-// Puzzles: examples/sudoku-smart-4x4-easy.nl.
+// Puzzles: examples/sudoku-smart-4x4.nl.
 
 // ---- types ----------------------------------------------------------
 Grid :: Object        // placeholder so we can name the nested list type

@@ -242,6 +242,8 @@ class NelumboServerTest {
         assertEquals("5", query.get("bindings").get(0).get("r").asText());
         assertTrue(query.get("result").asText().contains("r=5"),
                 "canonical result should show r=5: " + query.get("result"));
+        // the wall-clock time of the query's inference
+        assertTrue(query.get("micros").isIntegralNumber() && query.get("micros").asLong() >= 0, "micros: " + query);
 
         // The parse tree reflects the posted document: one entry per statement, the
         // query last.

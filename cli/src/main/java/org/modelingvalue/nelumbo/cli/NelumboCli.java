@@ -393,6 +393,7 @@ public final class NelumboCli {
         complete.put("facts", q.completeFacts());
         complete.put("falsehoods", q.completeFalsehoods());
         entry.put("complete", complete);
+        entry.put("micros", q.micros());
         return entry;
     }
 
@@ -789,7 +790,8 @@ public final class NelumboCli {
                                    collections, rationals, datetime
                   -j, --json       output one JSON object: errors as an array of messages,
                                    per query the facts/falsehoods as name/value pairs
-                                   and whether each list is complete,
+                                   and whether each list is complete, its inference
+                                   time in microseconds (micros),
                                    and the parse tree of the input
                   --trace          add the (currently stubbed) trace field to the output
                   -i, --interactive read-eval-print loop; any given files and --prep

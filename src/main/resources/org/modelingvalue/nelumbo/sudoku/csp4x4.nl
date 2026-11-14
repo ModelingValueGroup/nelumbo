@@ -2,7 +2,7 @@
 // still possible, assign/eliminate propagate naked and hidden singles, search is a
 // DFS on the cell with the fewest candidates (MRV). Options are a Digit enum, not
 // integers; puzzles go in and out as List<List<Integer>> (0 = blank).
-// Puzzles: examples/sudoku-csp-4x4-easy.nl, unit tests: tests/sudokuCsp4x4Test.nl.
+// Puzzles: examples/sudoku-csp-4x4.nl, unit tests: tests/sudokuCsp4x4Test.nl.
 //
 // A Norvig `return False` is an explicit `false` branch: a branch whose guard fails
 // is silent (unknown), not false. `/` is exact division: floor division via

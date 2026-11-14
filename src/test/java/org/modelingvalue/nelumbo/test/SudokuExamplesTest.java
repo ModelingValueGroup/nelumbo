@@ -18,12 +18,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 
-// All sudoku examples run (2026-10-28): every file green on the CLI in default,
-// reversed and random rule order. The 9x9 ones need a memoization of 100000
-// (set below); with the default 10000 the brute-force 9x9 runs 2+ hours.
-// Solvers and puzzles are modules in sudoku/; the example files of one size are
-// identical except for the solver import.
-// The slow ones only run with SLOW_SUDOKU=true in the environment.
+// One test per solver (examples/sudoku-<solver>-<size>.nl, all puzzles of that size); the time
+// of each sudoku is its query's micros in the CLI's --json output. The solvers' unit tests are
+// in SudokuUnitsTest. The 9x9 ones need a memoization of 100000 (set below); with the default
+// 10000 the brute-force 9x9 'real' puzzle runs 2+ hours. The slow ones only run with
+// SLOW_SUDOKU=true in the environment.
+// Times: M4 Max, test JVM pinned to 4 cores (root build.gradle.kts), 2026-11-14; CI runners take
+// 0.85x, 1.3x or 1.75x these times, depending on the runner.
 public class SudokuExamplesTest extends NelumboTestBase {
 
     static {
@@ -40,87 +41,41 @@ public class SudokuExamplesTest extends NelumboTestBase {
         kb.setTrace(env("TRACE_NELUMBO", false));
     }
 
+    // ~0.17s per run (per sudoku, CLI --json in a cold JVM: 0.13-0.23s)
     @RepeatedTest(10)
-    public void sudokuBrute4x4Easy() {
-        exampleResource("sudoku-brute-4x4-easy.nl");
+    public void sudokuBrute4x4() {
+        exampleResource("sudoku-brute-4x4.nl");
     }
 
+    // ~0.7s per run (per sudoku, CLI: 0.24-0.63s)
     @RepeatedTest(10)
-    public void sudokuSmart4x4Easy() {
-        exampleResource("sudoku-smart-4x4-easy.nl");
+    public void sudokuSmart4x4() {
+        exampleResource("sudoku-smart-4x4.nl");
     }
 
-    // ~8s per run, so not repeated (10/10 green as @RepeatedTest(10)).
+    // ~5s (per sudoku, CLI: 1.4-1.8s)
     @Test
-    public void sudokuCsp4x4Easy() {
-        exampleResource("sudoku-csp-4x4-easy.nl");
+    public void sudokuCsp4x4() {
+        exampleResource("sudoku-csp-4x4.nl");
     }
 
-    // ~95-145s with MAX_LOGIC_MEMOIZ=100000, most of it the 26-clue puzzle.
+    // ~110s (per sudoku, CLI: oneBlankPerUnit 0.5s, firstRowEmpty 0.8s, real 6s, guessing 110s)
     @Test
-    public void sudokuBrute9x9Easy() {
-        exampleResource("sudoku-brute-9x9-easy.nl");
+    public void sudokuBrute9x9() {
+        exampleResource("sudoku-brute-9x9.nl");
     }
 
-    // ~65-95s.
+    // ~70s (per sudoku, CLI: 1.6 / 2.5 / 12 / 59s)
     @Test
-    public void sudokuSmart9x9Easy() {
-        exampleResource("sudoku-smart-9x9-easy.nl");
+    public void sudokuSmart9x9() {
+        exampleResource("sudoku-smart-9x9.nl");
     }
 
-    // ~1 hour (estimated from single-puzzle runs: 72 clues ~4 min, the rest ~17-19 min).
-    @Test
-    @EnabledIfEnvironmentVariable(named = "SLOW_SUDOKU", matches = "true")
-    public void sudokuCsp9x9Easy() {
-        exampleResource("sudoku-csp-9x9-easy.nl");
-    }
-
-    // A puzzle where the CSP wins (25 clues, naked + hidden singles only), one file
-    // per solver: csp ~290s, brute force and singles-first did not finish within
-    // 60 min each (2026-11-02, CLI, memo 100000).
+    // ~880s: ~175s per sudoku (CLI) whatever the clue count, nearly all of it parse
     @Test
     @EnabledIfEnvironmentVariable(named = "SLOW_SUDOKU", matches = "true")
-    public void sudokuCsp9x9Hard() {
-        exampleResource("sudoku-csp-9x9-hard.nl");
-    }
-
-    @Test
-    @EnabledIfEnvironmentVariable(named = "SLOW_SUDOKU", matches = "true")
-    public void sudokuSmart9x9Hard() {
-        exampleResource("sudoku-smart-9x9-hard.nl");
-    }
-
-    @Test
-    @EnabledIfEnvironmentVariable(named = "SLOW_SUDOKU", matches = "true")
-    public void sudokuBrute9x9Hard() {
-        exampleResource("sudoku-brute-9x9-hard.nl");
-    }
-
-    // unit tests of the solver modules (the example files hold only puzzles)
-
-    @Test
-    public void brute4x4Units() {
-        testResource("sudokuBrute4x4Test.nl");
-    }
-
-    @Test
-    public void csp4x4Units() {
-        testResource("sudokuCsp4x4Test.nl");
-    }
-
-    @Test
-    public void brute9x9Units() {
-        testResource("sudokuBrute9x9Test.nl");
-    }
-
-    @Test
-    public void smart9x9Units() {
-        testResource("sudokuSmart9x9Test.nl");
-    }
-
-    @Test
-    public void csp9x9Units() {
-        testResource("sudokuCsp9x9Test.nl");
+    public void sudokuCsp9x9() {
+        exampleResource("sudoku-csp-9x9.nl");
     }
 
 }

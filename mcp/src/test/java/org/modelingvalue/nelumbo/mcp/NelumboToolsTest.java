@@ -65,6 +65,7 @@ public class NelumboToolsTest {
         for (int i = 0; i < expected.length; i++) {
             assertEquals(Map.of("facts", expected[i][0], "falsehoods", expected[i][1]), queries.get(i).get("complete"),
                     queries.get(i).toString());
+            assertTrue((Long) queries.get(i).get("micros") >= 0, queries.get(i).toString());
         }
     }
 

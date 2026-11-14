@@ -1,7 +1,7 @@
 import nelumbo.collections
 
 // Naive brute-force sudoku solver: solve walks the grid row by row and tries every
-// digit that fits at each blank (all solutions). Puzzles: examples/sudoku-brute-9x9-easy.nl,
+// digit that fits at each blank (all solutions). Puzzles: examples/sudoku-brute-9x9.nl,
 // unit tests: tests/sudokuBrute9x9Test.nl.
 // Needs -DMAX_LOGIC_MEMOIZ=100000 for puzzles that make it search.
 

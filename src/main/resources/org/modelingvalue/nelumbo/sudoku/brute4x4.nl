@@ -1,7 +1,7 @@
 import nelumbo.collections
 
 // 4x4 debug copy of brute9x9.nl: naive brute-force solver over digits 1-4 with
-// 2x2 boxes. Small enough to trace by hand. Puzzles: examples/sudoku-brute-4x4-easy.nl,
+// 2x2 boxes. Small enough to trace by hand. Puzzles: examples/sudoku-brute-4x4.nl,
 // unit tests: tests/sudokuBrute4x4Test.nl.
 
 // ---- types ----------------------------------------------------------

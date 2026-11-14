@@ -48,17 +48,29 @@ public final class NelumboTools {
         if (content == null) {
             throw new IllegalArgumentException("eval_nl requires a 'content' argument");
         }
-        EvalResult result   = NelumboEvaluator.evaluate(content, name == null || name.isBlank() ? "model.nl" : name, deadlineMs);
-        String[]   lines    = content.split("\n", -1);
+        EvalResult          result = NelumboEvaluator.evaluate(content, name == null || name.isBlank() ? "model.nl" : name, deadlineMs);
+        String[]            lines  = content.split("\n", -1);
+        Map<String, Object> out    = new LinkedHashMap<>();
+        out.put("ok", result.ok());
+        out.put("diagnostics", createDiagnostics(result, lines));
+        out.put("queryResults", createQueries(result));
+        return out;
+    }
+
+    private static List<Map<String, Object>> createDiagnostics(EvalResult result, String[] lines) {
         List<Map<String, Object>> diagnostics = new ArrayList<>();
         for (Diagnostic d : result.diagnostics()) {
             diagnostics.add(toDiagnosticMap(d, lines));
         }
         if (diagnostics.size() > CASCADE_THRESHOLD) {
-            Map<String, Object> first = diagnostics.get(0);
+            Map<String, Object> first = diagnostics.getFirst();
             String              note  = "Note: " + (diagnostics.size() - 1) + " further errors follow; they usually cascade from this first one - fix it and re-evaluate.";
             first.merge("hint", note, (old, n) -> old + " " + n);
         }
+        return diagnostics;
+    }
+
+    private static List<Map<String, Object>> createQueries(EvalResult result) {
         List<Map<String, Object>> queries = new ArrayList<>();
         for (QueryOutcome q : result.queries()) {
             Map<String, Object> m = new LinkedHashMap<>();
@@ -71,16 +83,13 @@ public final class NelumboTools {
                 complete.put("falsehoods", q.completeFalsehoods());
                 m.put("complete", complete);
             }
+            m.put("micros", q.micros());
             if (q.expectationMatched() != null) {
                 m.put("expectationMatched", q.expectationMatched());
             }
             queries.add(m);
         }
-        Map<String, Object> out = new LinkedHashMap<>();
-        out.put("ok", result.ok());
-        out.put("diagnostics", diagnostics);
-        out.put("queryResults", queries);
-        return out;
+        return queries;
     }
 
     private static Map<String, Object> toDiagnosticMap(Diagnostic d, String[] lines) {
@@ -91,7 +100,7 @@ public final class NelumboTools {
         if (d.line() >= 1 && d.line() <= lines.length) {
             String sourceLine = lines[d.line() - 1];
             m.put("sourceLine", sourceLine);
-            int col = Math.min(Math.max(d.col(), 1), sourceLine.length() + 1);
+            int col = Math.clamp(d.col(), 1, sourceLine.length() + 1);
             m.put("caret", " ".repeat(col - 1) + "^".repeat(Math.max(d.length(), 1)));
         }
         Hint hint = Hints.hintFor(d.message());

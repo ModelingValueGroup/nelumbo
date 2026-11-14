@@ -239,6 +239,16 @@ val allTestsReport = tasks.register<TestReport>("allTestsReport") {
     }
 }
 
+// every test JVM sees the machine of a CI runner (4 vCPUs, 16 GB), whatever it runs on: the core
+// count sets the engine pool (Collection.PARALLELISM = cores - 1) and the JVM's GC and JIT threads
+// (16 cores made the sudoku tests ~18% slower), the RAM the initial heap; same flags in java-ci
+allprojects {
+    tasks.withType<Test>().configureEach {
+        maxHeapSize = "2g"
+        jvmArgs("-XX:ActiveProcessorCount=4", "-XX:MaxRAM=16g", "-XX:+UseG1GC")
+    }
+}
+
 // make failing tests stand out in the (CI) log: a red banner per failure + a GitHub error annotation
 allprojects {
     tasks.withType<Test>().configureEach {

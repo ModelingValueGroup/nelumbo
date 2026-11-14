@@ -3,7 +3,7 @@
 // Every cell holds the set of digits still possible, assign/eliminate propagate
 // naked and hidden singles, search is a DFS on the cell with the fewest candidates
 // (MRV). Puzzles go in and out as List<List<Integer>> (0 = blank).
-// Puzzles: examples/sudoku-csp-9x9-easy.nl, unit tests: tests/sudokuCsp9x9Test.nl.
+// Puzzles: examples/sudoku-csp-9x9.nl, unit tests: tests/sudokuCsp9x9Test.nl.
 // Needs -DMAX_LOGIC_MEMOIZ=100000.
 //
 // A Norvig `return False` is an explicit `false` branch: a branch whose guard fails

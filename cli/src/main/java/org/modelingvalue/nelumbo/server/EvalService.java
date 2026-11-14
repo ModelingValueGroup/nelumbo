@@ -282,6 +282,7 @@ public final class EvalService implements AutoCloseable {
         complete.put("facts", result.completeFacts());
         complete.put("falsehoods", result.completeFalsehoods());
         json.put("complete", complete);
+        json.put("micros", query.inferMicros());
         return json;
     }
 
