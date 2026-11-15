@@ -171,3 +171,51 @@ test('a failed expected result has one hover, with the time and the error', asyn
     }
     expect([...seen], 'the same hover everywhere').toHaveLength(1);
 });
+
+// A query whose result is not in yet shows "...calculating" (after 300 ms); the quick queries above it
+// keep their results meanwhile.
+const SLOW: string = [
+    'import nelumbo.integers',
+    'Integer ::= factorial(<Integer>)',
+    'Integer n, r',
+    'factorial(n)=r <=> r=1 if n<=0, r=n*factorial(n-1) if n>0',
+    'factorial(5)=r ?',
+    'factorial(20000)=r ?',
+].join('\n');
+
+test('a slow query shows ...calculating until its result is in', async ({ page }: { page: Page }): Promise<void> => {
+    await page.goto('/sandbox.html');
+    await page.waitForFunction((): boolean => ((window as any).NelumboFields?.__editors?.length ?? 0) > 0);
+    await page.evaluate((doc: string): void => {
+        (window as any).NelumboFields.__editors[0].model.setValue(doc);
+    }, SLOW);
+    const calculating: Locator = page.getByText('...calculating');
+    await expect(calculating).toBeVisible({ timeout: 20_000 });
+    await expect.poll(async (): Promise<boolean> => await page.evaluate((): boolean =>
+        document.body.innerText.includes('...calculating') && document.body.innerText.includes('r=120')), { timeout: 20_000 }).toBe(true);
+    await expect(calculating).toHaveCount(0, { timeout: 30_000 });
+});
+
+test('a quick edit shows no ...calculating', async ({ page }: { page: Page }): Promise<void> => {
+    await page.goto('/sandbox.html');
+    await page.waitForFunction((): boolean => ((window as any).NelumboFields?.__editors?.length ?? 0) > 0);
+    await page.evaluate((doc: string): void => {
+        (window as any).NelumboFields.__editors[0].model.setValue(doc);
+    }, DOC);
+    for (const hint of HINTS) {
+        await expect(page.getByText(hint, { exact: true }).first()).toBeVisible({ timeout: 20_000 });
+    }
+    const seen: boolean = await page.evaluate(async (doc: string): Promise<boolean> => {
+        (window as any).NelumboFields.__editors[0].model.setValue(doc);
+        let   found: boolean = false;
+        const end:   number  = Date.now() + 1000;
+        while (Date.now() < end) {
+            if (document.body.innerText.includes('...calculating')) {
+                found = true;
+            }
+            await new Promise<void>((r: () => void): number => window.setTimeout(r, 10));
+        }
+        return found;
+    }, DOC + '\ntrue ?');
+    expect(seen, '...calculating appeared after a quick edit').toBe(false);
+});

@@ -17,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
@@ -73,7 +74,7 @@ public class QueryEvaluatorSeedingTest {
         String doc = "Integer r\nfib(50)=r ?\n";
         Map<Query, QueryResult> results = QueryEvaluator.evaluate(kb, 1, doc, "inmemory://slow.nl");
         boolean timedOut = results.values().stream()
-                .anyMatch(r -> r.kind() == QueryResult.Kind.ERROR && r.inferred().toLowerCase().contains("deadline"));
+                .anyMatch(r -> r.kind() == QueryResult.Kind.FAILED && r.inferred().contains("took too long"));
         assertTrue(timedOut || results.isEmpty(),
                 "expected a deadline marker or no results, got: " + kb.get(() -> results.toString()));
     }
@@ -98,10 +99,36 @@ public class QueryEvaluatorSeedingTest {
     }
 
     @Test
-    public void timeoutUnderTheNormalDeadlineStaysAnError() {
+    public void timeoutUnderTheNormalDeadlineIsATimeout() {
         KnowledgeBase           kb      = seeded(FACTORIAL_SEED);
         Map<Query, QueryResult> results = QueryEvaluator.evaluate(kb, 300, HEAVY_QUERY, "inmemory://heavy.nl", false);
         assertEquals(1, results.size(), "the heavy query gets a result: " + kb.get(() -> results.toString()));
-        assertEquals(QueryResult.Kind.ERROR, results.values().iterator().next().kind());
+        QueryResult result = results.values().iterator().next();
+        assertEquals(QueryResult.Kind.FAILED, result.kind());
+        assertEquals("evaluation took too long (over 300 ms)", result.message());
+    }
+
+    private static final String MODEL_ERRORS = """
+            import nelumbo.logic
+            import nelumbo.collections
+            Person  :: Object
+            Person  ::= Piet
+            Boolean ::= p(<Person>)
+            Person  x
+            Integer e
+            fact p(Piet)
+            p(x) <=> false
+            p(Piet) ?
+            at 5 in [1,2] = e ?
+            """;
+
+    @Test
+    public void anInconsistencyAndAnErrorInTheModelFail() {
+        List<QueryResult> results = List.copyOf(QueryEvaluator.evaluate(MODEL_ERRORS, "inmemory://errors.nl").values());
+        assertEquals(2, results.size(), results.toString());
+        assertEquals(QueryResult.Kind.FAILED, results.get(0).kind());
+        assertTrue(results.get(0).message().contains("Inconsistent results"), results.get(0).message());
+        assertEquals(QueryResult.Kind.FAILED, results.get(1).kind());
+        assertTrue(results.get(1).message().contains("IndexOutOfBoundsException"), results.get(1).message());
     }
 }

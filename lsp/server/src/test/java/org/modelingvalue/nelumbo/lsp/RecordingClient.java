@@ -18,6 +18,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.lsp4j.MessageActionItem;
 import org.eclipse.lsp4j.MessageParams;
@@ -27,9 +28,10 @@ import org.eclipse.lsp4j.services.LanguageClient;
 
 /** Test double: records diagnostics published by the server under test. */
 public class RecordingClient implements LanguageClient {
-    public final List<PublishDiagnosticsParams> diagnostics        = new CopyOnWriteArrayList<>();
-    private final CountDownLatch                firstDiagnostics   = new CountDownLatch(1);
-    private final CountDownLatch                inlayHintsRefreshed = new CountDownLatch(1);
+    public final  List<PublishDiagnosticsParams> diagnostics         = new CopyOnWriteArrayList<>();
+    private final CountDownLatch                 firstDiagnostics    = new CountDownLatch(1);
+    private final CountDownLatch                 inlayHintsRefreshed = new CountDownLatch(1);
+    public final  AtomicInteger                  inlayHintRefreshes  = new AtomicInteger();
 
     @Override
     public void telemetryEvent(Object object) {
@@ -56,6 +58,7 @@ public class RecordingClient implements LanguageClient {
 
     @Override
     public CompletableFuture<Void> refreshInlayHints() {
+        inlayHintRefreshes.incrementAndGet();
         inlayHintsRefreshed.countDown();
         return CompletableFuture.completedFuture(null);
     }

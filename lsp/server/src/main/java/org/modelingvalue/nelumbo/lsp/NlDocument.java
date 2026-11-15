@@ -25,31 +25,34 @@ import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.modelingvalue.nelumbo.AstElement;
-import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboTimeoutException;
 import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.syntax.Parser;
 import org.modelingvalue.nelumbo.syntax.ParserResult;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 import org.modelingvalue.nelumbo.syntax.Tokenizer;
 import org.modelingvalue.nelumbo.syntax.Tokenizer.TokenizerResult;
+import org.modelingvalue.nelumbo.tools.PreparedDocument;
 
 public record NlDocument(Workspace workspace,
                          String content,
                          int version,
                          String uri,
                          TokenizerResult tokenizerResult,
-                         ParserResult parserResult) {
+                         PreparedDocument prepared) {
+
+    public ParserResult parserResult() {
+        return prepared.parserResult();
+    }
 
     public static NlDocument of(NlDocument document, String newContent) {
         return of(document.workspace(), newContent, document.version(), document.uri());
     }
 
     public static NlDocument of(Workspace workspace, String content, int version, String uri) {
-        TokenizerResult tokenizerResult = new Tokenizer(content, uri).tokenize();
-        ParserResult    parserResult    = parse(workspace, tokenizerResult);
-        publishDiagnosticsAsync(workspace, uri, tokenizerResult, parserResult);
+        TokenizerResult  tokenizerResult = new Tokenizer(content, uri).tokenize();
+        PreparedDocument prepared        = prepare(workspace, tokenizerResult);
+        ParserResult     parserResult    = prepared.parserResult();
 
         U.DEBUG("    #tokens    : %4d", tokenizerResult.listAll().size());
         U.DEBUG("    #root-nodes: %4d", parserResult.roots().size());
@@ -61,25 +64,19 @@ public record NlDocument(Workspace workspace,
             U.DEBUG("    DEBUG_NODE failed: %s", e);
         }
 
-        return new NlDocument(workspace, content, version, uri, tokenizerResult, parserResult);
+        return new NlDocument(workspace, content, version, uri, tokenizerResult, prepared);
     }
 
     /**
-     * Parse against a deadline-bearing child KB when the workspace carries one (public /lsp), so a pathological
-     * document cannot occupy the shared engine pool indefinitely. A timeout yields an empty (root-less) result.
+     * Prepares on the calling thread, not on the pool. The deadline is checked only in {@code Predicate} inference, so it
+     * does not bound the parse; a timeout yields an empty (root-less) document.
      */
-    private static ParserResult parse(Workspace workspace, TokenizerResult tokenizerResult) {
-        long deadlineMs = workspace.getEvalDeadlineMs();
-        if (deadlineMs <= 0) {
-            return Parser.parse(workspace.getBaseKnowledgeBase(), tokenizerResult);
-        }
-        KnowledgeBase parseKb = new KnowledgeBase(workspace.getBaseKnowledgeBase());
-        parseKb.setDeadlineNanos(System.nanoTime() + deadlineMs * 1_000_000L);
+    private static PreparedDocument prepare(Workspace workspace, TokenizerResult tokenizerResult) {
         try {
-            return Parser.parse(parseKb, tokenizerResult);
+            return PreparedDocument.prepare(workspace.getBaseKnowledgeBase(), tokenizerResult, workspace.getEvalDeadlineMs());
         } catch (NelumboTimeoutException e) {
-            U.DEBUG("    parse timed out after %d ms", deadlineMs);
-            return new ParserResult(tokenizerResult, false);
+            U.DEBUG("    parse timed out after %d ms", workspace.getEvalDeadlineMs());
+            return PreparedDocument.empty(workspace.getBaseKnowledgeBase(), tokenizerResult);
         }
     }
 
@@ -92,7 +89,7 @@ public record NlDocument(Workspace workspace,
     }
 
     public List<Node> nodesAt(Position position) {
-        return findNodes(position, parserResult.roots()).toMutable();
+        return findNodes(position, parserResult().roots()).toMutable();
     }
 
     private static org.modelingvalue.collections.List<Node> findNodes(Position position, org.modelingvalue.collections.List<? extends AstElement> in) {
@@ -103,10 +100,6 @@ public record NlDocument(Workspace workspace,
             }
         }
         return org.modelingvalue.collections.List.of();
-    }
-
-    private static void publishDiagnosticsAsync(Workspace workspace, String uri, TokenizerResult tokenizerResult, ParserResult parserResult) {
-        publishDiagnostics(workspace, uri, baseDiagnostics(tokenizerResult, parserResult));
     }
 
     /** Syntax/parse diagnostics for the document; query-result diagnostics are added on top by {@link QueryResultCache}. */

@@ -33,7 +33,9 @@ public class ResourceImportResolver implements ImportResolver {
             return null;  // Let another resolver try
         }
         ParseException[] exc = new ParseException[1];
-        KnowledgeBase kb = KnowledgeBase.BASE.invoke(() -> {
+        KnowledgeBase    kb  = new KnowledgeBase(KnowledgeBase.BASE);
+        // on the calling thread, not on the pool: a parse (lsp4j thread, editor window) must not wait for running queries
+        kb.run(() -> {
             try {
                 Parser.parse(KnowledgeBase.class, path);
             } catch (ParseException e) {

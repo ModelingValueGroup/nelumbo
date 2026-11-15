@@ -47,11 +47,18 @@ public class QueryResultTest {
 
     @Test
     public void errorTooltipAddsOnlyWhatTheLabelLacks() {
-        QueryResult r = QueryResult.error("evaluation exceeded the deadline", -1);
-        assertEquals("⚠ evaluation exceeded the deadline", r.inlineLabel());
+        QueryResult r = QueryResult.error("Infer resulted in nothing", -1);
+        assertEquals("\u26a0\ufe0f Infer resulted in nothing", r.inlineLabel());
         assertEquals("", r.tooltip());
         String message = "a message far longer than the sixty characters that fit in a label";
-        assertEquals("⚠ " + message + "  (12 \u03bcs)", QueryResult.error(message, 12).tooltip());
+        assertEquals("\u26a0\ufe0f " + message + "  (12 \u03bcs)", QueryResult.error(message, 12).tooltip());
+    }
+
+    @Test
+    public void timeoutShowsARedCrossAndTheDeadline() {
+        assertEquals("❌ evaluation took too long (over 30 s)", QueryResult.timeout(30_000).inlineLabel());
+        assertEquals("❌ evaluation took too long (over 300 ms)", QueryResult.timeout(300).inlineLabel());
+        assertEquals("", QueryResult.timeout(30_000).tooltip(), "the label says it all");
     }
 
     @Test
@@ -79,9 +86,17 @@ public class QueryResultTest {
     public void overloadedNamesTheBudgetAndCarriesTheCode() {
         QueryResult r = QueryResult.overloaded(2000);
         assertEquals(QueryResult.Kind.OVERLOADED, r.kind());
-        assertEquals("⚠ server busy", r.inlineLabel());
-        assertEquals("⚠ Server busy: evaluation stopped after 2000 ms to protect other users - try again in a moment", r.tooltip());
+        assertEquals("\u26a0\ufe0f server busy", r.inlineLabel());
+        assertEquals("\u26a0\ufe0f Server busy: evaluation stopped after 2000 ms to protect other users - try again in a moment", r.tooltip());
         assertEquals("Server busy: evaluation stopped after 2000 ms to protect other users - try again in a moment", r.message());
         assertEquals("server-overloaded", QueryResult.OVERLOAD_CODE);
+    }
+
+    @Test
+    public void calculatingIsOnlyItsLabel() {
+        QueryResult r = QueryResult.calculating();
+        assertEquals("...calculating", r.inlineLabel());
+        assertEquals("", r.tooltip());
+        assertEquals("", r.hover());
     }
 }

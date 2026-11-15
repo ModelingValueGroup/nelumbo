@@ -25,24 +25,21 @@ import java.util.function.Consumer;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.modelingvalue.nelumbo.AstElement;
-import org.modelingvalue.nelumbo.Evaluatable;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.NelumboTimeoutException;
-import org.modelingvalue.nelumbo.Node;
-import org.modelingvalue.nelumbo.logic.InferResult;
 import org.modelingvalue.nelumbo.logic.Query;
 import org.modelingvalue.nelumbo.syntax.ParseException;
-import org.modelingvalue.nelumbo.syntax.Parser;
-import org.modelingvalue.nelumbo.syntax.ParserResult;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.Tokenizer;
+import org.modelingvalue.nelumbo.tools.PreparedDocument;
+import org.modelingvalue.nelumbo.tools.PreparedQuery;
 
 /**
- * Evaluates every {@code Query} in a document against a given
- * {@code KnowledgeBase}, so the user-declared types, patterns, facts and rules
- * are all registered in the same inference KB (see
- * {@code QueryExecutionFlowTest}). Shared by the inline inlay hints and the
- * "Query" code lens popup so both render identical results.
+ * Evaluates every {@code Query} in a document one after the other, each against
+ * the facts and rules above it (see {@code QueryExecutionFlowTest}): a
+ * sequential wrapper on {@link PreparedDocument} for the "Query" code lens
+ * popup and the tests. {@link #toResult} maps one query's outcome, also for the
+ * inlay hints of {@code QueryResultCache}, so both render identical results.
  */
 public final class QueryEvaluator {
 
@@ -50,8 +47,7 @@ public final class QueryEvaluator {
     }
 
     /**
-     * @return result per query, in document order. Queries that could not be
-     *         reached are absent.
+     * @return the result of every query, in document order.
      */
     public static Map<Query, QueryResult> evaluate(String content, String uri) {
         return evaluate(KnowledgeBase.BASE, 0, content, uri);
@@ -59,21 +55,20 @@ public final class QueryEvaluator {
 
     /**
      * Same, but declarations are resolved against {@code base} (a loaded KB for
-     * embedded servers) and, when {@code deadlineMs > 0}, inference self-aborts
-     * past the deadline. On timeout, queries already evaluated keep their results;
-     * the first unreached query gets an ERROR result; remaining queries are absent
-     * from the map.
+     * embedded servers) and, when {@code deadlineMs > 0}, each query's inference
+     * stops past the deadline, counted per query: that query gets an ERROR
+     * result, the others go on. A timeout while preparing gives an empty map.
      */
     public static Map<Query, QueryResult> evaluate(KnowledgeBase base, long deadlineMs, String content, String uri) {
         return evaluate(base, deadlineMs, content, uri, false);
     }
 
     /**
-     * Same, where {@code overloadBudget} means {@code deadlineMs} is the short budget of a busy server: the first
-     * unreached query gets an OVERLOADED result instead of an ERROR, and a timeout before any query was reached
-     * (while parsing) is rethrown instead of returning empty results, so the caller can still report the overload.
-     * The budget counts from when the evaluation gets an inference pool worker, not from when it is queued: a busy
-     * server is one whose pool is full, and the wait for a worker is not the evaluation's own cost.
+     * Same, where {@code overloadBudget} means {@code deadlineMs} is the short budget of a busy server: a query past
+     * it gets an OVERLOADED result instead of an ERROR, and a timeout while preparing is rethrown instead of returning
+     * empty results, so the caller can still report the overload. The budget counts per query from when it gets an
+     * inference pool worker, not from when it is queued: a busy server is one whose pool is full, and the wait for a
+     * worker is not the query's own cost.
      */
     public static Map<Query, QueryResult> evaluate(KnowledgeBase base, long deadlineMs, String content, String uri, boolean overloadBudget) {
         return evaluate(base, deadlineMs, content, uri, overloadBudget, error -> {
@@ -82,64 +77,45 @@ public final class QueryEvaluator {
 
     /**
      * Same, where {@code statementErrors} receives the error of a fact or rule that failed to evaluate (for example
-     * an inconsistent fact). Evaluation stops at that statement, like the CLI: the queries after it are absent from
-     * the map, so the error must be shown, or the document silently loses all its results.
+     * an inconsistent fact). Evaluation goes on past it: the queries after it still get their results.
      */
     public static Map<Query, QueryResult> evaluate(KnowledgeBase base, long deadlineMs, String content, String uri, boolean overloadBudget,
             Consumer<ParseException> statementErrors) {
         Map<Query, QueryResult> results = new QueryResults();
-        KnowledgeBase evalKb = new KnowledgeBase(base);
-        if (deadlineMs > 0 && !overloadBudget) {
-            evalKb.setDeadlineNanos(System.nanoTime() + deadlineMs * 1_000_000L);
-        }
+        PreparedDocument        prepared;
         try {
-            evalKb.invoke(() -> {
-                KnowledgeBase knowledgeBase = KnowledgeBase.current();
-                // invoke runs this in a child of evalKb (it copied evalKb's deadline when queued); inference checks this one
-                if (deadlineMs > 0 && overloadBudget) {
-                    knowledgeBase.setDeadlineNanos(System.nanoTime() + deadlineMs * 1_000_000L);
-                }
-                ParserResult parsed = new Parser(new Tokenizer(content, uri).tokenize()).parseNonThrowing();
-                ParserResult throwing = new ParserResult(null, true);
-                for (Node root : parsed.roots()) {
-                    if (!(root instanceof Evaluatable eval)) {
-                        continue;
-                    }
-                    try {
-                        eval.evaluate(knowledgeBase, throwing);
-                        if (eval instanceof Query query) {
-                            InferResult ir = query.inferResult();
-                            if (ir == null) {
-                                results.put(query, QueryResult.error("Infer resulted in nothing", query.inferMicros()));
-                            } else if (query.hasExpected()) {
-                                results.put(query, QueryResult.match(ir.toString(), query.inferMicros()));
-                            } else {
-                                results.put(query, QueryResult.result(ir.toString(), query.inferMicros()));
-                            }
-                        }
-                    } catch (NelumboTimeoutException tex) {
-                        if (eval instanceof Query query) {
-                            results.put(query, overloadBudget ? QueryResult.overloaded(deadlineMs) : QueryResult.error("evaluation exceeded the deadline", -1));
-                        }
-                        break;
-                    } catch (ParseException exc) {
-                        if (eval instanceof Query query) {
-                            results.put(query, toResult(query, exc));
-                        } else {
-                            // a fact/rule failed to evaluate: later queries can't be trusted, stop here.
-                            statementErrors.accept(exc);
-                            break;
-                        }
-                    }
-                }
-            });
+            prepared = PreparedDocument.prepare(base, new Tokenizer(content, uri).tokenize(), deadlineMs);
         } catch (NelumboTimeoutException tex) {
-            if (overloadBudget && results.isEmpty()) {
+            if (overloadBudget) {
                 throw tex;
             }
-            // partial results already in the map; return them as-is
+            return results;
+        }
+        prepared.statementErrors().forEach(statementErrors);
+        for (PreparedQuery query : prepared.queries()) {
+            results.put(query.query(), toResult(query, query.evaluate(deadlineMs), overloadBudget, deadlineMs));
         }
         return results;
+    }
+
+    public static QueryResult toResult(PreparedQuery query, PreparedQuery.Outcome outcome, boolean overloadBudget, long deadlineMs) {
+        if (outcome.timedOut()) {
+            return overloadBudget ? QueryResult.overloaded(deadlineMs) : QueryResult.timeout(deadlineMs);
+        }
+        ParseException exc = outcome.exception();
+        if (exc != null) {
+            String shortMsg = exc.getShortMessage();
+            if (shortMsg != null && shortMsg.startsWith("Expected result ")) {
+                return QueryResult.mismatch(outcome.result() == null ? "" : outcome.result(), shortMsg, expectedRange(query.query()), outcome.micros());
+            }
+            String message = "Problem executing " + query.query().getClass().getSimpleName() + ": " + shortMsg;
+            // an internal error is the engine's, anything else (an inconsistency, an error in the model) the model's
+            return shortMsg != null && shortMsg.startsWith("Internal error: ") ? QueryResult.error(message, outcome.micros()) : QueryResult.failed(message, outcome.micros());
+        }
+        if (outcome.result() == null) {
+            return QueryResult.error("Infer resulted in nothing", outcome.micros());
+        }
+        return query.query().hasExpected() ? QueryResult.match(outcome.result(), outcome.micros()) : QueryResult.result(outcome.result(), outcome.micros());
     }
 
     /**
@@ -171,16 +147,6 @@ public final class QueryEvaluator {
                 }
             };
         }
-    }
-
-    private static QueryResult toResult(Query query, ParseException exc) {
-        String shortMsg = exc.getShortMessage();
-        if (shortMsg != null && shortMsg.startsWith("Expected result ")) {
-            InferResult ir = query.inferResult(); // the calculated result; set before the mismatch is raised
-            String inferred = ir == null ? "" : ir.toString();
-            return QueryResult.mismatch(inferred, shortMsg, expectedRange(query), query.inferMicros());
-        }
-        return QueryResult.error("Problem executing " + query.getClass().getSimpleName() + ": " + exc.getShortMessage(), query.inferMicros());
     }
 
     /**

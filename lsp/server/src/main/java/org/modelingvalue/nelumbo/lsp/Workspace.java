@@ -49,6 +49,7 @@ public class Workspace {
     private          KnowledgeBase     baseKnowledgeBase = KnowledgeBase.BASE;
     private          long              evalDeadlineMs;
     private          EvalGate          evalGate          = EvalGate.GLOBAL;
+    private          int               maxParallelQueries;
     // embedded (public /lsp) mode never resolves client-supplied workspace folders (no filesystem walk)
     private          boolean           embedded;
 
@@ -102,6 +103,19 @@ public class Workspace {
 
     public void setEvalGate(EvalGate evalGate) {
         this.evalGate = evalGate;
+    }
+
+    /** How many queries of this connection run at once: the set value, else the system property, else at most 5 and the gate's threshold. */
+    public int getMaxParallelQueries() {
+        if (maxParallelQueries > 0) {
+            return maxParallelQueries;
+        }
+        int property = Integer.getInteger("NELUMBO_MAX_PARALLEL_QUERIES", 0);
+        return property > 0 ? property : Math.max(1, Math.min(5, getEvalGate().threshold()));
+    }
+
+    public void setMaxParallelQueries(int maxParallelQueries) {
+        this.maxParallelQueries = maxParallelQueries;
     }
 
     public boolean isEmbedded() {

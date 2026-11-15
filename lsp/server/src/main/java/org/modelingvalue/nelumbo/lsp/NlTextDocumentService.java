@@ -49,6 +49,7 @@ import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.TypeDefinitionParams;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.TextDocumentService;
+import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.lsp.documentService.DocumentCodeActionService;
 import org.modelingvalue.nelumbo.lsp.documentService.DocumentCompletionService;
 import org.modelingvalue.nelumbo.lsp.documentService.DocumentDefinitionService;
@@ -192,10 +193,8 @@ public class NlTextDocumentService implements TextDocumentService {
 
     // Requests arrive on lsp4j threads; type checks (Type.getAssigned) need a KnowledgeBase.CURRENT context.
     // A child of the base KB per request keeps document types out of the shared base KB caches.
-    @SuppressWarnings("unchecked")
+    // It runs on the lsp4j thread, not on the inference pool, so a full pool does not delay requests.
     private <T> T inKb(Supplier<T> request) {
-        Object[] result = new Object[1];
-        workspace.getBaseKnowledgeBase().invoke(() -> result[0] = request.get());
-        return (T) result[0];
+        return new KnowledgeBase(workspace.getBaseKnowledgeBase()).get(request);
     }
 }

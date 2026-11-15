@@ -14,11 +14,14 @@
 package org.modelingvalue.nelumbo.lsp;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -29,6 +32,9 @@ import org.eclipse.lsp4j.InlayHint;
 import org.eclipse.lsp4j.InlayHintKind;
 import org.eclipse.lsp4j.InlayHintLabelPart;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
+import org.eclipse.lsp4j.SemanticTokens;
+import org.eclipse.lsp4j.SemanticTokensParams;
+import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.junit.jupiter.api.Test;
 import org.modelingvalue.collections.Collection;
 import org.modelingvalue.nelumbo.KnowledgeBase;
@@ -88,9 +94,7 @@ public class EmbeddedServerTest {
         server.connect(client);
         try {
             server.getWorkspace().getDocumentManager().addDocument("inmemory://t.nl", "import nelumbo.logic\ntrue ?\n", 1);
-            org.junit.jupiter.api.Assertions.assertTrue(client.awaitInlayHintRefresh(15), "expected refreshInlayHints after the debounced evaluation");
-            List<InlayHint> hints = server.getWorkspace().getDocumentManager().queryResultCache().hints("inmemory://t.nl");
-            assertEquals(1, hints.size(), "one hint for the single query");
+            List<InlayHint> hints = LiveQueryResultsTest.awaitResults(server.getWorkspace().getDocumentManager().queryResultCache(), "inmemory://t.nl", 1, 15);
             // the tooltip on the one label part, not on the hint: LSP4IJ (IntelliJ) shows only label-part tooltips
             assertNull(hints.get(0).getTooltip(), "no hint-level tooltip, Monaco would show it twice");
             assertNotNull(part(hints.get(0)).getTooltip(), "the label part carries a tooltip");
@@ -112,18 +116,14 @@ public class EmbeddedServerTest {
         try {
             NlDocumentManager dm = server.getWorkspace().getDocumentManager();
             dm.addDocument(uri, "import nelumbo.logic\ntrue ?\nfalse ?\n", 1);
-            assertTrue(client.awaitInlayHintRefresh(15), "expected refreshInlayHints after the debounced evaluation");
-            assertEquals(2, dm.queryResultCache().hints(uri).size(), "one hint per query");
+            LiveQueryResultsTest.awaitResults(dm.queryResultCache(), uri, 2, 15);
             // read before the debounced re-evaluation: the cached hints were placed on the previous text
             dm.updateDocument(uri, "import nelumbo.logic\ntrue & true ?\nfalse ?\n");
             List<InlayHint> hints = dm.queryResultCache().hints(uri);
             assertEquals(1, hints.size(), "the hint of the edited line is withheld, got " + hints);
             assertEquals(2, hints.get(0).getPosition().getLine(), "the hint of the unchanged line stays");
-            long end = System.currentTimeMillis() + 15_000;
-            while (dm.queryResultCache().hints(uri).size() != 2 && System.currentTimeMillis() < end) {
-                Thread.sleep(50);
-            }
-            assertEquals(2, dm.queryResultCache().hints(uri).size(), "the re-evaluation of the new text serves both hints again");
+            // the re-evaluation of the new text serves both hints again
+            LiveQueryResultsTest.awaitResults(dm.queryResultCache(), uri, 2, 15);
         } finally {
             server.getWorkspace().dispose();
         }
@@ -162,7 +162,7 @@ public class EmbeddedServerTest {
             assertTrue(awaitOverloadDiagnostic(client, "inmemory://heavy.nl", 20), "expected a server-overloaded diagnostic, got " + client.diagnostics);
             List<InlayHint> hints = server.getWorkspace().getDocumentManager().queryResultCache().hints("inmemory://heavy.nl");
             assertEquals(1, hints.size());
-            assertEquals("⚠ server busy", part(hints.get(0)).getValue());
+            assertEquals("\u26a0\ufe0f server busy", part(hints.get(0)).getValue());
         } finally {
             server.getWorkspace().dispose();
         }
@@ -201,9 +201,7 @@ public class EmbeddedServerTest {
         server.getWorkspace().setEvalGate(new EvalGate(0, 2000));
         try {
             server.getWorkspace().getDocumentManager().addDocument("inmemory://t.nl", "import nelumbo.logic\ntrue ?\n", 1);
-            assertTrue(client.awaitInlayHintRefresh(15), "expected refreshInlayHints after the debounced evaluation");
-            List<InlayHint> hints = server.getWorkspace().getDocumentManager().queryResultCache().hints("inmemory://t.nl");
-            assertEquals(1, hints.size(), "one hint for the single query");
+            List<InlayHint> hints = LiveQueryResultsTest.awaitResults(server.getWorkspace().getDocumentManager().queryResultCache(), "inmemory://t.nl", 1, 15);
             assertEquals("[()][]", part(hints.get(0)).getValue(), "a light query completes within the short budget");
         } finally {
             server.getWorkspace().dispose();
@@ -228,7 +226,6 @@ public class EmbeddedServerTest {
             for (int i = 0; i < blockers; i++) {
                 gate.enter();
             }
-            // parsing needs a pool worker too, so open the document first: its evaluation follows after the debounce
             server.getWorkspace().getDocumentManager().addDocument("inmemory://light.nl", "Integer x\nfactorial(5)=x ?\n", 1);
             for (int i = 0; i < blockers; i++) {
                 Thread blocker = new Thread(() -> KnowledgeBase.BASE.invoke(() -> {
@@ -241,14 +238,44 @@ public class EmbeddedServerTest {
             assertTrue(started.await(10, TimeUnit.SECONDS), "every pool worker is held");
             assertEquals(blockers, gate.running(), "the pool is full before the light evaluation starts");
             assertTrue(awaitRunning(gate, blockers + 1, 5), "the light evaluation starts while busy, running=" + gate.running());
-            // longer than the budget plus 2 s (a backstop horizon from the budget), shorter than the workspace deadline
+            // longer than the budget, shorter than the workspace deadline
             Thread.sleep(3000);
             released.set(true);
-            assertTrue(client.awaitInlayHintRefresh(15), "expected the light result");
-            List<InlayHint> hints = server.getWorkspace().getDocumentManager().queryResultCache().hints("inmemory://light.nl");
-            assertEquals(1, hints.size(), "one hint for the light query, diagnostics " + client.diagnostics);
+            List<InlayHint> hints = LiveQueryResultsTest.awaitResults(server.getWorkspace().getDocumentManager().queryResultCache(), "inmemory://light.nl", 1, 15);
             assertEquals(InlayHintKind.Type, hints.get(0).getKind(), "a normal result, got " + part(hints.get(0)).getValue());
             assertTrue(part(hints.get(0)).getValue().contains("120"), part(hints.get(0)).getValue());
+        } finally {
+            released.set(true);
+            server.getWorkspace().dispose();
+        }
+    }
+
+    @Test
+    public void requestsDoNotWaitForAFullPool() throws InterruptedException {
+        int                   blockers = Collection.PARALLELISM;
+        CountDownLatch        started  = new CountDownLatch(blockers);
+        AtomicBoolean         released = new AtomicBoolean();
+        NelumboLanguageServer server   = new NelumboLanguageServer(KnowledgeBase.BASE, 0, () -> {
+        });
+        server.connect(new RecordingClient());
+        try {
+            for (int i = 0; i < blockers; i++) {
+                Thread blocker = new Thread(() -> KnowledgeBase.BASE.invoke(() -> {
+                    started.countDown();
+                    sleepUntil(released);
+                }));
+                blocker.setDaemon(true);
+                blocker.start();
+            }
+            assertTrue(started.await(10, TimeUnit.SECONDS), "every pool worker is held");
+            String uri = "inmemory://full.nl";
+            assertTimeoutPreemptively(Duration.ofSeconds(2), () -> {
+                // an import no other test loads: its knowledge base is built while the pool is full
+                server.getWorkspace().getDocumentManager().addDocument(uri, "import org.modelingvalue.nelumbo.lsp.coldImport\ntrue ?\n", 1);
+                assertTrue(server.getWorkspace().getDocumentManager().getDocument(uri).parserResult().exceptions().isEmpty(), "the import resolves");
+                SemanticTokens tokens = server.getTextDocumentService().semanticTokensFull(new SemanticTokensParams(new TextDocumentIdentifier(uri))).get();
+                assertFalse(tokens.getData().isEmpty());
+            });
         } finally {
             released.set(true);
             server.getWorkspace().dispose();
@@ -335,15 +362,17 @@ public class EmbeddedServerTest {
             winner(Piet) ?
             """;
 
-    // An inconsistent fact stops the evaluation (the queries after it get no result), so its error must be published:
-    // it once only went to stderr, and the editor showed no diagnostic and no hint at all.
+    // The error of an inconsistent fact must be published, and the queries below it are still evaluated: the error once
+    // only went to stderr, and the editor showed no diagnostic and no hint at all.
     @Test
     public void anInconsistentFactIsPublishedAsADiagnostic() throws InterruptedException {
         NelumboLanguageServer server = new NelumboLanguageServer(KnowledgeBase.BASE, 0, () -> {
         });
         RecordingClient       client = new RecordingClient();
         String                uri    = "inmemory://winner.nl";
+        EvalGate              gate   = new EvalGate(100, 2000);
         server.connect(client);
+        server.getWorkspace().setEvalGate(gate);
         try {
             NlDocumentManager dm = server.getWorkspace().getDocumentManager();
             dm.addDocument(uri, CONSISTENT_WINNER.replace("fact winner(Piet)=Yes\n", "fact winner(Piet)=Yes\nfact winner(Piet)=No\n"), 1);
@@ -352,14 +381,20 @@ public class EmbeddedServerTest {
             assertEquals(7, inconsistency.getRange().getStart().getLine(), "on the second fact");
             assertEquals(5, inconsistency.getRange().getStart().getCharacter(), "at its predicate");
             assertEquals(5 + "winner(Piet)=No".length(), inconsistency.getRange().getEnd().getCharacter(), "underlining the predicate");
-            assertTrue(dm.queryResultCache().hints(uri).isEmpty(), "the query after the inconsistent fact is not evaluated");
+            // the query below the inconsistent fact is still evaluated
+            LiveQueryResultsTest.awaitResults(dm.queryResultCache(), uri, 1, 15);
+            long evaluated = gate.total();
 
             dm.updateDocument(uri, CONSISTENT_WINNER);
+            // the moved query shows its old result at once: wait for its new evaluation
             long end = System.currentTimeMillis() + 15_000;
-            while (dm.queryResultCache().hints(uri).isEmpty() && System.currentTimeMillis() < end) {
+            while (!(gate.total() > evaluated && gate.running() == 0) && System.currentTimeMillis() < end) {
                 Thread.sleep(50);
             }
-            assertEquals(1, dm.queryResultCache().hints(uri).size(), "the query is evaluated again once the fact is removed");
+            assertTrue(gate.total() > evaluated && gate.running() == 0, "the query is evaluated again once the fact is removed");
+            // past the refresh throttle: the publish that follows the new result is in
+            Thread.sleep(500);
+            LiveQueryResultsTest.awaitResults(dm.queryResultCache(), uri, 1, 1);
             PublishDiagnosticsParams last = client.diagnostics.get(client.diagnostics.size() - 1);
             assertTrue(last.getDiagnostics().isEmpty(), "the inconsistency diagnostic is cleared, got " + last.getDiagnostics());
         } finally {

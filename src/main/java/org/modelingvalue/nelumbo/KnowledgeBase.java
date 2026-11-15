@@ -322,7 +322,7 @@ public final class KnowledgeBase implements ParseExceptionHandler {
 
     private boolean               stopped;
     private ParseExceptionHandler exceptionHandler;
-    private long                  deadlineNanos;
+    private volatile long         deadlineNanos;
     private boolean               worldScopedVariables;
     // evaluation settings (trace lives in context)
     private InferContext context;

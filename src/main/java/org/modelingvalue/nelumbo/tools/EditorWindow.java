@@ -44,8 +44,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
 
@@ -78,14 +82,10 @@ import javax.swing.text.TextAction;
 import javax.swing.undo.CompoundEdit;
 import javax.swing.undo.UndoManager;
 
-import org.modelingvalue.collections.List;
-import org.modelingvalue.nelumbo.Evaluatable;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.lang.Import;
-import org.modelingvalue.nelumbo.logic.Query;
 import org.modelingvalue.nelumbo.syntax.ParseException;
-import org.modelingvalue.nelumbo.syntax.Parser;
 import org.modelingvalue.nelumbo.syntax.ParserResult;
 import org.modelingvalue.nelumbo.syntax.Token;
 import org.modelingvalue.nelumbo.syntax.Tokenizer;
@@ -106,6 +106,33 @@ public class EditorWindow extends WindowAdapter
     private final static DefaultHighlightPainter redPainter   = new DefaultHighlightPainter(new Color(0xffaaaa));
     private final static DefaultHighlightPainter greenPainter = new DefaultHighlightPainter(new Color(0xaaffaa));
 
+    private static final int  PARALLEL_QUERIES     = 5;
+    private static final long CALCULATING_DELAY_MS = 300;
+
+    /** What a query shows on its line in the messages pane. */
+    private record Message(String text, EditorMessages.Highlight textHighlight, boolean highlightMessage) {
+    }
+
+    private static final Message CALCULATING = new Message("...calculating", null, false);
+
+    /** A query of a version; a kept query keeps its slot object, with its queued or running task, in the next version. */
+    private static final class Slot {
+        private final PreparedQuery query;
+        private final Message       moved;
+        private final long          invalidSince;
+        private volatile Message    result;
+        private boolean             queued;     // window thread only
+
+        private Slot(PreparedQuery query, Message moved, long invalidSince) {
+            this.query        = query;
+            this.moved        = moved;
+            this.invalidSince = invalidSince;
+        }
+    }
+
+    private record Version(String text, PreparedDocument prepared, List<Slot> slots) {
+    }
+
     private final String        windowId;
     private final NelumboEditor application;
     private volatile boolean    isExample;
@@ -115,7 +142,8 @@ public class EditorWindow extends WindowAdapter
     private final Preferences   preferences;
     private volatile int        windowNumber;      // Window number for regular windows
 
-    private volatile KnowledgeBase           knowledgeBase;
+    // empty until the first prepare: an importer that prepares first gets an empty KB (and this window's notify), not an error
+    private volatile KnowledgeBase           knowledgeBase         = new KnowledgeBase(KnowledgeBase.BASE);
     private JFrame                           frame;
     private JTextPane                        messagesPane;
     private JTextPane                        textPane;
@@ -134,6 +162,10 @@ public class EditorWindow extends WindowAdapter
     private KnowledgeBaseViewerDialog        knowledgeBaseViewerDialog;
     private volatile TokenizerResult         lastTokenizerResult;
     private volatile ParserResult            lastParserResult;
+    private ExecutorService                  queryPool;                               // window thread only
+    private volatile Version                 current;                                 // null after a crash
+    private final AtomicBoolean              importChanged         = new AtomicBoolean();
+    private final List<Object>               textHighlightTags     = new ArrayList<>(); // EDT only
     private Set<String>                      currentImports        = new HashSet<>(); // Tracks current editor imports
     private int                              currentUnderlineStart = -1;              // Start index of current
                                                                                       // underline (-1 if none)
@@ -233,11 +265,11 @@ public class EditorWindow extends WindowAdapter
     }
 
     /**
-     * Starts the knowledge base execution loop. This method blocks until the window
-     * is closed.
+     * Runs the execution loop on the calling thread (the window's own thread, not a
+     * pool worker, so an idle window holds none). Blocks until the window is closed.
      */
     public void startExecutionLoop() {
-        KnowledgeBase.BASE.invoke(this);
+        run();
     }
 
     private void initWindow() {
@@ -1151,11 +1183,17 @@ public class EditorWindow extends WindowAdapter
 
     @Override
     public void run() {
-        knowledgeBase = KnowledgeBase.current();
+        queryPool = Executors.newFixedThreadPool(PARALLEL_QUERIES, r -> {
+            Thread thread = new Thread(r, "EditorQuery-" + windowId);
+            thread.setDaemon(true);
+            return thread;
+        });
         while (!quit) {
             execute();
             waitForRefreshRequest();
         }
+        cancelQueries();
+        queryPool.shutdownNow();
     }
 
     private void waitForRefreshRequest() {
@@ -1186,6 +1224,7 @@ public class EditorWindow extends WindowAdapter
      */
     @Override
     public void onImportChanged(String importName) {
+        importChanged.set(true);
         refresh();
     }
 
@@ -1267,64 +1306,151 @@ public class EditorWindow extends WindowAdapter
     }
 
     private void execute() {
-        Parser parser = null;
-        // Phase 1: Read document text on EDT
+        boolean invalidateAll = importChanged.getAndSet(false);
         try {
             String text = callOnEDT(null, () -> getDocumentText(textPane));
-
-            // Phase 2: Compute on worker thread
-            knowledgeBase.init();
-            Tokenizer tokenizer = new Tokenizer(text, getEditorFileName());
-            TokenizerResult tokenizerResult = tokenizer.tokenize();
-            parser = new Parser(tokenizerResult);
-            ParserResult result = parser.parseNonThrowing();
-
-            // Phase 3: Apply all pre-compute UI updates on EDT
-            runOnEDT(knowledgeBase,
-                    () -> applyUIUpdates(tokenizerResult, result, text,
-                            emptyLines(result.getTokenizerResult().lastAll().lastLine()), new ArrayList<>(0),
-                            new ArrayList<>(0)));
-
-            // Phase 4: Compute results
-            ArrayList<Highlight> textHighlights = new ArrayList<>();
-            ArrayList<Highlight> messageHighlights = new ArrayList<>();
-            String messagesText = computeResults(result, textHighlights, messageHighlights);
-
-            if (!refreshRequested) {
-                // Phase 5: Apply all post-compute UI updates on EDT
-                runOnEDT(knowledgeBase, () -> applyUIUpdates(tokenizerResult, result, text, messagesText,
-                        textHighlights, messageHighlights));
+            cancelInvalid(text, invalidateAll);
+            TokenizerResult  tokens   = new Tokenizer(text, getEditorFileName()).tokenize();
+            PreparedDocument prepared = PreparedDocument.prepare(KnowledgeBase.BASE, tokens, 0);
+            knowledgeBase       = prepared.knowledgeBase();
+            lastTokenizerResult = tokens;
+            lastParserResult    = prepared.parserResult();
+            Version version = nextVersion(text, prepared, invalidateAll);
+            runOnEDT(knowledgeBase, () -> applyUIUpdates(version));
+            for (Slot slot : version.slots()) {
+                if (!slot.queued) {
+                    slot.queued = true;
+                    queryPool.execute(() -> evaluate(slot));
+                }
             }
-
-            // Phase 6: Non-UI updates on worker thread
-            updateImportDependencies(result);
+            Timer delay = new Timer((int) CALCULATING_DELAY_MS, e -> showMessages());
+            delay.setRepeats(false);
+            delay.start();
+            updateImportDependencies(prepared.parserResult());
             notifyDependentWindows();
-            lastTokenizerResult = tokenizerResult;
-            lastParserResult = result;
         } catch (NelumboEditor.EDTException e) {
             System.err.println("EDT call failed in execute: " + e.getCause());
         } catch (RuntimeException | StackOverflowError e) {
             // an engine crash on this text: report it in this window and keep the loop
             // alive, so the next edit evaluates again
             e.printStackTrace();
-            Token at = parser != null ? parser.crashToken() : null;
+            cancelQueries();
+            Token  at      = e instanceof PreparedDocument.Crash crash ? crash.crashToken() : null;
             String message = internalError(e);
             javax.swing.SwingUtilities.invokeLater(() -> showCrash(at, message));
         }
     }
 
+    // before the parse of the new text: the queries it cannot keep stop now, not after the parse (nextVersion cancels
+    // the rest that QueryDiff does not keep)
+    private void cancelInvalid(String text, boolean invalidateAll) {
+        Version version = current;
+        if (version == null) {
+            return;
+        }
+        int prefix = QueryDiff.prefix(version.text(), text);
+        for (Slot slot : version.slots()) {
+            if (invalidateAll || !QueryDiff.keepable(slot.query.span(), prefix)) {
+                slot.query.cancel();
+            }
+        }
+    }
+
+    // keeps, moves or replaces the queries of the current version, as the LSP's QueryResultCache does; after a changed
+    // editor import no query is kept: an unchanged one is moved in place
+    private Version nextVersion(String text, PreparedDocument prepared, boolean invalidateAll) {
+        Version               old      = current;
+        String                oldText  = old == null ? "" : old.text();
+        List<Slot>            oldSlots = old == null ? List.of() : old.slots();
+        List<PreparedQuery>   queries  = prepared.queries();
+        List<QueryDiff.Match> matches  = QueryDiff.of(oldText, oldSlots.stream().map(s -> s.query.span()).toList(), //
+                                                      text, queries.stream().map(PreparedQuery::span).toList());
+        long                  now      = now();
+        List<Slot>            slots    = new ArrayList<>();
+        for (int i = 0; i < queries.size(); i++) {
+            QueryDiff.Match match = matches.get(i);
+            PreparedQuery   query = queries.get(i);
+            slots.add(switch (match.kind()) {
+                case KEPT    -> invalidateAll ? moved(oldSlots.get(match.oldIndex()), query, now) : oldSlots.get(match.oldIndex());
+                case MOVED   -> moved(oldSlots.get(match.oldIndex()), query, now);
+                case CHANGED -> new Slot(query, null, now);
+            });
+        }
+        for (Slot slot : oldSlots) {
+            if (!slots.contains(slot)) {
+                slot.query.cancel();
+            }
+        }
+        Version version = new Version(text, prepared, slots);
+        current = version;
+        return version;
+    }
+
+    // the new slot of a moved query shows the old result during the delay; without one it stays invalid since the old slot was
+    private static Slot moved(Slot old, PreparedQuery query, long now) {
+        Message oldResult = old.result;
+        Message shown     = oldResult != null ? oldResult : old.moved;
+        if (shown != null && shown.textHighlight() != null) {
+            EditorMessages.Highlight h     = shown.textHighlight();
+            int                      shift = query.span().start() - old.query.span().start();
+            shown = new Message(shown.text(), new EditorMessages.Highlight(h.index() + shift, h.length(), h.error()), shown.highlightMessage());
+        }
+        return new Slot(query, shown, oldResult == null ? old.invalidSince : now);
+    }
+
+    private void cancelQueries() {
+        Version version = current;
+        current = null;
+        if (version != null) {
+            version.slots().forEach(slot -> slot.query.cancel());
+        }
+    }
+
+    // on a query thread: an escaping throwable becomes the query's message and never kills the thread
+    private void evaluate(Slot slot) {
+        Message result;
+        try {
+            PreparedQuery.Outcome outcome = slot.query.evaluate(0);
+            if (outcome.cancelled()) {
+                return;
+            }
+            result = message(outcome);
+        } catch (Throwable t) {
+            t.printStackTrace();
+            result = new Message(internalError(t), null, false);
+        }
+        slot.result = result;
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            Version version = current;
+            if (version != null && version.slots().contains(slot)) {
+                showMessages();
+            }
+        });
+    }
+
+    // the result, or the error's message with the red text highlight and, when there is a result, the green message highlight
+    private static Message message(PreparedQuery.Outcome outcome) {
+        ParseException pe = outcome.exception();
+        if (pe == null) {
+            return new Message(outcome.result() != null ? outcome.result() : "", null, false);
+        }
+        return outcome.result() != null ? new Message(outcome.result(), highlight(pe), true) : new Message(pe.getShortMessage(), highlight(pe), false);
+    }
+
+    private static EditorMessages.Highlight highlight(ParseException pe) {
+        return new EditorMessages.Highlight(pe.index(), pe.length(), pe.getShortMessage());
+    }
+
     // the innermost cause: the outer ones are reflection wrappers
     private static String internalError(Throwable e) {
-        while (e.getCause() != null) {
-            e = e.getCause();
-        }
-        return "Internal error: " + e;
+        return "Internal error: " + PreparedDocument.innermost(e);
     }
 
     // no parse, so no reliable colors: plain text, the message on the line of the
     // crashing node, that node's first token in red
     private void showCrash(Token at, String message) {
         textPane.setHighlighter(new DefaultHighlighter());
+        textHighlightTags.clear();
         messagesPane.setHighlighter(new DefaultHighlighter());
         clearColors();
         if (at == null) {
@@ -1335,104 +1461,70 @@ public class EditorWindow extends WindowAdapter
         }
     }
 
-    /**
-     * Computes evaluation results on the worker thread without touching Swing
-     * components. Returns the messages text; populates textHighlights and
-     * messageHighlights.
-     */
-    private String computeResults(ParserResult result, ArrayList<Highlight> textHighlights,
-            ArrayList<Highlight> messageHighlights) {
-        List<ParseException> exceptions = result.exceptions();
-        int totalLines = result.getTokenizerResult().lastAll().lastLine() + 1;
-        ArrayList<String> messages = new ArrayList<>(totalLines);
-        for (int i = 0; i < totalLines; i++) {
-            messages.add("");
+    // statement and parse errors on their lines; per query its result, else its moved old result during the delay,
+    // else ...calculating
+    private static EditorMessages messages(Version version) {
+        ParserResult   parsed   = version.prepared().parserResult();
+        EditorMessages messages = new EditorMessages(parsed.getTokenizerResult().lastAll().lastLine() + 1);
+        long           now      = now();
+        for (ParseException pe : version.prepared().statementErrors()) {
+            messages.setFixed(pe.line(), pe.getShortMessage(), highlight(pe));
         }
-
-        ArrayList<int[]> pendingMessageHighlights = new ArrayList<>();
-        ArrayList<String> pendingMessageHighlightErrors = new ArrayList<>();
-
-        ParserResult throwing = new ParserResult(null, true);
-        for (Node root : result.roots()) {
-            if (root instanceof Evaluatable eval) {
-                ParseException pe = null;
-                String mess = null;
-                try {
-                    eval.evaluate(knowledgeBase, throwing);
-                } catch (ParseException exc) {
-                    pe = exc;
-                    mess = pe.getShortMessage();
-                } catch (RuntimeException | StackOverflowError exc) {
-                    exc.printStackTrace();
-                    pe = new ParseException(exc, internalError(exc), root);
-                    mess = pe.getShortMessage();
-                }
-                if (eval instanceof Query query && query.inferResult() != null) {
-                    mess = query.inferResult().toString();
-                }
-                if (mess != null) {
-                    int line = eval.lastToken().line();
-                    if (line >= 0 && line < totalLines) {
-                        messages.set(line, mess);
-                    }
-                    if (pe != null) {
-                        textHighlights.add(new Highlight(pe.index(), pe.length(), pe.getShortMessage()));
-                        if (eval instanceof Query query && query.inferResult() != null && line >= 0
-                                && line < totalLines) {
-                            pendingMessageHighlights.add(new int[] { line, mess.length() });
-                            pendingMessageHighlightErrors.add(pe.getShortMessage());
-                        }
-                    }
-                }
+        for (ParseException pe : parsed.exceptions()) {
+            messages.setFixed(pe.line(), pe.getShortMessage(), highlight(pe));
+        }
+        for (Slot slot : version.slots()) {
+            Message result = slot.result;
+            Message shown  = result != null ? result : now - slot.invalidSince < CALCULATING_DELAY_MS ? slot.moved : CALCULATING;
+            if (shown != null) {
+                messages.setQuery(slot.query.query().lastToken().line(), shown.text(), shown.textHighlight(), shown.highlightMessage());
             }
         }
-        for (ParseException pe : exceptions) {
-            int line = pe.line();
-            if (line >= 0 && line < totalLines) {
-                messages.set(line, pe.getShortMessage());
-            }
-            textHighlights.add(new Highlight(pe.index(), pe.length(), pe.getShortMessage()));
-        }
+        return messages;
+    }
 
-        for (int i = 0; i < pendingMessageHighlights.size(); i++) {
-            int line = pendingMessageHighlights.get(i)[0];
-            int length = pendingMessageHighlights.get(i)[1];
-            int offset = 0;
-            for (int j = 0; j < line; j++) {
-                offset += messages.get(j).length() + 1;
-            }
-            messageHighlights.add(new Highlight(offset, length, pendingMessageHighlightErrors.get(i)));
+    // on the EDT: the messages pane and the red text highlights of the current version
+    private void showMessages() {
+        Version version = current;
+        if (version == null) {
+            return;
         }
-
-        return String.join("\n", messages);
+        EditorMessages messages = messages(version);
+        for (Object tag : textHighlightTags) {
+            textPane.getHighlighter().removeHighlight(tag);
+        }
+        textHighlightTags.clear();
+        for (EditorMessages.Highlight h : messages.textHighlights()) {
+            Object tag = setHighlight(textPane, h.index(), h.length(), h.error(), redPainter);
+            if (tag != null) {
+                textHighlightTags.add(tag);
+            }
+        }
+        messagesPane.setHighlighter(new DefaultHighlighter());
+        setMessages(messages.text());
+        showMessageColors();
+        for (EditorMessages.Highlight h : messages.messageHighlights()) {
+            setHighlight(messagesPane, h.index(), h.length(), h.error(), greenPainter);
+        }
     }
 
     /**
-     * Applies all UI updates on the EDT after computation is complete.
+     * Applies the UI updates of a new version on the EDT: colors, the messages
+     * with the results that are in, the viewers.
      */
-    private void applyUIUpdates(TokenizerResult tokenizerResult, ParserResult result, String text, String messagesText,
-            ArrayList<Highlight> textHighlights, ArrayList<Highlight> messageHighlights) {
-        // Reset UI state
+    private void applyUIUpdates(Version version) {
+        ParserResult    result          = version.prepared().parserResult();
+        TokenizerResult tokenizerResult = result.getTokenizerResult();
         // Create a new Highlighter instead of clearing it because of
         // ArrayIndexOutOfBoundsException when repainting
         textPane.setHighlighter(new DefaultHighlighter());
-        messagesPane.setHighlighter(new DefaultHighlighter());
+        textHighlightTags.clear();
         clearColors();
 
         // Apply token colors
         showColors(textPane, tokenizerResult);
 
-        // Apply text pane highlights
-        for (Highlight h : textHighlights) {
-            setHighlight(textPane, h.index(), h.length(), h.error(), redPainter);
-        }
-
-        // Set messages, apply colors, and apply message highlights
-        setMessages(messagesText);
-        showMessageColors();
-        for (Highlight h : messageHighlights) {
-            setHighlight(messagesPane, h.index(), h.length(), h.error(), greenPainter);
-        }
+        showMessages();
 
         // Update tree viewer if visible
         if (treeViewerDialog != null && treeViewerDialog.isVisible()) {
@@ -1445,7 +1537,7 @@ public class EditorWindow extends WindowAdapter
         }
 
         // Save window state (reads caret position, must be on EDT)
-        saveTextContent(text);
+        saveTextContent(version.text());
     }
 
     private void clearColors() {
@@ -1476,15 +1568,17 @@ public class EditorWindow extends WindowAdapter
         }
     }
 
-    private record Highlight(int index, int length, String error) {
-    }
-
-    private void setHighlight(JTextPane pane, int index, int length, String message, DefaultHighlightPainter painter) {
+    private Object setHighlight(JTextPane pane, int index, int length, String message, DefaultHighlightPainter painter) {
         try {
-            pane.getHighlighter().addHighlight(index, index + length, painter);
+            return pane.getHighlighter().addHighlight(index, index + length, painter);
         } catch (BadLocationException ble) {
             setMessages(message);
+            return null;
         }
+    }
+
+    private static long now() {
+        return System.nanoTime() / 1_000_000;
     }
 
     private String emptyLines(int nr) {

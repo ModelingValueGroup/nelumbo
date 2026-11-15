@@ -55,9 +55,7 @@ public class ExpectedResultEditTest {
         server.connect(client);
         try {
             server.getWorkspace().getDocumentManager().addDocument(URI, String.join("\n", LINES) + "\n", 1);
-            assertTrue(client.awaitInlayHintRefresh(15), "expected refreshInlayHints after the debounced evaluation");
-            List<InlayHint> hints = server.getWorkspace().getDocumentManager().queryResultCache().hints(URI);
-            assertEquals(3, hints.size(), "one hint per query");
+            List<InlayHint> hints = LiveQueryResultsTest.awaitResults(server.getWorkspace().getDocumentManager().queryResultCache(), URI, 3, 15);
 
             assertEquals("true ? [()][]", applied(hints.get(0).getTextEdits()), "a plain query gets the result inserted");
             assertNull(hints.get(1).getTextEdits(), "a matching expected result needs no edit");
