@@ -3,6 +3,7 @@ import * as monaco from 'monaco-editor/esm/vs/editor/edcore.main';
 import 'monaco-editor/esm/vs/editor/contrib/inlayHints/browser/inlayHintsContribution.js';
 import { InlayHintsController } from 'monaco-editor/esm/vs/editor/contrib/inlayHints/browser/inlayHintsController.js';
 import { InlayHintsHover } from 'monaco-editor/esm/vs/editor/contrib/inlayHints/browser/inlayHintsHover.js';
+import { SparseMultilineTokens } from 'monaco-editor/esm/vs/editor/common/tokens/sparseMultilineTokens.js';
 import {
     MonacoLanguageClient,
     MonacoServices,
@@ -227,6 +228,46 @@ function resultsHoverAtTheirQuery(): void {
     InlayHintsHover.prototype.suggestHoverAnchor = (): null => null;
 }
 
+// Monaco's store of the semantic tokens of some lines (not exported by Monaco 0.34)
+interface TokenStorage {
+    _tokens:     Uint32Array; // 4 numbers per token: delta line, start, end, metadata
+    _tokenCount: number;
+    acceptInsertText(deltaLine: number, character: number, eolCount: number, firstLineLength: number, lastLineLength: number, firstCharCode: number): void;
+}
+
+// Monaco moves the semantic tokens along with an edit until the server's next tokens arrive. One word
+// character typed where a token ends grows that token; a token starting there should grow instead or move,
+// but Monaco 0.34 leaves it in place, so both tokens cover the new character. On a line with an inlay hint
+// Monaco builds the shown text from the token offsets (LineTokens.withInserted), and the overlap repeats
+// characters: 1|+2 ?, typing 0, showed 1000+2 until the server's next tokens. Grow such a token, as Monaco
+// intends, unless a token ends there: then move it.
+function moveTokenAtTypedCharacter(): void {
+    const storage: TokenStorage = Object.getPrototypeOf(SparseMultilineTokens.create(1, new Uint32Array(0))._tokens);
+    const accept:  TokenStorage['acceptInsertText'] = storage.acceptInsertText;
+    storage.acceptInsertText = function (this: TokenStorage, deltaLine: number, character: number, eolCount: number,
+                                         firstLineLength: number, lastLineLength: number, firstCharCode: number): void {
+        const tokens:   Uint32Array = this._tokens;
+        const starting: number[]    = [];
+        let   ending:   boolean     = false;
+        for (let i: number = 0; i < 4 * this._tokenCount; i += 4) {
+            if (tokens[i] === deltaLine && tokens[i + 1] === character && tokens[i + 2] > character) {
+                starting.push(i);
+            }
+            if (tokens[i] === deltaLine && tokens[i + 2] === character) {
+                ending = true;
+            }
+        }
+        accept.call(this, deltaLine, character, eolCount, firstLineLength, lastLineLength, firstCharCode);
+        for (const i of starting) {
+            // still in place: Monaco skipped it
+            if (tokens[i] === deltaLine && tokens[i + 1] === character) {
+                tokens[i + 1] += ending ? 1 : 0;
+                tokens[i + 2] += 1;
+            }
+        }
+    };
+}
+
 function ensureServices(): void {
     if (servicesReady) {
         return;
@@ -239,6 +280,7 @@ function ensureServices(): void {
     keepInlayHintTextEdits();
     fixWorkspaceTextEdits();
     resultsHoverAtTheirQuery();
+    moveTokenAtTypedCharacter();
     // Query-result inlay hints: the server picks the style bucket via the hint kind (QueryResultCache):
     // no kind = matched expectation (checkmark), Type = plain result, Parameter = failed
     // expectation/error. One dim purple background and one text colour for every outcome, dim enough

@@ -21,3 +21,12 @@ declare module 'monaco-editor/esm/vs/editor/contrib/inlayHints/browser/inlayHint
         suggestHoverAnchor(mouseEvent: unknown): unknown;
     }
 }
+
+// Monaco 0.34's semantic tokens of some lines; nelumbo-fields.ts fixes how they follow a typed character in
+// their storage (_tokens), a class Monaco does not export.
+declare module 'monaco-editor/esm/vs/editor/common/tokens/sparseMultilineTokens.js' {
+    export class SparseMultilineTokens {
+        static create(startLineNumber: number, tokens: Uint32Array): SparseMultilineTokens;
+        _tokens: any;
+    }
+}

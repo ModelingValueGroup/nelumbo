@@ -219,3 +219,35 @@ test('a quick edit shows no ...calculating', async ({ page }: { page: Page }): P
     }, DOC + '\ntrue ?');
     expect(seen, '...calculating appeared after a quick edit').toBe(false);
 });
+
+// Monaco moves the semantic tokens along with an edit until the server's next tokens arrive. A word
+// character typed between two adjacent tokens (the 1 and the + of 1+2) was claimed by both, and on a
+// line with an inlay hint Monaco builds the shown text from the token offsets: 10+2 showed as 1000+2 for
+// a moment (moveTokenAtTypedCharacter).
+test('a character typed between two colored tokens of a line with a result shows once', async ({ page }: { page: Page }): Promise<void> => {
+    await page.goto('/sandbox.html');
+    await page.waitForFunction((): boolean => ((window as any).NelumboFields?.__editors?.length ?? 0) > 0);
+    await page.evaluate((): void => {
+        (window as any).NelumboFields.__editors[0].model.setValue('import nelumbo.integers\n1+2 ?');
+    });
+    const line: () => Promise<string[]> = async (): Promise<string[]> => await page.evaluate((): string[] => {
+        const view: Element | undefined = Array.from(document.querySelectorAll('.monaco-editor .view-line'))
+            .find((e: Element): boolean => (e.textContent ?? '').includes('[(3)]'));
+        // the leaf spans: one per token or hint part; Monaco renders spaces as (hair) non-breaking spaces
+        return view === undefined ? [] : Array.from(view.querySelectorAll('span span'))
+            .map((s: Element): string => (s.textContent ?? '').replace(/\s/g, ' '));
+    });
+    // the result and the semantic tokens are in: the 1 is a token of its own
+    await expect.poll(line, { timeout: 20_000 }).toContain('1');
+    await page.evaluate((): void => {
+        const editor: any = (window as any).NelumboFields.__editors[0].editor;
+        editor.focus();
+        editor.setPosition({ lineNumber: 2, column: 2 });
+    });
+    await page.keyboard.press('0');
+    // two frames: Monaco has rendered the edit, the server's next tokens are at least 300 ms away
+    await page.evaluate(async (): Promise<void> => {
+        await new Promise<void>((r: () => void): number => requestAnimationFrame((): number => requestAnimationFrame((): void => r())));
+    });
+    expect((await line()).join('')).toBe('10+2 ? [(3)][..]');
+});
