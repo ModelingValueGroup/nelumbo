@@ -11,7 +11,6 @@
 //     Wim Bast, Tom Brus, Victor Lap                                                                                  ~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
 package org.modelingvalue.nelumbo.lsp;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
