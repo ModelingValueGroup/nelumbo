@@ -13,12 +13,17 @@
 
 package org.modelingvalue.nelumbo.lsp.documentService;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.lsp4j.CodeAction;
+import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Command;
+import org.eclipse.lsp4j.InlayHint;
+import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.modelingvalue.nelumbo.lsp.CommandType;
 import org.modelingvalue.nelumbo.lsp.NlDocument;
@@ -33,15 +38,36 @@ public class DocumentCodeActionService extends DocumentServiceAdapter {
 
     @Override
     public CompletableFuture<List<Either<Command, CodeAction>>> codeAction(CodeActionParams params) {
-        NlDocument document = documentManager.getDocument(params.getTextDocument().getUri());
+        String     uri      = params.getTextDocument().getUri();
+        NlDocument document = documentManager.getDocument(uri);
         if (document == null) {
             return CompletableFuture.completedFuture(null);
         }
+        List<Either<Command, CodeAction>> actions = new ArrayList<>(expectationActions(uri, params));
         Token t = document.tokenAt(params.getRange().getStart());
-        if (t == null || t.type() != TokenType.OPERATOR || !t.text().equals("?")) {
-            return CompletableFuture.completedFuture(null);
+        if (t != null && t.type() == TokenType.OPERATOR && t.text().equals("?")) {
+            actions.add(Either.forLeft(CommandType.EXEC_COMMAND.command()));
         }
-        List<Either<Command, CodeAction>> actions = List.of(Either.forLeft(CommandType.EXEC_COMMAND.command()));
-        return CompletableFuture.completedFuture(actions);
+        return CompletableFuture.completedFuture(actions.isEmpty() ? null : actions);
+    }
+
+    // a query result on the requested lines can be written into its query as the expected result: the edits the
+    // inlay hint carries (QueryResultCache), offered here for editors that do not accept hints (IntelliJ, Eclipse)
+    private List<Either<Command, CodeAction>> expectationActions(String uri, CodeActionParams params) {
+        int                               from    = params.getRange().getStart().getLine();
+        int                               to      = params.getRange().getEnd().getLine();
+        List<Either<Command, CodeAction>> actions = new ArrayList<>();
+        for (InlayHint hint : documentManager.queryResultCache().hints(uri)) {
+            int line = hint.getPosition().getLine();
+            if (hint.getTextEdits() == null || line < from || line > to) {
+                continue;
+            }
+            boolean    insert = hint.getTextEdits().getFirst().getRange().getStart().equals(hint.getPosition());
+            CodeAction action = new CodeAction(insert ? "Insert the result as expected result" : "Replace the expected result by the result");
+            action.setKind(CodeActionKind.QuickFix);
+            action.setEdit(new WorkspaceEdit(Map.of(uri, hint.getTextEdits())));
+            actions.add(Either.forRight(action));
+        }
+        return actions;
     }
 }

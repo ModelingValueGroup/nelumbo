@@ -334,7 +334,8 @@
        provides the values <code>true</code>, <code>false</code> and <code>unknown</code>, and the
        operators <code>&amp;</code> (and), <code>|</code> (or) and <code>!</code> (not).</p>
     <p>There is no Run button: Nelumbo evaluates every query as you type and shows its result at the end
-       of the line, in a purple label. A long result is cut short; hover over it to see all of it.</p>
+       of the line, in a purple label. Hover over it to see how long the query took (in microseconds,
+       &mu;s) and, when the label cuts a long result short, all of it.</p>
     <p>A result has two sides, <code>[facts][falsehoods]</code>: on the left the answers for which the
        query is true, on the right those for which it is false. An answer is written between parentheses.
        These queries have no variables, so an answer is just <code>()</code>. <code>..</code> means that a
@@ -352,7 +353,8 @@
        <code>true &amp; false ? [][()]</code> expects false. The editor then checks it instead of showing the
        result: a green check mark at the end of the line when the result matches; otherwise the expected
        result is underlined in red and the actual result follows a red cross. Without an expected result
-       you just get the purple label. The exercises use this to show when you are done.</p>
+       you just get the purple label. The exercises use this to show when you are done. A double-click on
+       a result writes it after the <code>?</code> as the expected result, or over a wrong one.</p>
     <div class="nelumbo-exercise">
       <p class="challenge">Make the query below come out <strong>true</strong> by changing only the
          operator.</p>

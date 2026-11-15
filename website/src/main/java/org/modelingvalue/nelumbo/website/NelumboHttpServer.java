@@ -24,6 +24,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.lsp.EvalGate;
@@ -104,23 +106,27 @@ public final class NelumboHttpServer {
 
     /** Starts the server on {@code port} (use 0 for an ephemeral port) and returns the actually bound port. */
     public int start(int port) {
-        String landing    = loadResource("/public/landing.html");
-        String tutorial   = TutorialPage.render(loadResource("/public/tutorial.html"));
-        String sandbox    = loadResource("/public/sandbox.html");
-        String admin      = loadResource("/public/admin.html");
-        String libraryPage = loadResource("/public/library.html");
-        String favicon    = loadResource("/public/favicon.svg");
-        String theme      = loadResource("/public/theme.js");
-        String statusDot  = loadResource("/public/status-dot.js");
-        String llms       = loadResource("/public/llms.txt");
-        String docsLogo   = loadResource(DocsSite.RESOURCE_ROOT + "nelumbo.svg");
-        DocsSite docs     = DocsSite.load();
-        Library library   = Library.load(docs);
+        String   landing        = loadResource("/public/landing.html");
+        String   tutorialSource = loadResource("/public/tutorial.html");
+        String   tutorial       = step("rendering the tutorial", () -> TutorialPage.render(tutorialSource),
+                page -> (tutorialSource.split("data-src=\"", -1).length - 1) + " editors");
+        String   sandbox        = loadResource("/public/sandbox.html");
+        String   admin          = loadResource("/public/admin.html");
+        String   libraryPage    = loadResource("/public/library.html");
+        String   favicon        = loadResource("/public/favicon.svg");
+        String   theme          = loadResource("/public/theme.js");
+        String   statusDot      = loadResource("/public/status-dot.js");
+        String   llms           = loadResource("/public/llms.txt");
+        String   docsLogo       = loadResource(DocsSite.RESOURCE_ROOT + "nelumbo.svg");
+        DocsSite docs           = step("pre-coloring the docs", DocsSite::load, site -> site.pageCount() + " pages");
+        Library  library        = step("loading the library", () -> Library.load(docs), lib -> lib.modules().size() + " modules");
         // the sandbox's example list; the sudokus run far past the eval deadline, so they are left out
         List<String> examples = NelumboServer.exampleNames().stream().filter(n -> !n.startsWith("sudoku")).toList();
         LspWebSocket    lsp       = new LspWebSocket(baseKb, timeoutMs, maxLspSessions);
-        StatsHistory    history   = new StatsHistory(statsDir, System::currentTimeMillis);
-        SolutionStore   store     = new SolutionStore(solutionsDir, System::currentTimeMillis);
+        StatsHistory    history   = step("reading the stats history", () -> new StatsHistory(statsDir, System::currentTimeMillis),
+                h -> statsDir == null ? "memory only" : "from " + statsDir);
+        SolutionStore   store     = step("reading the shared solutions", () -> new SolutionStore(solutionsDir, System::currentTimeMillis),
+                s -> s.count() + " solutions, " + s.totalBytes() + " bytes" + (solutionsDir == null ? ", memory only" : ", in " + solutionsDir));
         SolutionService solutions = new SolutionService(store, BlockedWords.load(),
                 System::currentTimeMillis, SolutionService.MAX_TOTAL_BYTES);
         stream               = new StatsStream();
@@ -313,6 +319,15 @@ public final class NelumboHttpServer {
     private void handleEval(Context ctx, boolean pathTrace) {
         EvalService.Response response = service.eval(ctx.body(), ctx.contentType(), pathTrace);
         ctx.status(response.status()).json(response.body());
+    }
+
+    // startup tracing: what the server is doing, then what it got and how long it took
+    static <T> T step(String doing, Supplier<T> work, Function<T, String> done) {
+        System.out.println("nelumbo: " + doing);
+        long start  = System.nanoTime();
+        T    result = work.get();
+        System.out.println("nelumbo:   " + done.apply(result) + ", " + (System.nanoTime() - start) / 1_000_000 + " ms");
+        return result;
     }
 
     private static String loadResource(String path) {

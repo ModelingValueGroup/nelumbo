@@ -27,6 +27,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.InlayHint;
 import org.eclipse.lsp4j.InlayHintKind;
+import org.eclipse.lsp4j.InlayHintLabelPart;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.junit.jupiter.api.Test;
 import org.modelingvalue.collections.Collection;
@@ -80,7 +81,7 @@ public class EmbeddedServerTest {
     }
 
     @Test
-    public void inlayHintsCarryFullResultTooltips() throws InterruptedException {
+    public void inlayHintsCarryTheTimeAsTooltip() throws InterruptedException {
         NelumboLanguageServer server = new NelumboLanguageServer(KnowledgeBase.BASE, 0, () -> {
         });
         RecordingClient       client = new RecordingClient();
@@ -90,8 +91,12 @@ public class EmbeddedServerTest {
             org.junit.jupiter.api.Assertions.assertTrue(client.awaitInlayHintRefresh(15), "expected refreshInlayHints after the debounced evaluation");
             List<InlayHint> hints = server.getWorkspace().getDocumentManager().queryResultCache().hints("inmemory://t.nl");
             assertEquals(1, hints.size(), "one hint for the single query");
-            assertNotNull(hints.get(0).getTooltip(), "the hint carries a tooltip");
-            assertEquals("[()][]", hints.get(0).getTooltip().getLeft(), "the tooltip is the full inferred result");
+            // the tooltip on the one label part, not on the hint: LSP4IJ (IntelliJ) shows only label-part tooltips
+            assertNull(hints.get(0).getTooltip(), "no hint-level tooltip, Monaco would show it twice");
+            assertNotNull(part(hints.get(0)).getTooltip(), "the label part carries a tooltip");
+            String tooltip = tooltip(hints.get(0));
+            assertEquals("[()][]", part(hints.get(0)).getValue(), "the label is the result");
+            assertTrue(tooltip.matches("[0-9,]+ \u03bcs"), "the tooltip adds only the time, the label shows the result: " + tooltip);
         } finally {
             server.getWorkspace().dispose();
         }
@@ -157,7 +162,7 @@ public class EmbeddedServerTest {
             assertTrue(awaitOverloadDiagnostic(client, "inmemory://heavy.nl", 20), "expected a server-overloaded diagnostic, got " + client.diagnostics);
             List<InlayHint> hints = server.getWorkspace().getDocumentManager().queryResultCache().hints("inmemory://heavy.nl");
             assertEquals(1, hints.size());
-            assertEquals("⚠ server busy", hints.get(0).getLabel().getLeft());
+            assertEquals("⚠ server busy", part(hints.get(0)).getValue());
         } finally {
             server.getWorkspace().dispose();
         }
@@ -199,7 +204,7 @@ public class EmbeddedServerTest {
             assertTrue(client.awaitInlayHintRefresh(15), "expected refreshInlayHints after the debounced evaluation");
             List<InlayHint> hints = server.getWorkspace().getDocumentManager().queryResultCache().hints("inmemory://t.nl");
             assertEquals(1, hints.size(), "one hint for the single query");
-            assertEquals("[()][]", hints.get(0).getTooltip().getLeft(), "a light query completes within the short budget");
+            assertEquals("[()][]", part(hints.get(0)).getValue(), "a light query completes within the short budget");
         } finally {
             server.getWorkspace().dispose();
         }
@@ -242,8 +247,8 @@ public class EmbeddedServerTest {
             assertTrue(client.awaitInlayHintRefresh(15), "expected the light result");
             List<InlayHint> hints = server.getWorkspace().getDocumentManager().queryResultCache().hints("inmemory://light.nl");
             assertEquals(1, hints.size(), "one hint for the light query, diagnostics " + client.diagnostics);
-            assertEquals(InlayHintKind.Type, hints.get(0).getKind(), "a normal result, got " + hints.get(0).getLabel().getLeft());
-            assertTrue(hints.get(0).getTooltip().getLeft().contains("120"), hints.get(0).getTooltip().getLeft());
+            assertEquals(InlayHintKind.Type, hints.get(0).getKind(), "a normal result, got " + part(hints.get(0)).getValue());
+            assertTrue(part(hints.get(0)).getValue().contains("120"), part(hints.get(0)).getValue());
         } finally {
             released.set(true);
             server.getWorkspace().dispose();
@@ -279,6 +284,17 @@ public class EmbeddedServerTest {
         } finally {
             server.getWorkspace().dispose();
         }
+    }
+
+    // the one part of a hint's label
+    private static InlayHintLabelPart part(InlayHint hint) {
+        List<InlayHintLabelPart> parts = hint.getLabel().getRight();
+        assertEquals(1, parts.size(), "one label part");
+        return parts.getFirst();
+    }
+
+    private static String tooltip(InlayHint hint) {
+        return part(hint).getTooltip().getLeft();
     }
 
     private static boolean hasResult(NelumboLanguageServer server, String uri) {

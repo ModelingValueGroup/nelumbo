@@ -31,8 +31,10 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.InlayHint;
 import org.eclipse.lsp4j.InlayHintKind;
+import org.eclipse.lsp4j.InlayHintLabelPart;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.modelingvalue.nelumbo.NelumboTimeoutException;
@@ -203,8 +205,14 @@ public class QueryResultCache {
                     QueryResult result = e.getValue();
                     Token       last   = e.getKey().lastToken();
                     if (last != null) {
-                        Position  pos  = new Position(last.lastLine(), last.positionEnd());
-                        InlayHint hint = new InlayHint(pos, Either.forLeft(result.inlineLabel()));
+                        // the tooltip goes on a label part, not on the hint: LSP4IJ (IntelliJ) shows only label-part
+                        // tooltips, and Monaco shows both, so a tooltip on the hint as well would show twice
+                        Position           pos  = new Position(last.lastLine(), last.positionEnd());
+                        InlayHintLabelPart part = new InlayHintLabelPart(result.inlineLabel());
+                        if (!result.tooltip().isEmpty()) {
+                            part.setTooltip(result.tooltip());
+                        }
+                        InlayHint          hint = new InlayHint(pos, Either.forRight(List.of(part)));
                         // the kind selects the client-side style bucket (website theme: no kind = green
                         // checkmark, Type = plain result chip, Parameter = failed expectation chip)
                         switch (result.kind()) {
@@ -213,8 +221,17 @@ public class QueryResultCache {
                             case MATCH -> {
                             }
                         }
+                        // accepting the hint (Monaco: double-click) writes the result into the query as its expected
+                        // result: after a plain query, or over a wrong expected result; DocumentCodeActionService offers
+                        // the same edits as code actions for the other editors
+                        if (result.kind() == QueryResult.Kind.RESULT) {
+                            hint.setTextEdits(List.of(new TextEdit(new Range(pos, pos), " " + result.inferred())));
+                        } else if (result.kind() == QueryResult.Kind.MISMATCH && result.expectedRange() != null) {
+                            hint.setTextEdits(List.of(new TextEdit(result.expectedRange(), result.inferred())));
+                        }
                         hint.setPaddingLeft(true);
-                        hint.setTooltip(result.tooltip());
+                        // the hover at the end of the query (DocumentHoverService)
+                        hint.setData(result.hover());
                         list.add(hint);
                     }
                     if (result.kind() == QueryResult.Kind.MISMATCH && result.expectedRange() != null) {

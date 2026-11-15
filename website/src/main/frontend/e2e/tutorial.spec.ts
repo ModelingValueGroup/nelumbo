@@ -38,7 +38,7 @@ test('query results appear inline without pressing anything', async ({ page }: {
     await expect(demo.getByText('[()][]').first()).toBeVisible({ timeout: 20_000 });
 });
 
-test('hovering an inline result shows the full-result tooltip', async ({ page }: { page: Page }): Promise<void> => {
+test('hovering an inline result shows the time of the query', async ({ page }: { page: Page }): Promise<void> => {
     await page.goto('/tutorial.html#logic');
     const demo: Locator = page.locator('#logic .nelumbo-field-wrap').first();
     const hint: Locator = demo.getByText('[()][]').first();
@@ -46,7 +46,11 @@ test('hovering an inline result shows the full-result tooltip', async ({ page }:
     await hint.hover();
     const hover: Locator = page.locator('.monaco-hover').first();
     await expect(hover).toBeVisible({ timeout: 10_000 });
-    await expect(hover).toContainText('[()][]');
+    // the label already shows the whole result: the tooltip adds only the time of the query's inference
+    await expect(hover).toContainText(/\d[\d,]* \u03bcs/);
+    await expect(hover).not.toContainText('[()][]');
+    const text: string = await hover.innerText();
+    expect(text.split('\u03bcs').length - 1).toBe(1); // once: the tooltip is only on the label part, not also on the hint
 });
 
 test('Show solution toggles the solution block', async ({ page }: { page: Page }): Promise<void> => {

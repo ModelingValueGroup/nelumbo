@@ -110,16 +110,16 @@ public final class QueryEvaluator {
                         if (eval instanceof Query query) {
                             InferResult ir = query.inferResult();
                             if (ir == null) {
-                                results.put(query, QueryResult.error("Infer resulted in nothing"));
+                                results.put(query, QueryResult.error("Infer resulted in nothing", query.inferMicros()));
                             } else if (query.hasExpected()) {
-                                results.put(query, QueryResult.match(ir.toString()));
+                                results.put(query, QueryResult.match(ir.toString(), query.inferMicros()));
                             } else {
-                                results.put(query, QueryResult.result(ir.toString()));
+                                results.put(query, QueryResult.result(ir.toString(), query.inferMicros()));
                             }
                         }
                     } catch (NelumboTimeoutException tex) {
                         if (eval instanceof Query query) {
-                            results.put(query, overloadBudget ? QueryResult.overloaded(deadlineMs) : QueryResult.error("evaluation exceeded the deadline"));
+                            results.put(query, overloadBudget ? QueryResult.overloaded(deadlineMs) : QueryResult.error("evaluation exceeded the deadline", -1));
                         }
                         break;
                     } catch (ParseException exc) {
@@ -178,9 +178,9 @@ public final class QueryEvaluator {
         if (shortMsg != null && shortMsg.startsWith("Expected result ")) {
             InferResult ir = query.inferResult(); // the calculated result; set before the mismatch is raised
             String inferred = ir == null ? "" : ir.toString();
-            return QueryResult.mismatch(inferred, shortMsg, expectedRange(query));
+            return QueryResult.mismatch(inferred, shortMsg, expectedRange(query), query.inferMicros());
         }
-        return QueryResult.error("Problem executing " + query.getClass().getSimpleName() + ": " + exc.getShortMessage());
+        return QueryResult.error("Problem executing " + query.getClass().getSimpleName() + ": " + exc.getShortMessage(), query.inferMicros());
     }
 
     /**

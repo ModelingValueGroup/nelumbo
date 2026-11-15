@@ -1,13 +1,18 @@
 import * as monaco from 'monaco-editor/esm/vs/editor/edcore.main';
 // esbuild tree-shakes this side-effect contribution out of edcore.main; without it inlay hints never render
 import 'monaco-editor/esm/vs/editor/contrib/inlayHints/browser/inlayHintsContribution.js';
+import { InlayHintsController } from 'monaco-editor/esm/vs/editor/contrib/inlayHints/browser/inlayHintsController.js';
+import { InlayHintsHover } from 'monaco-editor/esm/vs/editor/contrib/inlayHints/browser/inlayHintsHover.js';
 import {
     MonacoLanguageClient,
     MonacoServices,
     MessageTransports,
     CloseAction,
     ErrorAction,
+    ProtocolToMonacoConverter,
+    ProtocolInlayHint,
 } from 'monaco-languageclient';
+import type { AnnotatedTextEdit, InlayHint, TextEdit } from 'vscode-languageserver-protocol';
 import {
     toSocket,
     WebSocketMessageReader,
@@ -170,6 +175,58 @@ function monacoTheme(): string {
     return document.documentElement.dataset.theme === 'light' ? 'nelumbo-light' : 'nelumbo-dark';
 }
 
+// Users could not tell the query results the editor adds from the text they typed: every inlay hint
+// gets a light dashed border, whatever its outcome (--nf-hint-border in fields.css). Monaco 0.34 gives a
+// hint no CSS class of its own, its style is a generated rule that _fillInColors fills in, so extend that.
+function borderInlayHints(): void {
+    const fill: (props: Record<string, unknown>, hint: { kind?: number }) => void = InlayHintsController.prototype._fillInColors;
+    InlayHintsController.prototype._fillInColors = function (this: InlayHintsController, props: Record<string, unknown>, hint: { kind?: number }): void {
+        fill.call(this, props, hint);
+        props.border = '1px dashed var(--nf-hint-border)';
+    };
+}
+
+// A double-click on a query result writes it into the query as its expected result: the server puts that
+// edit on the hint (textEdits), but monaco-languageclient 1.0.1 drops textEdits on the way to Monaco, so
+// carry them over.
+function keepInlayHintTextEdits(): void {
+    const asInlayHint: (hint: InlayHint) => ProtocolInlayHint = ProtocolToMonacoConverter.prototype.asInlayHint;
+    ProtocolToMonacoConverter.prototype.asInlayHint = function (this: ProtocolToMonacoConverter, hint: InlayHint): ProtocolInlayHint {
+        const result: ProtocolInlayHint = asInlayHint.call(this, hint);
+        result.textEdits = hint.textEdits?.map((edit: TextEdit): monaco.languages.TextEdit => this.asTextEdit(edit));
+        return result;
+    };
+}
+
+// monaco-languageclient 1.0.1 builds a workspace text edit in the old Monaco shape ({resource, edit,
+// modelVersionId}); Monaco 0.34 wants {resource, textEdit, versionId} and threw "Unsupported edit", so a
+// code action with an edit ("Insert the result as expected result") did nothing.
+type ResourceEdits = (this: ProtocolToMonacoConverter, resource: monaco.Uri, edits: TextEdit[],
+    asMetadata: (annotation: string | undefined) => monaco.languages.WorkspaceEditMetadata | undefined,
+    version?: number) => monaco.languages.IWorkspaceTextEdit[];
+
+function fixWorkspaceTextEdits(): void {
+    (ProtocolToMonacoConverter.prototype as unknown as { asResourceEdits: ResourceEdits }).asResourceEdits = function (
+        this: ProtocolToMonacoConverter, resource: monaco.Uri, edits: TextEdit[],
+        asMetadata: (annotation: string | undefined) => monaco.languages.WorkspaceEditMetadata | undefined,
+        version?: number): monaco.languages.IWorkspaceTextEdit[] {
+        return edits.map((edit: TextEdit): monaco.languages.IWorkspaceTextEdit => ({
+            resource:  resource,
+            textEdit:  this.asTextEdit(edit),
+            versionId: version,
+            metadata:  asMetadata((edit as AnnotatedTextEdit).annotationId),
+        }));
+    };
+}
+
+// Around a result Monaco showed the hover at the end of its query (with the problem marker of a failed
+// expected result), on it the result's own tooltip: one or the other, depending on where the mouse was.
+// Give a result no hover of its own: the server's hover at the end of the query carries everything
+// (QueryResult.hover(): the time, a long result, how to write it as the expected result).
+function resultsHoverAtTheirQuery(): void {
+    InlayHintsHover.prototype.suggestHoverAnchor = (): null => null;
+}
+
 function ensureServices(): void {
     if (servicesReady) {
         return;
@@ -178,34 +235,50 @@ function ensureServices(): void {
     monaco.languages.register({ id: LANGUAGE_ID, extensions: ['.nl'] });
     // Toggle Line Comment (Cmd/Ctrl+/) and Toggle Block Comment (Shift+Alt+A)
     monaco.languages.setLanguageConfiguration(LANGUAGE_ID, { comments: { lineComment: '//', blockComment: ['/*', '*/'] } });
-    // Query-result inlay hints: the server picks the style bucket via the hint kind
-    // (QueryResultCache): no kind = matched expectation (green checkmark), Type = plain result
-    // value (purple chip), Parameter = failed expectation/error (red on pink chip).
+    borderInlayHints();
+    keepInlayHintTextEdits();
+    fixWorkspaceTextEdits();
+    resultsHoverAtTheirQuery();
+    // Query-result inlay hints: the server picks the style bucket via the hint kind (QueryResultCache):
+    // no kind = matched expectation (checkmark), Type = plain result, Parameter = failed
+    // expectation/error. One dim purple background and one text colour for every outcome, dim enough
+    // that the red cross stays visible: the emoji tell the outcome.
     monaco.editor.defineTheme('nelumbo-dark', {
         base:    'vs-dark',
         inherit: true,
         rules:   tokenRules('dark'),
         colors:  {
-            'editorInlayHint.foreground':          '#46c98b',
-            'editorInlayHint.background':          '#00000000',
-            'editorInlayHint.typeForeground':      '#ffffff',
-            'editorInlayHint.typeBackground':      '#9246b0',
-            'editorInlayHint.parameterForeground': '#f1707b',
-            'editorInlayHint.parameterBackground': '#f1707b2b',
+            // on #4b2f59 (1.47:1 against the editor): lilac text 8.7:1
+            'editorInlayHint.foreground':             '#46c98b',
+            'editorInlayHint.background':             '#4b2f59',
+            'editorInlayHint.typeForeground':         '#ecdcf4',
+            'editorInlayHint.typeBackground':         '#4b2f59',
+            'editorInlayHint.parameterForeground':    '#ecdcf4',
+            'editorInlayHint.parameterBackground':    '#4b2f59',
+            // hovers stand out from the editor (the vs-dark default #252526 on #1e1e1e is 1.09:1): 1.76:1, border 6.7:1
+            'editorHoverWidget.background':           '#4a4160',
+            'editorHoverWidget.statusBarBackground':  '#4a4160',
+            'editorHoverWidget.border':               '#a99ae8',
+            'editorHoverWidget.foreground':           '#e6e8ee',
         },
     });
-    // the same three buckets, darkened for contrast on a white editor
+    // the same, light: on #e3cdee (1.47:1 against white) purple text 8.7:1
     monaco.editor.defineTheme('nelumbo-light', {
         base:    'vs',
         inherit: true,
         rules:   tokenRules('light'),
         colors:  {
-            'editorInlayHint.foreground':          '#1a8a55',
-            'editorInlayHint.background':          '#00000000',
-            'editorInlayHint.typeForeground':      '#6e2f88',
-            'editorInlayHint.typeBackground':      '#c184d833',
-            'editorInlayHint.parameterForeground': '#c42f3c',
-            'editorInlayHint.parameterBackground': '#f1707b26',
+            'editorInlayHint.foreground':             '#1a8a55',
+            'editorInlayHint.background':             '#e3cdee',
+            'editorInlayHint.typeForeground':         '#4a1d5e',
+            'editorInlayHint.typeBackground':         '#e3cdee',
+            'editorInlayHint.parameterForeground':    '#4a1d5e',
+            'editorInlayHint.parameterBackground':    '#e3cdee',
+            // the vs default #f3f3f3 on white is 1.11:1: 1.35:1, border 3.7:1
+            'editorHoverWidget.background':           '#e6d9f1',
+            'editorHoverWidget.statusBarBackground':  '#e6d9f1',
+            'editorHoverWidget.border':               '#8a78d0',
+            'editorHoverWidget.foreground':           '#1f1b24',
         },
     });
     // theme.js flips data-theme on <html> (switch click or OS change); the Monaco theme is global
@@ -652,6 +725,8 @@ function buildSolutionViewer(solution: HTMLElement, index: number): void {
         'semanticHighlighting.enabled': true,
         scrollBeyondLastLine: false,
         padding:              { top: 12, bottom: 8 },
+        // room between a query result and its dashed border
+        inlayHints:           { padding: true },
         // hovers escape the field's overflow:hidden border and overlapping sections
         fixedOverflowWidgets: true,
         renderLineHighlight:  'none',
@@ -719,10 +794,15 @@ function buildField(div: HTMLElement, index: number): void {
         'semanticHighlighting.enabled': true,
         scrollBeyondLastLine: false,
         padding:              { top: 12, bottom: 8 },
+        // room between a query result and its dashed border
+        inlayHints:           { padding: true },
         // hovers escape the field's overflow:hidden border and overlapping sections
         fixedOverflowWidgets: true,
         // Cmd/Ctrl+Click goes to definition (Alt+Click is multi-cursor), the VS Code default made explicit
         multiCursorModifier:  'alt',
+        // no code-action lightbulb: without a glyph margin Monaco draws it over the text of the line (or the
+        // line above); a double-click on a result does what its one action does, Cmd/Ctrl+. still lists them
+        lightbulb:            { enabled: false },
     });
     __editors.push({ editor: editor, model: model });
     fields.set(div, field);

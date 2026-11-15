@@ -41,6 +41,7 @@ public final class Main {
     }
 
     public static void main(String[] args) {
+        long              started        = System.nanoTime();
         int               port           = 8080;
         long              timeoutMs      = NelumboHttpServer.DEFAULT_TIMEOUT_MS;
         int               maxLspSessions = NelumboHttpServer.DEFAULT_MAX_LSP_SESSIONS;
@@ -113,12 +114,14 @@ public final class Main {
             fail("no .nl files found in: " + paths);
         }
 
-        KnowledgeBase base   = KnowledgeBaseLoader.load(sources);
+        KnowledgeBase base   = sources.isEmpty() ? KnowledgeBaseLoader.load(sources)
+                : NelumboHttpServer.step("loading " + sources.size() + " .nl file(s)", () -> KnowledgeBaseLoader.load(sources), kb -> "loaded");
         NelumboHttpServer server = new NelumboHttpServer(base, files, timeoutMs, maxLspSessions, statsDir, solutionsDir,
                 ClientAccess.of(System.getenv("ADMIN_IPS"), System.getenv("PROXY_SECRET")));
         int bound = server.start(port);
         String detail = files.size() + " file(s) loaded, timeout " + timeoutMs + " ms";
-        System.out.println("Nelumbo HTTP server listening on http://localhost:" + bound + " (" + detail + ")");
+        System.out.println("Nelumbo HTTP server listening on http://localhost:" + bound + " (" + detail + ", started in "
+                + (System.nanoTime() - started) / 1_000_000 + " ms)");
         if (ServerGui.wanted(noGui)) {
             long tMs = timeoutMs;
             int sessions = maxLspSessions;

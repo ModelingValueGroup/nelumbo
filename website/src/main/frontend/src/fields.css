@@ -12,6 +12,8 @@
     /* 4.8:1 on --nf-banner-bg */
     --nf-overload-fg:     #f1707b;
     --nf-overload-border: rgba(241, 112, 123, .4);
+    /* dashed border of the query results the editor adds (not part of the text), the same for every outcome */
+    --nf-hint-border:     #9aa0ac;
 }
 
 [data-theme="light"] {
@@ -27,6 +29,8 @@
     /* 5.4:1 on --nf-banner-bg */
     --nf-overload-fg:     #b42a3a;
     --nf-overload-border: rgba(180, 42, 58, .4);
+    /* 7.6:1 on the white editor, 5.2:1 on the result background (#bdb6c6 and #7a7187 were barely visible) */
+    --nf-hint-border:     #5a4f6b;
 }
 
 .nelumbo-field-wrap {

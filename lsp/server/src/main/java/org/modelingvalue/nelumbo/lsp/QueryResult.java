@@ -13,6 +13,8 @@
 
 package org.modelingvalue.nelumbo.lsp;
 
+import java.util.Locale;
+
 import org.eclipse.lsp4j.Range;
 
 /**
@@ -26,8 +28,10 @@ import org.eclipse.lsp4j.Range;
  *   <li>{@code ERROR}    — evaluation failed; {@code inferred} holds the error message.</li>
  *   <li>{@code OVERLOADED} - stopped by the short budget of a busy server ({@code EvalGate}); {@code inferred} holds the message.</li>
  * </ul>
+ * {@code micros} is the wall-clock time of the query's inference ({@code Query.inferMicros()}), -1 when there is
+ * none to show; the tooltip shows it, the inline label does not (it would change on every evaluation).
  */
-public record QueryResult(Kind kind, String inferred, String message, Range expectedRange) {
+public record QueryResult(Kind kind, String inferred, String message, Range expectedRange, long micros) {
 
     public enum Kind {
         RESULT,
@@ -37,20 +41,20 @@ public record QueryResult(Kind kind, String inferred, String message, Range expe
         OVERLOADED,
     }
 
-    public static QueryResult result(String inferred) {
-        return new QueryResult(Kind.RESULT, inferred, null, null);
+    public static QueryResult result(String inferred, long micros) {
+        return new QueryResult(Kind.RESULT, inferred, null, null, micros);
     }
 
-    public static QueryResult match(String inferred) {
-        return new QueryResult(Kind.MATCH, inferred, null, null);
+    public static QueryResult match(String inferred, long micros) {
+        return new QueryResult(Kind.MATCH, inferred, null, null, micros);
     }
 
-    public static QueryResult mismatch(String inferred, String message, Range expectedRange) {
-        return new QueryResult(Kind.MISMATCH, inferred, message, expectedRange);
+    public static QueryResult mismatch(String inferred, String message, Range expectedRange, long micros) {
+        return new QueryResult(Kind.MISMATCH, inferred, message, expectedRange, micros);
     }
 
-    public static QueryResult error(String message) {
-        return new QueryResult(Kind.ERROR, message, message, null);
+    public static QueryResult error(String message, long micros) {
+        return new QueryResult(Kind.ERROR, message, message, null, micros);
     }
 
     /** Diagnostic code of an evaluation stopped because the server was busy; the contract for clients. */
@@ -58,7 +62,7 @@ public record QueryResult(Kind kind, String inferred, String message, Range expe
 
     public static QueryResult overloaded(long budgetMs) {
         String message = "Server busy: evaluation stopped after " + budgetMs + " ms to protect other users - try again in a moment";
-        return new QueryResult(Kind.OVERLOADED, message, message, null);
+        return new QueryResult(Kind.OVERLOADED, message, message, null, -1);
     }
 
     private static final int MAX_LABEL_LENGTH = 60;
@@ -74,12 +78,58 @@ public record QueryResult(Kind kind, String inferred, String message, Range expe
         };
     }
 
-    /** Full result for the inlay-hint tooltip; never capped. */
+    /**
+     * The inlay-hint tooltip: what the label does not show. That is the time of the inference, and the full result
+     * or message only when the label cut it short (a match shows its result in the query's expected result, an
+     * overload only "server busy"); a mismatch always shows what was expected and found, its label only the latter.
+     * Empty when there is nothing to add.
+     */
     public String tooltip() {
-        return switch (kind) {
+        if (kind == Kind.MISMATCH) {
+            return message + timing();
+        }
+        String  full  = switch (kind) {
             case RESULT, MISMATCH, MATCH -> inferred;
             case ERROR, OVERLOADED -> "⚠ " + inferred;
         };
+        boolean shown = switch (kind) {
+            case RESULT -> inferred.length() <= MAX_LABEL_LENGTH;
+            case MATCH -> true;
+            case MISMATCH -> ("❌ " + inferred).length() <= MAX_LABEL_LENGTH;
+            case ERROR -> full.length() <= MAX_LABEL_LENGTH;
+            case OVERLOADED -> false;
+        };
+        if (!shown) {
+            return full + timing();
+        }
+        return micros < 0 ? "" : time(micros);
+    }
+
+    /**
+     * The hover at the end of the query, which the website editor shows for a result instead of its tooltip (the
+     * same hover around the result and on it): the tooltip, but for a mismatch or an overload not what their problem
+     * marker already says, and how to write the result into the query.
+     */
+    public String hover() {
+        String text = switch (kind) {
+            case MISMATCH -> micros < 0 ? "" : time(micros);
+            case OVERLOADED -> "";
+            default -> tooltip();
+        };
+        if (kind == Kind.RESULT || kind == Kind.MISMATCH) {
+            text += (text.isEmpty() ? "" : "\n\n") + "Double-click the result to make it the expected result";
+        }
+        return text;
+    }
+
+    /** A time of inference, for example {@code "1,234 \u03bcs"} (Greek mu). */
+    public static String time(long micros) {
+        return String.format(Locale.ROOT, "%,d \u03bcs", micros);
+    }
+
+    /** The time of the inference as a suffix, for example {@code "  (1,234 \u03bcs)"} (Greek mu); empty without one. */
+    public String timing() {
+        return micros < 0 ? "" : "  (" + time(micros) + ")";
     }
 
     private static String cap(String s) {

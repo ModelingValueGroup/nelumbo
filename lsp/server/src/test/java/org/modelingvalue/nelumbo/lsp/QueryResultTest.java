@@ -22,33 +22,57 @@ public class QueryResultTest {
 
     @Test
     public void shortLabelIsNotCapped() {
-        QueryResult r = QueryResult.result("[()][]");
+        QueryResult r = QueryResult.result("[()][]", -1);
         assertEquals("[()][]", r.inlineLabel());
-        assertEquals("[()][]", r.tooltip());
+        assertEquals("", r.tooltip(), "the label shows the whole result, no time: nothing to add");
     }
 
     @Test
     public void longLabelIsCappedButTooltipIsFull() {
         String      full = "[(f=0),(f=1),(f=2),(f=3),(f=4),(f=5),(f=6),(f=7),(f=8),(f=9)][..]";
-        QueryResult r    = QueryResult.result(full);
+        QueryResult r    = QueryResult.result(full, -1);
         assertEquals(60, r.inlineLabel().length(), "inline label is capped at 60 chars");
         assertTrue(r.inlineLabel().endsWith("..."), "capped label ends in an ellipsis");
         assertTrue(full.startsWith(r.inlineLabel().substring(0, 57)), "capped label is a prefix of the full result");
-        assertEquals(full, r.tooltip(), "tooltip always carries the full result");
+        assertEquals(full, r.tooltip(), "the tooltip carries the full result the label cut short");
+        assertEquals(full + "  (7 \u03bcs)", QueryResult.result(full, 7).tooltip());
     }
 
     @Test
-    public void matchShowsCheckmarkWithResultTooltip() {
-        QueryResult r = QueryResult.match("[()][]");
+    public void matchShowsCheckmarkAndOnlyTheTime() {
+        QueryResult r = QueryResult.match("[()][]", 1234567);
         assertEquals("✅", r.inlineLabel());
-        assertEquals("[()][]", r.tooltip(), "the tooltip reveals the result behind the checkmark");
+        assertEquals("1,234,567 \u03bcs", r.tooltip(), "the result is the expected result in the query itself");
     }
 
     @Test
-    public void errorTooltipCarriesFullMessage() {
-        QueryResult r = QueryResult.error("evaluation exceeded the deadline");
+    public void errorTooltipAddsOnlyWhatTheLabelLacks() {
+        QueryResult r = QueryResult.error("evaluation exceeded the deadline", -1);
         assertEquals("⚠ evaluation exceeded the deadline", r.inlineLabel());
-        assertEquals("⚠ evaluation exceeded the deadline", r.tooltip());
+        assertEquals("", r.tooltip());
+        String message = "a message far longer than the sixty characters that fit in a label";
+        assertEquals("⚠ " + message + "  (12 \u03bcs)", QueryResult.error(message, 12).tooltip());
+    }
+
+    @Test
+    public void tooltipShowsTheTimeOfTheInferenceTheLabelDoesNot() {
+        assertEquals("[()][]", QueryResult.result("[()][]", 1234567).inlineLabel());
+        assertEquals("1,234,567 \u03bcs", QueryResult.result("[()][]", 1234567).tooltip());
+        assertEquals("Expected result [()][], found [][()]  (12 \u03bcs)", QueryResult.mismatch("[][()]", "Expected result [()][], found [][()]", null, 12).tooltip(),
+                "the label shows only what was found");
+        assertEquals("12 \u03bcs", QueryResult.error("oops", 12).tooltip());
+        assertEquals("", QueryResult.overloaded(2000).timing(), "an overload has no time of its own");
+    }
+
+    // the website shows this at the end of the query instead of the tooltip, next to a problem marker there
+    @Test
+    public void hoverAddsTheTimeAndHowToWriteTheExpectedResult() {
+        String accept = "Double-click the result to make it the expected result";
+        assertEquals("7 \u03bcs\n\n" + accept, QueryResult.result("[()][]", 7).hover());
+        assertEquals("7 \u03bcs", QueryResult.match("[()][]", 7).hover());
+        assertEquals("7 \u03bcs\n\n" + accept, QueryResult.mismatch("[][()]", "Expected result [()][], found [][()]", null, 7).hover(),
+                "the message of a mismatch is its problem marker");
+        assertEquals("", QueryResult.overloaded(2000).hover(), "the message of an overload is its problem marker");
     }
 
     @Test

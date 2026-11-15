@@ -83,10 +83,10 @@ public class WorkspaceExecuteCommandService extends WorkspaceServiceAdapter {
         }
 
         MessageParams message = switch (result.kind()) {
-            case RESULT     -> new MessageParams(MessageType.Info, result.inferred());
-            case MATCH      -> new MessageParams(MessageType.Info, "✓ " + result.inferred());
-            case MISMATCH   -> new MessageParams(MessageType.Warning, result.message());
-            case ERROR      -> new MessageParams(MessageType.Error, result.inferred());
+            case RESULT     -> new MessageParams(MessageType.Info, result.inferred() + result.timing());
+            case MATCH      -> new MessageParams(MessageType.Info, "✓ " + result.inferred() + result.timing());
+            case MISMATCH   -> new MessageParams(MessageType.Warning, result.message() + result.timing());
+            case ERROR      -> new MessageParams(MessageType.Error, result.inferred() + result.timing());
             case OVERLOADED -> new MessageParams(MessageType.Warning, result.message());
         };
         showMessage(message);

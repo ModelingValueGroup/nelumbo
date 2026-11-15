@@ -85,17 +85,18 @@ final class NelumboHighlighter {
      * parsed but not shown, so a fragment gets the colors it has in its whole file.
      */
     String highlight(String context, String code) {
+        Throwable onStdlib;
         try {
             return colored(base, context, code);
         } catch (RuntimeException | StackOverflowError e) {
-            System.err.println("docs: cannot highlight a nelumbo block on the stdlib, trying it on its own: " + e);
+            onStdlib = e;
         }
         // a stdlib module quoted in the docs re-declares what the stdlib base already has, which can crash the
         // parser (bugs/continuation-line-equals-pattern-overflow.nl); on its own it parses as in its own file
         try {
             return colored(KnowledgeBase.BASE, context, code);
         } catch (RuntimeException | StackOverflowError e) {
-            System.err.println("docs: cannot highlight a nelumbo block, showing it plain: " + e);
+            System.err.println("docs: cannot highlight a nelumbo block, showing it plain: on the stdlib " + onStdlib + ", on its own " + e);
             return escape(code);
         }
     }
