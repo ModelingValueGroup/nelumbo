@@ -49,19 +49,19 @@ public final class Query extends Node implements Evaluatable {
         if (reason == ConstructionReason.parsing) {
             Node node = (Node) get(0);
             Variable var = node instanceof Predicate ? null
-                    : new Variable(List.of(), true, node.type().nonFunction(), "r$" + uniqueId());
+                                                     : new Variable(List.of(), true, node.type().nonFunction(), "r$" + uniqueId());
             Predicate nodePred = var == null ? (Predicate) node : new NIs(node.astElements(), node, var);
             Predicate predicate = nodePred.setVariables(knowledgeBase,
-                    Predicate.literals(nodePred.getBinding(nodePred)), ctx);
+                                                        Predicate.literals(nodePred.getBinding(nodePred)), ctx);
             List<List<Object>> expected = getVal(1);
             if (expected == null) {
                 Object[] array = new Object[1];
                 array[0] = predicate;
                 return setArgs(array);
             } else {
-                List<Object> facts = expected.get(0);
+                List<Object> facts      = expected.get(0);
                 List<Object> falsehoods = expected.get(1);
-                Object[] array = new Object[5];
+                Object[]     array      = new Object[5];
                 array[0] = predicate;
                 array[1] = bindings(knowledgeBase, facts.exclude(e -> e instanceof String).asList(), var);
                 array[2] = !facts.contains("..");
@@ -80,9 +80,9 @@ public final class Query extends Node implements Evaluatable {
         for (List<Object> list : (List<List<Object>>) listList) {
             Map<Variable, Object> map = Map.of();
             for (Object element : list) {
-                if (element instanceof List pair) {
+                if (element instanceof List<?> pair) {
                     Variable variable = ((Node) pair.get(0)).variable();
-                    Node value = (Node) pair.get(1);
+                    Node     value    = (Node) pair.get(1);
                     map = map.put(variable.literal(), setType(variable, value));
                 } else if (var == null) {
                     knowledgeBase.addException(new ParseException("No variable in binding", (Node) element));
@@ -192,18 +192,16 @@ public final class Query extends Node implements Evaluatable {
             found = predicate.infer().predicate(predicate);
             if (found.isUnknownWithPossibleCyclesOrExceptions() && !found.exceptions().isEmpty()) {
                 for (Entry<Predicate, RuntimeException> e : found.exceptions()) {
-                    RuntimeException exc = e.getValue();
-                    String message = exc.getMessage();
-                    Predicate pred = e.getKey();
+                    RuntimeException exc     = e.getValue();
+                    String           message = exc.getMessage();
+                    Predicate        pred    = e.getKey();
                     handler.addException(new ParseException(exc,
-                            message != null ? message : exc.getClass().getSimpleName() + " in " + pred.toBaseString(),
-                            predicate));
+                                                            message != null ? message : exc.getClass().getSimpleName() + " in " + pred.toBaseString(),
+                                                            predicate));
                 }
                 return;
             }
-        } catch (
-
-        InconsistencyException ie) {
+        } catch (InconsistencyException ie) {
             handler.addException(new ParseException(ie, ie.getMessage(), predicate));
             return;
         } finally {
@@ -211,19 +209,19 @@ public final class Query extends Node implements Evaluatable {
         }
         inferResult = found;
         if (hasExpected()) {
-            Set<Map<Variable, Object>> trueBindings = facts();
-            Set<Predicate> truePredicates = trueBindings.map(b -> predicate.setBinding(predicate, b)).asSet();
-            boolean completeFacts = completeFacts();
-            Set<Map<Variable, Object>> falseBindings = falsehoods();
-            Set<Predicate> falsePredicates = falseBindings.map(b -> predicate.setBinding(predicate, b)).asSet();
-            boolean completeFalsehoods = completeFalsehoods();
+            Set<Map<Variable, Object>> trueBindings       = facts();
+            Set<Predicate>             truePredicates     = trueBindings.map(b -> predicate.setBinding(predicate, b)).asSet();
+            boolean                    completeFacts      = completeFacts();
+            Set<Map<Variable, Object>> falseBindings      = falsehoods();
+            Set<Predicate>             falsePredicates    = falseBindings.map(b -> predicate.setBinding(predicate, b)).asSet();
+            boolean                    completeFalsehoods = completeFalsehoods();
             InferResult expected = InferResult.of(predicate, truePredicates, completeFacts, falsePredicates,
-                    completeFalsehoods, Set.of(), Map.of());
+                                                  completeFalsehoods, Set.of(), Map.of());
             if (!found.equals(expected)) {
                 // System.err.println("!!!!!!!!!!!!!!!!!!!!!! " + found.diff(expected));
                 List<AstElement> astElements = astElements();
                 handler.addException(new ParseException("Expected result " + expected + ", found " + found, //
-                        astElements.sublist(2, astElements.size()).toArray(AstElement[]::new)));
+                                                        astElements.sublist(2, astElements.size()).toArray(AstElement[]::new)));
             }
         }
     }
