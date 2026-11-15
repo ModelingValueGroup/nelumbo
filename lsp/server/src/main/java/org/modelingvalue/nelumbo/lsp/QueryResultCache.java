@@ -126,7 +126,7 @@ public class QueryResultCache {
                 QueryResult shown = slot.result != null ? slot.result
                         : now - slot.invalidSince < CALCULATING_DELAY_MS ? slot.moved : QueryResult.calculating();
                 if (shown != null) {
-                    hints.add(hint(slot.query.query().lastToken(), shown, shown == slot.result));
+                    hints.add(hint(slot.query.query(), shown));
                 }
             }
         }
@@ -408,9 +408,10 @@ public class QueryResultCache {
         }
     }
 
-    private static InlayHint hint(Token last, QueryResult result, boolean own) {
+    private static InlayHint hint(Query query, QueryResult result) {
         // the tooltip goes on a label part, not on the hint: LSP4IJ (IntelliJ) shows only label-part
         // tooltips, and Monaco shows both, so a tooltip on the hint as well would show twice
+        Token              last = query.lastToken();
         Position           pos  = new Position(last.lastLine(), last.positionEnd());
         InlayHintLabelPart part = new InlayHintLabelPart(result.inlineLabel());
         if (!result.tooltip().isEmpty()) {
@@ -427,11 +428,13 @@ public class QueryResultCache {
         }
         // accepting the hint (Monaco: double-click) writes the result into the query as its expected
         // result: after a plain query, or over a wrong expected result; DocumentCodeActionService offers
-        // the same edits as code actions for the other editors. Never a moved old result: it may be stale
-        if (own && result.kind() == QueryResult.Kind.RESULT) {
+        // the same edits as code actions for the other editors. A moved old result writes what it shows, at
+        // its query's new place (its own expectedRange is that of the old text)
+        Range expected = QueryEvaluator.expectedRange(query);
+        if (result.kind() == QueryResult.Kind.RESULT) {
             hint.setTextEdits(List.of(new TextEdit(new Range(pos, pos), " " + result.inferred())));
-        } else if (own && result.kind() == QueryResult.Kind.MISMATCH && result.expectedRange() != null) {
-            hint.setTextEdits(List.of(new TextEdit(result.expectedRange(), result.inferred())));
+        } else if (result.kind() == QueryResult.Kind.MISMATCH && expected != null) {
+            hint.setTextEdits(List.of(new TextEdit(expected, result.inferred())));
         }
         hint.setPaddingLeft(true);
         // the hover at the end of the query (DocumentHoverService)

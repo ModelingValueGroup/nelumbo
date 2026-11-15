@@ -85,7 +85,7 @@ public record QueryResult(Kind kind, String inferred, String message, Range expe
         return new QueryResult(Kind.OVERLOADED, message, message, null, -1);
     }
 
-    private static final int    MAX_LABEL_LENGTH = 60;
+    private static final int    MAX_LABEL_LENGTH = 50;
     // the emoji form of the warning sign (with variation selector 16); the bare sign renders as a text glyph
     private static final String WARNING          = "\u26a0\ufe0f ";
     private static final String CROSS            = "\u274c ";

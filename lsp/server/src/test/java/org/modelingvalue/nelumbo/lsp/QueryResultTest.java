@@ -31,9 +31,9 @@ public class QueryResultTest {
     public void longLabelIsCappedButTooltipIsFull() {
         String      full = "[(f=0),(f=1),(f=2),(f=3),(f=4),(f=5),(f=6),(f=7),(f=8),(f=9)][..]";
         QueryResult r    = QueryResult.result(full, -1);
-        assertEquals(60, r.inlineLabel().length(), "inline label is capped at 60 chars");
+        assertEquals(50, r.inlineLabel().length(), "inline label is capped at 50 chars: Monaco draws a longer run as two boxes");
         assertTrue(r.inlineLabel().endsWith("..."), "capped label ends in an ellipsis");
-        assertTrue(full.startsWith(r.inlineLabel().substring(0, 57)), "capped label is a prefix of the full result");
+        assertTrue(full.startsWith(r.inlineLabel().substring(0, 47)), "capped label is a prefix of the full result");
         assertEquals(full, r.tooltip(), "the tooltip carries the full result the label cut short");
         assertEquals(full + "  (7 \u03bcs)", QueryResult.result(full, 7).tooltip());
     }

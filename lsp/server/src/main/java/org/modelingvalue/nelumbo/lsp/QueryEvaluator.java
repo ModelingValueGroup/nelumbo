@@ -153,7 +153,7 @@ public final class QueryEvaluator {
      * Source span of the query's expected clause (everything after the {@code ?}),
      * to be underlined on a mismatch.
      */
-    private static Range expectedRange(Query query) {
+    static Range expectedRange(Query query) {
         org.modelingvalue.collections.List<AstElement> els = query.astElements();
         if (els.size() <= 2) {
             return null;

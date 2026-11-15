@@ -26,6 +26,7 @@ import java.util.function.BooleanSupplier;
 import java.util.stream.IntStream;
 
 import org.eclipse.lsp4j.InlayHint;
+import org.eclipse.lsp4j.Range;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.modelingvalue.nelumbo.KnowledgeBase;
@@ -158,7 +159,7 @@ public class LiveQueryResultsTest {
     }
 
     @Test
-    void aMovedOldResultCarriesNoTextEdit() throws InterruptedException {
+    void aMovedOldResultWritesWhatItShowsAtItsNewPlace() throws InterruptedException {
         start(FACTORIAL, 0);
         documents.addDocument(URI, factorials(5000), 1);
         InlayHint own = awaitResults(documents.queryResultCache(), URI, 1, 15).getFirst();
@@ -166,7 +167,11 @@ public class LiveQueryResultsTest {
         documents.updateDocument(URI, "// c\n" + factorials(5000));
         InlayHint moved = documents.queryResultCache().hints(URI).getFirst();
         assertEquals(label(own), label(moved), "the moved old result shows during the delay");
-        assertTrue(moved.getTextEdits() == null, "no text edit: a double-click would write a stale expected result");
+        assertNotNull(moved.getTextEdits(), "a double-click in the delay writes what it shows");
+        Range ownRange   = own.getTextEdits().getFirst().getRange();
+        Range movedRange = moved.getTextEdits().getFirst().getRange();
+        assertEquals(ownRange.getStart().getLine() + 1, movedRange.getStart().getLine(), "at the query's new place");
+        assertEquals(ownRange.getStart().getCharacter(), movedRange.getStart().getCharacter());
     }
 
     @Test
@@ -215,7 +220,7 @@ public class LiveQueryResultsTest {
         try {
             documents.addDocument(URI, factorials(5, 6), 1);
             awaitResults(documents.queryResultCache(), URI, 2, 15);
-            assertTrue(contains(labels(URI).get(1), "Internal error: java.lang.AssertionError: escaped"), "the query shows the error: " + labels(URI));
+            assertTrue(contains(labels(URI).get(1), "Internal error: java.lang.AssertionError"), "the query shows the error: " + labels(URI));
             assertTrue(contains(labels(URI).get(2), "720"), "the one driver goes on with the next query: " + labels(URI));
         } finally {
             workspace.dispose();
