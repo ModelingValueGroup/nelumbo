@@ -1,4 +1,4 @@
-import { test, expect, devices, Page, Locator, PlaywrightTestOptions } from '@playwright/test';
+import { test, expect, devices, CDPSession, Page, Locator, PlaywrightTestOptions } from '@playwright/test';
 
 // Query results are added by the editor, not typed: every result hint has the same light dashed border
 // (--nf-hint-border in fields.css) and the same dim purple background, whatever its outcome (dim enough
@@ -120,9 +120,15 @@ for (const name of ['Pixel 7', 'iPhone 13']) {
             }, DOC);
             const text: () => Promise<string> = async (): Promise<string> =>
                 await page.evaluate((): string => (window as any).NelumboFields.__editors[0].model.getValue());
+            // a finger moves a little while it taps (Android sends that as touchmove; Monaco then resets its tap count)
+            const cdp: CDPSession                         = await page.context().newCDPSession(page);
             const tap: (hint: Locator) => Promise<void> = async (hint: Locator): Promise<void> => {
                 const box: { x: number; y: number; width: number; height: number } | null = await hint.boundingBox();
-                await page.touchscreen.tap(box!.x + box!.width / 2, box!.y + box!.height / 2);
+                const x:   number                                                         = box!.x + box!.width / 2;
+                const y:   number                                                         = box!.y + box!.height / 2;
+                await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: x, y: y }] });
+                await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: x + 2, y: y + 1 }] });
+                await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
             };
             const result: Locator = page.getByText('[()][]', { exact: true }).first();
             await expect(result).toBeVisible({ timeout: 20_000 });

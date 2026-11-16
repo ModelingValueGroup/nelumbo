@@ -199,24 +199,32 @@ function keepInlayHintTextEdits(): void {
     };
 }
 
-// Monaco's tap on a touch screen (base/browser/touch.js); tapCount is 2 for a tap within 400 ms of the last
+// Monaco's tap on a touch screen (base/browser/touch.js)
 interface GestureTap extends Event {
-    tapCount: number;
-    pageX:    number;
-    pageY:    number;
+    pageX: number;
+    pageY: number;
 }
 
+// the longest time between the two taps of a double tap, as Monaco's Gesture.CLEAR_TAP_COUNT_TIME
+const DOUBLE_TAP_MS: number = 400;
+
 // A phone never fires the double-click: Monaco cancels the mouse events of a touch (Android) or gets only
-// pointer events, whose detail is always 0 (iOS). Monaco counts taps itself and sends them, without
-// bubbling, to the lines of the editor: a double tap on a result does what a double-click does.
+// pointer events, whose detail is always 0 (iOS). Monaco sends its taps, without bubbling, to the lines of
+// the editor: a double tap on a result does what a double-click does. Not by Monaco's tapCount: any
+// touchmove resets it, and on Android a finger moves a little during almost every tap.
 function acceptResultsByDoubleTap(): void {
     const install: (updateInlayHints: () => void) => monaco.IDisposable = InlayHintsController.prototype._installDblClickGesture;
     InlayHintsController.prototype._installDblClickGesture = function (this: InlayHintsController, updateInlayHints: () => void): monaco.IDisposable {
-        const click: monaco.IDisposable = install.call(this, updateInlayHints);
-        const lines: Element | null     = this._editor.getDomNode()!.querySelector('.lines-content');
-        const onTap: (e: Event) => void = (e: Event): void => {
-            const tap: GestureTap = e as GestureTap;
-            if (tap.tapCount !== 2) {
+        const click:   monaco.IDisposable = install.call(this, updateInlayHints);
+        const lines:   Element | null     = this._editor.getDomNode()!.querySelector('.lines-content');
+        let   lastTap: number             = 0;
+        const onTap:   (e: Event) => void = (e: Event): void => {
+            const tap:    GestureTap = e as GestureTap;
+            const now:    number     = Date.now();
+            const double: boolean    = now - lastTap <= DOUBLE_TAP_MS;
+            // a third tap starts a new double tap
+            lastTap = double ? 0 : now;
+            if (!double) {
                 return;
             }
             const target: monaco.editor.IMouseTarget | null = this._editor.getTargetAtClientPoint(tap.pageX - window.scrollX, tap.pageY - window.scrollY);
