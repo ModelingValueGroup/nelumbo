@@ -37,8 +37,8 @@ LEFT          :: NATIVE     // [\(\[\{]
 RIGHT         :: NATIVE     // [\)\]\}]
 STRING        :: NATIVE     // "([^"\\]|\\[\s\S])*"
 NUMBER        :: NATIVE     // [0-9]+
-NAME          :: NATIVE     // [\p{L}\p{Nl}_][\p{L}\p{Nl}\p{Mn}\p{Mc}\p{Nd}\p{Pc} ZWNJ ZWJ]*
-OPERATOR      :: NATIVE     // (?!//)[~!@#$%^&*=+|:<>.?/- non-ASCII \p{S}\p{P}\p{No}]+ with marks, ZWJ and tags inside
+NAME          :: NATIVE     // [\p{L}\p{Nl}_ emoji][\p{L}\p{Nl}\p{Mn}\p{Mc}\p{Nd}\p{Pc} emoji ZWNJ ZWJ]*
+OPERATOR      :: NATIVE     // (?!//)[~!@#$%^&*=+|:<>.?/- other non-ASCII \p{S}\p{P}\p{No}]+ with marks inside
 NEWLINE       :: NATIVE     // \r\n|[\n\r]
 BEGINOFFILE   :: NATIVE
 ENDOFFILE     :: NATIVE
@@ -55,8 +55,8 @@ Each `:: NATIVE` declares a token type produced by the tokenizer. The comment th
 | `RIGHT`       | `)`, `]`, or `}`                                          |
 | `STRING`      | a double-quoted string with backslash escapes             |
 | `NUMBER`      | one or more decimal digits — an unsigned integer          |
-| `NAME`        | an identifier — a letter of any script or `_`, then letters, digits of any script, combining marks and `_` (`Zoë`, `東京`, `x1`) |
-| `OPERATOR`    | one or more operator characters (`! @ # $ % ^ & * = + \| : < > . ? / -`) or non-ASCII symbols, punctuation and superscripts (`≤`, `♥`, `²`, emoji), but not starting with `//` |
+| `NAME`        | an identifier — a letter of any script, a picture emoji or `_`, then also digits of any script and combining marks (`Zoë`, `東京`, `🧍`, `x1`); an emoji counts as a letter, so `a😀b` is one name |
+| `OPERATOR`    | one or more operator characters (`! @ # $ % ^ & * = + \| : < > . ? / -`) or other non-ASCII symbols, punctuation and superscripts (`≤`, `→`, `♥`, `²`), but not starting with `//` |
 | `NEWLINE`     | a line break: `\n`, `\r\n` or `\r`                        |
 | `BEGINOFFILE` | synthetic token at the start of input                     |
 | `ENDOFFILE`   | synthetic token at the end of input                       |

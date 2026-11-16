@@ -28,14 +28,18 @@ public enum TokenType {
     RIGHT("[\\)\\]\\}]", /* CONTINUES_ON_NEXT_LINE, */ VARIABLE_CONTENT), //
     STRING("\"([^\"\\\\]|\\\\[\\s\\S])*\"", VARIABLE_CONTENT), //
     NUMBER("[0-9]+", VARIABLE_CONTENT), //
-    // letters of any script; marks, digits of any script and connectors also inside (Unicode identifiers, UAX #31)
-    NAME("[\\p{L}\\p{Nl}_][\\p{L}\\p{Nl}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\u200C\\u200D]*", VARIABLE_CONTENT), //
+    // letters of any script and picture emoji (emoji presentation by default, or a pictograph with variation selector
+    // 16); inside also marks, digits of any script, connectors, skin tones, tags and joiners (UAX #31, emoji sequences)
+    NAME("(?:[\\p{L}\\p{Nl}_\\p{IsEmoji_Presentation}]|\\p{IsExtended_Pictographic}\\uFE0F)"
+            + "(?:[\\p{L}\\p{Nl}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\p{IsEmoji_Presentation}\\u200C\\x{1F3FB}-\\x{1F3FF}\\x{E0020}-\\x{E007F}]"
+            + "|\\p{IsExtended_Pictographic}\\uFE0F|\\u200D\\p{IsExtended_Pictographic}?)*", VARIABLE_CONTENT), //
     END_LINE_COMMENT("//[^\\n\\r]*", SKIP, VARIABLE_CONTENT), //
     IN_LINE_COMMENT("/\\*.*?(?:\\*/|\\z)", SKIP, VARIABLE_CONTENT), //
-    // also every non-ASCII symbol, punctuation and other number (math symbols, superscripts, emoji); inside, the
-    // marks, joiners and tags of emoji sequences
-    OPERATOR("(?!//)(?:[~!@#$%^&*=+|:<>.?/-]|[\\p{S}\\p{P}\\p{No}&&[^\\x00-\\x7F]])"
-            + "(?:[~!@#$%^&*=+|:<>.?/-]|[\\p{S}\\p{P}\\p{No}&&[^\\x00-\\x7F]]|[\\p{M}\\u200D\\x{E0020}-\\x{E007F}])*", CONTINUES_ON_NEXT_LINE, VARIABLE_CONTENT), //
+    // also every other non-ASCII symbol, punctuation and other number (math symbols, text symbols like a heart,
+    // superscripts); inside also marks, joiners and tags
+    OPERATOR("(?!//)(?:[~!@#$%^&*=+|:<>.?/-]|(?!\\p{IsExtended_Pictographic}\\uFE0F)[\\p{S}\\p{P}\\p{No}&&[^\\x00-\\x7F]&&[^\\p{IsEmoji_Presentation}]])"
+            + "(?:[~!@#$%^&*=+|:<>.?/-]|(?!\\p{IsExtended_Pictographic}\\uFE0F)[\\p{S}\\p{P}\\p{No}&&[^\\x00-\\x7F]&&[^\\p{IsEmoji_Presentation}]]"
+            + "|[\\p{M}\\u200D\\x{E0020}-\\x{E007F}])*", CONTINUES_ON_NEXT_LINE, VARIABLE_CONTENT), //
     // the line breaks of LSP and the editors; other Unicode line and paragraph separators are spaces
     NEWLINE("\\r\\n|[\\n\\r]", CONTINUES_ON_NEXT_LINE, LAYOUT), //
     // also the invisible format characters (a BOM, zero-width space, soft hyphen, direction marks)

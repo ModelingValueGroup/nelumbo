@@ -256,14 +256,49 @@ public class TokenizerTest extends NelumboTestBase {
 
     @Test
     public void unicodeSymbolsMakeOperators() {
-        // a heart, less-or-equal, an emoji outside the BMP, a red heart with its variation selector, a superscript two,
-        // a family emoji joined by zero-width joiners, a flag of two regional indicators
-        String input = "a\u2665b \u2264 c \ud83d\ude00 d \u2764\ufe0f e\u00b2 \ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67 \ud83c\uddf3\ud83c\uddf1";
-        assertEquals("BEGINOFFILE NAME OPERATOR NAME HSPACE OPERATOR HSPACE NAME HSPACE OPERATOR HSPACE NAME HSPACE OPERATOR HSPACE NAME OPERATOR"
-                + " HSPACE OPERATOR HSPACE OPERATOR ENDOFFILE", types(input));
+        // a heart (text presentation), less-or-equal, a superscript two, a left-right arrow
+        assertEquals("BEGINOFFILE NAME OPERATOR NAME HSPACE OPERATOR HSPACE NAME OPERATOR HSPACE OPERATOR HSPACE NAME ENDOFFILE",
+                types("a\u2665b \u2264 c\u00b2 \u2194 d"));
+    }
+
+    @Test
+    public void pictureEmojiMakeNames() {
+        // a standing person, a smiley glued to x, a red heart with variation selector 16, a family joined by zero-width
+        // joiners, a flag of two regional indicators, a man standing (joiner and male sign), a thumbs up with a skin
+        // tone, and a smiley glued to an operator
+        String input = "\ud83e\uddcd \ud83d\ude00x \u2764\ufe0f \ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67 \ud83c\uddf3\ud83c\uddf1"
+                + " \ud83e\uddcd\u200d\u2642\ufe0f \ud83d\udc4d\ud83c\udffd \u2264\ud83d\ude00";
+        assertEquals("BEGINOFFILE NAME HSPACE NAME HSPACE NAME HSPACE NAME HSPACE NAME HSPACE NAME HSPACE NAME HSPACE OPERATOR NAME ENDOFFILE",
+                types(input));
         List<Token> all = tokenizeAll(input);
-        assertEquals("\u2764\ufe0f", all.get(13).text());
-        assertEquals("\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67", all.get(18).text());
+        assertEquals("\ud83d\ude00x", all.get(3).text());
+        assertEquals("\u2764\ufe0f", all.get(5).text());
+        assertEquals("\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67", all.get(7).text());
+        assertEquals("\ud83e\uddcd\u200d\u2642\ufe0f", all.get(11).text());
+        assertEquals("\ud83d\udc4d\ud83c\udffd", all.get(13).text());
+    }
+
+    @Test
+    public void anEmojiNamesATypeAVariableAndAPatternWord() {
+        testString("""
+                import nelumbo.logic
+
+                \ud83e\uddcd  :: Object
+                Male     :: \ud83e\uddcd
+                Female   :: \ud83e\uddcd
+                Male     ::= \u6771\u4eac, Jan
+                Female   ::= Zo\u00eb
+                \ud83e\uddcd  ::= father(<\ud83e\uddcd>)
+                Sentence :: Root
+                Sentence ::= <\ud83e\uddcd> knows <\ud83e\uddcd> #0
+                \u6771\u4eac knows Zo\u00eb
+                father(Zo\u00eb) knows Jan
+
+                Boolean ::= <\ud83e\uddcd> \ud83d\ude00 <\ud83e\uddcd> #30
+                \ud83e\uddcd \ud83d\ude42
+                fact Jan \ud83d\ude00 Zo\u00eb
+                Jan \ud83d\ude00 \ud83d\ude42 ? [(\ud83d\ude42=Zo\u00eb),..][..]
+                """, "anEmojiNamesATypeAVariableAndAPatternWord");
     }
 
     @Test
