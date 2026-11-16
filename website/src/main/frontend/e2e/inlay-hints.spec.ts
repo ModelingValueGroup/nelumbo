@@ -1,4 +1,4 @@
-import { test, expect, Page, Locator } from '@playwright/test';
+import { test, expect, devices, Page, Locator, PlaywrightTestOptions } from '@playwright/test';
 
 // Query results are added by the editor, not typed: every result hint has the same light dashed border
 // (--nf-hint-border in fields.css) and the same dim purple background, whatever its outcome (dim enough
@@ -100,6 +100,48 @@ test('double-clicking a query result writes it as the expected result', async ({
     await expect.poll(text).toContain('false ? [][()]\nfalse ? [][()]');
     await expect(page.getByText('✅')).toHaveCount(3, { timeout: 20_000 });
 });
+
+// A phone has no double-click: Monaco's touch handling cancels the mouse events (Android) or sends pointer
+// events, whose detail is always 0 (iOS). A double tap on a result does what a double-click does. Chromium
+// with an iPhone user agent takes Monaco's iOS path (PointerEventHandler).
+function phone(name: string): Partial<PlaywrightTestOptions> {
+    const device: (typeof devices)[string] = devices[name];
+    return { userAgent: device.userAgent, viewport: device.viewport, deviceScaleFactor: device.deviceScaleFactor, isMobile: true, hasTouch: true };
+}
+
+for (const name of ['Pixel 7', 'iPhone 13']) {
+    test.describe(name, (): void => {
+        test.use(phone(name));
+        test('double-tapping a query result writes it as the expected result', async ({ page }: { page: Page }): Promise<void> => {
+            await page.goto('/sandbox.html');
+            await page.waitForFunction((): boolean => ((window as any).NelumboFields?.__editors?.length ?? 0) > 0);
+            await page.evaluate((doc: string): void => {
+                (window as any).NelumboFields.__editors[0].model.setValue(doc);
+            }, DOC);
+            const text: () => Promise<string> = async (): Promise<string> =>
+                await page.evaluate((): string => (window as any).NelumboFields.__editors[0].model.getValue());
+            const tap: (hint: Locator) => Promise<void> = async (hint: Locator): Promise<void> => {
+                const box: { x: number; y: number; width: number; height: number } | null = await hint.boundingBox();
+                await page.touchscreen.tap(box!.x + box!.width / 2, box!.y + box!.height / 2);
+            };
+            const result: Locator = page.getByText('[()][]', { exact: true }).first();
+            await expect(result).toBeVisible({ timeout: 20_000 });
+            await tap(result);
+            // past Monaco's 400 ms between the taps of a double tap
+            await page.waitForTimeout(500);
+            expect(await text(), 'a single tap writes nothing').toBe(DOC);
+            await tap(result);
+            await tap(result);
+            await expect.poll(text).toContain('true ? [()][]\n');
+            const mismatch: Locator = page.getByText('❌ [][()]').first();
+            await expect(mismatch).toBeVisible({ timeout: 20_000 });
+            await tap(mismatch);
+            await tap(mismatch);
+            await expect.poll(text).toContain('false ? [][()]\nfalse ? [][()]');
+            await expect(page.getByText('✅')).toHaveCount(3, { timeout: 20_000 });
+        });
+    });
+}
 
 // Monaco's default hover background hardly differs from the editor's (1.09:1 dark, 1.11:1 light)
 const HOVER: { light: string; dark: string } = { light: '#e6d9f1 #8a78d0', dark: '#4a4160 #a99ae8' };

@@ -7,10 +7,15 @@ declare module 'monaco-editor/esm/vs/editor/edcore.main' {
 }
 
 // Monaco 0.34 gives inlay hints no CSS class of their own: their style is a generated rule that
-// _fillInColors fills in, which nelumbo-fields.ts extends with a border.
+// _fillInColors fills in, which nelumbo-fields.ts extends with a border. It also adds a double tap to the
+// double-click gesture of a hint.
 declare module 'monaco-editor/esm/vs/editor/contrib/inlayHints/browser/inlayHintsController.js' {
+    import type * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
     export class InlayHintsController {
+        _editor: monaco.editor.ICodeEditor;
         _fillInColors(props: Record<string, unknown>, hint: { kind?: number }): void;
+        _installDblClickGesture(updateInlayHints: () => void): monaco.IDisposable;
+        _getInlayHintLabelPart(e: { target: monaco.editor.IMouseTarget }): { item: { hint: monaco.languages.InlayHint } } | undefined;
     }
 }
 

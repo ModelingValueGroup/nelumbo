@@ -199,6 +199,43 @@ function keepInlayHintTextEdits(): void {
     };
 }
 
+// Monaco's tap on a touch screen (base/browser/touch.js); tapCount is 2 for a tap within 400 ms of the last
+interface GestureTap extends Event {
+    tapCount: number;
+    pageX:    number;
+    pageY:    number;
+}
+
+// A phone never fires the double-click: Monaco cancels the mouse events of a touch (Android) or gets only
+// pointer events, whose detail is always 0 (iOS). Monaco counts taps itself and sends them, without
+// bubbling, to the lines of the editor: a double tap on a result does what a double-click does.
+function acceptResultsByDoubleTap(): void {
+    const install: (updateInlayHints: () => void) => monaco.IDisposable = InlayHintsController.prototype._installDblClickGesture;
+    InlayHintsController.prototype._installDblClickGesture = function (this: InlayHintsController, updateInlayHints: () => void): monaco.IDisposable {
+        const click: monaco.IDisposable = install.call(this, updateInlayHints);
+        const lines: Element | null     = this._editor.getDomNode()!.querySelector('.lines-content');
+        const onTap: (e: Event) => void = (e: Event): void => {
+            const tap: GestureTap = e as GestureTap;
+            if (tap.tapCount !== 2) {
+                return;
+            }
+            const target: monaco.editor.IMouseTarget | null = this._editor.getTargetAtClientPoint(tap.pageX - window.scrollX, tap.pageY - window.scrollY);
+            const edits:  monaco.languages.TextEdit[] | undefined = target ? this._getInlayHintLabelPart({ target: target })?.item.hint.textEdits : undefined;
+            if (edits && edits.length > 0) {
+                this._editor.executeEdits('inlayHint.default', edits);
+                updateInlayHints();
+            }
+        };
+        lines!.addEventListener('-monaco-gesturetap', onTap);
+        return {
+            dispose: (): void => {
+                click.dispose();
+                lines!.removeEventListener('-monaco-gesturetap', onTap);
+            },
+        };
+    };
+}
+
 // monaco-languageclient 1.0.1 builds a workspace text edit in the old Monaco shape ({resource, edit,
 // modelVersionId}); Monaco 0.34 wants {resource, textEdit, versionId} and threw "Unsupported edit", so a
 // code action with an edit ("Insert the result as expected result") did nothing.
@@ -278,6 +315,7 @@ function ensureServices(): void {
     monaco.languages.setLanguageConfiguration(LANGUAGE_ID, { comments: { lineComment: '//', blockComment: ['/*', '*/'] } });
     borderInlayHints();
     keepInlayHintTextEdits();
+    acceptResultsByDoubleTap();
     fixWorkspaceTextEdits();
     resultsHoverAtTheirQuery();
     moveTokenAtTypedCharacter();
