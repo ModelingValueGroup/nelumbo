@@ -25,7 +25,7 @@ class StatsRecorderTest {
     private static final long MINUTE = 1_800_000_000_000L - 1_800_000_000_000L % 60_000;
 
     private static StatsSample sample(long time, int sessions, int running, long total, long overloaded, double cpu, long heap) {
-        return new StatsSample(time, sessions, running, total, overloaded, cpu, heap, 0, 0, 0, 0);
+        return new StatsSample(time, sessions, running, total, overloaded, cpu, heap, 0, 0, 0, 0, 0);
     }
 
     @Test
@@ -39,7 +39,7 @@ class StatsRecorderTest {
         List<MinuteStats> rows = history.rows(StatsHistory.Range.HOUR);
         assertEquals(1, rows.size(), "the second minute is still open");
         MinuteStats row = rows.get(0);
-        assertEquals(new MinuteStats(MINUTE, 4, 3, row.cpuAvg(), 0.6, 300, 10, 2, 0, 0, 0), row);
+        assertEquals(new MinuteStats(MINUTE, 4, 3, row.cpuAvg(), 0.6, 300, 10, 2, 0, 0, 0, 0), row);
         assertEquals(0.4, row.cpuAvg(), 1e-9);
         assertEquals(MINUTE + 65_000, recorder.latest().time());
         assertEquals(0, heard.size(), "record() does not broadcast; sampleNow() does");
@@ -50,13 +50,27 @@ class StatsRecorderTest {
         StatsHistory  history  = new StatsHistory(null, () -> MINUTE + 120_000);
         StatsRecorder recorder = new StatsRecorder(history, () -> null, s -> {
         });
-        recorder.record(new StatsSample(MINUTE + 5_000, 0, 0, 0, 0, 0, 0, 0, 3, 100, 10));
-        recorder.record(new StatsSample(MINUTE + 30_000, 0, 0, 0, 0, 0, 0, 0, 5, 300, 14));
-        recorder.record(new StatsSample(MINUTE + 65_000, 0, 0, 0, 0, 0, 0, 0, 4, 200, 15));
+        recorder.record(new StatsSample(MINUTE + 5_000, 0, 0, 0, 0, 0, 0, 0, 3, 100, 10, 0));
+        recorder.record(new StatsSample(MINUTE + 30_000, 0, 0, 0, 0, 0, 0, 0, 5, 300, 14, 0));
+        recorder.record(new StatsSample(MINUTE + 65_000, 0, 0, 0, 0, 0, 0, 0, 4, 200, 15, 0));
         MinuteStats row = history.rows(StatsHistory.Range.HOUR).get(0);
         assertEquals(5, row.solutionsMax());
         assertEquals(300, row.solutionBytesMax());
         assertEquals(4, row.saves());
+    }
+
+    @Test
+    void aMinuteRowCountsTheTimeouts() {
+        StatsHistory  history  = new StatsHistory(null, () -> MINUTE + 180_000);
+        StatsRecorder recorder = new StatsRecorder(history, () -> null, s -> {
+        });
+        recorder.record(new StatsSample(MINUTE + 5_000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2));
+        recorder.record(new StatsSample(MINUTE + 30_000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5));
+        recorder.record(new StatsSample(MINUTE + 65_000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6));
+        recorder.record(new StatsSample(MINUTE + 125_000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6));
+        List<MinuteStats> rows = history.rows(StatsHistory.Range.HOUR);
+        assertEquals(3, rows.get(0).timeouts());
+        assertEquals(1, rows.get(1).timeouts(), "counted from the previous minute's last value");
     }
 
     @Test

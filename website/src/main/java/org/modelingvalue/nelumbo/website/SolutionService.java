@@ -48,8 +48,8 @@ final class SolutionService {
     static final String SHARING_OFF = "Sharing is turned off";
 
     static final int  MAX_NAME_CHARS             = 40;
-    // JSON-escaped, so a loaded text always fits a 64 K /lsp frame (LspWebSocket.MAX_MESSAGE_CHARS)
-    static final int  MAX_TEXT_CHARS             = 32 * 1024;
+    // JSON-escaped, in UTF-8 bytes, so a loaded text always fits a 64 KB /lsp frame (LspWebSocket.MAX_MESSAGE_BYTES)
+    static final int  MAX_TEXT_BYTES             = 32 * 1024;
     static final long MAX_TOTAL_BYTES            = 100L * 1024 * 1024;
     static final int  SAVES_PER_BROWSER_PER_HOUR = 30;
     static final int  NEW_NAMES_PER_IP_PER_HOUR  = 200;
@@ -102,7 +102,7 @@ final class SolutionService {
         if (browserId == null || browserId.isBlank()) {
             return new Response(400, "Missing browser id");
         }
-        if (escapedLength(text) > MAX_TEXT_CHARS) {
+        if (escapedBytes(text) > MAX_TEXT_BYTES) {
             return new Response(413, "Not shared: too large (max 32 KB)");
         }
         if (words.inName(name) || words.inText(text)) {
@@ -169,9 +169,10 @@ final class SolutionService {
         return part.isEmpty() ? List.of() : List.of(part.split(":"));
     }
 
-    private int escapedLength(String text) {
+    // in UTF-8 bytes, as the /lsp frame cap counts: a character outside ASCII takes 2 to 4
+    private int escapedBytes(String text) {
         try {
-            return mapper.writeValueAsString(text).length() - 2;
+            return mapper.writeValueAsBytes(text).length - 2;
         } catch (JsonProcessingException e) {
             throw new UncheckedIOException(e);
         }

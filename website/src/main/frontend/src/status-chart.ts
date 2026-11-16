@@ -5,7 +5,7 @@ interface Stats {
     status:        string;
     time:          number;
     sessions:      { open: number; max: number };
-    evaluations:   { running: number; threshold: number; total: number; overloaded: number };
+    evaluations:   { running: number; threshold: number; total: number; overloaded: number; timedOut: number };
     cpu:           { load: number; cpus: number };
     heap:          { usedMb: number; maxMb: number };
     uptimeSeconds: number;
@@ -21,6 +21,7 @@ interface Point {
     heapMaxMb:   number;
     evaluations:      number | null;
     overloads:        number | null;
+    timeouts:         number | null;
     solutionsMax:     number;
     solutionBytesMax: number;
     saves:            number | null;
@@ -128,6 +129,7 @@ function showStats(s: Stats): void {
     set('running', s.evaluations.running + ' (overloaded at ' + s.evaluations.threshold + ')');
     set('total', String(s.evaluations.total));
     set('overloaded', String(s.evaluations.overloaded));
+    set('timed-out', String(s.evaluations.timedOut));
     set('solutions', String(s.solutions.count));
     set('solution-disk', (s.solutions.bytes / MB).toFixed(1) + ' MB of ' + Math.round(s.solutions.maxBytes / MB) + ' MB');
     set('cpu', Math.round(s.cpu.load * 100) + '% of ' + s.cpu.cpus + ' cores');
@@ -142,7 +144,7 @@ function showStats(s: Stats): void {
 function showUnreachable(): void {
     el('status').className = '';
     set('status', 'unreachable');
-    for (const id of ['sessions', 'running', 'total', 'overloaded', 'cpu', 'heap', 'uptime']) {
+    for (const id of ['sessions', 'running', 'total', 'overloaded', 'timed-out', 'cpu', 'heap', 'uptime']) {
         set(id, '-');
     }
 }
@@ -207,7 +209,7 @@ function series(): (Point | null)[] {
     // in the hour view the latest live sample extends the lines to now
     if (range === 'hour' && latest !== null) {
         points.push({ t: latest.time, sessionsMax: latest.sessions.open, runningMax: latest.evaluations.running, cpuAvg: latest.cpu.load,
-                      cpuMax: latest.cpu.load, heapMaxMb: latest.heap.usedMb, evaluations: null, overloads: null,
+                      cpuMax: latest.cpu.load, heapMaxMb: latest.heap.usedMb, evaluations: null, overloads: null, timeouts: null,
                       solutionsMax: latest.solutions.count, solutionBytesMax: latest.solutions.bytes, saves: null });
     }
     return points;
@@ -386,7 +388,7 @@ function draw(): void {
         val((p: Point): number | null => p.cpuAvg * 100), val((p: Point): number | null => p.cpuMax * 100),
         val(rate),
         val((p: Point): number | null => p.sessionsMax), val((p: Point): number | null => p.runningMax),
-        val((p: Point): number | null => p.overloads), val((p: Point): number | null => p.saves),
+        val((p: Point): number | null => p.overloads), val((p: Point): number | null => p.timeouts), val((p: Point): number | null => p.saves),
         val((p: Point): number | null => p.solutionsMax),
         val((p: Point): number | null => p.solutionBytesMax / MB), val((): number | null => limitMb()),
     ];
@@ -429,6 +431,7 @@ function build(data: uPlot.AlignedData): void {
             { label: 'Sessions', scale: 'activity', stroke: css('--series-1'), width: 2 },
             { label: 'Evaluations running', scale: 'activity', stroke: css('--series-2'), width: 2 },
             { label: 'Stopped (busy)', scale: 'activity', stroke: css('--series-3'), width: 2 },
+            { label: 'Timed out', scale: 'activity', stroke: css('--series-5'), width: 2 },
             { label: 'Shares', scale: 'activity', stroke: solution, width: 2 },
             { label: 'Shared solutions', scale: 'solutions', stroke: solution, width: 2 },
             { label: 'On disk', scale: 'disk', stroke: solution, width: 2,
@@ -454,7 +457,7 @@ function fillTable(): void {
     const body: HTMLElement = el('history-table').querySelector('tbody') as HTMLElement;
     const rows: string[]    = history.slice().reverse().map((p: Point): string =>
         '<tr><td>' + dateTime(p.t) + '</td><td>' + Math.round(p.cpuAvg * 100) + '%</td><td>' + Math.round(p.cpuMax * 100)
-        + '%</td><td>' + p.sessionsMax + '</td><td>' + p.runningMax + '</td><td>' + p.overloads + '</td><td>' + p.evaluations
+        + '%</td><td>' + p.sessionsMax + '</td><td>' + p.runningMax + '</td><td>' + p.overloads + '</td><td>' + p.timeouts + '</td><td>' + p.evaluations
         + '</td><td>' + fixed(rate(p)) + '</td><td>' + p.saves + '</td><td>' + p.solutionsMax + '</td><td>' + (p.solutionBytesMax / MB).toFixed(1) + '</td></tr>');
     body.innerHTML = rows.join('');
 }

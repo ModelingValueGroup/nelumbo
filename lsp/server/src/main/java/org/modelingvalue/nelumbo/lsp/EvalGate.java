@@ -36,6 +36,7 @@ public final class EvalGate {
     private final AtomicInteger running    = new AtomicInteger();
     private final AtomicLong    total      = new AtomicLong();
     private final AtomicLong    overloaded = new AtomicLong();
+    private final AtomicLong    timedOut   = new AtomicLong();
 
     // threshold 0 means always busy; a budget below 1 ms would mean no deadline at all, so it is raised to 1
     public EvalGate(int threshold, long budgetMs) {
@@ -57,6 +58,11 @@ public final class EvalGate {
         overloaded.incrementAndGet();
     }
 
+    // an evaluation stopped by the workspace deadline (not by the overload budget)
+    public void recordTimeout() {
+        timedOut.incrementAndGet();
+    }
+
     public int threshold() {
         return threshold;
     }
@@ -75,5 +81,9 @@ public final class EvalGate {
 
     public long overloaded() {
         return overloaded.get();
+    }
+
+    public long timedOut() {
+        return timedOut.get();
     }
 }

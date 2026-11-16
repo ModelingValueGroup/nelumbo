@@ -36,6 +36,7 @@ final class StatsRecorder implements AutoCloseable {
     private long                        baseTotal      = -1;
     private long                        baseOverloaded = -1;
     private long                        baseSaves      = -1;
+    private long                        baseTimedOut   = -1;
     private volatile StatsSample        latest;
 
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
@@ -103,10 +104,12 @@ final class StatsRecorder implements AutoCloseable {
                 increase(baseOverloaded >= 0 ? baseOverloaded : first.overloaded(), last.overloaded()),
                 bucket.stream().mapToInt(StatsSample::solutions).max().orElse(0),
                 bucket.stream().mapToLong(StatsSample::solutionBytes).max().orElse(0),
-                increase(baseSaves >= 0 ? baseSaves : first.saves(), last.saves()));
+                increase(baseSaves >= 0 ? baseSaves : first.saves(), last.saves()),
+                increase(baseTimedOut >= 0 ? baseTimedOut : first.timedOut(), last.timedOut()));
         baseTotal      = last.total();
         baseOverloaded = last.overloaded();
         baseSaves      = last.saves();
+        baseTimedOut   = last.timedOut();
         bucket.clear();
         return row;
     }

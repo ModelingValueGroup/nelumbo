@@ -47,6 +47,9 @@ public class EvalGateTest {
         gate.recordOverload();
         gate.recordOverload();
         assertEquals(2, gate.overloaded());
+        gate.recordTimeout();
+        assertEquals(1, gate.timedOut());
+        assertEquals(2, gate.overloaded(), "timeouts are counted apart");
         assertEquals(2000, gate.budgetMs());
         assertEquals(4, gate.threshold());
     }

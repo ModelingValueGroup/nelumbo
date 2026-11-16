@@ -90,18 +90,6 @@ Already there (CLAUDE.md):
 - Shared solutions: by name, kept 7 days, no public list (admins see them, with the sharer's IP, on `/admin`).
 - `import` resolves from the jar (CLI) or the stdlib: there is no way yet to import a module from elsewhere.
 
-### Stats do not show timed-out evaluations
-
-Status: todo (2026-11-12). During the workshop the status page showed no "Stopped (busy)" evaluations, while people saw the timeout message in the editor.
-
-Found (code read, 2026-11-12):
-- "Stopped (busy)" is `EvalGate.overloaded`, raised by `gate.recordOverload()` in `QueryResultCache` only when the evaluation ran under the short overload budget (`overloadBudget`).
-- A timeout at the normal workspace deadline gives an ERROR result and is counted nowhere.
-
-To do:
-- [ ] Count timeouts at the workspace deadline too (a counter of its own next to `overloaded`), in `/stats`, the history and the status charts.
-- [ ] Check the text the editor shows for each of the two cases.
-
 ### AI on the website
 
 Status: todo (2026-11-12). Find a way to use AI on nelumbo.nl.
@@ -152,27 +140,10 @@ Find out:
 - [ ] In which editor (website, IntelliJ, Eclipse, VS Code, Swing editor)?
 - [ ] A text and a sequence of edits that reproduce it.
 
-### Full Unicode in names, operators and patterns
+### Unicode names that look the same but differ
 
-Status: todo (2026-11-10). Allow the full Unicode character set wherever it is useful.
+Status: open (2026-11-16). Unicode names and operators work since 2026-11-16 (`TokenType`, `docs/reference/lang/index.md`); left over:
 
-Current state (CLI probe, 2026-11-10):
-- `TokenType`: `NAME` is `[a-zA-Z_][0-9a-zA-Z_]*`, `OPERATOR` is `(?!//)[~!@#$%^&*=+|:<>.?/-]+`. Any other character becomes an `ERROR` token.
-- Patterns use the same tokenizer: `Person ::= Zoë` gives "Unexpected token 'ë'", `<Person> ♥ <Person>` gives "Unexpected token '♥'".
-- Strings already accept any character.
-
-Change:
-- [ ] `src/main/java/org/modelingvalue/nelumbo/syntax/TokenType.java`: `NAME`, `OPERATOR`
-- [ ] `lang/lang.nl` and `docs/reference/lang/index.md`: the token regexes in the comments and the table
-- [ ] Tests for names, operators and pattern words with non-ASCII characters
-
-Decide:
-- [ ] Names: Unicode letters, digits and marks (`\p{L}`, `\p{N}`, `\p{M}`), following Unicode's identifier rules (UAX #31)?
-- [ ] Operators: math symbols (`\p{Sm}`: `≤ ≠ ∧ ∨ ¬ ∀ ∃ →`) and other symbols (`\p{So}`: `♥`, emoji)? `\p{Sm}` also contains `+ < = > | ~`.
-- [ ] Normalization: `ë` is one code point or `e` plus a combining mark. Without NFC before tokenizing, two names that look the same differ.
-- [ ] Lookalikes: Cyrillic `а` vs Latin `a`. Accept, or warn about mixed scripts?
-- [ ] Digits: digits of other scripts in `NUMBER`, or ASCII only?
-
-Check:
-- [ ] Positions: Java and LSP count UTF-16 units, and a character outside the BMP (most emoji) takes two. Check CLI `file:line:col`, LSP ranges, semantic tokens and inlay hints.
-- [ ] Every reader and writer uses UTF-8: CLI files and stdin, LSP, website `/eval`, editor, `PreferenceText`, the docs highlighter.
+- [ ] Normalization: `ë` is one code point or `e` plus a combining mark; both are names, but different ones. NFC before tokenizing would shift every position after it (LSP ranges, semantic tokens), so it needs a token text apart from its source length.
+- [ ] Lookalikes: Cyrillic `а` vs Latin `a`. Accepted for now; warn about mixed scripts?
+- [ ] CLI `file:line:col` counts UTF-16 units, as LSP does: after an emoji the column is one more than the characters a person counts.

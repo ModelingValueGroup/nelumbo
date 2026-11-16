@@ -73,6 +73,13 @@ class SolutionServiceTest {
     }
 
     @Test
+    void theSizeIsMeasuredInUtf8Bytes() {
+        // UTF-8 bytes, as the /lsp frame cap counts: 11 K chars of 3 bytes each are 33 KB
+        assertEquals(200, service.save("a", "\u6771".repeat(10 * 1024), "b1", "1.1.1.1").status());
+        assertEquals(413, service.save("b", "\u6771".repeat(11 * 1024), "b1", "1.1.1.1").status());
+    }
+
+    @Test
     void blockedWordsAreRefusedInNameAndText() {
         assertEquals(new SolutionService.Response(422, "Not shared: contains a blocked word"), service.save("Kut", "x", "b1", "1.1.1.1"));
         assertEquals(422, service.save("Frits", "fact kut(A)", "b1", "1.1.1.1").status());

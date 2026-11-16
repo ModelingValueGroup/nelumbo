@@ -181,6 +181,8 @@ public class LiveQueryResultsTest {
         awaitResults(documents.queryResultCache(), URI, 2, 15);
         assertEquals("\u274c evaluation took too long (over 1 s)", labels(URI).get(1), "the slow query: " + labels(URI));
         assertEquals("[(x=120)][..]", labels(URI).get(2), "the fast query: " + labels(URI));
+        assertEquals(1, gate.timedOut(), "the timeout is counted, for the stats");
+        assertEquals(0, gate.overloaded(), "a timeout at the workspace deadline is no overload");
     }
 
     @Test

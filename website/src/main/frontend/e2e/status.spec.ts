@@ -60,10 +60,12 @@ test('the stats are one graph with five lanes', async ({ page }: { page: Page })
     const ids: string[] = await page.locator('#panel-stats [id^="chart-"]').evaluateAll((els: Element[]): string[] => els.map((e: Element): string => e.id));
     expect(ids).toEqual(['chart-stats']);
     const legend: Locator = page.locator('#chart-stats .u-legend');
-    for (const label of ['CPU avg', 'Evaluations/s', 'Sessions', 'Shared solutions', 'On disk']) {
+    for (const label of ['CPU avg', 'Evaluations/s', 'Sessions', 'Timed out', 'Shared solutions', 'On disk']) {
         await expect(legend).toContainText(label);
     }
     await expect(page.locator('#history-table thead')).toContainText('Eval/s');
+    await expect(page.locator('#history-table thead')).toContainText('Timed out');
+    await expect(page.locator('#timed-out')).toHaveText(/^\d+$/, { timeout: 10_000 });
 });
 
 type Night = [number, number];

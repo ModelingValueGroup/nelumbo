@@ -99,7 +99,7 @@ public class TokenizerTest extends NelumboTestBase {
 
     @Test
     public void tokenizerComment2Test() {
-        String example = "<a/*a*/>•a";
+        String example = "<a/*a*/>`a";
 
         TokenizerResult result = new Tokenizer(example, "tokenizerCommentTest").tokenize();
         List<Token> tokens = result.list();
@@ -241,6 +241,76 @@ public class TokenizerTest extends NelumboTestBase {
         assertEquals(3, all.size(), "wrong number of tokens for '+-*/'");
         assertEqualsToken(0, 0, all, 1, TokenType.OPERATOR);
         assertEquals("+-*/", all.get(1).text(), "mixed operators should be single token");
+    }
+
+    @Test
+    public void unicodeLettersMakeNames() {
+        // Zoe and Mueller with their accents, a Japanese and a Greek name, Zoe with a combining diaeresis, x with an
+        // Arabic-Indic digit
+        String input = "Zo\u00eb M\u00fcller \u6771\u4eac \u0395\u03bb\u03bb\u03ac\u03b4\u03b1 Zoe\u0308 x\u0663 _a1";
+        assertEquals("BEGINOFFILE NAME HSPACE NAME HSPACE NAME HSPACE NAME HSPACE NAME HSPACE NAME HSPACE NAME ENDOFFILE", types(input));
+        List<Token> all = tokenizeAll(input);
+        assertEquals("Zoe\u0308", all.get(9).text());
+        assertEqualsToken(0, 21, all, 9, TokenType.NAME);
+    }
+
+    @Test
+    public void unicodeSymbolsMakeOperators() {
+        // a heart, less-or-equal, an emoji outside the BMP, a red heart with its variation selector, a superscript two,
+        // a family emoji joined by zero-width joiners, a flag of two regional indicators
+        String input = "a\u2665b \u2264 c \ud83d\ude00 d \u2764\ufe0f e\u00b2 \ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67 \ud83c\uddf3\ud83c\uddf1";
+        assertEquals("BEGINOFFILE NAME OPERATOR NAME HSPACE OPERATOR HSPACE NAME HSPACE OPERATOR HSPACE NAME HSPACE OPERATOR HSPACE NAME OPERATOR"
+                + " HSPACE OPERATOR HSPACE OPERATOR ENDOFFILE", types(input));
+        List<Token> all = tokenizeAll(input);
+        assertEquals("\u2764\ufe0f", all.get(13).text());
+        assertEquals("\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67", all.get(18).text());
+    }
+
+    @Test
+    public void invisibleFormatCharactersAreSpace() {
+        // a byte order mark, a zero-width space, a soft hyphen and a left-to-right mark
+        assertEquals("BEGINOFFILE HSPACE NAME HSPACE NAME HSPACE NAME HSPACE NAME ENDOFFILE", types("\ufeffa\u200bb\u00adc\u200ed"));
+    }
+
+    @Test
+    public void onlyTheLineBreaksOfTheEditorsAreNewlines() {
+        // line separator, paragraph separator, next line, vertical tab and form feed: editors and LSP show them on one line
+        List<Token> all = tokenizeAll("a\u2028b\u2029c\u0085d\u000Be\ff\r\ng\rh\ni");
+        assertEquals("BEGINOFFILE NAME HSPACE NAME HSPACE NAME HSPACE NAME HSPACE NAME HSPACE NAME NEWLINE NAME NEWLINE NAME NEWLINE NAME ENDOFFILE",
+                all.map(t -> t.type().name()).collect(Collectors.joining(" ")));
+        assertEqualsToken(0, 10, all, 11, TokenType.NAME);
+        assertEqualsToken(1, 0, all, 13, TokenType.NAME);
+        assertEquals("BEGINOFFILE END_LINE_COMMENT ENDOFFILE", types("// a\u2028b"), "a comment ends only at a line break");
+    }
+
+    @Test
+    public void positionsCountUtf16UnitsAsLsp() {
+        List<Token> all = tokenizeAll("\"\ud83d\ude00\" x");
+        assertEqualsToken(0, 5, all, 3, TokenType.NAME);
+    }
+
+    @Test
+    public void unicodeNamesAndOperatorsParseAndEvaluate() {
+        testString("""
+                import nelumbo.logic
+                import nelumbo.strings
+
+                Person  :: Object
+                Person  ::= Zo\u00eb, M\u00fcller, \u6771\u4eac
+                Boolean ::= <Person> \u2665 <Person> #30,
+                            <Person> \ud83d\ude00 <Person> #30
+                Person  p
+
+                fact Zo\u00eb \u2665 M\u00fcller, \u6771\u4eac \ud83d\ude00 Zo\u00eb
+
+                Zo\u00eb \u2665 p ? [(p=M\u00fcller),..][..]
+                \u6771\u4eac \ud83d\ude00 Zo\u00eb ? [()][]
+                len("Zo\u00eb \ud83d\ude00") ? [(5)][..]
+                """, "unicodeNamesAndOperators");
+    }
+
+    private static String types(String input) {
+        return tokenizeAll(input).map(t -> t.type().name()).collect(Collectors.joining(" "));
     }
 
     private static List<Token> tokenizeAll(String input) {

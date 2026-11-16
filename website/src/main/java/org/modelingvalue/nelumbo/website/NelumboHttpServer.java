@@ -144,7 +144,7 @@ public final class NelumboHttpServer {
             });
             // make the 64 KB text-frame limit explicit (Jetty's default is the same size, but do not rely on it)
             config.jetty.modifyWebSocketServletFactory(factory ->
-                    factory.setMaxTextMessageSize(LspWebSocket.MAX_MESSAGE_CHARS));
+                    factory.setMaxTextMessageSize(LspWebSocket.MAX_MESSAGE_BYTES));
             // before-handlers run for every method (also HEAD, which skips the GET handler): a non-admin gets exactly the 404 of an unknown route
             config.routes.before("/admin", this::guardAdmin);
             config.routes.before("/admin/*", this::guardAdmin);

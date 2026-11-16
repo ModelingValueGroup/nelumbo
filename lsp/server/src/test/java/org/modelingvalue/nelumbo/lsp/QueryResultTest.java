@@ -39,6 +39,14 @@ public class QueryResultTest {
     }
 
     @Test
+    public void theCapKeepsAnEmojiWhole() {
+        // the cut after 47 chars falls inside the emoji (chars 47 and 48, a surrogate pair)
+        String full  = "x".repeat(46) + "\ud83d\ude00" + "y".repeat(10);
+        String label = QueryResult.result(full, -1).inlineLabel();
+        assertEquals("x".repeat(46) + "...", label, "no half emoji (it would show as '?')");
+    }
+
+    @Test
     public void matchShowsCheckmarkAndOnlyTheTime() {
         QueryResult r = QueryResult.match("[()][]", 1234567);
         assertEquals("✅", r.inlineLabel());

@@ -27,7 +27,7 @@ final class LspWebSocket {
     static final int      CLOSE_MESSAGE_TOO_BIG   = 1009;
     static final int      CLOSE_PROTOCOL_ERROR    = 1002;
     static final int      CLOSE_INTERNAL_ERROR    = 1011;
-    static final int      MAX_MESSAGE_CHARS       = 64 * 1024;
+    static final int      MAX_MESSAGE_BYTES       = 64 * 1024;
     static final Duration IDLE_TIMEOUT            = Duration.ofMinutes(10);
 
     private final KnowledgeBase          baseKb;
@@ -73,8 +73,9 @@ final class LspWebSocket {
             if (bridge == null) {
                 return; // session was rejected or bridge not yet ready
             }
-            // defense-in-depth: Jetty already rejects oversized frames (maxTextMessageSize set in NelumboHttpServer)
-            if (ctx.message().length() > MAX_MESSAGE_CHARS) {
+            // defense-in-depth: Jetty already rejects oversized frames (maxTextMessageSize set in NelumboHttpServer, in
+            // UTF-8 bytes); a message has at most as many chars as bytes
+            if (ctx.message().length() > MAX_MESSAGE_BYTES) {
                 ctx.closeSession(CLOSE_MESSAGE_TOO_BIG, "message too large");
                 return;
             }

@@ -426,7 +426,7 @@ class NelumboHttpServerTest {
         assertTrue(List.of("ok", "busy", "overloaded").contains(stats.get("status").asText()), "status is ok, busy or overloaded");
         assertEquals(0, stats.get("sessions").get("open").asInt(), "no LSP session is open in this test");
         assertEquals(NelumboHttpServer.DEFAULT_MAX_LSP_SESSIONS, stats.get("sessions").get("max").asInt());
-        for (String field : List.of("running", "threshold", "total", "overloaded")) {
+        for (String field : List.of("running", "threshold", "total", "overloaded", "timedOut")) {
             assertTrue(stats.get("evaluations").has(field), "evaluations." + field);
         }
         assertTrue(stats.get("cpu").has("load"), "cpu.load");

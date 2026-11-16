@@ -13,11 +13,11 @@
 <style>
   :root { --bg: #1b1d23; --panel: #23262e; --text: #e6e8ee; --muted: #9aa0ac; --accent: #c184d8; --grid: #343843;
           --border: #343843; --faint: #5c6270; --accent-soft: #edd4e8; color-scheme: dark;
-          --series-cpu: #9085e9; --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500;
+          --series-cpu: #9085e9; --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500; --series-5: #d55181;
           --night: #17191e; }
   [data-theme="light"] { --bg: #fbfafc; --panel: #f2eff5; --text: #1f1b24; --muted: #6b6475; --accent: #9246b0; --grid: #e0dbe6;
           --border: #e0dbe6; --faint: #958e9e; --accent-soft: #74358f; color-scheme: light;
-          --series-cpu: #4a3aa7; --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --series-4: #eda100;
+          --series-cpu: #4a3aa7; --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --series-4: #eda100; --series-5: #e87ba4;
           --night: #e4e0e9; }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 "Instrument Sans", system-ui, sans-serif; }
@@ -125,6 +125,7 @@
       <dt>Evaluations running</dt> <dd id="running">-</dd>
       <dt>Evaluations total</dt>   <dd id="total">-</dd>
       <dt>Stopped (busy)</dt>      <dd id="overloaded">-</dd>
+      <dt>Timed out</dt>           <dd id="timed-out">-</dd>
       <dt>Shared solutions</dt>    <dd id="solutions">-</dd>
       <dt>Solutions on disk</dt>   <dd id="solution-disk">-</dd>
       <dt>CPU</dt>                 <dd id="cpu">-</dd>
@@ -145,7 +146,7 @@
       <summary>Data table</summary>
       <div class="table-wrap">
         <table id="history-table">
-          <thead><tr><th>Time</th><th>CPU avg</th><th>CPU max</th><th>Sessions</th><th>Running</th><th>Stopped</th><th>Evaluations</th><th>Eval/s</th><th>Shares</th><th>Shared</th><th>Disk MB</th></tr></thead>
+          <thead><tr><th>Time</th><th>CPU avg</th><th>CPU max</th><th>Sessions</th><th>Running</th><th>Stopped</th><th>Timed out</th><th>Evaluations</th><th>Eval/s</th><th>Shares</th><th>Shared</th><th>Disk MB</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>

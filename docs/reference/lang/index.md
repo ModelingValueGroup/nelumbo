@@ -37,9 +37,9 @@ LEFT          :: NATIVE     // [\(\[\{]
 RIGHT         :: NATIVE     // [\)\]\}]
 STRING        :: NATIVE     // "([^"\\]|\\[\s\S])*"
 NUMBER        :: NATIVE     // [0-9]+
-NAME          :: NATIVE     // [a-zA-Z_][0-9a-zA-Z_]*
-OPERATOR      :: NATIVE     // (?!//)[~!@#$%^&*=+|:<>.?/-]+
-NEWLINE       :: NATIVE     // \R
+NAME          :: NATIVE     // [\p{L}\p{Nl}_][\p{L}\p{Nl}\p{Mn}\p{Mc}\p{Nd}\p{Pc} ZWNJ ZWJ]*
+OPERATOR      :: NATIVE     // (?!//)[~!@#$%^&*=+|:<>.?/- non-ASCII \p{S}\p{P}\p{No}]+ with marks, ZWJ and tags inside
+NEWLINE       :: NATIVE     // \r\n|[\n\r]
 BEGINOFFILE   :: NATIVE
 ENDOFFILE     :: NATIVE
 ```
@@ -55,11 +55,13 @@ Each `:: NATIVE` declares a token type produced by the tokenizer. The comment th
 | `RIGHT`       | `)`, `]`, or `}`                                          |
 | `STRING`      | a double-quoted string with backslash escapes             |
 | `NUMBER`      | one or more decimal digits — an unsigned integer          |
-| `NAME`        | an identifier — letter / underscore, then alphanumerics    |
-| `OPERATOR`    | one or more operator characters (`! @ # $ % ^ & * = + \| : < > . ? / -`), but not starting with `//` |
-| `NEWLINE`     | a line terminator                                         |
+| `NAME`        | an identifier — a letter of any script or `_`, then letters, digits of any script, combining marks and `_` (`Zoë`, `東京`, `x1`) |
+| `OPERATOR`    | one or more operator characters (`! @ # $ % ^ & * = + \| : < > . ? / -`) or non-ASCII symbols, punctuation and superscripts (`≤`, `♥`, `²`, emoji), but not starting with `//` |
+| `NEWLINE`     | a line break: `\n`, `\r\n` or `\r`                        |
 | `BEGINOFFILE` | synthetic token at the start of input                     |
 | `ENDOFFILE`   | synthetic token at the end of input                       |
+
+Between tokens, spaces include tabs, every Unicode space, the other Unicode line separators (editors show them on one line) and invisible format characters (a byte order mark, zero-width space, soft hyphen, direction marks). `NUMBER` takes ASCII digits only. Names are compared as written: `Zoë` typed as one character and as `e` plus a combining diaeresis are two different names.
 
 These names are visible to user code wherever a lexical-token hole is expected: `<NUMBER>`, `<STRING>`, `<NAME>`, `<OPERATOR>`, `<LEFT>`, `<RIGHT>`, `<COMMA>`, etc. See [`built-in-tokens.md`](built-in-tokens.md) for how they are used in user-facing pattern declarations.
 

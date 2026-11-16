@@ -187,6 +187,7 @@ public class EmbeddedServerTest {
             }
             assertEquals(0, gate.running(), "the gate is released after the overloaded evaluation");
             assertEquals(1, gate.overloaded(), "the overload is counted once");
+            assertEquals(0, gate.timedOut(), "an overload is no timeout");
         } finally {
             server.getWorkspace().dispose();
         }

@@ -61,7 +61,8 @@ public final class Strings extends Predicate {
             return unknown();
         }
         if (string != null) {
-            BigInteger actual = BigInteger.valueOf(string.value().length());
+            // characters, not UTF-16 units: an emoji outside the BMP counts once
+            BigInteger actual = BigInteger.valueOf(string.value().codePointCount(0, string.value().length()));
             if (length != null) {
                 return length.value().equals(actual) ? factCC() : falsehoodCC();
             }

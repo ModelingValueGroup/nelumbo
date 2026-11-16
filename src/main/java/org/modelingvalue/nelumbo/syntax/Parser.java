@@ -16,6 +16,7 @@ package org.modelingvalue.nelumbo.syntax;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
@@ -40,7 +41,7 @@ public final class Parser implements ParseExceptionHandler {
                 throw new ParseException("Nelumbo resource " + fileName + " does not exist", fileName);
             }
             InputStream buffer = new BufferedInputStream(stream);
-            String base = new String(buffer.readAllBytes());
+            String base = new String(buffer.readAllBytes(), StandardCharsets.UTF_8);
             return new Parser(new Tokenizer(base, fileName).tokenize()).parseEvaluate().roots();
         } catch (IOException e) {
             throw new ParseException(e, "IOException during parse", fileName);

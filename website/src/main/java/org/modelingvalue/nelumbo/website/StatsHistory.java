@@ -132,7 +132,8 @@ class StatsHistory {
                 bucket.stream().mapToLong(MinuteStats::overloads).sum(),
                 bucket.stream().mapToInt(MinuteStats::solutionsMax).max().orElse(0),
                 bucket.stream().mapToLong(MinuteStats::solutionBytesMax).max().orElse(0),
-                bucket.stream().mapToLong(MinuteStats::saves).sum());
+                bucket.stream().mapToLong(MinuteStats::saves).sum(),
+                bucket.stream().mapToLong(MinuteStats::timeouts).sum());
     }
 
     private void append(MinuteStats row) {

@@ -67,7 +67,8 @@ public class DocumentSemanticTokensFullService extends DocumentServiceAdapter {
                 int           firstLineNum      = token.line();
                 int           firstCharPosition = token.position();
 
-                String[] tokenLines = token.text().split("\\R");
+                // the line breaks of LSP and the tokenizer, not every Unicode one (\R)
+                String[] tokenLines = token.text().split("\\r\\n|[\\n\\r]");
                 for (int index = 0; index < tokenLines.length; index++) {
                     String tokenLine = tokenLines[index];
 

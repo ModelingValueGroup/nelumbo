@@ -300,6 +300,8 @@ public class QueryResultCache {
                 gate.recordOverload();
                 slot.state = State.RETRYING;
                 retryLater(slot);
+            } else if (outcome.timedOut()) {
+                gate.recordTimeout();
             }
             request(slot.uri);
         }

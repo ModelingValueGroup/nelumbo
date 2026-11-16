@@ -160,6 +160,13 @@ public record QueryResult(Kind kind, String inferred, String message, Range expe
     }
 
     private static String cap(String s) {
-        return s.length() <= MAX_LABEL_LENGTH ? s : s.substring(0, MAX_LABEL_LENGTH - 3) + "...";
+        if (s.length() <= MAX_LABEL_LENGTH) {
+            return s;
+        }
+        int end = MAX_LABEL_LENGTH - 3;
+        if (Character.isHighSurrogate(s.charAt(end - 1))) {
+            end--; // keep a surrogate pair (an emoji) whole
+        }
+        return s.substring(0, end) + "...";
     }
 }

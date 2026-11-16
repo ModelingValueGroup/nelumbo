@@ -48,7 +48,7 @@ Integer ::=  len(<String>),
 |---|---|---|---|
 | `<String> + <String>`  | 40   | `String`  | concatenation                 |
 | `str(<Integer>)`       | —    | `String`  | format an integer as decimal  |
-| `len(<String>)`        | —    | `Integer` | string length                 |
+| `len(<String>)`        | —    | `Integer` | string length in characters (an emoji counts once) |
 | `int(<String>)`        | —    | `Integer` | parse a digit string          |
 
 All four reduce to three private native predicates:

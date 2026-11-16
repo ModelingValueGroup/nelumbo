@@ -6,9 +6,9 @@ LEFT        :: NATIVE // [\(\[\{]
 RIGHT       :: NATIVE // [\)\]\}]
 STRING      :: NATIVE // "([^"\\]|\\[\s\S])*"
 NUMBER      :: NATIVE // [0-9]+
-NAME        :: NATIVE // [a-zA-Z_][0-9a-zA-Z_]*
-OPERATOR    :: NATIVE // (?!//)[~!@#$%^&*=+|:<>.?/-]+
-NEWLINE     :: NATIVE // \R
+NAME        :: NATIVE // [\p{L}\p{Nl}_][\p{L}\p{Nl}\p{Mn}\p{Mc}\p{Nd}\p{Pc} ZWNJ ZWJ]*
+OPERATOR    :: NATIVE // (?!//)[~!@#$%^&*=+|:<>.?/- non-ASCII \p{S}\p{P}\p{No}]+ with marks, ZWJ and tags inside
+NEWLINE     :: NATIVE // \r\n|[\n\r]
 BEGINOFFILE :: NATIVE
 ENDOFFILE   :: NATIVE
 

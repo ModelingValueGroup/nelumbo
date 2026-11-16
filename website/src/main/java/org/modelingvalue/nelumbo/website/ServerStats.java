@@ -34,7 +34,7 @@ final class ServerStats {
         Runtime               runtime = Runtime.getRuntime();
         return new StatsSample(System.currentTimeMillis(), openSessions, gate.running(), gate.total(), gate.overloaded(),
                 cpuLoad(os.getProcessCpuLoad()), (runtime.totalMemory() - runtime.freeMemory()) >> 20,
-                ManagementFactory.getRuntimeMXBean().getUptime() / 1000, solutions.solutions(), solutions.bytes(), solutions.saves());
+                ManagementFactory.getRuntimeMXBean().getUptime() / 1000, solutions.solutions(), solutions.bytes(), solutions.saves(), gate.timedOut());
     }
 
     static Map<String, Object> json(StatsSample sample, int maxSessions, EvalGate gate) {
@@ -43,7 +43,8 @@ final class ServerStats {
         stats.put("status", status(sample.running(), gate.threshold(), sample.cpuLoad()));
         stats.put("time", sample.time());
         stats.put("sessions", Map.of("open", sample.sessions(), "max", maxSessions));
-        stats.put("evaluations", Map.of("running", sample.running(), "threshold", gate.threshold(), "total", sample.total(), "overloaded", sample.overloaded()));
+        stats.put("evaluations", Map.of("running", sample.running(), "threshold", gate.threshold(), "total", sample.total(), "overloaded", sample.overloaded(),
+                "timedOut", sample.timedOut()));
         stats.put("cpu", Map.of("load", sample.cpuLoad(), "cpus", runtime.availableProcessors()));
         stats.put("heap", Map.of("usedMb", sample.heapUsedMb(), "maxMb", runtime.maxMemory() >> 20));
         stats.put("solutions", Map.of("count", sample.solutions(), "bytes", sample.solutionBytes(), "maxBytes", SolutionService.MAX_TOTAL_BYTES, "saves", sample.saves()));

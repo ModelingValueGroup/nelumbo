@@ -246,7 +246,9 @@ public final class NelumboCli {
             if (trace) {
                 addTraceStub(out);
             }
-            System.out.println(Json.toJson(out));
+            // JSON is UTF-8 whatever the locale: System.out would write a non-ASCII character as '?' under LANG=C
+            System.out.writeBytes((Json.toJson(out) + System.lineSeparator()).getBytes(StandardCharsets.UTF_8));
+            System.out.flush();
         } else if (trace) {
             System.out.println("trace: not-implemented");
         }

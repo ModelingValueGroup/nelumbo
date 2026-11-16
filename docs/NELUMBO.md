@@ -502,7 +502,7 @@ A whole language from given facts and questions
 
 Early stage: breaking changes are likely.
 
-Recently added: generics, lists and sets, transformations, the web editor.
+Recently added: generics, lists and sets, transformations, the web editor, Unicode names and operators.
 
 On the roadmap:
 
@@ -511,7 +511,6 @@ On the roadmap:
 * Private import
 * External DSLs
 * Deprecation and migration support
-* Full Unicode in names, operators and patterns
 
 ---
 
