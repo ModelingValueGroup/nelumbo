@@ -385,4 +385,30 @@ public class RegressionTest extends NelumboTestBase {
         assertTrue(result.ok());
     }
 
+    // Type variables of a parsed node (the element type of [] and {}) are coerced
+    // to the types they are matched with (were bugs/empty-list-and-set-in-list-errors.nl,
+    // bugs/empty-collection-function-rule-value.nl and
+    // bugs/computed-collection-element-equality.nl).
+    @RepeatedTest(10)
+    public void emptyListAndSetInListErrors() {
+        testResource("empty-list-and-set-in-list-errors.nl");
+    }
+
+    @RepeatedTest(10)
+    public void emptyCollectionFunctionRuleValue() {
+        testResource("empty-collection-function-rule-value.nl");
+    }
+
+    // The literal made of a computed collection has literal elements at every level
+    // (was bugs/empty-list-beside-expression-list.nl).
+    @RepeatedTest(10)
+    public void emptyListBesideExpressionList() {
+        testResource("empty-list-beside-expression-list.nl");
+    }
+
+    @RepeatedTest(10)
+    public void computedCollectionElementEquality() {
+        testResource("computed-collection-element-equality.nl");
+    }
+
 }

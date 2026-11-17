@@ -99,7 +99,7 @@ public final class Query extends Node implements Evaluatable {
         if (!variable.type().isAssignableFrom(value.type())) {
             Set<Variable> args = value.type().typeVariables();
             if (!args.isEmpty()) {
-                Node node = value.coerceTo(variable.type().nonFunction().nonVariable());
+                Node node = value.coerceTo(variable.type());
                 if (node != null) {
                     return node;
                 }

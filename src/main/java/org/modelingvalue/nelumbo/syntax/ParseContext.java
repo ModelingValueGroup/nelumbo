@@ -15,7 +15,6 @@ package org.modelingvalue.nelumbo.syntax;
 
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.Map;
-import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.mutable.MutableMap;
 import org.modelingvalue.collections.util.NotMergeableException;
 import org.modelingvalue.nelumbo.KnowledgeBase;
@@ -211,7 +210,7 @@ public interface ParseContext {
                 Type type = left instanceof Variable ? left.type().toVariable() : left.type();
                 for (Entry<Type, ParseState> e : states) {
                     result.clear();
-                    ParseState found = e.getValue().matchType(type, false, Set.of(), result.typeArgs());
+                    ParseState found = e.getValue().matchType(type, false, true, result.typeArgs());
                     if (found != null) {
                         result.left(left);
                         if (found.parse(token, result, Map.of(), true)) {

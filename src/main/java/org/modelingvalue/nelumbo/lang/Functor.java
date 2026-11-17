@@ -48,6 +48,7 @@ import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
 import org.modelingvalue.nelumbo.syntax.ParseExceptionHandler;
 import org.modelingvalue.nelumbo.syntax.ParseState;
+import org.modelingvalue.nelumbo.syntax.ThrowingFunction;
 import org.modelingvalue.nelumbo.syntax.Token;
 
 public class Functor extends Node implements FunctorOrType {
@@ -482,7 +483,7 @@ public class Functor extends Node implements FunctorOrType {
     }
 
     private Functor incrementVariables(String id) throws ParseException {
-        return ((Functor) replace(o -> {
+        return (replace(o -> {
             if (o instanceof Variable v && v.name().contains("$")) {
                 return v.makeUnique(id);
             }
@@ -627,5 +628,10 @@ public class Functor extends Node implements FunctorOrType {
     @Override
     public Functor resetVariables(ParseContext ctx) throws ParseException {
         return (Functor) super.resetVariables(ctx);
+    }
+
+    @Override
+    public Functor replace(ThrowingFunction<Object, Object> replacer) throws ParseException {
+        return (Functor) super.replace(replacer);
     }
 }

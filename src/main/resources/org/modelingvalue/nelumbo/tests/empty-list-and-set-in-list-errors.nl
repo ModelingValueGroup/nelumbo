@@ -1,6 +1,7 @@
-// Bug: an empty list or set ([] or {}) as an element of a collection breaks equality:
-// binding a variable to such a collection finds nothing ([[],[2]] = ll is [][..]) and
-// a computed collection holding [] is not equal to the same literal (false).
+// Regression test (fixed 2026-11-17; was bugs/empty-list-and-set-in-list-errors.nl).
+// An empty list or set ([] or {}) as an element of a collection gets the element type of
+// its neighbours: such a collection binds to a variable and equals a computed collection.
+// (Was: [[],[2]] = ll gave [][..] and a computed collection holding [] was not equal.)
 import nelumbo.collections
 
 List<Integer>       l

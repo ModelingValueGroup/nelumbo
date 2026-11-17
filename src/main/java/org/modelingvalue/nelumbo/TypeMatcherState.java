@@ -38,16 +38,27 @@ public class TypeMatcherState implements IState<TypeMatcherState> {
         return type;
     }
 
-    public final Set<Type> match(Type type, boolean inverse, Set<Variable> matchVar,
-            MutableMap<Variable, Type> typeArgs) {
-        return doMatch(type, inverse, matchVar, typeArgs).replaceAll(TypeMatcherState::type);
+    // With coerce, a type variable in an argument of the type also matches an expected type: when that is the only
+    // match, the variable is bound to it in the typeArgs.
+    public final Set<Type> match(Type type, boolean inverse, boolean coerce, MutableMap<Variable, Type> typeArgs) {
+        MutableMap<Variable, Type> coercions = coerce ? MutableMap.of(Map.of()) : null;
+        Set<TypeMatcherState> result = doMatch(type, inverse, null, coercions, typeArgs);
+        if (result.size() == 1 && coercions != null) {
+            for (Entry<Variable, Type> c : coercions.get()) {
+                if (!put(typeArgs, c.getKey(), c.getValue())) {
+                    return Set.of();
+                }
+            }
+        }
+        return result.replaceAll(TypeMatcherState::type);
     }
 
-    private Set<TypeMatcherState> doMatch(Type type, boolean inverse, Set<Variable> matchVar,
-            MutableMap<Variable, Type> typeArgs) {
+    private Set<TypeMatcherState> doMatch(Type type, boolean inverse, MutableMap<Variable, Type> coercions,
+            MutableMap<Variable, Type> argCoercions, MutableMap<Variable, Type> typeArgs) {
         Set<TypeMatcherState> result = Set.of();
         Entry<Type, TypeMatcherState> found = null;
         Type assigned = null;
+        List<Entry<Type, TypeMatcherState>> coerced = List.of();
         outer: for (Entry<Type, TypeMatcherState> e : transitions) {
             Variable var = e.getKey().variable();
             if (var != null) {
@@ -61,60 +72,29 @@ public class TypeMatcherState implements IState<TypeMatcherState> {
                         }
                     }
                 }
-                Type nvt = type.nonVariable();
-                Type match = typeArgs.get(var);
-                if (match == null) {
-                    typeArgs.put(var, nvt);
+                if (put(typeArgs, var, type.nonVariable())) {
                     result = result.add(e.getValue());
-                } else {
-                    match = common(nvt, match, typeArgs);
-                    if (match != null) {
-                        typeArgs.put(var, match);
-                        result = result.add(e.getValue());
-                    } else {
-                        typeArgs.put(var, Type.$NONE);
-                    }
                 }
             } else {
                 Type a = e.getKey().getAssigned(type);
                 if (a == null && inverse) {
-                    a = type.nonVariable().nonLiteral().nonFunction().objectArgsOnly()
-                            .getAssigned(e.getKey().numberArgs());
-                    if (a != null) {
-                        if (e.getKey().hasArguments()) {
-                            List<Type> from = type.arguments();
-                            List<Type> to = e.getKey().arguments();
-                            int fi = 0;
-                            for (Type arg : a.arguments()) {
-                                try {
-                                    int ti = Integer.parseInt(arg.variable().name());
-                                    to = to.replace(ti, from.get(fi));
-                                } catch (NumberFormatException nfe) {
-                                }
-                                fi++;
-                            }
-                            a = e.getKey().setArguments(to);
-                        } else {
-                            a = e.getKey();
-                        }
-                    }
-                }
-                if (a == null) {
-                    Variable v = type.variable();
-                    if (v != null && matchVar.contains(v)) {
-                        Type t = e.getKey();
-                        if (t.hasArguments()) {
-                            List<Type> args = t.arguments();
-                            for (int i = 0; i < args.size(); i++) {
-
-                            }
-                            t = t.setArguments(args);
-                        }
-                        typeArgs.put(v, t);
+                    // the type may be a super type of the expected type: its arguments become those of the expected type
+                    Type numbered = e.getKey().numberArgs();
+                    Map<Variable, Type> bound = numbered.coerceTo(type, Map.of());
+                    if (bound != null) {
                         a = e.getKey();
+                        if (!bound.isEmpty()) {
+                            List<Type> args = a.arguments();
+                            a = a.setArguments(numbered.arguments().replaceAll(n -> {
+                                Type b = n.variable() != null ? bound.get(n.variable()) : null;
+                                return b != null ? b : args.get(numbered.arguments().firstIndexOf(n));
+                            }));
+                        }
                     }
                 }
-                if (a != null && (found == null || found.getKey().isAssignableFrom(e.getKey()))) {
+                if (a == null && coercions != null && type.variable() != null) {
+                    coerced = coerced.addAll(whole(e));
+                } else if (a != null && (found == null || found.getKey().isAssignableFrom(e.getKey()))) {
                     found = e;
                     assigned = a;
                 }
@@ -127,29 +107,58 @@ public class TypeMatcherState implements IState<TypeMatcherState> {
                     pre = post;
                     post = Set.of();
                     for (TypeMatcherState s : pre) {
-                        post = post.addAll(s.doMatch(arg, inverse, matchVar, typeArgs));
+                        post = post.addAll(s.doMatch(arg, inverse, argCoercions, argCoercions, typeArgs));
                     }
                 }
                 result = result.addAll(post);
             } else {
                 result = result.add(found.getValue());
             }
+        } else if (!coerced.isEmpty()) {
+            if (coerced.size() == 1) {
+                coercions.put(type.variable(), coerced.first().getKey());
+            }
+            result = result.addAll(coerced.map(Entry::getValue));
         }
         return result;
     }
 
-    private static Type common(Type a, Type b, MutableMap<Variable, Type> typeArgs) {
-        Variable av = a.variable();
-        Variable bv = b.variable();
-        if (av != null && bv == null) {
-            typeArgs.put(av, b);
-            return b;
+    // The complete types (arguments included) that start with the given transition, each with the state after it.
+    private static List<Entry<Type, TypeMatcherState>> whole(Entry<Type, TypeMatcherState> transition) {
+        List<Entry<Type, TypeMatcherState>> wholes = List.of(transition);
+        if (transition.getKey().hasArguments()) {
+            for (int i = 0; i < transition.getKey().arguments().size(); i++) {
+                int ai = i;
+                wholes = wholes.flatMap(w -> w.getValue().transitions.flatMap(TypeMatcherState::whole).map(a -> Entry
+                        .of(w.getKey().setArguments(w.getKey().arguments().replace(ai, a.getKey())), a.getValue())))
+                        .asList();
+            }
         }
-        if (av == null && bv != null) {
-            typeArgs.put(bv, a);
-            return a;
+        return wholes;
+    }
+
+    // Combines the type that is matched for a type variable with the type that was matched for it before.
+    private static boolean put(MutableMap<Variable, Type> typeArgs, Variable var, Type type) {
+        Type match = typeArgs.get(var);
+        if (match == null) {
+            typeArgs.put(var, type);
+            return true;
+        } else if (Type.$NONE.equals(match)) {
+            return false;
         }
-        return a.common(b);
+        Map<Variable, Type> pre = typeArgs.get();
+        Map<Variable, Type> coerced = type.coerceTo(match, pre);
+        Map<Variable, Type> post = coerced != null ? coerced : match.coerceTo(type, pre);
+        if (post != null && post != pre) {
+            typeArgs.set(m -> post.replaceAll(e -> Entry.of(e.getKey(), e.getValue().setTypeArgs(post))));
+            match = typeArgs.get(var);
+        }
+        if (post != null && !type.typeVariables().isEmpty()) {
+            type = type.setTypeArgs(post);
+        }
+        Type common = type.common(match);
+        typeArgs.put(var, common != null ? common : Type.$NONE);
+        return common != null;
     }
 
     @Override

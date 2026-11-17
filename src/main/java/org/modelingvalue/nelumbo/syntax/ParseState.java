@@ -637,7 +637,7 @@ public class ParseState extends AbstractState<ParseState> {
         if (functor != null) {
             Set<StateContext> states = Set.of();
             Type type = functor.resultType().setTypeArgs(typeArgs.get());
-            ParseState state = ctx.state().matchType(type, false, Set.of(), typeArgs);
+            ParseState state = ctx.state().matchType(type, false, true, typeArgs);
             if (state != null) {
                 states = states.add(new StateContext(state, ctx.outer()));
             }
@@ -654,7 +654,7 @@ public class ParseState extends AbstractState<ParseState> {
             Map<Type, ParseState> posts = pc.postStates(group);
             if (posts != null) {
                 for (Entry<Type, ParseState> e : posts) {
-                    ParseState state = e.getValue().matchType(type, false, Set.of(), MutableMap.of(typeArgs));
+                    ParseState state = e.getValue().matchType(type, false, true, MutableMap.of(typeArgs));
                     if (state != null) {
                         states = states.add(new StateContext(state, ctx));
                     }
@@ -790,20 +790,9 @@ public class ParseState extends AbstractState<ParseState> {
             } catch (NotMergeableException exc) {
                 result.addException(new ParseException(exc.getMessage(), node));
             }
-            boolean isVar = node instanceof Variable;
-            Type type = isVar ? node.type().toVariable() : node.type();
-            Set<Variable> args = isVar ? Set.of() : type.typeVariables();
-            ParseState next = matchType(type, false, args, result.typeArgs());
+            Type type = node instanceof Variable ? node.type().toVariable() : node.type();
+            ParseState next = matchType(type, false, true, result.typeArgs());
             if (next != null) {
-                if (!args.isEmpty()) {
-                    Map<Variable, Type> r = result.typeArgs().get().retainAll(e -> args.contains(e.getKey()));
-                    if (!r.isEmpty()) {
-                        node = node.setTypeArgs(r);
-                        for (Entry<Variable, Type> e : r) {
-                            result.typeArgs().remove(e.getKey());
-                        }
-                    }
-                }
                 result.add(node);
                 return new TokenState(node.nextToken(), next);
             }

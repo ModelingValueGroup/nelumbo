@@ -1,6 +1,6 @@
-// Bug: `=` between a collection literal with a computed element and an equal literal is
-// false: {1+1} = {2} gives [][()]. The element itself is computed ({1+1} ? gives {2},
-// s = {1+1} binds s={2}), only the comparison treats {1+1} as a different value.
+// Regression test (fixed 2026-11-17; was bugs/computed-collection-element-equality.nl).
+// `=` between a collection literal with a computed element and an equal literal is true:
+// {1+1} = {2}. (Was: [][()], the comparison treated {1+1} as a different value.)
 import nelumbo.collections
 
 Set<Integer>  s

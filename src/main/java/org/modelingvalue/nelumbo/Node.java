@@ -56,7 +56,7 @@ public class Node extends StructImpl implements AstElement {
 
     private static final AtomicLong UNIQUE_COUNTER = new AtomicLong(0);
 
-    protected static String uniqueId() {
+    public static String uniqueId() {
         long l = UNIQUE_COUNTER.getAndIncrement();
         return Long.toUnsignedString(l, Character.MAX_RADIX);
     }
@@ -616,7 +616,7 @@ public class Node extends StructImpl implements AstElement {
         });
     }
 
-    public final Node replace(ThrowingFunction<Object, Object> replacer) throws ParseException {
+    public Node replace(ThrowingFunction<Object, Object> replacer) throws ParseException {
         Object[] array = null;
         for (int i = 0; i < length(); i++) {
             Object fromVal = get(i);
@@ -628,7 +628,10 @@ public class Node extends StructImpl implements AstElement {
                 array[i] = toVal;
             }
         }
-        return (Node) replacer.apply(array != null ? set(nodeInfo, array) : this);
+        Functor functor = functor();
+        FunctorOrType fot = functor != null ? functor.replace(replacer) : functorOrType();
+        Node node = array != null ? set(nodeInfo.setFunctorOrType(fot), array) : setFunctorOrType(fot);
+        return (Node) replacer.apply(node);
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -797,15 +800,8 @@ public class Node extends StructImpl implements AstElement {
     }
 
     public Node coerceTo(Type to) {
-        Type from = type();
-        if (to.isAssignableFrom(from)) {
-            return this;
-        }
-        Map<Variable, Type> bind = from.bindTo(to, Map.of());
-        if (bind != null) {
-            return setTypeArgs(bind);
-        }
-        return null;
+        Map<Variable, Type> bind = type().coerceTo(to, Map.of());
+        return bind != null ? setTypeArgs(bind) : null;
     }
 
 }

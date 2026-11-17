@@ -18,7 +18,6 @@ import java.util.function.Function;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
-import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.mutable.MutableList;
 import org.modelingvalue.collections.mutable.MutableMap;
 import org.modelingvalue.nelumbo.AstElement;
@@ -138,7 +137,7 @@ public class NodeTypePattern extends Pattern {
         }
         if (args.get(ai) instanceof Node n) {
             Type type = n instanceof Variable ? n.type().toVariable() : n.type();
-            if (!nodeType().typeMatcher().match(type, n instanceof Variable, Set.of(), typeArgs).isEmpty()) {
+            if (!nodeType().typeMatcher().match(type, n instanceof Variable, true, typeArgs).isEmpty()) {
                 boolean parenthetical = false;
                 Functor functor = n.functor();
                 ParseState post = functor != null ? functor.postStart() : null;
@@ -166,7 +165,7 @@ public class NodeTypePattern extends Pattern {
             AstElement e = elements.get(i);
             if (e instanceof Node n) {
                 Type type = n instanceof Variable ? n.type().toVariable() : n.type();
-                if (!nodeType().typeMatcher().match(type, n instanceof Variable, Set.of(), typeArgs).isEmpty()) {
+                if (!nodeType().typeMatcher().match(type, n instanceof Variable, true, typeArgs).isEmpty()) {
                     args.clear();
                     keep[0] = false;
                     args.add(n);

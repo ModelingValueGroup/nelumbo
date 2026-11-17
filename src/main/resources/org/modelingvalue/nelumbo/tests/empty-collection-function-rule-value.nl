@@ -1,6 +1,6 @@
-// Bug: an empty set or list literal ({} or []) as a value of a function rule (==)
-// does not parse: "Node {} of unexpected type {Literal,Set<...>}, expected R".
-// The same rule written with <=> (f(i)=s <=> s={} if i=0) works.
+// Regression test (fixed 2026-11-17; was bugs/empty-collection-function-rule-value.nl).
+// An empty set or list literal ({} or []) is a value of a function rule (==). (Was:
+// "Node {} of unexpected type {Literal,Set<...>}, expected R" and the rule dropped.)
 import nelumbo.collections
 
 Integer       i

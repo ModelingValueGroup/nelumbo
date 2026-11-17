@@ -89,13 +89,13 @@ public class NIs extends Predicate {
             Node a = (Node) get(0);
             Node b = (Node) get(1);
             if (!(a instanceof Variable) && Type.LITERAL.isAssignableFrom(a.type())) {
-                Node x = a.coerceTo(b.type().nonFunction().nonVariable());
+                Node x = a.coerceTo(b.type());
                 if (x != null && !x.equals(a)) {
                     return set(0, x);
                 }
             }
             if (!(b instanceof Variable) && Type.LITERAL.isAssignableFrom(b.type())) {
-                Node y = b.coerceTo(a.type().nonFunction().nonVariable());
+                Node y = b.coerceTo(a.type());
                 if (y != null && !y.equals(b)) {
                     return set(1, y);
                 }

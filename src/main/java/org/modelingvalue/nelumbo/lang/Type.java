@@ -30,6 +30,7 @@ import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.TypeMatcherState;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
+import org.modelingvalue.nelumbo.syntax.ThrowingFunction;
 import org.modelingvalue.nelumbo.syntax.TokenType;
 
 public final class Type extends Node implements FunctorOrType {
@@ -308,7 +309,7 @@ public final class Type extends Node implements FunctorOrType {
     public Type setBinding(Node declaration, Map<Variable, Object> vars, boolean setFunctorOrType) {
         Variable var = variable();
         if (var != null && vars.get(var) instanceof Type elt) {
-            return elt;
+            return rewrite(elt);
         }
         return (Type) super.setBinding(this, vars, setFunctorOrType);
     }
@@ -545,7 +546,8 @@ public final class Type extends Node implements FunctorOrType {
 
     public Type rewrite(Type type) {
         if (isLiteral()) {
-            return type.toLiteral();
+            // the arguments of a literal are literals
+            return type.isLiteral() ? type : type.toLiteralDeep();
         } else if (isFunction()) {
             return type.toFunction();
         } else if (isVariable()) {
@@ -646,11 +648,21 @@ public final class Type extends Node implements FunctorOrType {
         return null;
     }
 
-    public Map<Variable, Type> bindTo(Type to, Map<Variable, Type> binding) {
+    // The binding of type variables of this type that makes it assignable to the given type, null if there is none.
+    public Map<Variable, Type> coerceTo(Type to, Map<Variable, Type> binding) {
         Variable var = variable();
         if (var != null) {
-            return binding.put(var, to);
-        } else if (to.isAssignableFrom(this)) {
+            Type bound = binding.get(var);
+            if (bound != null) {
+                to = $NONE.equals(bound) ? null : bound.common(to);
+            }
+            if (to == null || var.equals(to.variable())) {
+                return to == null ? null : binding;
+            }
+            return to.typeVariables().contains(var) ? null : binding.put(var, to);
+        }
+        to = to.nonLiteral().nonFunction().nonVariable();
+        if (to.isAssignableFrom(this)) {
             return binding;
         } else if (hasArguments() && to.hasArguments()) {
             Type as = to.objectArgsOnly().getAssigned(this);
@@ -658,7 +670,7 @@ public final class Type extends Node implements FunctorOrType {
                 List<Type> fArgs = as.arguments();
                 List<Type> tArgs = to.arguments();
                 for (int i = 0; i < tArgs.size(); i++) {
-                    binding = fArgs.get(i).bindTo(tArgs.get(i), binding);
+                    binding = fArgs.get(i).coerceTo(tArgs.get(i), binding);
                     if (binding == null) {
                         return null;
                     }
@@ -744,6 +756,11 @@ public final class Type extends Node implements FunctorOrType {
     @Override
     public Type makeVariablesUnique(ParseContext ctx, String id) throws ParseException {
         return (Type) super.makeVariablesUnique(ctx, id);
+    }
+
+    @Override
+    public Type replace(ThrowingFunction<Object, Object> replacer) throws ParseException {
+        return (Type) super.replace(replacer);
     }
 
 }

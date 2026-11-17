@@ -248,24 +248,6 @@ public class KnownBugsTest extends NelumboTestBase {
         bugResource("given-result-call-crash.nl");
     }
 
-    @KnownBug("list of lists with [] next to a list holding an expression ([[],[1+2]]) does not parse")
-    @Test
-    public void emptyListBesideExpressionList() {
-        bugResource("empty-list-beside-expression-list.nl");
-    }
-
-    @KnownBug("empty list or set ([] or {}) as an element of a collection makes equality fail ([[],[2]] = ll is [][..])")
-    @Test
-    public void emptyListAndSetInListErrors() {
-        bugResource("empty-list-and-set-in-list-errors.nl");
-    }
-
-    @KnownBug("empty set or list literal as a value of a function rule (f(i) == {}) does not parse")
-    @Test
-    public void emptyCollectionFunctionRuleValue() {
-        bugResource("empty-collection-function-rule-value.nl");
-    }
-
     @KnownBug("date-time value with a time cannot be written bare in an expected result ([(2024-01-15T11:30)] does not parse)")
     @Test
     public void datetimeBareBindingValue() {
@@ -306,11 +288,5 @@ public class KnownBugsTest extends NelumboTestBase {
     @Test
     public void openSetIntersectionClosed() {
         bugResource("open-set-intersection-closed.nl");
-    }
-
-    @KnownBug("= between a collection literal with a computed element and an equal literal is false ({1+1} = {2} gives [][()])")
-    @Test
-    public void computedCollectionElementEquality() {
-        bugResource("computed-collection-element-equality.nl");
     }
 }

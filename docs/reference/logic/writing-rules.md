@@ -137,8 +137,6 @@ Nesting does not change the meaning: a function argument that is itself a functi
 - picks its value by searching, such as `E[d,g2](d in {1,2,3,4} & ok(g,r,c,d) & put(g,r,c,d)=g2 & s=solve(g2,r,c+1))` in [`sudoku/brute4x4.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/sudoku/brute4x4.nl), so the bound variable is not determined by one call,
 - uses an intermediate result more than once (nesting would repeat the call).
 
-An empty collection literal cannot be an `==` value yet: `f(i) == {}` and `f(i) == []` do not parse (a known bug, [`bugs/empty-collection-function-rule-value.nl`](../../../src/main/resources/org/modelingvalue/nelumbo/bugs/empty-collection-function-rule-value.nl)). Write `f(i)=s <=> s={}` there.
-
 ---
 
 ## Contradictions

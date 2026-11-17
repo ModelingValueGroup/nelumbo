@@ -13,6 +13,7 @@
 
 package org.modelingvalue.nelumbo.syntax;
 
+import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
@@ -166,11 +167,7 @@ public final class PatternResult implements ParseExceptionHandler {
                 }
                 Object[] args = functor.args(elements, typeArgs);
                 Node node = functor.construct(elements, args, this, context);
-                Set<Variable> tv = functor.typeVariables();
-                Map<Variable, Type> tas = typeArgs.get().retainAll(e -> tv.contains(e.getKey()));
-                if (!tas.isEmpty()) {
-                    node = node.setTypeArgs(tas);
-                }
+                node = node.setTypeArgs(coercions(node));
                 if (hasLeft && args.length == 1 && args[0] instanceof Node arg) {
                     if (node.functor().equals(arg.functor())) {
                         addException(
@@ -194,6 +191,34 @@ public final class PatternResult implements ParseExceptionHandler {
             }
         }
         return null;
+    }
+
+    // The types that are matched for the type variables of the functor and for the free type variables of the children
+    // of the node. A type variable of the functor that is not matched is free in the node: it becomes a new one.
+    private Map<Variable, Type> coercions(Node node) {
+        Set<Variable> functorVars = functor.typeVariables();
+        Set<Variable> freeVars = node.children().flatMap(n -> n.type().typeVariables())
+                .filter(PatternResult::isUnique).asSet();
+        Map<Variable, Type> coercions = typeArgs.get().removeAll(e -> Type.$NONE.equals(e.getValue())
+                || !(functorVars.contains(e.getKey()) || freeVars.contains(e.getKey())));
+        String id = Node.uniqueId();
+        for (Variable var : functorVars) {
+            if (isUnique(var) && !coercions.containsKey(var)) {
+                coercions = coercions.put(var, new Type(var.makeUnique(id)));
+            }
+        }
+        for (int i = 0; i < coercions.size(); i++) {
+            Map<Variable, Type> pre = coercions;
+            coercions = pre.replaceAll(e -> Entry.of(e.getKey(), e.getValue().setTypeArgs(pre)));
+            if (coercions.equals(pre)) {
+                break;
+            }
+        }
+        return coercions;
+    }
+
+    private static boolean isUnique(Variable var) {
+        return var.name().contains("$");
     }
 
     private void setNodes(List<AstElement> elements, Node node) {
