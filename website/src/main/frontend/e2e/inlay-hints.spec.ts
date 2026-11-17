@@ -123,7 +123,9 @@ for (const name of ['Pixel 7', 'iPhone 13']) {
             // a finger moves a little while it taps (Android sends that as touchmove; Monaco then resets its tap count)
             const cdp: CDPSession                         = await page.context().newCDPSession(page);
             const tap: (hint: Locator) => Promise<void> = async (hint: Locator): Promise<void> => {
-                const box: { x: number; y: number; width: number; height: number } | null = await hint.boundingBox();
+                // every result that comes in makes Monaco render the hints anew: for a moment a hint has no box
+                let box: { x: number; y: number; width: number; height: number } | null = null;
+                await expect.poll(async (): Promise<boolean> => (box = await hint.boundingBox()) !== null, { timeout: 20_000 }).toBe(true);
                 const x:   number                                                         = box!.x + box!.width / 2;
                 const y:   number                                                         = box!.y + box!.height / 2;
                 await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: x, y: y }] });
