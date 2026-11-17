@@ -108,27 +108,13 @@ Decide:
 - [ ] Editor texts would go to an outside service: what visitors are told.
 - [ ] Limits per visitor, as the shares have (public site).
 
-### Progress, stop and parallel queries while evaluating
+### Stop a running query
 
-Status: todo (2026-11-12).
-
-Now the editor shows feedback only after the whole document has been evaluated.
+Status: todo (2026-11-12; the rest of "progress, stop and parallel queries" is done: results one by one, `...calculating`, parallel queries).
 
 Wanted:
-- [ ] A busy indicator while an expression is being evaluated.
-- [ ] A stop button.
-- [ ] Per query: done (with its result), being evaluated, or waiting.
-- [ ] Evaluate `?` statements in parallel.
-
-Current state (CLAUDE.md):
-- Until an edit's re-evaluation finishes, `QueryResultCache` serves only the hints on unchanged lines.
-- Evaluation stops at the workspace deadline or the overload budget; there is no user stop.
-- A fact or rule that fails stops the evaluation: the queries after it get no hint.
-
-Find out:
-- [ ] Which editors: the website only, or every LSP client?
-- [ ] Parallel queries: a result must not depend on an earlier query. That was once a bug (fixed 2026-10-27, `tests/solve-depends-on-earlier-query.nl`); running queries in parallel tests it harder.
-- [ ] Parallel queries share the one inference pool (`KnowledgeBase.POOL`) and the overload threshold.
+- [ ] A stop button: a query now stops only at the workspace deadline, the overload budget or an edit.
+- [ ] Tell a running query from a waiting one: both show `...calculating`.
 
 ### Wrong highlighting now and then
 
