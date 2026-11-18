@@ -411,4 +411,22 @@ public class RegressionTest extends NelumboTestBase {
         testResource("computed-collection-element-equality.nl");
     }
 
+    // A free type variable that occurs twice in the type of an argument (the
+    // element type of [] in dup([]) : Pair<List<T>,List<T>>) is bound at every
+    // occurrence by the one that meets a concrete type in the hole.
+    @RepeatedTest(10)
+    public void repeatedFreeTypeVariable() throws IOException {
+        String name = "repeated-free-type-variable.nl";
+        String source = new String(
+                RegressionTest.class.getResourceAsStream(NelumboConstants.NELUMBO_TESTS + name).readAllBytes());
+        testResource(name);
+        // a List<String> hole does not take it: without the binding its type would still be free
+        EvalResult result = evaluate(source + "texts(fst(dup([]))) ?\n", name, 60_000);
+        assertEquals(1, result.diagnostics().size(), "diagnostics: " + result.diagnostics());
+        var error = result.diagnostics().get(0);
+        assertEquals((int) source.lines().count() + 1, error.line());
+        assertTrue(error.message().startsWith("Node fst(dup([])) of unexpected type {Function,List<{Integer,Literal}>}"),
+                error.message());
+    }
+
 }
