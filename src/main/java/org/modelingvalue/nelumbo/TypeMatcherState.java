@@ -38,12 +38,19 @@ public class TypeMatcherState implements IState<TypeMatcherState> {
         return type;
     }
 
-    // With coerce, a type variable in an argument of the type also matches an expected type: when that is the only
-    // match, the variable is bound to it in the typeArgs.
+    // With coerce, a type variable in an argument of the type also matches an expected type. The variable is not bound:
+    // that is done by matchAndCoerce, when the node is constructed.
     public final Set<Type> match(Type type, boolean inverse, boolean coerce, MutableMap<Variable, Type> typeArgs) {
         MutableMap<Variable, Type> coercions = coerce ? MutableMap.of(Map.of()) : null;
+        return doMatch(type, inverse, null, coercions, typeArgs).replaceAll(TypeMatcherState::type);
+    }
+
+    // As match with coerce. When there is only one match, the type variables in the arguments of the type are bound in
+    // the typeArgs to the expected types they matched.
+    public final Set<Type> matchAndCoerce(Type type, boolean inverse, MutableMap<Variable, Type> typeArgs) {
+        MutableMap<Variable, Type> coercions = MutableMap.of(Map.of());
         Set<TypeMatcherState> result = doMatch(type, inverse, null, coercions, typeArgs);
-        if (result.size() == 1 && coercions != null) {
+        if (result.size() == 1) {
             for (Entry<Variable, Type> c : coercions.get()) {
                 if (!put(typeArgs, c.getKey(), c.getValue())) {
                     return Set.of();

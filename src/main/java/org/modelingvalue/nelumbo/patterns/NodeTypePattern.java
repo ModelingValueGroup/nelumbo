@@ -165,7 +165,7 @@ public class NodeTypePattern extends Pattern {
             AstElement e = elements.get(i);
             if (e instanceof Node n) {
                 Type type = n instanceof Variable ? n.type().toVariable() : n.type();
-                if (!nodeType().typeMatcher().match(type, n instanceof Variable, true, typeArgs).isEmpty()) {
+                if (!nodeType().typeMatcher().matchAndCoerce(type, n instanceof Variable, typeArgs).isEmpty()) {
                     args.clear();
                     keep[0] = false;
                     args.add(n);
