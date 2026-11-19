@@ -314,7 +314,7 @@ public class Predicate extends Node {
 
     public InferResult infer(int nrOfUnbound, InferContext context) {
         Functor functor = functor();
-        if (nrOfUnbound > 1 || nrOfUnbound >= functor.argTypes().size()
+        if (nrOfUnbound > 1 || (nrOfUnbound == 1 && nrOfUnbound >= functor.argTypes().size())
                 || (context.shallow() && !isShallow(nrOfUnbound, functor))) {
             return unknown();
         }

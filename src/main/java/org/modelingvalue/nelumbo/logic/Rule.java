@@ -180,7 +180,7 @@ public final class Rule extends Node implements Evaluatable {
         for (Predicate condFact : condResult.facts()) {
             Map<Variable, Object> bind = condFact.getBinding(condition);
             Predicate fact = bind != null ? predicate.castFrom(consequence.setBinding(consequence, bind)) : null;
-            if (fact != null && fact.isFullyBound()) {
+            if (fact != null && condFact.isFullyBound()) {
                 facts = facts.add(fact);
             } else {
                 completeFacts = false;
@@ -189,7 +189,7 @@ public final class Rule extends Node implements Evaluatable {
         for (Predicate condFalsehood : condResult.falsehoods()) {
             Map<Variable, Object> bind = condFalsehood.getBinding(condition);
             Predicate falsehood = bind != null ? predicate.castFrom(consequence.setBinding(consequence, bind)) : null;
-            if (falsehood != null && falsehood.isFullyBound()) {
+            if (falsehood != null && condFalsehood.isFullyBound()) {
                 falsehoods = falsehoods.add(falsehood);
             } else {
                 completeFalsehoods = false;
