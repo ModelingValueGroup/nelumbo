@@ -1,0 +1,3 @@
+# .nl files are Nelumbo, not NewLisp. GitHub Linguist has no Nelumbo language yet,
+# so keep them out of the language statistics instead of misreporting them.
+*.nl linguist-detectable=false
