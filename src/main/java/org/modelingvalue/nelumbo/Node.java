@@ -29,6 +29,7 @@ import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
+import org.modelingvalue.collections.mutable.MutableMap;
 import org.modelingvalue.collections.mutable.MutableSet;
 import org.modelingvalue.collections.struct.impl.StructImpl;
 import org.modelingvalue.collections.util.Context;
@@ -457,22 +458,23 @@ public class Node extends StructImpl implements AstElement {
     }
 
     public final Map<Variable, Object> getBinding(Node declaration) {
-        return getBinding(declaration, Map.of(), false);
+        return getBinding(declaration, Map.of(), false, MutableMap.of(Map.of()));
     }
 
     public final Map<Variable, Object> getAllBinding(Node declaration) {
-        return getBinding(declaration, Map.of(), true);
+        return getBinding(declaration, Map.of(), true, MutableMap.of(Map.of()));
     }
 
-    private Map<Variable, Object> getBinding(Node declaration, Map<Variable, Object> vars, boolean all) {
+    private Map<Variable, Object> getBinding(Node declaration, Map<Variable, Object> vars, boolean all,
+            MutableMap<Variable, Object> replace) {
         for (int i = 0; vars != null && i < length(); i++) {
-            vars = getBinding(declaration.get(i), get(i), vars, i, all);
+            vars = getBinding(declaration.get(i), get(i), vars, i, all, replace);
         }
         return vars;
     }
 
     private Map<Variable, Object> getBinding(Object declVal, Object thisIn, Map<Variable, Object> vars, int i,
-            boolean all) {
+            boolean all, MutableMap<Variable, Object> replace) {
         Object thisVal = !all && thisIn instanceof Variable ? null : thisIn;
         if (declVal instanceof Type declType) {
             declVal = declType.variable();
@@ -486,7 +488,14 @@ public class Node extends StructImpl implements AstElement {
                 }
             } else {
                 if (thisVal == null) {
-                    thisVal = varOf(declVar, thisIn);
+                    if (thisIn instanceof Variable var) {
+                        thisVal = declVar.setType(var.type());
+                        replace.put(var, thisVal);
+                    } else {
+                        thisVal = declVar;
+                    }
+                } else if (thisVal instanceof Node node && !replace.isEmpty()) {
+                    thisVal = node.setBinding(node, replace.get());
                 }
                 if (thisVal != null && doGetBinding(thisVal, i)) {
                     vars = vars.put(declVar, thisVal);
@@ -495,19 +504,15 @@ public class Node extends StructImpl implements AstElement {
         } else if (declVal instanceof Node declNode && thisVal instanceof Node thisNode) {
             // noinspection ConstantValue
             assert !(declVal instanceof Type || declVal instanceof Variable);
-            vars = thisNode.getBinding(declNode, vars, all);
+            vars = thisNode.getBinding(declNode, vars, all, replace);
         } else if (declVal instanceof ContainingCollection<?> declList
                 && thisVal instanceof ContainingCollection<?> thisList && //
                 declList.size() == thisList.size()) {
             for (int ii = 0; ii < declList.size(); ii++) {
-                vars = getBinding(declList.get(ii), thisList.get(ii), vars, i, all);
+                vars = getBinding(declList.get(ii), thisList.get(ii), vars, i, all, replace);
             }
         }
         return vars;
-    }
-
-    private static Variable varOf(Variable declVar, Object v) {
-        return v instanceof Variable var ? declVar.setType(var.type()) : declVar;
     }
 
     public Node set(Variable var, Object val) {
