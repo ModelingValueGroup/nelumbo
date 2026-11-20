@@ -133,6 +133,56 @@ public class NelumboTest extends NelumboTestBase {
         assertTrue(result.queries().stream().allMatch(QueryOutcome::expectationMatched), "mismatch: " + result.queries());
     }
 
+    // A unique hole (<one T>) holds at most one value for each combination of the OTHER type holes. In a functor with
+    // only that type hole there is nothing to be unique for (its facts were never closed, without a message): it is an
+    // error at the hole. The functor is still declared, so the statements that use it give no further errors.
+    @RepeatedTest(10)
+    public void uniqueHoleNeedsAnotherHole() {
+        String header = """
+                import nelumbo.integers
+                Person :: Object
+                Person ::= Piet, Jan
+                Person p
+                Integer i
+                """;
+        // the last <one T> of each is the hole in error; a token hole (<NAME>) is no type hole
+        for (String functor : List.of("Boolean ::= winner(<one Person>)", "Boolean ::= <one Person> wins #30", "Boolean ::= <hidden one Person#30> wins #30",
+                "Integer ::= prize(<one Person>)", "Boolean ::= winners <(> <one Person> <)+> #30", "Boolean ::= winner <(> <one Person> <)?> #30",
+                "Boolean ::= score of <NAME> is <one Integer> #30", "Boolean ::= age(<Person>,<one Integer>), winner(<one Person>)")) {
+            EvalResult result = evaluate(header + functor + "\n", "uniqueHole", 10_000);
+            int one = functor.lastIndexOf("one ");
+            String type = functor.substring(one + 4).split("[#>]")[0];
+            assertEquals(List.of("6:" + (functor.lastIndexOf('<', one) + 1) + ": " + uniqueHoleMessage(type)), diagnostics(result), functor);
+        }
+        // only the one error: the functor is declared, its fact and queries are evaluated (open: nothing is unique)
+        EvalResult single = evaluate(header + "Boolean ::= winner(<one Person>)\nfact winner(Piet)\nwinner(Piet) ? [()][]\nwinner(Jan) ? [..][..]\n",
+                "uniqueHoleUsed", 10_000);
+        assertEquals(List.of("6:20: " + uniqueHoleMessage("Person")), diagnostics(single));
+        assertEquals(2, single.queries().size());
+        assertTrue(single.queries().stream().allMatch(QueryOutcome::expectationMatched), "mismatch: " + single.queries());
+        // with a second type hole the unique hole is closed per value of the other one, whatever their order
+        EvalResult result = evaluate(header + """
+                Boolean ::= age(<Person>,<one Integer>), <one Person> is the mother of <Person> #30
+                fact age(Piet,7), Jan is the mother of Piet
+                age(Piet,i)                ? [(i=7)][..]
+                age(Piet,8)                ? [][()]
+                age(Jan,i)                 ? [..][..]
+                p is the mother of Piet    ? [(p=Jan)][..]
+                Piet is the mother of Piet ? [][()]
+                """, "uniqueHoles", 10_000);
+        assertEquals(List.of(), diagnostics(result));
+        assertEquals(5, result.queries().size());
+        assertTrue(result.queries().stream().allMatch(QueryOutcome::expectationMatched), "mismatch: " + result.queries());
+    }
+
+    private static String uniqueHoleMessage(String type) {
+        return "Unique hole <one " + type + "> needs at least 2 type holes in its functor: it has at most one value for each combination of the other holes.";
+    }
+
+    private static List<String> diagnostics(EvalResult result) {
+        return result.diagnostics().stream().map(d -> d.line() + ":" + d.col() + ": " + d.message()).toList();
+    }
+
     @RepeatedTest(10)
     public void datetimeTest() {
         testResource("datetimeTest.nl");

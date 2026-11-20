@@ -76,6 +76,10 @@ import org.modelingvalue.nelumbo.tools.NelumboEvaluator.EvalResult;
 // Promoted on 2026-11-11, when the `struct` functor modifier replaced user
 // `:: Literal` types: literal-type-in-intersection-hole and
 // literal-binding-expectation-unchecked.
+// Removed on 2026-11-20, not promoted: single-unique-hole-not-closed. A unique
+// hole is unique per combination of the other type holes, so a functor with
+// only that hole (winner(<one Person>)) is an error at its declaration now
+// (NelumboTest.uniqueHoleNeedsAnotherHole).
 //
 // Findings WITHOUT an .nl repro (from the 2026-09-07 review; kept here so
 // they are not lost - they cannot be tested from this suite):
@@ -163,12 +167,6 @@ public class KnownBugsTest extends NelumboTestBase {
     }
 
     // ==== logic / quantifiers / facts ====
-
-    @KnownBug("pattern whose only argument is a unique hole (winner(<one Person>)) is never closed")
-    @Test
-    public void singleUniqueHoleNotClosed() {
-        bugResource("single-unique-hole-not-closed.nl");
-    }
 
     @KnownBug("variable nested in a fact argument (owns(Piet,box(n))) is not bound by the lookup")
     @Test

@@ -357,7 +357,7 @@ public class EmbeddedServerTest {
             Person :: Object
             YesNo  :: Object
             YesNo  ::= Yes, No
-            YesNo  ::= winner(<one Person>)
+            YesNo  ::= winner(<Person>)
             Person ::= Piet
             fact winner(Piet)=Yes
             winner(Piet) ?

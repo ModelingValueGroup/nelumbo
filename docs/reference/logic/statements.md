@@ -70,7 +70,7 @@ The exact rules:
 
 - Uniqueness constrains the **variable** that fills the hole. Only a top-level argument that is an unbound variable counts; a term such as `m(x)` in the left hole of `=` is not constrained, which is why `m(x)=Juliana` may have several answers.
 - The check applies when exactly one unique hole holds an unbound variable. With two (`x=y`, or `married(p,q)` for `married(<one Person>, <one Person>)`) nothing is checked.
-- A hole is closed per combination of the **other** arguments, so it needs other arguments that are bound (and literal, for facts). A pattern whose only argument is unique, such as `winner(<one Person>)`, gets no closure.
+- A hole is closed per combination of the **other** arguments, so it needs other arguments that are bound (and literal, for facts). A functor therefore needs at least two type holes to declare one of them unique: a pattern whose only type hole is unique, such as `winner(<one Person>)` or `score of <NAME> is <one Integer>` (a token hole is not a type hole), is an error at the hole: `Unique hole <one Person> needs at least 2 type holes in its functor`.
 - Two facts that differ only in a unique hole (`fact m(Beatrix)=Juliana, m(Beatrix)=Wilhelmina`) are an inconsistency.
 - The same holds for rules: with the unique hole unbound, a rule may produce no answer or exactly one *closed* answer. Two answers, or one answer with an open facts side, are reported as `Inconsistent result: ... has non unique bindings`.
 

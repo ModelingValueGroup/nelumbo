@@ -41,6 +41,7 @@ import org.modelingvalue.nelumbo.logic.InferContext;
 import org.modelingvalue.nelumbo.logic.NIs;
 import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.logic.Rule;
+import org.modelingvalue.nelumbo.patterns.NodeTypePattern;
 import org.modelingvalue.nelumbo.patterns.Pattern;
 import org.modelingvalue.nelumbo.patterns.SequencePattern;
 import org.modelingvalue.nelumbo.patterns.TokenTextPattern;
@@ -378,6 +379,7 @@ public class Functor extends Node implements FunctorOrType {
                     Token t = (Token) e;
                     if (t == null || t.text().equals(",")) {
                         Pattern pattern = Pattern.pattern(pttrn);
+                        checkUniqueHoles(pattern, knowledgeBase);
                         pattern = pattern.setPresedence(precedence != null ? precedence : Integer.MIN_VALUE);
                         roots = createFunctor(type, roots, ast, clazz, pattern, local, struct, precedence,
                                 knowledgeBase, ctx);
@@ -417,6 +419,34 @@ public class Functor extends Node implements FunctorOrType {
         }
         activate(knowledgeBase, ctx);
         return this;
+    }
+
+    // A unique hole (<one T>) holds at most one value for each combination of the other type holes (the arguments the
+    // facts are indexed on; a token hole like <NAME> is not), so a functor with only that hole has nothing to be unique
+    // for: its facts were never closed, without any message.
+    private static void checkUniqueHoles(Pattern pattern, KnowledgeBase knowledgeBase) throws ParseException {
+        List<NodeTypePattern> holes = typeHoles(pattern, List.of());
+        if (holes.size() < 2) {
+            for (NodeTypePattern hole : holes) {
+                if (hole.unique()) {
+                    knowledgeBase.addException(new ParseException("Unique hole <one " + hole.nodeType()
+                            + "> needs at least 2 type holes in its functor: it has at most one value for each combination of the other holes.",
+                            hole));
+                }
+            }
+        }
+    }
+
+    private static List<NodeTypePattern> typeHoles(Pattern pattern, List<NodeTypePattern> holes) {
+        if (pattern instanceof NodeTypePattern hole) {
+            return holes.add(hole);
+        }
+        for (Node child : pattern.children()) {
+            if (child instanceof Pattern p) {
+                holes = typeHoles(p, holes);
+            }
+        }
+        return holes;
     }
 
     private void activate(KnowledgeBase knowledgeBase, ParseContext ctx) throws ParseException {
