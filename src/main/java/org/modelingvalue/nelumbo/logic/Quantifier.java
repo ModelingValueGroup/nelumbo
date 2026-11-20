@@ -15,10 +15,8 @@ package org.modelingvalue.nelumbo.logic;
 
 import java.io.Serial;
 
-import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.NodeInfo;
-import org.modelingvalue.nelumbo.lang.Variable;
 
 public abstract class Quantifier extends CompoundPredicate {
 
@@ -29,13 +27,12 @@ public abstract class Quantifier extends CompoundPredicate {
         super(nodeInfo, args);
     }
 
-    @Override
-    public List<Variable> localVars() {
-        return getVal(0, 0);
-    }
-
     public final Predicate predicate() {
         return getVal(0, 1);
+    }
+
+    public final Lambda lambda() {
+        return (Lambda) get(0);
     }
 
     @Override

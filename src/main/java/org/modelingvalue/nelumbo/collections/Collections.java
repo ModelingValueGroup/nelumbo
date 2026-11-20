@@ -245,7 +245,7 @@ public class Collections extends Predicate {
         if (b != null) {
             return sameAs(b, set, a.complete()) ? factCC() : falsehoodCC();
         }
-        Type type = a.isEmpty() ? l.localVars().first().type() : elementType(a.elementType(), set);
+        Type type = a.isEmpty() ? l.localVars().get(0).type() : elementType(a.elementType(), set);
         return set(2, new NSet(type, set, a.complete())).factCI();
     }
 
@@ -261,7 +261,7 @@ public class Collections extends Predicate {
         if (b != null) {
             return sameAs(b, list, a.complete()) ? factCC() : falsehoodCC();
         }
-        Type type = a.isEmpty() ? l.localVars().first().type() : elementType(a.elementType(), list);
+        Type type = a.isEmpty() ? l.localVars().get(0).type() : elementType(a.elementType(), list);
         return set(2, new NList(type, list, a.complete())).factCI();
     }
 
@@ -293,7 +293,7 @@ public class Collections extends Predicate {
         if (b != null) {
             return sameAs(b, list, a.complete()) ? factCC() : falsehoodCC();
         }
-        Type type = a.isEmpty() ? l.localVars().first().type() : a.elementType();
+        Type type = a.isEmpty() ? l.localVars().get(0).type() : a.elementType();
         return set(2, new NList(type, list, a.complete())).factCI();
     }
 

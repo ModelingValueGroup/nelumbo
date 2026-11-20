@@ -246,12 +246,12 @@ public class Functor extends Node implements FunctorOrType {
         return resultType() + "::=" + pattern();
     }
 
-    public Node construct(List<AstElement> elements, Object[] args, ParseExceptionHandler handler, ParseContext ctx)
-            throws ParseException {
+    public Node construct(List<AstElement> elements, Object[] args, List<Variable> localVariables,
+            ParseExceptionHandler handler, ParseContext ctx) throws ParseException {
         Constructor<? extends Node> constructor = constructor();
         if (constructor != null) {
             try {
-                return constructor.newInstance(NodeInfo.of(this, elements), args);
+                return constructor.newInstance(NodeInfo.of(this, elements, localVariables), args);
             } catch (Exception e) {
                 handleException(elements, handler, e);
             }
@@ -316,12 +316,13 @@ public class Functor extends Node implements FunctorOrType {
         return r;
     }
 
-    public Object[] args(List<AstElement> elements, MutableMap<Variable, Type> typeArgs) {
+    public Object[] args(List<AstElement> elements, MutableMap<Variable, Type> typeArgs,
+            MutableList<Variable> localVariables) {
         Pattern pattern = pattern();
         MutableList<Object> args = MutableList.of(List.of());
-        int i = pattern.args(elements, 0, args, new boolean[1], this, typeArgs);
+        int i = pattern.args(elements, 0, args, new boolean[1], this, typeArgs, localVariables);
         if (i < 0) {
-            pattern.args(elements, 0, args, new boolean[1], this, typeArgs);
+            pattern.args(elements, 0, args, new boolean[1], this, typeArgs, localVariables);
             throw new IllegalArgumentException("Error during argument extraction for " + this + " with elements "
                     + elements + " and typeArgs " + typeArgs);
         }
@@ -470,7 +471,7 @@ public class Functor extends Node implements FunctorOrType {
         nodFunctor.init(knowledgeBase, ctx, ConstructionReason.transforming);
         roots = new NList(List.of(), roots, nodFunctor);
         if (pattern instanceof TokenTextPattern && clazz != null) {
-            nodFunctor.construct(List.of(), new Object[0], knowledgeBase, ctx).init(knowledgeBase, ctx,
+            nodFunctor.construct(List.of(), new Object[0], List.of(), knowledgeBase, ctx).init(knowledgeBase, ctx,
                     ConstructionReason.parsing);
         }
         if (toLiteral) {
@@ -543,6 +544,8 @@ public class Functor extends Node implements FunctorOrType {
         assert nodVars.length == litVars.length;
         Object[] nodConsArgs = new Object[nodVars.length];
         Object[] litConsArgs = new Object[litVars.length];
+        List<Variable> nodLocalVars = List.of();
+        List<Variable> litLocalVars = List.of();
         for (int v = 0; v < nodVars.length; v++) {
             Type nodType = nodArgs.get(v);
             Type litType = litArgs.get(v);
@@ -550,9 +553,13 @@ public class Functor extends Node implements FunctorOrType {
             litVars[v] = new Variable(List.of(), false, litType, "l" + (v + 1));
             nodConsArgs[v] = nodVars[v];
             litConsArgs[v] = litVars[v];
+            if (Type.VARIABLE.isAssignableFrom(nodType)) {
+                nodLocalVars = nodLocalVars.add(nodVars[v]);
+                litLocalVars = litLocalVars.add(litVars[v]);
+            }
         }
-        Node nodNode = nodFunctor.construct(List.of(), nodConsArgs, knowledgeBase, ctx);
-        Node litNode = litFunctor.construct(List.of(), litConsArgs, knowledgeBase, ctx);
+        Node nodNode = nodFunctor.construct(List.of(), nodConsArgs, nodLocalVars, knowledgeBase, ctx);
+        Node litNode = litFunctor.construct(List.of(), litConsArgs, litLocalVars, knowledgeBase, ctx);
         boolean function = nodFunctor.isFunction();
         Type type = nodFunctor.resultType();
         Variable rigthVar = function ? new Variable(List.of(), false, type.nonFunction(), "r") : null;

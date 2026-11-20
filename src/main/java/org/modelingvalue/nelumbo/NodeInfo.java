@@ -15,6 +15,7 @@ package org.modelingvalue.nelumbo;
 
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.lang.FunctorOrType;
+import org.modelingvalue.nelumbo.lang.Variable;
 
 public interface NodeInfo {
 
@@ -22,11 +23,35 @@ public interface NodeInfo {
 
     List<AstElement> elements();
 
+    List<Variable> localVariables();
+
     public static abstract class AbstractNodeInfo implements NodeInfo {
         @Override
         public String toString() {
             return functorOrType().toString();
         }
+    }
+
+    static NodeInfo of(FunctorOrType functorOrType, List<AstElement> elements, List<Variable> localVariables) {
+        if (localVariables.isEmpty()) {
+            return of(functorOrType, elements);
+        }
+        return new AbstractNodeInfo() {
+            @Override
+            public FunctorOrType functorOrType() {
+                return functorOrType;
+            }
+
+            @Override
+            public List<AstElement> elements() {
+                return elements;
+            }
+
+            @Override
+            public List<Variable> localVariables() {
+                return localVariables;
+            }
+        };
     }
 
     static NodeInfo of(FunctorOrType functorOrType, List<AstElement> elements) {
@@ -44,6 +69,10 @@ public interface NodeInfo {
                 return elements;
             }
 
+            @Override
+            public List<Variable> localVariables() {
+                return List.of();
+            }
         };
     }
 
@@ -58,15 +87,24 @@ public interface NodeInfo {
             public List<AstElement> elements() {
                 return List.of();
             }
+
+            @Override
+            public List<Variable> localVariables() {
+                return List.of();
+            }
         };
     }
 
     default NodeInfo setFunctorOrType(FunctorOrType functorOrType) {
-        return functorOrType.equals(functorOrType()) ? this : of(functorOrType, elements());
+        return functorOrType.equals(functorOrType()) ? this : of(functorOrType, elements(), localVariables());
     }
 
     default NodeInfo setElements(List<AstElement> elements) {
-        return elements.equals(elements()) ? this : of(functorOrType(), elements);
+        return elements.equals(elements()) ? this : of(functorOrType(), elements, localVariables());
+    }
+
+    default NodeInfo setLocalVariables(List<Variable> localVariables) {
+        return localVariables.equals(localVariables()) ? this : of(functorOrType(), elements(), localVariables);
     }
 
 }

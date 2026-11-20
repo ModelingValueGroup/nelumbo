@@ -177,7 +177,7 @@ public abstract class Pattern extends Node {
             MutableMap<Variable, Type> typeArgs);
 
     public abstract int args(List<AstElement> elements, int i, MutableList<Object> args, boolean[] keep,
-            Functor functor, MutableMap<Variable, Type> typeArgs);
+            Functor functor, MutableMap<Variable, Type> typeArgs, MutableList<Variable> localVariables);
 
     public static boolean isEndOfLine(Token token) {
         return token.type() == TokenType.ENDOFFILE

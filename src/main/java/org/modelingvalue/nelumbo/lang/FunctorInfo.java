@@ -44,6 +44,10 @@ public interface FunctorInfo extends NodeInfo {
                 return original;
             }
 
+            @Override
+            public List<Variable> localVariables() {
+                return List.of();
+            }
         };
     }
 
@@ -62,6 +66,11 @@ public interface FunctorInfo extends NodeInfo {
             @Override
             public Functor original() {
                 return original;
+            }
+
+            @Override
+            public List<Variable> localVariables() {
+                return List.of();
             }
         };
     }

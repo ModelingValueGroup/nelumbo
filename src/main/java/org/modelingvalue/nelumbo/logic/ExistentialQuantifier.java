@@ -55,7 +55,7 @@ public final class ExistentialQuantifier extends Quantifier {
     @Override
     protected InferResult resolve(InferContext context, InferResult predResult) {
         Predicate predicate = predResult.predicate();
-        List<Variable> localVars = localVars();
+        List<Variable> localVars = lambda().localVars();
         Set<Predicate> facts = Set.of(), falsehoods = Set.of();
         boolean completeFacts = true, completeFalsehoods = true;
         for (Predicate predFact : predResult.facts()) {

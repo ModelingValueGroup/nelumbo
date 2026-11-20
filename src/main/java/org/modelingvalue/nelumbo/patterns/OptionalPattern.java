@@ -87,7 +87,8 @@ public class OptionalPattern extends Pattern {
     }
 
     @Override
-    public int string(List<Object> args, int ai, StringBuffer sb, RenderOptions options, boolean alt, MutableMap<Variable, Type> typeArgs) {
+    public int string(List<Object> args, int ai, StringBuffer sb, RenderOptions options, boolean alt,
+            MutableMap<Variable, Type> typeArgs) {
         if (ai < 0 || args.size() <= ai) {
             return -1;
         }
@@ -107,9 +108,9 @@ public class OptionalPattern extends Pattern {
 
     @Override
     public int args(List<AstElement> elements, int i, MutableList<Object> args, boolean[] keep, Functor functor,
-            MutableMap<Variable, Type> typeArgs) {
+            MutableMap<Variable, Type> typeArgs, MutableList<Variable> localVariables) {
         MutableList<Object> inner = MutableList.of(List.of());
-        int ii = optional().args(elements, i, inner, new boolean[] { true }, functor, typeArgs);
+        int ii = optional().args(elements, i, inner, new boolean[] { true }, functor, typeArgs, localVariables);
         if (ii >= 0) {
             List<Object> immutable = inner.toImmutable();
             args.add(Optional.of(immutable.size() == 1 ? immutable.first() : immutable));

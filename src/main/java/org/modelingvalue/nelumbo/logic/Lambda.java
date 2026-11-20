@@ -68,13 +68,7 @@ public final class Lambda extends Node {
     }
 
     public Lambda(List<AstElement> elements, List<Variable> localVars, Predicate predicate) {
-        super(NodeInfo.of(FUNCTOR[localVars.size() - 1], elements), localVars, predicate);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public List<Variable> localVars() {
-        return (List<Variable>) get(0);
+        super(NodeInfo.of(FUNCTOR[localVars.size() - 1], elements, localVars), localVars, predicate);
     }
 
     public Node expression() {

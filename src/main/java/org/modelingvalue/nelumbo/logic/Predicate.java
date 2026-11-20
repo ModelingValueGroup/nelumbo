@@ -98,8 +98,9 @@ public class Predicate extends Node {
                     Functor lit = functor.toLiteral();
                     if (lit != null) {
                         List<Object> args = n.args();
+                        List<Variable> localVariables = n.localVars();
                         if (args.allMatch(a -> a instanceof Node node ? node.type().isLiteral() : true)) {
-                            return lit.construct(n.astElements(), args.toArray(), kb, ctx);
+                            return lit.construct(n.astElements(), args.toArray(), localVariables, kb, ctx);
                         }
                     }
                 }

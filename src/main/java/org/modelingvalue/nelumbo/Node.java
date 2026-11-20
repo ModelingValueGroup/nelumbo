@@ -71,6 +71,7 @@ public class Node extends StructImpl implements AstElement {
     public Node(NodeInfo nodeInfo, Object... args) {
         super(removeOptionals(args));
         this.nodeInfo = nodeInfo;
+        assert (allVars().containsAll(allLocalVars()));
     }
 
     public NodeInfo nodeInfo() {
@@ -214,8 +215,8 @@ public class Node extends StructImpl implements AstElement {
         return functorOrType();
     }
 
-    public List<Variable> localVars() {
-        return List.of();
+    public final List<Variable> localVars() {
+        return nodeInfo().localVariables();
     }
 
     private static final Context<RenderOptions> CURRENT_OPTIONS = Context.of(null);
@@ -541,11 +542,22 @@ public class Node extends StructImpl implements AstElement {
                 array[i] = bound;
             }
         }
+        List<Variable> localVars = localVars();
+        List<Variable> declLocalVars = declaration.localVars();
+        for (int i = 0; i < localVars.size(); i++) {
+            Object val = setBinding(declLocalVars.get(i), localVars.get(i), vars, i, setFunctorOrType);
+            if (val instanceof Variable var) {
+                localVars = localVars.replace(i, var);
+            } else if (val != null) {
+                localVars = localVars.removeIndex(i);
+            }
+        }
         if (setFunctorOrType && !(this instanceof Type)) {
             FunctorOrType fot = functorOrType().setTypeArgs((Map) vars);
-            return array != null ? set(nodeInfo.setFunctorOrType(fot), array) : setFunctorOrType(fot);
+            return array != null ? set(nodeInfo.setFunctorOrType(fot).setLocalVariables(localVars), array)
+                    : setFunctorOrType(fot);
         } else {
-            return array != null ? set(nodeInfo, array) : this;
+            return array != null ? set(nodeInfo.setLocalVariables(localVars), array) : this;
         }
     }
 
@@ -635,7 +647,15 @@ public class Node extends StructImpl implements AstElement {
         }
         Functor functor = functor();
         FunctorOrType fot = functor != null ? functor.replace(replacer) : functorOrType();
-        Node node = array != null ? set(nodeInfo.setFunctorOrType(fot), array) : setFunctorOrType(fot);
+        List<Variable> localVars = localVars();
+        for (int i = 0; i < localVars.size(); i++) {
+            Variable lv = localVars.get(i);
+            if (lv.replace(replacer) instanceof Variable var && !var.equals(lv)) {
+                localVars = localVars.replace(i, var);
+            }
+        }
+        Node node = array != null ? set(nodeInfo.setFunctorOrType(fot).setLocalVariables(localVars), array)
+                : setFunctorOrType(fot);
         return (Node) replacer.apply(node);
     }
 

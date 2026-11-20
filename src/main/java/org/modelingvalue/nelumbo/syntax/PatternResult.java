@@ -165,8 +165,12 @@ public final class PatternResult implements ParseExceptionHandler {
                 for (Pair<Token, Token> merge : merged) {
                     merge.a().merge(merge.b());
                 }
-                Object[] args = functor.args(elements, typeArgs);
-                Node node = functor.construct(elements, args, this, context);
+                MutableList<Variable> localVariables = MutableList.of(List.of());
+                Object[] args = functor.args(elements, typeArgs, localVariables);
+                if (Type.ROOT.isAssignableFrom(functor.resultType())) {
+                    localVariables.clear();
+                }
+                Node node = functor.construct(elements, args, localVariables.get(), this, context);
                 node = node.setTypeArgs(coercions(node));
                 if (hasLeft && args.length == 1 && args[0] instanceof Node arg) {
                     if (node.functor().equals(arg.functor())) {
@@ -193,12 +197,14 @@ public final class PatternResult implements ParseExceptionHandler {
         return null;
     }
 
-    // The types that are matched for the type variables of the functor and for the free type variables of the children
-    // of the node. A type variable of the functor that is not matched is free in the node: it becomes a new one.
+    // The types that are matched for the type variables of the functor and for the
+    // free type variables of the children
+    // of the node. A type variable of the functor that is not matched is free in
+    // the node: it becomes a new one.
     private Map<Variable, Type> coercions(Node node) {
         Set<Variable> functorVars = functor.typeVariables();
-        Set<Variable> freeVars = node.children().flatMap(n -> n.type().typeVariables())
-                .filter(PatternResult::isUnique).asSet();
+        Set<Variable> freeVars = node.children().flatMap(n -> n.type().typeVariables()).filter(PatternResult::isUnique)
+                .asSet();
         Map<Variable, Type> coercions = typeArgs.get().removeAll(e -> Type.$NONE.equals(e.getValue())
                 || !(functorVars.contains(e.getKey()) || freeVars.contains(e.getKey())));
         String id = Node.uniqueId();

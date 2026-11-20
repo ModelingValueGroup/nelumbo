@@ -160,15 +160,19 @@ public class NodeTypePattern extends Pattern {
 
     @Override
     public int args(List<AstElement> elements, int i, MutableList<Object> args, boolean[] keep, Functor functor,
-            MutableMap<Variable, Type> typeArgs) {
+            MutableMap<Variable, Type> typeArgs, MutableList<Variable> localVariables) {
         if (i < elements.size()) {
             AstElement e = elements.get(i);
             if (e instanceof Node n) {
                 Type type = n instanceof Variable ? n.type().toVariable() : n.type();
-                if (!nodeType().typeMatcher().matchAndCoerce(type, n instanceof Variable, typeArgs).isEmpty()) {
+                Type nodeType = nodeType();
+                if (!nodeType.typeMatcher().matchAndCoerce(type, n instanceof Variable, typeArgs).isEmpty()) {
                     args.clear();
                     keep[0] = false;
                     args.add(n);
+                    if (n instanceof Variable var && Type.VARIABLE.isAssignableFrom(nodeType)) {
+                        localVariables.add(var);
+                    }
                     return i + 1;
                 }
             }
