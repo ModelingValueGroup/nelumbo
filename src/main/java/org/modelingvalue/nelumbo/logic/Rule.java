@@ -21,6 +21,7 @@ import java.util.Optional;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Map;
 import org.modelingvalue.collections.Set;
+import org.modelingvalue.collections.mutable.MutableMap;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.ConstructionReason;
 import org.modelingvalue.nelumbo.Evaluatable;
@@ -160,7 +161,8 @@ public final class Rule extends Node implements Evaluatable {
 
     public final InferResult infer(Predicate predicate, InferContext context) {
         Predicate consDecl = consequence();
-        Map<Variable, Object> binding = predicate.getBinding(consDecl);
+        MutableMap<Variable, Variable> replace = MutableMap.of(Map.of());
+        Map<Variable, Object> binding = predicate.getBinding(consDecl, replace);
         if (binding == null) {
             return null;
         }

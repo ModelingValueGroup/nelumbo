@@ -412,12 +412,12 @@ public class Predicate extends Node {
         return result;
     }
 
-    private InferResult fixpoint(InferContext context, InferResult result) {
-        InferResult previousResult = null, nextResult,
-                cycleResult = InferResult.cycle(result.facts(), result.falsehoods(), this, singleton());
+    private InferResult fixpoint(InferContext context, InferResult previousResult) {
+        InferResult nextResult,
+                cycleResult = InferResult.cycle(previousResult.facts(), previousResult.falsehoods(), this, singleton());
         do {
             context.knowledgebase().memoization(this, cycleResult);
-            nextResult = inferRules(context, result);
+            nextResult = inferRules(context, previousResult);
             if (nextResult.hasStackOverflow() || nextResult.cycles().isEmpty()) {
                 return nextResult;
             }

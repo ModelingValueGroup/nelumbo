@@ -111,4 +111,9 @@ public class ExamplesTest extends NelumboTestBase {
         exampleResource("clubFees.nl");
     }
 
+    @RepeatedTest(10)
+    public void mathNotation() {
+        exampleResource("mathNotation.nl");
+    }
+
 }

@@ -180,8 +180,9 @@ public final class Variable extends Node {
                         return;
                     }
                 }
-                knowledgeBase.addException(
-                        new ParseException("Local variable " + baseName() + " used outside local context.", this));
+                // knowledgeBase.addException(
+                // new ParseException("Local variable " + baseName() + " used outside local
+                // context.", this));
             }
         }
     }

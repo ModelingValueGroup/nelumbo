@@ -256,8 +256,9 @@ public class Functor extends Node implements FunctorOrType {
                 handleException(elements, handler, e);
             }
         }
-        return Type.BOOLEAN.isAssignableFrom(resultType()) ? new Predicate(NodeInfo.of(this, elements), args)
-                : new Node(NodeInfo.of(this, elements), args);
+        return Type.BOOLEAN.isAssignableFrom(resultType())
+                ? new Predicate(NodeInfo.of(this, elements, localVariables), args)
+                : new Node(NodeInfo.of(this, elements, localVariables), args);
     }
 
     private void handleException(List<AstElement> elements, ParseExceptionHandler handler, Exception e)
