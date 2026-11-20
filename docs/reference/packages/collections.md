@@ -139,6 +139,7 @@ private Boolean ::= build(<Lambda1<E,Boolean>>, <Set<E>>)                    @ne
                     last(<List<E>>, <E>)                                     @nelumbo.collections.Collections,
                     elementOf(<Set<E>>, <E>)                                 @nelumbo.collections.Collections,
                     subset(<Set<E>>, <Set<E>>)                               @nelumbo.collections.Collections,
+                    properSubset(<Set<E>>, <Set<E>>)                         @nelumbo.collections.Collections,
                     intersection(<Set<E>>, <Set<E>>, <Set<E>>)               @nelumbo.collections.Collections,
                     union(<Set<E>>, <Set<E>>, <Set<E>>)                      @nelumbo.collections.Collections,
                     diff(<Set<E>>, <Set<E>>, <Set<E>>)                       @nelumbo.collections.Collections,
@@ -154,7 +155,7 @@ private Boolean ::= build(<Lambda1<E,Boolean>>, <Set<E>>)                    @ne
 |---|---|---|---|
 | cardinality                       | `\| <Collection<E>> \|`                               | 35   | `Integer`   |
 | membership                        | `<E> in <Collection<E>>`                             | 30   | `Boolean`   |
-| subset / superset                 | `<Set<E>> < <=  > >= <Set<E>>`                       | 30   | `Boolean`   |
+| (proper) subset / superset        | `<Set<E>> < <=  > >= <Set<E>>`                       | 30   | `Boolean`   |
 | intersection / union / difference | `<Set<E>> && \|\| - <Set<E>>`                        | 60 / 60 / 50 | `Set<E>` |
 | concatenation                     | `<List<E>> + <List<E>>`                              | 50   | `List<E>`   |
 | element at an index               | `at <Integer> in <List<E>>`                          | 40   | `E`         |
@@ -176,9 +177,10 @@ Operations respect the openness of their operands; a result is only as complete 
 | `e in s`, `e` bound | `true` if `e` is a known member, else `false` for a closed set and unknown for an open one |
 | `e in s`, `e` free | enumerates the known members; the facts side is open (`..`) for an open set |
 | `\|c\|` | unknown for an open collection |
-| `a < b` | true if `a` is closed and its elements are known members of `b`; false if `b` is closed and misses a known element of `a`; otherwise unknown (`{1,3} < {1,..}`, `{1,..} < {1,2}`) |
+| `a <= b` | true if `a` is closed and its elements are known members of `b`; false if `b` is closed and misses a known element of `a`; otherwise unknown (`{1,3} <= {1,..}`, `{1,..} <= {1,2}`) |
+| `a < b` | as `a <= b`, but true also needs a known member of `b` that `a` lacks (`{1} < {1,2,..}`; `{1,2} < {1,2,..}` is unknown), and it is false when `b` is closed and has no member besides the known ones of `a` (`{1,2} < {1,2}`, `{1,..} < {1}`) |
 | `a \|\| b`, `a + b` | open if either operand is open: `{1,..} \|\| {2} = s` gives `{1,2,..}` |
-| `a && b` | open only if both are open: `{1,..} && {1,2} = s` gives `{1}` |
+| `a && b` | closed if both are closed, or if the open operand lists every element of the closed one: `{1,2,..} && {2} = s` gives `{2}`. Otherwise open, since an unlisted element of the closed set may be in the open one: `{1,..} && {1,2} = s` gives `{1,..}`, `{1,..} && {2} = s` gives `{..}` |
 | `a - b` | open if `a` is open; if `b` is open (and `a` is not empty) the result is `{..}`, since any element of `a` may be in `b` |
 | `where`, `map`, `sort` | open if the input collection is open: `{1,2,..} where [i](i>1) = s` gives `{2,..}` |
 
@@ -222,14 +224,18 @@ Boolean ::= <Set<E>> "<"  <Set<E>> #30,
             <Set<E>> ">=" <Set<E>> #30
 ```
 
-`s1 < s2` holds when every element of `s1` is in `s2` — i.e. `s1 ⊆ s2`. Note this is the **non-strict** subset (it is backed by `containsAll`, so a set is a subset of itself); `s1 <= s2` is defined as `s1 < s2 | s1 = s2` and denotes the same relation, kept for symmetry with the integer comparison operators. `>`/`>=` are the mirror (superset).
+`s1 <= s2` holds when every element of `s1` is in `s2` (`s1 ⊆ s2`, so a set is a subset of itself). `s1 < s2` is the **proper** subset (`s1 ⊂ s2`): `s1 <= s2` and the sets are not equal, as with the integer comparison operators. `>`/`>=` are the mirrors (superset). They are backed by the natives `properSubset` (`<`, `>`) and `subset` (`<=`, `>=`, defined as `subset(s1, s2) | s1 = s2`).
 
 ```nelumbo
 {1,2}   < {1,2,3}   ?   [()][]      ▸ true
-{}      < {1,2,3}   ?   [()][]      ▸ the empty set is a subset of anything
+{}      < {1,2,3}   ?   [()][]      ▸ the empty set is a proper subset of any other set
 {1,2,3} < {}        ?   [][()]      ▸ false
+{1,2}   < {1,2}     ?   [][()]      ▸ a set is no proper subset of itself
+{1,2}   <= {1,2}    ?   [()][]      ▸ but it is a subset of itself
 {1,2}   >= {1}      ?   [()][]
 ```
+
+With an [open set](#open-collections--) the answer is unknown when the unlisted elements could decide it: `{1,2} < {1,2,..}` is `[..][..]` (the open set may or may not have a third element), while `{1} < {1,2,..}` is true and `{1,..} < {1}` is false.
 
 ### Set algebra — `&&` `||` `-`
 
@@ -416,12 +422,12 @@ Added to what `nelumbo.integers` and `nelumbo.logic` already export:
 | Comprehension | `{[e](c)}` — set-builder notation                                            |
 | Cardinality   | `\|c\|` — element count of any collection                                    |
 | Membership    | `e in c`                                                                     |
-| Set relations | `<` `>` `<=` `>=` — subset / superset                                        |
+| Set relations | `<=` `>=` — subset / superset; `<` `>` — proper subset / superset            |
 | Set algebra   | `&&` intersection, `\|\|` union, `-` difference                              |
 | List ops      | `+` concatenation; 0-based index: `at i in l`, `first in l`, `last in l`, `e first index l`, `e last index l`, `e index l`, `e indexes l`; update: `set e at i in l` |
 | Higher-order  | `c where [x](p)`, `c map [x](e)`, `c sort [a,b](p)`                          |
 
-(The native predicates `build`, `size`, `index`, `firstIndex`, `lastIndex`, `first`, `last`, `elementOf`, `subset`, `intersection`, `union`, `diff`, `concat`, `setFilter`, `listFilter`, `map`, `sort` and `set` are all `private`; the operator syntax above is their public surface.)
+(The native predicates `build`, `size`, `index`, `firstIndex`, `lastIndex`, `first`, `last`, `elementOf`, `subset`, `properSubset`, `intersection`, `union`, `diff`, `concat`, `setFilter`, `listFilter`, `map`, `sort` and `set` are all `private`; the operator syntax above is their public surface.)
 
 (The `Type E, F` declaration introduces the parameter bindings inside `collections.nl`; the *mechanism* of generic-type parameters is supplied by `nelumbo.lang` and is available to importers regardless of `collections`.)
 

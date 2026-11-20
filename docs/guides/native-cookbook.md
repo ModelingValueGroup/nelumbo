@@ -82,7 +82,7 @@ A Predicate native computes its result in one of two ways: a `@NelumboMethod`, o
 
 1. **The functor is an operator.** Method dispatch matches the functor's *name*, and that name must be a Java-style identifier (`add`, `gt`, `iir`). An operator pattern such as `<Integer> ">" <Integer>` has the name `">"`, which can never match a method — the engine silently falls back to `infer`. Two ways out:
    - override `infer` on the class bound to the operator (this is what `datetime.GreaterThan` does); **or**
-   - declare a named private helper functor and route the operator to it with a rule, so the *helper* is a `@NelumboMethod`. `integers.nl` declares `gt(<Integer>,<Integer>) @…Integers` and adds `a>b <=> gt(a,b)`; `collections.nl` does the same, routing `<` through `subset`. This is the preferred path when you want to keep all logic in methods.
+   - declare a named private helper functor and route the operator to it with a rule, so the *helper* is a `@NelumboMethod`. `integers.nl` declares `gt(<Integer>,<Integer>) @…Integers` and adds `a>b <=> gt(a,b)`; `collections.nl` does the same, routing `<` through `properSubset`. This is the preferred path when you want to keep all logic in methods.
 2. **You need the `InferContext`.** A `@NelumboMethod` receives only the arguments. If the native must consult the knowledge base, cycle results, or `context.reduce()` / `context.shallow()`, override `infer`.
 3. **`BinaryPredicate` connectives.** `And` / `Or`-style natives override the truth-table methods instead (Recipe 4) — neither `@NelumboMethod` nor `infer` applies.
 

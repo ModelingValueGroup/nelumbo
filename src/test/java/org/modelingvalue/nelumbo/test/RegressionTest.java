@@ -216,6 +216,13 @@ public class RegressionTest extends NelumboTestBase {
         testResource("speculative-guard-index-crash.nl");
     }
 
+    // the intersection of an open and a closed set is open when an element of the
+    // closed set may be in the open one (was bugs/open-set-intersection-closed.nl)
+    @RepeatedTest(10)
+    public void openSetIntersectionClosed() {
+        testResource("open-set-intersection-closed.nl");
+    }
+
     // a query's result does not depend on earlier, unrelated queries
     @RepeatedTest(10)
     public void emptySetQueryChangesLaterResult() {

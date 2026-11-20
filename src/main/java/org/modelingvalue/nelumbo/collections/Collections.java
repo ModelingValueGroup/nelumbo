@@ -176,13 +176,32 @@ public class Collections extends Predicate {
         return b.complete() ? falsehoodCC() : unknown();
     }
 
+    // a is a subset of b and not equal to it. With the known elements of a all in b: an element only b has decides it
+    // for a complete a; with as many known elements, a complete b has no room for another one (a is b, or more).
+    @NelumboMethod
+    protected InferResult properSubset(NSet a, NSet b) {
+        if (a == null || b == null) {
+            return unknown();
+        }
+        if (b.collection().containsAll(a.collection())) {
+            boolean more = b.size() > a.size();
+            if (a.complete()) {
+                return more ? factCC() : b.complete() ? falsehoodCC() : unknown();
+            }
+            return !more && b.complete() ? falsehoodCC() : unknown();
+        }
+        return b.complete() ? falsehoodCC() : unknown();
+    }
+
     @NelumboMethod
     protected InferResult intersection(NSet a, NSet b, NSet i) {
         if (a == null || b == null) {
             return unknown();
         }
         Set<Object> set = a.collection().retainAll(b.collection());
-        boolean complete = a.complete() || b.complete();
+        // an element of a closed operand that an open one does not list may still be in it
+        boolean complete = a.complete() ? b.complete() || b.collection().containsAll(a.collection())
+                : b.complete() && a.collection().containsAll(b.collection());
         if (i != null) {
             return sameAs(i, set, complete) ? factCC() : falsehoodCC();
         }

@@ -29,7 +29,7 @@ import org.modelingvalue.nelumbo.tools.NelumboEvaluator.EvalResult;
 // from src/main/resources/org/modelingvalue/nelumbo/bugs/ whose query
 // expectations state the CORRECT behavior. While the bug exists the method is
 // ABORTED (grey); once fixed it FAILS with "KNOWN BUG APPEARS FIXED" - then
-// remove the @KnownBug and promote the method to RegressionTest (twenty-two
+// remove the @KnownBug and promote the method to RegressionTest (twenty-three
 // promoted so far: two on 2026-09-11, three on 2026-09-24, four on 2026-09-25,
 // one on 2026-10-02, five on 2026-10-06, on 2026-10-18 one merged from
 // three unbound-lookup repros whose remaining expectations were wrong: a
@@ -79,7 +79,9 @@ import org.modelingvalue.nelumbo.tools.NelumboEvaluator.EvalResult;
 // Removed on 2026-11-20, not promoted: single-unique-hole-not-closed. A unique
 // hole is unique per combination of the other type holes, so a functor with
 // only that hole (winner(<one Person>)) is an error at its declaration now
-// (NelumboTest.uniqueHoleNeedsAnotherHole).
+// (NelumboTest.uniqueHoleNeedsAnotherHole). Promoted the same day:
+// open-set-intersection-closed (an intersection is closed only when every
+// element of a closed operand is listed by the other one).
 //
 // Findings WITHOUT an .nl repro (from the 2026-09-07 review; kept here so
 // they are not lost - they cannot be tested from this suite):
@@ -282,9 +284,4 @@ public class KnownBugsTest extends NelumboTestBase {
         bugResource("relation-guard-on-two-head-variables-hangs.nl");
     }
 
-    @KnownBug("intersection of an open and a closed set is closed although an element may be in the open set ({1,..} && {2} is {} instead of {..})")
-    @Test
-    public void openSetIntersectionClosed() {
-        bugResource("open-set-intersection-closed.nl");
-    }
 }

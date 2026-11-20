@@ -415,6 +415,7 @@ List<E>       :: Collection<E>
 private Boolean ::= build(<Lambda1<E,Boolean>>, <Set<E>>)  @...BuildSet,
                     size(...), index(...), firstIndex(...), lastIndex(...),
                     first(...), last(...), elementOf(...), subset(...),
+                    properSubset(...),
                     intersection(...), union(...), diff(...), concat(...),
                     setFilter(...), listFilter(...), map(...), sort(...),
                     set(...)  @...Collections
@@ -451,7 +452,7 @@ Boolean          ::= <Set<E>> "<" <Set<E>>, ...,           ▸ subset / superset
 - **`Type E, F`** — the declaration that introduces generic type parameters. `lang.nl` uses the same mechanism for parenthesisation (`Type P; P ::= (<P>)`); this is its first use to define container types. `F` is the input element type of `map`.
 - **`Collection<E>`, `Set<E>`, and `List<E>`** — parameterised container types with literal syntax. `Collection<E>` is the common supertype. The literal functors are declared [`struct`](../reference/lang/grammar.md#struct-functors--struct): a collection of literals is a `Literal` itself, which gives it structural equality. A literal may contain `..` to make it *open* (`{1,2,..}`: at least these elements).
 - **Set-builder notation** — `{[e](c)}`, the comprehension form of `Set<E>`; it is a `Lambda1<E,Boolean>` in braces.
-- **Algebraic operations** — cardinality `|c|`, membership `e in c`, subset/superset `< > <= >=`, set intersection/union/difference `&& || -`, list concatenation `+`, and list indexing (`at i in l`, `first in l`, `last in l`, `e first index l`, `e last index l`, `e index l`, `e indexes l`), and list update `set e at i in l` (a copy with the element at index `i` replaced). Each is a relation backed by the `Collections` native class and runs in both directions where meaningful.
+- **Algebraic operations** — cardinality `|c|`, membership `e in c`, subset/superset `<= >=` and proper subset/superset `< >`, set intersection/union/difference `&& || -`, list concatenation `+`, and list indexing (`at i in l`, `first in l`, `last in l`, `e first index l`, `e last index l`, `e index l`, `e indexes l`), and list update `set e at i in l` (a copy with the element at index `i` replaced). Each is a relation backed by the `Collections` native class and runs in both directions where meaningful.
 - **Higher-order operations** — `c where [x](p)` (filter), `c map [x](e)` (to a list), `c sort [a,b](p)` (to a list). They take [lambdas](../reference/logic/lambdas.md) declared in `logic.nl`. See [`reference/packages/collections.md`](../reference/packages/collections.md#operations) for the full table.
 
 ### How the literal syntax works

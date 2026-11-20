@@ -15,6 +15,7 @@ private Boolean   ::= build(<Lambda1<E,Boolean>>, <Set<E>>)                    @
                       last(<List<E>>, <E>)                                     @nelumbo.collections.Collections,
                       elementOf(<Set<E>>, <E>)                                 @nelumbo.collections.Collections,
                       subset(<Set<E>>, <Set<E>>)                               @nelumbo.collections.Collections,
+                      properSubset(<Set<E>>, <Set<E>>)                         @nelumbo.collections.Collections,
                       intersection(<Set<E>>, <Set<E>>, <Set<E>>)               @nelumbo.collections.Collections,
                       union(<Set<E>>, <Set<E>>, <Set<E>>)                      @nelumbo.collections.Collections,
                       diff(<Set<E>>, <Set<E>>, <Set<E>>)                       @nelumbo.collections.Collections,
@@ -75,8 +76,8 @@ Lambda1<F,E>         lfe
 
 {leb}=s             <=>  build(leb, s)
 e in s              <=>  elementOf(s, e)
-s1 < s2             <=>  subset(s1, s2)
-s1 > s2             <=>  subset(s2, s1)
+s1 < s2             <=>  properSubset(s1, s2)
+s1 > s2             <=>  properSubset(s2, s1)
 s1 && s2 = s3       <=>  intersection(s1, s2, s3)
 s1 || s2 = s3       <=>  union(s1, s2, s3)
 s1 - s2 = s3        <=>  diff(s1, s2, s3)
@@ -92,8 +93,8 @@ set e at i in l1=l2 <=>  set(l1,i,e,l2)
 e indexes l         ==  {[i](index(l, e, i))}
 e index l           ==  e first index l
 
-s1 <= s2            <=>  s1 < s2 | s1 = s2
-s1 >= s2            <=>  s1 > s2 | s1 = s2
+s1 <= s2            <=>  subset(s1, s2) | s1 = s2
+s1 >= s2            <=>  subset(s2, s1) | s1 = s2
 e in l              <=>  E[i](firstIndex(l, e, i))
 
 s1 where leb = s2   <=>  setFilter(s1, leb, s2)
