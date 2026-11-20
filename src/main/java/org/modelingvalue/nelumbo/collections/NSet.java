@@ -15,6 +15,7 @@ package org.modelingvalue.nelumbo.collections;
 
 import java.io.Serial;
 
+import org.modelingvalue.collections.Collection;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.collections.Set;
 import org.modelingvalue.nelumbo.ConstructionReason;
@@ -51,6 +52,11 @@ public class NSet extends NCollection {
     @SuppressWarnings("unchecked")
     public <T> Set<T> collection() {
         return (Set<T>) get(0);
+    }
+
+    @Override
+    protected boolean includes(Collection<?> closed, Collection<?> known) {
+        return known.allMatch(closed::contains);
     }
 
     @Override

@@ -46,8 +46,13 @@ public class Equal extends Predicate {
 
     @Override
     public InferResult infer(int nrOfUnbound, InferContext context) {
+        Node left = left(), right = right();
+        if ((left.hasOpenPart() || right.hasOpenPart()) && left.same(right) == null) {
+            // an open collection: the elements it does not list would decide it
+            return unknown();
+        }
         boolean[] complete = new boolean[] { true };
-        Node eq = eq(left(), right(), complete);
+        Node eq = eq(left, right, complete);
         if (eq == null) {
             return complete[0] ? falsehoodCC() : falsehoodCI();
         } else {

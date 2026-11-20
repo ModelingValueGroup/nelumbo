@@ -550,11 +550,17 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         QualifiedSet<Predicate, Inference>[] mem = memoization.updateAndGet(array -> {
             array = array.clone();
             array[0] = array[0].put(new Inference(predicate, result, initialUsageCount));
+            // not for an open collection: m(X)={1,..} as an answer to m(X)=s does not make m(X)={1,..} true for another
+            // partly known set {1,..}
             for (Predicate fact : result.facts()) {
-                array[0] = array[0].put(new Inference(fact, fact.factCC(), initialUsageCount));
+                if (!fact.hasOpenPart()) {
+                    array[0] = array[0].put(new Inference(fact, fact.factCC(), initialUsageCount));
+                }
             }
             for (Predicate falsehood : result.falsehoods()) {
-                array[0] = array[0].put(new Inference(falsehood, falsehood.falsehoodCC(), initialUsageCount));
+                if (!falsehood.hasOpenPart()) {
+                    array[0] = array[0].put(new Inference(falsehood, falsehood.falsehoodCC(), initialUsageCount));
+                }
             }
             if (array[0].size() >= maxLogicMemoiz / 4) {
                 array[2] = array[2].putAll(array[1]);
@@ -656,7 +662,10 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         for (int[] i : vars) {
             pred = pred.set(i, Variable.DUMMY);
         }
-        InferResult result = facts.get().get(pred);
+        // An open collection in the predicate is only partly known: it is not known to be the one in a fact, so no fact
+        // is found by it. Only a unique hole can still tell it apart from the value that is there.
+        boolean open = predicate.hasOpenPart();
+        InferResult result = open ? null : facts.get().get(pred);
         if (result != null) {
             result = result.cast(predicate);
             Set<Predicate> facts = result.facts();
@@ -675,10 +684,17 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         }
         if (vars.isEmpty()) {
             for (int i : predicate.functor().unique()) {
+                Object value = predicate.get(i);
+                if (value instanceof Node node && !node.type().isLiteral()) {
+                    // a function application (m(X)=r(X)) is no value to compare with the one in the hole
+                    continue;
+                }
                 pred = predicate.set(i, Variable.DUMMY);
-                result = facts.get().get(pred);
+                result = open && pred.hasOpenPart() ? null : facts.get().get(pred);
                 if (result != null) {
-                    return predicate.falsehoodCC();
+                    // the hole has another value: false, unless open collections leave undecided whether it is another
+                    return result.facts().anyMatch(f -> Node.same(f.get(i), value) == null) ? predicate.unknown()
+                            : predicate.falsehoodCC();
                 }
             }
         }

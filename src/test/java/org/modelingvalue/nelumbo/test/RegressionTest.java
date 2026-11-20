@@ -223,6 +223,13 @@ public class RegressionTest extends NelumboTestBase {
         testResource("open-set-intersection-closed.nl");
     }
 
+    // an open collection is only partly known: whether it is the same as another value is unknown, unless the
+    // elements it lists tell them apart; also for a function value, and whatever was asked before
+    @RepeatedTest(10)
+    public void openCollectionEquality() {
+        testResource("open-collection-equality.nl");
+    }
+
     // a query's result does not depend on earlier, unrelated queries
     @RepeatedTest(10)
     public void emptySetQueryChangesLaterResult() {

@@ -203,7 +203,7 @@ public class Collections extends Predicate {
         boolean complete = a.complete() ? b.complete() || b.collection().containsAll(a.collection())
                 : b.complete() && a.collection().containsAll(b.collection());
         if (i != null) {
-            return sameAs(i, set, complete) ? factCC() : falsehoodCC();
+            return given(i, set, complete, a.complete() ? a.collection() : b.complete() ? b.collection() : null);
         }
         Type type = elementType(common(a, b), set);
         return set(2, new NSet(type, set, complete)).factCI();
@@ -217,7 +217,7 @@ public class Collections extends Predicate {
         Set<Object> set = a.collection().addAll(b.collection());
         boolean complete = a.complete() && b.complete();
         if (u != null) {
-            return sameAs(u, set, complete) ? factCC() : falsehoodCC();
+            return given(u, set, complete);
         }
         Type type = common(a, b);
         return set(2, new NSet(type, set, complete)).factCI();
@@ -232,7 +232,7 @@ public class Collections extends Predicate {
         Set<Object> set = open ? Set.of() : a.collection().removeAll(b.collection());
         boolean complete = !open && a.complete();
         if (d != null) {
-            return sameAs(d, set, complete) ? factCC() : falsehoodCC();
+            return given(d, set, complete, a.complete() ? a.collection().removeAll(b.collection()) : null);
         }
         Type type = elementType(common(a, b), set);
         return set(2, new NSet(type, set, complete)).factCI();
@@ -246,7 +246,7 @@ public class Collections extends Predicate {
         List<Object> list = a.collection().addAll(b.collection());
         boolean complete = a.complete() && b.complete();
         if (c != null) {
-            return sameAs(c, list, complete) ? factCC() : falsehoodCC();
+            return given(c, list, complete);
         }
         Type type = common(a, b);
         return set(2, new NList(type, list, complete)).factCI();
@@ -262,7 +262,7 @@ public class Collections extends Predicate {
             return incompleteResult();
         }
         if (b != null) {
-            return sameAs(b, set, a.complete()) ? factCC() : falsehoodCC();
+            return given(b, set, a.complete());
         }
         Type type = a.isEmpty() ? l.localVars().get(0).type() : elementType(a.elementType(), set);
         return set(2, new NSet(type, set, a.complete())).factCI();
@@ -278,7 +278,7 @@ public class Collections extends Predicate {
             return incompleteResult();
         }
         if (b != null) {
-            return sameAs(b, list, a.complete()) ? factCC() : falsehoodCC();
+            return given(b, list, a.complete());
         }
         Type type = a.isEmpty() ? l.localVars().get(0).type() : elementType(a.elementType(), list);
         return set(2, new NList(type, list, a.complete())).factCI();
@@ -294,7 +294,7 @@ public class Collections extends Predicate {
             return incompleteResult();
         }
         if (b != null) {
-            return sameAs(b, list, a.complete()) ? factCC() : falsehoodCC();
+            return given(b, list, a.complete());
         }
         Type type = elementType(l.expression().type(), list);
         return set(2, new NList(type, list, a.complete())).factCI();
@@ -310,7 +310,7 @@ public class Collections extends Predicate {
             return incompleteResult();
         }
         if (b != null) {
-            return sameAs(b, list, a.complete()) ? factCC() : falsehoodCC();
+            return given(b, list, a.complete());
         }
         Type type = a.isEmpty() ? l.localVars().get(0).type() : a.elementType();
         return set(2, new NList(type, list, a.complete())).factCI();
@@ -326,7 +326,7 @@ public class Collections extends Predicate {
             return incompleteResult();
         }
         if (b != null) {
-            return sameAs(b, list, true) ? factCC() : falsehoodCC();
+            return given(b, list, true);
         }
         Type type = a.elementType().common(e.type());
         return set(3, new NList(type, list, true)).factCI();
@@ -351,8 +351,21 @@ public class Collections extends Predicate {
         return result != null ? result : type;
     }
 
-    private static boolean sameAs(NCollection ncoll, Collection<Object> coll, boolean complete) {
-        return ncoll.complete() == complete && ncoll.collection().equals(coll);
+    // The computed result against a given one: unknown when an open collection (given or computed) leaves undecided
+    // whether they are the same.
+    private InferResult given(NCollection given, Collection<Object> coll, boolean complete) {
+        return given(given, coll, complete, null);
+    }
+
+    // As above, for an operation whose result can only have elements of the set within (null when that is not known):
+    // a given set that lists another element is certainly not the result.
+    private InferResult given(NCollection given, Collection<Object> coll, boolean complete, Set<Object> within) {
+        Boolean same = given.same(coll, complete);
+        if (same == null && within != null && !isOpen(within) && !isOpen(given.collection())
+                && !given.collection().allMatch(within::contains)) {
+            same = Boolean.FALSE;
+        }
+        return same == null ? unknown() : same ? factCC() : falsehoodCC();
     }
 
 }

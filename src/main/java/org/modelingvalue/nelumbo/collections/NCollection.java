@@ -19,6 +19,7 @@ import org.modelingvalue.collections.Collection;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.lang.Type;
+import org.modelingvalue.nelumbo.lang.Variable;
 
 public abstract class NCollection extends Node {
     @Serial
@@ -48,6 +49,41 @@ public abstract class NCollection extends Node {
     public Type elementType() {
         return type().arguments().first();
     }
+
+    @Override
+    protected boolean isOpen() {
+        return !complete() || isOpen(collection());
+    }
+
+    @Override
+    public Boolean same(Node other) {
+        if (other instanceof Variable) {
+            return Boolean.TRUE;
+        } else if (other instanceof NCollection coll && coll.getClass() == getClass()) {
+            return same(coll.collection(), coll.complete());
+        }
+        return Boolean.FALSE;
+    }
+
+    // As same(Node), with the other collection given by its elements. Two closed collections of fully known elements
+    // are the same when their elements are. An open one can only be told apart from the other: when the other is
+    // closed and lacks an element it lists. In every other case it is undecided (null), also for two open ones.
+    public final Boolean same(Collection<?> elements, boolean complete) {
+        Collection<?> mine = collection();
+        if (isOpen(mine) || isOpen(elements)) {
+            return null;
+        } else if (complete() && complete) {
+            return mine.equals(elements);
+        } else if (complete()) {
+            return includes(mine, elements) ? null : Boolean.FALSE;
+        } else if (complete) {
+            return includes(elements, mine) ? null : Boolean.FALSE;
+        }
+        return null;
+    }
+
+    // whether the known elements of an open collection can all be elements of the closed collection
+    protected abstract boolean includes(Collection<?> closed, Collection<?> known);
 
     protected static final int open(Object[] args) {
         for (int i = 0; i < args.length; i++) {

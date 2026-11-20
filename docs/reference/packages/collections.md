@@ -58,13 +58,22 @@ Both functors are declared [`struct`](../lang/grammar.md#struct-functors--struct
 
 A collection literal may contain the **incompleteness marker** `..` in place of an element. It makes the collection *open*: the listed elements are known members, but there may be more. This is the same `..` that marks an open side of a query result (see [`reading-a-test.md`](../../getting-started/reading-a-test.md#the-incompleteness-marker-)), now on a single value. An open collection prints with a trailing `..` (`{1,2,..}`, `[1,..]`, `{..}`), wherever the `..` was written.
 
-Openness is part of the value, so a closed and an open collection are never equal, while two open collections with the same known elements are:
+An open collection is only **partly known**, so whether it is the same as another value is unknown, unless the elements it lists already tell them apart. It is never known to be equal to anything, not even to an open collection with the same known elements:
 
 ```nelumbo
-s = {1,2,..}      ?   [(s={1,2,..})][..]
-{1,..} = {1}      ?   [][()]
-{1,..} = {1,..}   ?   [()][]
+s = {1,2,..}      ?   [(s={1,2,..})][..]   ▸ the open set itself is a value: it can be an answer
+{1,..} = {1}      ?   [..][..]             ▸ unknown: the open set may have more elements
+{1,..} = {1,..}   ?   [..][..]             ▸ unknown: two partly known sets
+{1,..} = {2}      ?   [][()]               ▸ false: {2} lacks the known element 1
+{1,..} != {2}     ?   [()][]
 ```
+
+The same holds wherever a value is compared with an open collection:
+
+- a result of an operation against a given value: `{1,..} || {2} = {1,2}` is unknown, `{1,..} || {2} = {1}` is false. An intersection or a difference has no element outside a closed operand, so `{1,..} && {2} = {3}` is false too, while `{1,..} && {2} = {}` and `= {2}` are unknown;
+- a function value, in a fact or from a rule: after `fact m(X)={1,..}`, `m(X) = {1,2}` is unknown and `m(X) = {2}` is false, where a closed value would make every other value false (see [Open facts and `one`](../logic/statements.md#open-facts-and-one)); `m(X) = {1,..}` is unknown too.
+
+To check that a result is a certain open collection, ask for it (`m(X) = s ? [(s={1,..})][..]`, or the function query `m(X) ? [({1,..})][..]`): an expected result is compared as written. An open list does not tell where its unlisted elements are, so `[2,..] = [1,2,3]` is unknown and `[2,1,..] = [1,2]` is false (the order of the known elements cannot fit). An open collection that is an *element* of another collection is compared as written by `in` and the set operations.
 
 Open collections arise naturally from a set-builder over open facts (see [below](#set-builder--ec)): the result is one open set rather than an open list of candidate sets.
 
@@ -174,6 +183,7 @@ Operations respect the openness of their operands; a result is only as complete 
 
 | Operation | Result for open operands |
 |---|---|
+| `a = b`, `a != b` | unknown if either is open, unless a closed one lacks a known element of the open one (then `=` is false) |
 | `e in s`, `e` bound | `true` if `e` is a known member, else `false` for a closed set and unknown for an open one |
 | `e in s`, `e` free | enumerates the known members; the facts side is open (`..`) for an open set |
 | `\|c\|` | unknown for an open collection |

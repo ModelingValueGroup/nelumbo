@@ -464,7 +464,7 @@ The structural markers `<(> <(> <E> <|> .. <)> <,> , <)*>` decode as:
 - `<,>` — the separator marker
 - `,` after `<,>` — the actual separator character the user writes
 
-So `Set<E>` accepts `{}`, `{x}`, `{x, y}`, `{x, y, z}`, and so on. Same for `List<E>` with `[` and `]`. A `..` among the items makes the collection **open**: `{x, y, ..}` contains at least `x` and `y`, `{..}` has no known elements. Open collections print with a trailing `..`, are never equal to a closed one, and propagate through the operations (a union with an open set is open, the size of an open set is unknown); see [`reference/packages/collections.md`](../reference/packages/collections.md#open-collections--).
+So `Set<E>` accepts `{}`, `{x}`, `{x, y}`, `{x, y, z}`, and so on. Same for `List<E>` with `[` and `]`. A `..` among the items makes the collection **open**: `{x, y, ..}` contains at least `x` and `y`, `{..}` has no known elements. Open collections print with a trailing `..`, are never known to be equal to another collection (`{1,..} = {1}` is unknown), and propagate through the operations (a union with an open set is open, the size of an open set is unknown); see [`reference/packages/collections.md`](../reference/packages/collections.md#open-collections--).
 
 ### Set-builder notation
 

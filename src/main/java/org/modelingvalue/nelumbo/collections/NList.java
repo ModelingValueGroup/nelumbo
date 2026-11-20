@@ -14,7 +14,9 @@
 package org.modelingvalue.nelumbo.collections;
 
 import java.io.Serial;
+import java.util.Iterator;
 
+import org.modelingvalue.collections.Collection;
 import org.modelingvalue.collections.List;
 import org.modelingvalue.nelumbo.AstElement;
 import org.modelingvalue.nelumbo.ConstructionReason;
@@ -85,6 +87,22 @@ public final class NList extends NCollection {
     @SuppressWarnings("unchecked")
     public <T> List<T> collection() {
         return (List<T>) get(0);
+    }
+
+    // an open list does not tell where its unlisted elements are: its known ones are in the closed list, in their order
+    @Override
+    protected boolean includes(Collection<?> closed, Collection<?> known) {
+        Iterator<?> it = closed.iterator();
+        for (Object e : known) {
+            boolean found = false;
+            while (!found && it.hasNext()) {
+                found = e.equals(it.next());
+            }
+            if (!found) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public <T extends Node> List<T> elementsFlattened() {

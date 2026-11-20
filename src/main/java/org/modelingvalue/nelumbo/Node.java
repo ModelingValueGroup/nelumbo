@@ -66,6 +66,7 @@ public class Node extends StructImpl implements AstElement {
 
     // cash
     private int hashCodeCache;
+    private byte openPartCache; // 0: not determined, 1: no open part, 2: an open part
 
     @NelumboConstructor
     public Node(NodeInfo nodeInfo, Object... args) {
@@ -164,6 +165,81 @@ public class Node extends StructImpl implements AstElement {
             return false;
         }
         return super.equals(obj);
+    }
+
+    // Whether an open collection ({1,..}, [1,..]) is in this node, at any depth. An open collection stands for a
+    // collection that is only partly known, so whether it is the same as another value can be undecided (same).
+    public final boolean hasOpenPart() {
+        if (openPartCache == 0) {
+            openPartCache = (byte) (isOpen() ? 2 : 1);
+        }
+        return openPartCache == 2;
+    }
+
+    protected boolean isOpen() {
+        for (int i = 0; i < length(); i++) {
+            if (isOpen(get(i))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    protected static boolean isOpen(Object val) {
+        if (val instanceof Node node) {
+            return node.hasOpenPart();
+        } else if (val instanceof ContainingCollection<?> coll) {
+            for (Object e : coll) {
+                if (isOpen(e)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    // Three-valued equality: TRUE or FALSE when it is decided, null when it depends on the elements an open collection
+    // does not list. Without an open part it is equals. A variable is the same as anything: binding it is the
+    // caller's concern.
+    public Boolean same(Node other) {
+        if (this instanceof Variable || other instanceof Variable) {
+            return Boolean.TRUE;
+        } else if (!hasOpenPart() && !other.hasOpenPart()) {
+            return equals(other);
+        } else if (!functorOrTypeForEquals().equals(other.functorOrTypeForEquals()) || length() != other.length()) {
+            return Boolean.FALSE;
+        }
+        Boolean same = Boolean.TRUE;
+        for (int i = 0; i < length(); i++) {
+            Boolean s = same(get(i), other.get(i));
+            if (s == null) {
+                same = null;
+            } else if (!s) {
+                return Boolean.FALSE;
+            }
+        }
+        return same;
+    }
+
+    public static Boolean same(Object a, Object b) {
+        if (a instanceof Node na && b instanceof Node nb) {
+            return na.same(nb);
+        } else if (a instanceof List<?> la && b instanceof List<?> lb) {
+            if (la.size() != lb.size()) {
+                return Boolean.FALSE;
+            }
+            Boolean same = Boolean.TRUE;
+            for (int i = 0; i < la.size(); i++) {
+                Boolean s = same(la.get(i), lb.get(i));
+                if (s == null) {
+                    same = null;
+                } else if (!s) {
+                    return Boolean.FALSE;
+                }
+            }
+            return same;
+        }
+        return Objects.equals(a, b);
     }
 
     public final Set<Pair<Object, Object>> diff(Node other) {
