@@ -526,9 +526,12 @@ public class Functor extends Node implements FunctorOrType {
             return null;
         }
         if (literal == null) {
-            Pattern litPattern = pattern().setTypes(Type::toLiteral);
             Type type = (Type) get(1);
             boolean struct = isStruct();
+            // The arguments of a literal are literals at every level: without the deep
+            // conversion a nested generic struct keeps a differently-typed argument on
+            // each occurrence, and Equal rejects them as different functors.
+            Pattern litPattern = pattern().setTypes(struct ? Type::toLiteralDeep : Type::toLiteral);
             Functor f = Functor.of(astElements(), litPattern, struct ? type.toLiteralDeep() : type, local(),
                     (Constructor<?>) get(3), leftPrecedence(), (Method) get(5), false, !struct && isFunction(),
                     (boolean) get(8), struct).incrementVariables("$");

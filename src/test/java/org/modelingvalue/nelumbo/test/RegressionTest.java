@@ -53,6 +53,11 @@ public class RegressionTest extends NelumboTestBase {
     }
 
     @RepeatedTest(10)
+    public void genericStructNestedEqualityBinding() {
+        testResource("generic-struct-nested-equality-binding.nl");
+    }
+
+    @RepeatedTest(10)
     public void literalConstructorInRuleHead() {
         testResource("literal-constructor-in-rule-head.nl");
     }
