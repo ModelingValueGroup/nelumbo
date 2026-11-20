@@ -26,7 +26,6 @@ import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.NodeInfo;
 import org.modelingvalue.nelumbo.collections.NList;
 import org.modelingvalue.nelumbo.logic.BooleanVariable;
-import org.modelingvalue.nelumbo.logic.Lambda;
 import org.modelingvalue.nelumbo.logic.Predicate;
 import org.modelingvalue.nelumbo.syntax.ParseContext;
 import org.modelingvalue.nelumbo.syntax.ParseException;
@@ -176,13 +175,12 @@ public final class Variable extends Node {
         for (Node a : ancestors) {
             if (a instanceof Predicate pred && pred.allLocalVars().contains(this)) {
                 for (Node l : ancestors) {
-                    if (l instanceof Lambda lambda && lambda.localVars().contains(this)) {
+                    if (l.localVars().contains(this)) {
                         return;
                     }
                 }
-                // knowledgeBase.addException(
-                // new ParseException("Local variable " + baseName() + " used outside local
-                // context.", this));
+                knowledgeBase.addException(
+                        new ParseException("Local variable " + baseName() + " used outside local context.", this));
             }
         }
     }
