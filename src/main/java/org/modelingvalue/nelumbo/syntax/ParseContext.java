@@ -15,6 +15,7 @@ package org.modelingvalue.nelumbo.syntax;
 
 import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.Map;
+import org.modelingvalue.collections.Set;
 import org.modelingvalue.collections.mutable.MutableMap;
 import org.modelingvalue.collections.util.NotMergeableException;
 import org.modelingvalue.nelumbo.KnowledgeBase;
@@ -23,231 +24,108 @@ import org.modelingvalue.nelumbo.lang.Functor;
 import org.modelingvalue.nelumbo.lang.Type;
 import org.modelingvalue.nelumbo.lang.Variable;
 
-public interface ParseContext {
+public class ParseContext {
 
-    ParseState state();
-
-    Token token();
-
-    int precedence();
-
-    String group();
-
-    ParseContext outer();
-
-    MutableMap<String, Map<Type, ParseState>> preStates();
-
-    MutableMap<String, Map<Type, ParseState>> postStates();
-
-    MutableMap<String, Map<Type, Variable>> hiddenVariables();
-
-    static ParseContext of(String group, int precedence, MutableMap<String, Map<Type, ParseState>> preStates,
-            MutableMap<String, Map<Type, ParseState>> postStates,
-            MutableMap<String, Map<Type, Variable>> hiddenVariables) {
-        return new ParseContext() {
-
-            @Override
-            public ParseState state() {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public Token token() {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public int precedence() {
-                return precedence;
-            }
-
-            @Override
-            public String group() {
-                return group;
-            }
-
-            @Override
-            public MutableMap<String, Map<Type, ParseState>> preStates() {
-                return preStates;
-            }
-
-            @Override
-            public MutableMap<String, Map<Type, ParseState>> postStates() {
-                return postStates;
-            }
-
-            @Override
-            public MutableMap<String, Map<Type, Variable>> hiddenVariables() {
-                return hiddenVariables;
-            }
-
-            @Override
-            public ParseContext outer() {
-                return null;
-            }
-
+    public static ParseContext of(String group, int precedence, MutableMap<String, ParseState> preStates,
+            MutableMap<String, ParseState> postStates, MutableMap<String, Set<Variable>> hiddenVariables) {
+        return new ParseContext(null, null, preStates, postStates, hiddenVariables, null, group, precedence) {
             @Override
             public String toString() {
                 return "(UNIVERSE)";
             }
-
         };
     }
 
-    static ParseContext of(String group, int precedence, ParseContext outer) {
-        MutableMap<String, Map<Type, ParseState>> preStates = MutableMap.of(Map.of());
-        MutableMap<String, Map<Type, ParseState>> postStates = MutableMap.of(Map.of());
-        MutableMap<String, Map<Type, Variable>> hiddenVariables = MutableMap.of(Map.of());
-        return new ParseContext() {
-
-            @Override
-            public ParseState state() {
-                return null;
-            }
-
-            @Override
-            public Token token() {
-                return null;
-            }
-
-            @Override
-            public int precedence() {
-                return precedence;
-            }
-
-            @Override
-            public String group() {
-                return group;
-            }
-
-            @Override
-            public MutableMap<String, Map<Type, ParseState>> preStates() {
-                return preStates;
-            }
-
-            @Override
-            public MutableMap<String, Map<Type, ParseState>> postStates() {
-                return postStates;
-            }
-
-            @Override
-            public MutableMap<String, Map<Type, Variable>> hiddenVariables() {
-                return hiddenVariables;
-            }
-
-            @Override
-            public ParseContext outer() {
-                return outer;
-            }
-
+    public static ParseContext of(String group, int precedence, ParseContext outer) {
+        MutableMap<String, ParseState> preStates = MutableMap.of(outer.preStates.get());
+        MutableMap<String, ParseState> postStates = MutableMap.of(outer.postStates.get());
+        MutableMap<String, Set<Variable>> hiddenVariables = MutableMap.of(outer.hiddenVariables.get());
+        return new ParseContext(null, null, preStates, postStates, hiddenVariables, outer, group, precedence) {
             @Override
             public String toString() {
-                return "(" + precedence() + " " + group() + " " + outer() + ")";
+                return "(" + precedence + " " + group + " " + outer + ")";
             }
-
         };
     }
 
-    static ParseContext of(ParseState state, Token token, ParseContext outer) {
-        MutableMap<String, Map<Type, ParseState>> preStates = MutableMap.of(Map.of());
-        MutableMap<String, Map<Type, ParseState>> postStates = MutableMap.of(Map.of());
-        MutableMap<String, Map<Type, Variable>> hiddenVariables = MutableMap.of(Map.of());
-        return new ParseContext() {
-
-            @Override
-            public ParseState state() {
-                return state;
-            }
-
-            @Override
-            public Token token() {
-                return token;
-            }
-
-            @Override
-            public int precedence() {
-                Integer inner = state().innerPrecedence();
-                return inner == null ? Integer.MIN_VALUE : inner;
-            }
-
-            @Override
-            public String group() {
-                return state().group();
-            }
-
-            @Override
-            public MutableMap<String, Map<Type, ParseState>> preStates() {
-                return preStates;
-            }
-
-            @Override
-            public MutableMap<String, Map<Type, ParseState>> postStates() {
-                return postStates;
-            }
-
-            @Override
-            public MutableMap<String, Map<Type, Variable>> hiddenVariables() {
-                return hiddenVariables;
-            }
-
-            @Override
-            public ParseContext outer() {
-                return outer;
-            }
-
+    public static ParseContext of(ParseState state, Token token, ParseContext outer) {
+        MutableMap<String, ParseState> preStates = MutableMap.of(outer.preStates.get());
+        MutableMap<String, ParseState> postStates = MutableMap.of(outer.postStates.get());
+        MutableMap<String, Set<Variable>> hiddenVariables = MutableMap.of(outer.hiddenVariables.get());
+        Integer precedence = state.innerPrecedence();
+        return new ParseContext(token, state, preStates, postStates, hiddenVariables, outer, state.group(),
+                precedence == null ? Integer.MIN_VALUE : precedence) {
             @Override
             public String toString() {
-                return "(" + precedence() + " " + group() + " " + outer() + ")";
+                return "(" + precedence + " " + state.group() + " " + outer + ")";
             }
-
         };
     }
 
-    default boolean preParse(String group, Token token, Node left, PatternResult result) throws ParseException {
-        if (left != null) {
-            Map<Type, ParseState> states = postStates(group);
-            if (states != null) {
-                Type type = left instanceof Variable ? left.type().toVariable() : left.type();
-                for (Entry<Type, ParseState> e : states) {
-                    result.clear();
-                    ParseState found = e.getValue().matchType(type, false, true, result.typeArgs());
-                    if (found != null) {
-                        result.left(left);
-                        if (found.parse(token, result, Map.of(), true)) {
-                            return true;
-                        }
-                        break;
-                    }
-                }
-            }
-            return false;
-        }
-        Map<Type, ParseState> states = preStates(group);
-        if (states != null) {
-            for (Entry<Type, ParseState> e : states) {
-                result.clear();
-                if (e.getValue().parse(token, result, Map.of(), true)) {
-                    return true;
-                }
-            }
-        }
-        return false;
+    private final Token                                        token;
+    private final ParseState                                   state;
+    private final ParseContext                                 outer;
+    private final String                                       group;
+    private final int                                          precedence;
+    private final MutableMap<String, ParseState>               preStates;
+    private final MutableMap<String, ParseState>               postStates;
+    private final MutableMap<String, Set<Variable>>            hiddenVariables;
+    private final MutableMap<Type, Map<String, ParseState>>    localPreStates;
+    private final MutableMap<Type, Map<String, ParseState>>    localPostStates;
+    private final MutableMap<Type, Map<String, Set<Variable>>> localHiddenVariables;
+
+    private ParseContext(Token token, ParseState state, MutableMap<String, ParseState> preStates,
+            MutableMap<String, ParseState> postStates, MutableMap<String, Set<Variable>> hiddenVariables,
+            ParseContext outer, String group, int precedence) {
+        this.localPreStates = MutableMap.of(Map.of());
+        this.localPostStates = MutableMap.of(Map.of());
+        this.localHiddenVariables = MutableMap.of(Map.of());
+        this.token = token;
+        this.state = state;
+        this.preStates = preStates;
+        this.postStates = postStates;
+        this.hiddenVariables = hiddenVariables;
+        this.outer = outer;
+        this.group = group;
+        this.precedence = precedence;
     }
 
-    default void register(KnowledgeBase knowledgeBase, String group, Type scope, Functor functor)
-            throws ParseException {
+    public ParseState state() {
+        return state;
+    }
+
+    public Token token() {
+        return token;
+    }
+
+    public int precedence() {
+        return precedence;
+    }
+
+    public String group() {
+        return group;
+    }
+
+    public ParseContext outer() {
+        return outer;
+    }
+
+    public void register(KnowledgeBase knowledgeBase, String group, Type scope, Functor functor) throws ParseException {
         try {
             ParseState preStart = functor.preStart();
             ParseState postStart = functor.postStart();
             if (preStart != null) {
-                preStates().set(p -> merge(group, scope, preStart, p));
+                preStates.set(p -> merge(group, preStart, p));
+                localPreStates.set(p -> merge(scope, group, preStart, p));
             }
             if (postStart != null) {
-                postStates().set(p -> merge(group, scope, postStart, p));
+                postStates.set(p -> merge(group, postStart, p));
+                localPostStates.set(p -> merge(scope, group, postStart, p));
             }
             Variable var = functor.variable();
             if (var != null && var.hidden()) {
-                hiddenVariables().set(p -> p.add(group, Map.of(Entry.of(scope, var))));
+                hiddenVariables.set(p -> p.add(group, Set.of(var)));
+                localHiddenVariables.set(p -> merge(scope, group, var, p));
             }
         } catch (NotMergeableException pme) {
             knowledgeBase.addException(new ParseException(pme.getMessage(), functor));
@@ -255,85 +133,150 @@ public interface ParseContext {
         knowledgeBase.register(functor);
     }
 
-    default Map<String, Map<Type, ParseState>> merge(String group, Type scope, ParseState state,
-            Map<String, Map<Type, ParseState>> m) {
-        Map<Type, ParseState> ts = m.get(group);
-        ts = ts != null ? ts.put(scope, state.merge(ts.get(scope))) : Map.of(Entry.of(scope, state));
-        return m.put(group, ts);
+    private static Map<String, ParseState> merge(String group, ParseState state, Map<String, ParseState> m) {
+        ParseState ts = m.get(group);
+        return m.put(group, ts != null ? state.merge(ts) : state);
     }
 
-    default Map<Type, ParseState> preStates(String group) {
-        return preStates().get(group);
+    private static Map<Type, Map<String, ParseState>> merge(Type scope, String group, ParseState state,
+            Map<Type, Map<String, ParseState>> m) {
+        Map<String, ParseState> ts = m.get(scope);
+        ts = ts != null ? ts.put(group, state.merge(ts.get(group))) : Map.of(Entry.of(group, state));
+        return m.put(scope, ts);
     }
 
-    default Map<Type, ParseState> postStates(String group) {
-        return postStates().get(group);
+    private static Map<Type, Map<String, Set<Variable>>> merge(Type scope, String group, Variable var,
+            Map<Type, Map<String, Set<Variable>>> m) {
+        Map<String, Set<Variable>> ts = m.get(scope);
+        ts = ts != null ? ts.add(group, Set.of(var)) : Map.of(Entry.of(group, Set.of(var)));
+        return m.put(scope, ts);
     }
 
-    default Map<Type, Variable> hiddenVariables(String group) {
-        return hiddenVariables().get(group);
+    public boolean preParse(String group, Token token, Node left, PatternResult result) throws ParseException {
+        if (left != null) {
+            ParseState state = postStates(group);
+            if (state != null) {
+                Type type = left instanceof Variable ? left.type().toVariable() : left.type();
+                result.clear();
+                ParseState found = state.matchType(type, false, true, result.typeArgs());
+                if (found != null) {
+                    result.left(left);
+                    if (found.parse(token, result, Map.of(), true)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        ParseState state = preStates(group);
+        if (state != null) {
+            result.clear();
+            if (state.parse(token, result, Map.of(), true)) {
+                return true;
+            }
+        }
+        return false;
     }
 
-    default boolean hasDefined(Variable var) {
+    public ParseState preStates(String group) {
+        return preStates.get(group);
+    }
+
+    public ParseState postStates(String group) {
+        return postStates.get(group);
+    }
+
+    public Set<Variable> hiddenVariables(String group) {
+        return hiddenVariables.get(group);
+    }
+
+    public boolean hasDefined(Variable var) {
         String name = var.name();
-        return type(name) != null || variable(name) != null;
+        return (type(name) != null || variable(name) != null) && outer.type(name) == null
+                && outer.variable(name) == null;
     }
 
-    default Variable variable(String name) {
-        for (Entry<String, Map<Type, ParseState>> e1 : preStates().get()) {
-            for (Entry<Type, ParseState> e2 : e1.getValue()) {
-                ParseState found = e2.getValue().tokenTexts().get(name);
-                if (found != null) {
-                    Functor functor = found.functor(Map.of());
-                    if (functor != null) {
-                        return functor.constructedVariable();
-                    }
+    public Variable variable(String name) {
+        for (Entry<String, ParseState> e : preStates.get()) {
+            ParseState found = e.getValue().tokenTexts().get(name);
+            if (found != null) {
+                Functor functor = found.functor(Map.of());
+                if (functor != null) {
+                    return functor.constructedVariable();
                 }
             }
         }
         return null;
     }
 
-    default Type type(String name) {
-        for (Entry<String, Map<Type, ParseState>> e1 : preStates().get()) {
-            for (Entry<Type, ParseState> e2 : e1.getValue()) {
-                ParseState found = e2.getValue().tokenTexts().get(name);
-                if (found != null) {
-                    Functor functor = found.functor(Map.of());
-                    if (functor != null) {
-                        return functor.constructedType();
-                    }
+    public Type type(String name) {
+        for (Entry<String, ParseState> e : preStates.get()) {
+            ParseState found = e.getValue().tokenTexts().get(name);
+            if (found != null) {
+                Functor functor = found.functor(Map.of());
+                if (functor != null) {
+                    return functor.constructedType();
                 }
             }
         }
         return null;
     }
 
-    default void finish(Type scope) {
-        clear(scope, preStates());
-        clear(scope, postStates());
-        clear(scope, hiddenVariables());
-    }
-
-    default <T> void clear(Type scope, MutableMap<String, Map<Type, T>> map) {
-        for (Entry<String, Map<Type, T>> pre : map.get()) {
-            for (Entry<Type, T> ts : pre.getValue()) {
-                if (ts.getKey().isAssignableFrom(scope)) {
-                    Map<Type, T> m = map.get(pre.getKey());
-                    if (m.size() == 1) {
-                        map.remove(pre.getKey());
-                    } else {
-                        map.put(pre.getKey(), m.removeKey(ts.getKey()));
-                    }
+    public void finish(Type scope) {
+        if (localPreStates.get().anyMatch(e -> e.getKey().isAssignableFrom(scope))) {
+            preStates.set(p -> outer.preStates.get());
+            for (Entry<Type, Map<String, ParseState>> e : localPreStates.get()) {
+                if (e.getKey().isAssignableFrom(scope)) {
+                    localPreStates.remove(e.getKey());
+                } else {
+                    preStates.set(p -> p.addAll(e.getValue()));
+                }
+            }
+        }
+        if (localPostStates.get().anyMatch(e -> e.getKey().isAssignableFrom(scope))) {
+            postStates.set(p -> outer.postStates.get());
+            for (Entry<Type, Map<String, ParseState>> e : localPostStates.get()) {
+                if (e.getKey().isAssignableFrom(scope)) {
+                    localPostStates.remove(e.getKey());
+                } else {
+                    postStates.set(p -> p.addAll(e.getValue()));
+                }
+            }
+        }
+        if (localHiddenVariables.get().anyMatch(e -> e.getKey().isAssignableFrom(scope))) {
+            hiddenVariables.set(p -> outer.hiddenVariables.get());
+            for (Entry<Type, Map<String, Set<Variable>>> e : localHiddenVariables.get()) {
+                if (e.getKey().isAssignableFrom(scope)) {
+                    localHiddenVariables.remove(e.getKey());
+                } else {
+                    hiddenVariables.set(p -> p.addAll(e.getValue()));
                 }
             }
         }
     }
 
-    default void merge(ParseContext inner) {
-        preStates().set(p -> p.addAll(inner.preStates().get()));
-        postStates().set(p -> p.addAll(inner.postStates().get()));
-        hiddenVariables().set(p -> p.addAll(inner.hiddenVariables().get()));
+    // The patterns of an imported knowledge base. This context is a copy of its
+    // outer one, so it does not see what an import adds to the knowledge base.
+    // They are world scoped here, so that a finish keeps them.
+    public void include(ParseContext imported) {
+        Map<String, ParseState> pre = imported.preStates.get();
+        Map<String, ParseState> post = imported.postStates.get();
+        Map<String, Set<Variable>> hidden = imported.hiddenVariables.get();
+        preStates.set(p -> p.addAll(pre));
+        postStates.set(p -> p.addAll(post));
+        hiddenVariables.set(p -> p.addAll(hidden));
+        localPreStates.set(p -> p.add(Type.WORLD, pre));
+        localPostStates.set(p -> p.add(Type.WORLD, post));
+        localHiddenVariables.set(p -> p.add(Type.WORLD, hidden));
+    }
+
+    public void put(ParseContext inner) {
+        localPreStates.set(p -> p.addAll(inner.localPreStates.get()));
+        localPostStates.set(p -> p.addAll(inner.localPostStates.get()));
+        localHiddenVariables.set(p -> p.addAll(inner.localHiddenVariables.get()));
+        preStates.set(p -> inner.preStates.get());
+        postStates.set(p -> inner.postStates.get());
+        hiddenVariables.set(p -> inner.hiddenVariables.get());
     }
 
 }

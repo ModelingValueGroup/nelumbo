@@ -421,8 +421,10 @@ public class Functor extends Node implements FunctorOrType {
         return this;
     }
 
-    // A unique hole (<one T>) holds at most one value for each combination of the other type holes (the arguments the
-    // facts are indexed on; a token hole like <NAME> is not), so a functor with only that hole has nothing to be unique
+    // A unique hole (<one T>) holds at most one value for each combination of the
+    // other type holes (the arguments the
+    // facts are indexed on; a token hole like <NAME> is not), so a functor with
+    // only that hole has nothing to be unique
     // for: its facts were never closed, without any message.
     private static void checkUniqueHoles(Pattern pattern, KnowledgeBase knowledgeBase) throws ParseException {
         List<NodeTypePattern> holes = typeHoles(pattern, List.of());
@@ -467,11 +469,7 @@ public class Functor extends Node implements FunctorOrType {
         Type type = resultType();
         String group = type.group();
         Type local = local();
-        if (local != null) {
-            ctx.register(knowledgeBase, group, local, this);
-        } else {
-            knowledgeBase.parseContext().register(knowledgeBase, group, Type.WORLD, this);
-        }
+        ctx.register(knowledgeBase, group, local != null ? local : Type.WORLD, this);
     }
 
     private NList createFunctor(Type type, NList roots, List<AstElement> ast, Class<?> clazz, Pattern pattern,

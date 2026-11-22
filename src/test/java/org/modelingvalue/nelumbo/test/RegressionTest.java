@@ -443,4 +443,12 @@ public class RegressionTest extends NelumboTestBase {
                 error.message());
     }
 
+    // A constant whose name starts with the name of a type parameter (Tom with Type T)
+    // is one constant in a <T> hole, not a variable declaration T om
+    // (was bugs/type-variable-name-prefix-split.nl).
+    @RepeatedTest(10)
+    public void typeVariableNamePrefixSplit() {
+        testResource("type-variable-name-prefix-split.nl");
+    }
+
 }

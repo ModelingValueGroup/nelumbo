@@ -54,7 +54,7 @@ public final class Import extends Node {
                     }
                     el = List.of();
                     sb = new StringBuilder();
-                    knowledgeBase.doImport(ip.name(), ip);
+                    knowledgeBase.doImport(ip.name(), ip, ctx);
                 } else {
                     sb.append(t.text());
                     el = el.add(t);

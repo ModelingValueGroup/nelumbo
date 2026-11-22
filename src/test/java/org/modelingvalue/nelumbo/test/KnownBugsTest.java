@@ -150,14 +150,14 @@ public class KnownBugsTest extends NelumboTestBase {
         bugResource("multiline-string-assert.nl");
     }
 
-    @KnownBug("single-hole functor (Cell ::= <Integer>) makes the parser NPE on every later Integer expression")
+    @KnownBug("single-hole functor (Cell ::= <Integer>) is accepted, but an Integer in a Cell hole is rejected as of unexpected type")
     @Test
     public void singleHoleFunctorParserNpe() {
         bugResource("single-hole-functor-parser-npe.nl");
     }
 
     // the correct outcome is a parse error, which bugResource (a clean run) cannot express
-    @KnownBug("unquoted = or != in a functor alternative after a line break overflows the parser stack instead of a parse error")
+    @KnownBug("unquoted = or != in a functor alternative after a line break gives a second parse error (Unexpected token ',') next to the expected one")
     @Test
     public void continuationLineEqualsPatternOverflow() throws IOException {
         String     name   = "continuation-line-equals-pattern-overflow.nl";
@@ -260,13 +260,7 @@ public class KnownBugsTest extends NelumboTestBase {
         bugResource("leading-repetition-pattern.nl");
     }
 
-    @KnownBug("constant starting with a type parameter's name (Tom with Type T) in a <T> hole parses as a variable declaration (T om)")
-    @Test
-    public void typeVariableNamePrefixSplit() {
-        bugResource("type-variable-name-prefix-split.nl");
-    }
-
-    @KnownBug("functor without holes (Thing ::= n) in a transformation body makes the closing } of that body fail to parse")
+    @KnownBug("functor without holes (Thing ::= n) in a transformation body clashes with its variable (Non deterministic pattern merge) and makes the closing } of that body fail to parse")
     @Test
     public void holelessFunctorInTransformation() {
         bugResource("holeless-functor-in-transformation.nl");

@@ -1,6 +1,6 @@
 // Bug: a functor alternative that is a lone type hole (`Cell ::= blank, <Integer>`) is
-// accepted, but from then on the parser crashes (NullPointerException) on every Integer
-// expression, also unrelated ones like `1+1=v`.
+// accepted, but an Integer in a Cell hole is still rejected ("Node k of unexpected type
+// {Integer,Variable}, expected {Cell,Literal} or Cell").
 // Correct: the coercion works, or (if a lone hole is illegal) a diagnostic at the declaration.
 import nelumbo.integers
 

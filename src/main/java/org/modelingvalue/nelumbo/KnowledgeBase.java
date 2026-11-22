@@ -304,9 +304,9 @@ public final class KnowledgeBase implements ParseExceptionHandler {
     private final AtomicReference<Set<Rule>>                   rules      = new AtomicReference<>();
     private final AtomicReference<Set<Transform>>              transforms = new AtomicReference<>();
     //
-    private final MutableMap<String, Map<Type, ParseState>> prePatterns     = MutableMap.concurrent(Map.of());
-    private final MutableMap<String, Map<Type, ParseState>> postPatterns    = MutableMap.concurrent(Map.of());
-    private final MutableMap<String, Map<Type, Variable>>   hiddenVariables = MutableMap.concurrent(Map.of());
+    private final MutableMap<String, ParseState>    prePatterns     = MutableMap.concurrent(Map.of());
+    private final MutableMap<String, ParseState>    postPatterns    = MutableMap.concurrent(Map.of());
+    private final MutableMap<String, Set<Variable>> hiddenVariables = MutableMap.concurrent(Map.of());
     //
     private final AtomicReference<Set<String>> imported = new AtomicReference<>();
     //
@@ -460,8 +460,9 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         resetMemoization();
     }
 
-    public void merge(KnowledgeBase kb, AstElement element) throws ParseException {
+    public void merge(KnowledgeBase kb, AstElement element, ParseContext ctx) throws ParseException {
         try {
+            ctx.include(kb.parseContext);
             types.updateAndGet(s -> s.addAll(kb.types.get()));
             functors.updateAndGet(s -> s.addAll(kb.functors.get()));
             facts.updateAndGet(s -> s.addAll(kb.facts.get(), KnowledgeBase::mergeFacts));
@@ -550,7 +551,8 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         QualifiedSet<Predicate, Inference>[] mem = memoization.updateAndGet(array -> {
             array = array.clone();
             array[0] = array[0].put(new Inference(predicate, result, initialUsageCount));
-            // not for an open collection: m(X)={1,..} as an answer to m(X)=s does not make m(X)={1,..} true for another
+            // not for an open collection: m(X)={1,..} as an answer to m(X)=s does not make
+            // m(X)={1,..} true for another
             // partly known set {1,..}
             for (Predicate fact : result.facts()) {
                 if (!fact.hasOpenPart()) {
@@ -662,8 +664,10 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         for (int[] i : vars) {
             pred = pred.set(i, Variable.DUMMY);
         }
-        // An open collection in the predicate is only partly known: it is not known to be the one in a fact, so no fact
-        // is found by it. Only a unique hole can still tell it apart from the value that is there.
+        // An open collection in the predicate is only partly known: it is not known to
+        // be the one in a fact, so no fact
+        // is found by it. Only a unique hole can still tell it apart from the value
+        // that is there.
         boolean open = predicate.hasOpenPart();
         InferResult result = open ? null : facts.get().get(pred);
         if (result != null) {
@@ -686,13 +690,15 @@ public final class KnowledgeBase implements ParseExceptionHandler {
             for (int i : predicate.functor().unique()) {
                 Object value = predicate.get(i);
                 if (value instanceof Node node && !node.type().isLiteral()) {
-                    // a function application (m(X)=r(X)) is no value to compare with the one in the hole
+                    // a function application (m(X)=r(X)) is no value to compare with the one in the
+                    // hole
                     continue;
                 }
                 pred = predicate.set(i, Variable.DUMMY);
                 result = open && pred.hasOpenPart() ? null : facts.get().get(pred);
                 if (result != null) {
-                    // the hole has another value: false, unless open collections leave undecided whether it is another
+                    // the hole has another value: false, unless open collections leave undecided
+                    // whether it is another
                     return result.facts().anyMatch(f -> Node.same(f.get(i), value) == null) ? predicate.unknown()
                             : predicate.falsehoodCC();
                 }
@@ -747,11 +753,11 @@ public final class KnowledgeBase implements ParseExceptionHandler {
         return imported.get();
     }
 
-    public void doImport(String name, Import imp) throws ParseException {
+    public void doImport(String name, Import imp, ParseContext ctx) throws ParseException {
         if (!imported.get().contains(name)) {
             KnowledgeBase kb = knowledgeBase(name, imp);
             if (kb != null) {
-                merge(kb, imp);
+                merge(kb, imp, ctx);
                 imported.updateAndGet(s -> s.add(name));
             }
         }

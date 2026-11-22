@@ -18,9 +18,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
-import org.modelingvalue.collections.Entry;
 import org.modelingvalue.collections.List;
-import org.modelingvalue.collections.Map;
+import org.modelingvalue.collections.Set;
+import org.modelingvalue.collections.util.NotMergeableException;
 import org.modelingvalue.nelumbo.KnowledgeBase;
 import org.modelingvalue.nelumbo.Node;
 import org.modelingvalue.nelumbo.lang.Type;
@@ -95,8 +95,13 @@ public final class Parser implements ParseExceptionHandler {
         try {
             Token token = tokenizerResult.first();
             ParseContext ctx = ParseContext.of(Type.DEFAULT_GROUP, Integer.MIN_VALUE, knowledgeBase.parseContext());
-            Node node = parseNode(token, ctx, null);
+            Node node = parseNode(token, ctx);
             if (node != null) {
+                try {
+                    knowledgeBase.parseContext().put(ctx);
+                } catch (NotMergeableException exc) {
+                    result.addException(new ParseException(exc.getMessage(), node));
+                }
                 result.setRoot(node);
                 token = node.nextToken();
                 if (token != null) {
@@ -114,10 +119,10 @@ public final class Parser implements ParseExceptionHandler {
         }
     }
 
-    protected Node parseNode(Token token, ParseContext inner, ParseContext outer) throws ParseException {
+    protected Node parseNode(Token token, ParseContext inner) throws ParseException {
         try {
             crashToken = null;
-            return parseNodeAt(token, inner, outer);
+            return parseNodeAt(token, inner);
         } catch (RuntimeException | StackOverflowError e) {
             if (crashToken == null) {
                 crashToken = token; // set by the innermost node only
@@ -134,43 +139,42 @@ public final class Parser implements ParseExceptionHandler {
         return crashToken;
     }
 
-    private Node parseNodeAt(Token token, ParseContext inner, ParseContext outer) throws ParseException {
-        String group = inner.group();
-        PatternResult result = new PatternResult(this, inner);
-        if (!preParse(group, token, null, result, inner, outer)) {
+    private Node parseNodeAt(Token token, ParseContext ctx) throws ParseException {
+        String group = ctx.group();
+        PatternResult result = new PatternResult(this, ctx);
+        if (!preParse(group, token, null, result, ctx)) {
             return null;
         }
         Node left = result.postParse();
-        token = left != null && inner.precedence() < Integer.MAX_VALUE ? left.nextToken() : null;
-        while (token != null && preParse(group, token, left, result, inner, null)) {
+        token = left != null && ctx.precedence() < Integer.MAX_VALUE ? left.nextToken() : null;
+        while (token != null && preParse(group, token, left, result, ctx)) {
             left = result.postParse();
             token = left != null ? left.nextToken() : null;
         }
         return left;
     }
 
-    private boolean preParse(String group, Token token, Node left, PatternResult result, ParseContext inner,
-            ParseContext outer) throws ParseException {
-        for (ParseContext pc = outer != null ? outer : result.context(); pc != null; pc = outer != null ? null
-                : pc.outer()) {
-            if (pc.preParse(group, token, left, result)) {
-                if (left != null && inner.precedence() < result.leftPrecedence()) {
-                    return true;
-                }
-                if (left == null && inner.precedence() <= result.leftPrecedence()) {
-                    return true;
-                }
-            }
-            if (left == null) {
-                Map<Type, Variable> vars = pc.hiddenVariables(group);
-                if (vars != null) {
-                    for (Entry<Type, Variable> var : vars) {
-                        if (preParse(group, token, var.getValue(), result, inner, null)
-                                && inner.precedence() < result.leftPrecedence()) {
-                            return true;
-                        }
+    private boolean preParse(String group, Token token, Node left, PatternResult result, ParseContext ctx)
+            throws ParseException {
+        // The hidden variables first: the context holds the patterns of all scopes in
+        // one state, so a pattern of an outer scope that starts with this token (a
+        // type declaration for a name, a variable) would win from a hidden variable.
+        if (left == null) {
+            Set<Variable> vars = ctx.hiddenVariables(group);
+            if (vars != null) {
+                for (Variable var : vars) {
+                    if (preParse(group, token, var, result, ctx) && ctx.precedence() < result.leftPrecedence()) {
+                        return true;
                     }
                 }
+            }
+        }
+        if (ctx.preParse(group, token, left, result)) {
+            if (left != null && ctx.precedence() < result.leftPrecedence()) {
+                return true;
+            }
+            if (left == null && ctx.precedence() <= result.leftPrecedence()) {
+                return true;
             }
         }
         return false;
