@@ -55,7 +55,7 @@
     "typescript": "^5.4.5"
   },
   "dependencies": {
-    "vscode-languageclient": "^11.0.0"
+    "vscode-languageclient": "^11.0.1"
   },
   "overrides": {
     "minimatch": "^11.0.1"
