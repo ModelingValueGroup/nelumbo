@@ -78,7 +78,8 @@ public final class Strings extends Predicate {
         }
         if (string != null) {
             try {
-                BigInteger parsed = BigInteger.valueOf(Integer.parseInt(string.value()));
+                // Integer values are unbounded, so the parser must accept values beyond 32 bits.
+                BigInteger parsed = new BigInteger(string.value());
                 if (integer != null) {
                     return integer.value().equals(parsed) ? factCC() : falsehoodCC();
                 }
