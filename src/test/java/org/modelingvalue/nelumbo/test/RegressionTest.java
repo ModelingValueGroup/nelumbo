@@ -53,6 +53,11 @@ public class RegressionTest extends NelumboTestBase {
     }
 
     @RepeatedTest(10)
+    public void commentAfterOperator() {
+        testResource("comment-after-operator.nl");
+    }
+
+    @RepeatedTest(10)
     public void literalConstructorInRuleHead() {
         testResource("literal-constructor-in-rule-head.nl");
     }

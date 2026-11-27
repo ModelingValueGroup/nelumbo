@@ -37,8 +37,9 @@ public enum TokenType {
     IN_LINE_COMMENT("/\\*.*?(?:\\*/|\\z)", SKIP, VARIABLE_CONTENT), //
     // also every other non-ASCII symbol, punctuation and other number (math symbols, text symbols like a heart,
     // superscripts); inside also marks, joiners and tags
+    // A // anywhere ends the operator and starts an end-of-line comment, also after an initial operator character.
     OPERATOR("(?!//)(?:[~!@#$%^&*=+|:<>.?/-]|(?!\\p{IsExtended_Pictographic}\\uFE0F)[\\p{S}\\p{P}\\p{No}&&[^\\x00-\\x7F]&&[^\\p{IsEmoji_Presentation}]])"
-            + "(?:[~!@#$%^&*=+|:<>.?/-]|(?!\\p{IsExtended_Pictographic}\\uFE0F)[\\p{S}\\p{P}\\p{No}&&[^\\x00-\\x7F]&&[^\\p{IsEmoji_Presentation}]]"
+            + "(?:(?!//)[~!@#$%^&*=+|:<>.?/-]|(?!\\p{IsExtended_Pictographic}\\uFE0F)[\\p{S}\\p{P}\\p{No}&&[^\\x00-\\x7F]&&[^\\p{IsEmoji_Presentation}]]"
             + "|[\\p{M}\\u200D\\x{E0020}-\\x{E007F}])*", CONTINUES_ON_NEXT_LINE, VARIABLE_CONTENT), //
     // the line breaks of LSP and the editors; other Unicode line and paragraph separators are spaces
     NEWLINE("\\r\\n|[\\n\\r]", CONTINUES_ON_NEXT_LINE, LAYOUT), //
